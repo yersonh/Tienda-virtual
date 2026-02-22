@@ -6,8 +6,9 @@ require_once __DIR__ . '/../models/UsuarioModel.php';
 header('Content-Type: text/html; charset=utf-8');
 
 $pdo = Database::getConnection();
-$model = new UsuarioModel($pdo);
+$model = new UsuarioModel($pdo);*/
 $error = '';
+/*
 if (isset($_GET['logout']) && $_GET['logout'] == 'success') {
     $logout_message = "Sesión cerrada exitosamente";
 }
@@ -212,10 +213,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             0 0 0 3px rgba(79, 195, 247, 0.2),
             inset 0 1px 2px rgba(255, 255, 255, 0.1);
     }
-    /*
+    
     .error-message {
-        background: rgba(244, 67, 54, 0.15); /* Rojo con transparencia 
-        color: #ff8a80; /* Rojo claro 
+        background: rgba(244, 67, 54, 0.15); /* Rojo con transparencia */
+        color: #ff8a80; /* Rojo claro */
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 15px;
