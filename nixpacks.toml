@@ -1,0 +1,35 @@
+# nixpacks.toml
+name = "mi-app-php"
+
+[phases.setup]
+nixPkgs = [
+  "php81", 
+  "php81Extensions.mbstring", 
+  "php81Extensions.pdo", 
+  "php81Extensions.pdo_mysql",
+  "php81Extensions.mysqlnd",
+  "php81Extensions.gd",
+  "php81Extensions.curl",
+  "php81Extensions.xml",
+  "php81Extensions.zip"
+]
+
+[phases.install]
+cmds = [
+  "mkdir -p /app/public",
+  "echo 'Directorio public creado'"
+]
+
+[phases.build]
+cmds = [
+  "echo '🔨 Construyendo aplicación PHP...'",
+  "php -v",
+  "echo 'Build completado'"
+]
+
+[start]
+cmd = "php -S 0.0.0.0:${PORT:-8080} -t public"
+
+[env]
+PHP_VERSION = "8.1"
+APP_ENV = "production"

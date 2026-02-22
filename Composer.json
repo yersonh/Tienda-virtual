@@ -1,0 +1,17 @@
+{
+    "name": "tu-app/php-project",
+    "description": "Aplicación PHP en Railway",
+    "type": "project",
+    "require": {
+        "php": ">=8.1"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "echo 'Composer install completado'"
+        ]
+    }
+}
