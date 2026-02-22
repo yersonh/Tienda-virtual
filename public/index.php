@@ -464,9 +464,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-container">
         <div class="logo-section text-center">
     <div class="logo mb-0">
-        <img src="imagenes/image_no_bg.png" alt="Logo" class="logo-img">
+        <img src="imagenes/logosinfondo.png" alt="Logo" class="logo-img">
     </div>
-        <p class="mt-0">Plataforma de confirmación de usuario autorizado para acceso al software SGP.</p> 
+        <p class="mt-0">Tienda virtual para la comercialización de maquinaria agrícola, repuestos automotrices y productos de iluminación.</p> 
     </div>
         
         <?php if ($error): ?>
@@ -513,18 +513,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <div class="footer-links">
             <a href="recuperar.php"><i class="fas fa-question-circle"></i> ¿Olvidó su contraseña?</a>
-        </div>
-        
-        <div class="system-info">
-            <p>
-                <strong>© 2026 Sistema de Gestión Política SGP</strong> • Puerto Gaitán - Meta
-                Módulo de SGA Sistema de Gestión Administrativa 2026 
-                SGA Solución de Gestión Administrativa Enterprise Premium 1.0™
-                Desarrollado por SISGONTech Technology® • Conjunto Residencial Portal del Llano, Casa 104, Villavicencio, Meta.
-                Asesores e-Governance Solutions para Entidades Públicas 2026® 
-                Propietario software: Ing. Yerson Solano Alfonso
-                ☎️ (+57) 313 333 62 27 • Email: soportesgp@gmail.com • © Reservado por derechos de autor.
-            </p>
         </div>
     </div>
     <script>
