@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         min-height: 100vh;
         background: 
             linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-            url('/imagenes/fondo.jpg') no-repeat center center fixed;
+            url('/imagenes/Fondo.png') no-repeat center center fixed;
         background-size: cover;
         display: flex;
         justify-content: center;
