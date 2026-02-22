@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         border-left: 3px solid #ff5252;
         display: <?php echo $error ? 'block' : 'none'; ?>;
         backdrop-filter: blur(5px);
-    }*/
+    }
     
     .login-btn {
         width: 100%;
