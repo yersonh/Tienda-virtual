@@ -1,5 +1,5 @@
 <?php
-// UsuarioModel.php
+// UsuarioModel.php - VERSIÓN TEMPORAL PARA TEXTO PLANO
 class UsuarioModel {
     private $conn;
     private $table = 'usuario';
@@ -12,30 +12,27 @@ class UsuarioModel {
         try {
             $query = "SELECT id_usuario, email, password 
                       FROM " . $this->table . " 
-                      WHERE email = :email";
+                      WHERE email = :email AND password = :password"; // COMPARACIÓN DIRECTA
             
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':password', $password); // TEXTO PLANO
             $stmt->execute();
             
             if($stmt->rowCount() > 0) {
                 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if(password_verify($password, $usuario['password'])) {
-                    return [
-                        'success' => true,
-                        'id_usuario' => $usuario['id_usuario'],
-                        'email' => $usuario['email']
-                    ];
-                }
+                return [
+                    'success' => true,
+                    'id_usuario' => $usuario['id_usuario'],
+                    'email' => $usuario['email']
+                ];
             }
             
             return ['success' => false];
             
         } catch(PDOException $e) {
             error_log("Error: " . $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
+            return ['success' => false];
         }
     }
 }
-?>
