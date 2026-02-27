@@ -1,4 +1,3 @@
-# nixpacks.toml
 name = "mi-app-php"
 
 [phases.setup]
@@ -11,7 +10,8 @@ nixPkgs = [
   "php81Extensions.gd",
   "php81Extensions.curl",
   "php81Extensions.xml",
-  "php81Extensions.zip"
+  "php81Extensions.zip",
+  "postgresql"
 ]
 
 [phases.install]
@@ -22,8 +22,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "echo '🔨 Construyendo aplicación PHP...'",
+  "echo 'Construyendo aplicación PHP...'",
   "php -v",
+  "php -m | grep pgsql",
   "echo 'Build completado'"
 ]
 
