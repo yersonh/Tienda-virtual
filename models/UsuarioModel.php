@@ -1,12 +1,41 @@
 <?php
+// UsuarioModel.php
 class UsuarioModel {
-    private $pdo; //estos es la variable de conexion q luego haras en database.php
-
-    public function __construct($pdo) {
-        $this->pdo = $pdo;
+    private $conn;
+    private $table = 'usuario';
+    
+    public function __construct($db) {
+        $this->conn = $db;
     }
-
-    //Aqui iran todas las consultas relacionadas y necesarias para la tabla de base de datos Usuario
-    public function verificarCredenciales($nickname, $password) {
+    
+    public function validarCredenciales($email, $password) {
+        try {
+            $query = "SELECT id_usuario, email, password 
+                      FROM " . $this->table . " 
+                      WHERE email = :email";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            
+            if($stmt->rowCount() > 0) {
+                $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if(password_verify($password, $usuario['password'])) {
+                    return [
+                        'success' => true,
+                        'id_usuario' => $usuario['id_usuario'],
+                        'email' => $usuario['email']
+                    ];
+                }
+            }
+            
+            return ['success' => false];
+            
+        } catch(PDOException $e) {
+            error_log("Error: " . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
     }
 }
+?>

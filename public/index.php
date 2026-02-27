@@ -1,60 +1,27 @@
 <?php
-/*
 session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
 header('Content-Type: text/html; charset=utf-8');
 
 $pdo = Database::getConnection();
-$model = new UsuarioModel($pdo);*/
+$model = new UsuarioModel($pdo);
 $error = '';
-/*
-if (isset($_GET['logout']) && $_GET['logout'] == 'success') {
-    $logout_message = "Sesión cerrada exitosamente";
-}
-// Procesar login si se envió el formulario
+$login_exitoso = false; // Variable para controlar el mensaje de éxito
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nickname = trim($_POST['nickname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
     
-    if (!empty($nickname) && !empty($password)) {
+    if (!empty($email) && !empty($password)) {
         try {
-            // Usar el modelo para verificar credenciales
-            $usuario = $model->verificarCredenciales($nickname, $password);
+            // Usar el modelo para validar credenciales
+            $resultado = $model->validarCredenciales($email, $password);
             
-            if ($usuario) {
-                // Login exitoso
-                $_SESSION['id_usuario'] = $usuario['id_usuario'];
-                $_SESSION['nickname'] = $usuario['nickname'];
-                $_SESSION['tipo_usuario'] = $usuario['tipo_usuario'];
-                $_SESSION['login_time'] = time();
-                
-                // Actualizar último registro usando el modelo
-                $fecha_actual = date('Y-m-d H:i:s');
-                $model->actualizarUltimoRegistro($usuario['id_usuario'], $fecha_actual);
-                
-                // REDIRIGIR SEGÚN EL TIPO DE USUARIO
-                switch ($usuario['tipo_usuario']) {
-                    case 'SuperAdmin':
-                        header('Location: superadmin_dashboard.php');
-                        break;
-                    case 'Administrador':
-                        header('Location: dashboard.php');
-                        break;
-                    case 'Referenciador':
-                        header('Location: referenciador.php');
-                        break;
-                    case 'Tracking':
-                        header('Location: tracking/ver_usuarios.php');
-                        break;
-                    default:
-                        // Redirigir a una vista por defecto o mostrar error
-                        header('Location: dashboard.php');
-                        break;
-                }
-                exit();
+            if ($resultado['success']) {
+                $login_exitoso = true; // Cambiamos a true para mostrar el mensaje
             } else {
-                $error = 'Credenciales incorrectas o usuario inactivo';
+                $error = 'Credenciales incorrectas';
             }
         } catch (Exception $e) {
             $error = 'Error al procesar la solicitud';
@@ -63,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $error = 'Por favor complete todos los campos';
     }
-}*/
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -93,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     .login-container {
-        background: rgba(30, 30, 40, 0.75); /* Fondo oscuro semi-transparente */
-        backdrop-filter: blur(12px); /* Efecto de desenfoque tipo vidrio */
+        background: rgba(30, 30, 40, 0.75);
+        backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-radius: 20px;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -119,27 +86,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     .logo {
         font-size: 2.8rem;
-        color: #4fc3f7; /* Azul claro moderno */
+        color: #4fc3f7;
         margin-bottom: 8px;
         text-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
     }
     
     .logo-section h1 {
         color: #ffffff;
-        font-size: 1.3rem; /* Reducido para que quepa */
+        font-size: 1.3rem;
         margin-bottom: 8px;
         line-height: 1.3;
         font-weight: 600;
-        letter-spacing: 0.2px; /* Reducido espaciado */
-        word-break: keep-all; /* Evita separar palabras */
-        overflow-wrap: break-word; /* Permite ajuste inteligente */
+        letter-spacing: 0.2px;
+        word-break: keep-all;
+        overflow-wrap: break-word;
     }
     
     .logo-section p {
-        color: #b0bec5; /* Gris azulado claro */
+        color: #b0bec5;
         font-size: 0.85rem;
         line-height: 1.4;
         opacity: 0.9;
+    }
+    
+    /* Mensaje de éxito */
+    .success-message {
+        background: rgba(76, 175, 80, 0.15);
+        color: #81c784;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 1rem;
+        border-left: 3px solid #4caf50;
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        animation: slideDown 0.5s ease-out;
+    }
+    
+    .success-message i {
+        font-size: 1.3rem;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     .form-group {
@@ -150,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-group label {
         display: block;
         margin-bottom: 6px;
-        color: #cfd8dc; /* Gris claro */
+        color: #cfd8dc;
         font-weight: 600;
         font-size: 0.85rem;
     }
@@ -165,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #90a4ae; /* Gris medio */
+        color: #90a4ae;
         font-size: 1rem;
         z-index: 2;
     }
@@ -215,8 +214,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     .error-message {
-        background: rgba(244, 67, 54, 0.15); /* Rojo con transparencia */
-        color: #ff8a80; /* Rojo claro */
+        background: rgba(244, 67, 54, 0.15);
+        color: #ff8a80;
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 15px;
@@ -230,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         width: 100%;
         padding: 13px;
         background: linear-gradient(135deg, #4fc3f7, #29b6f6);
-        color: #1a237e; /* Texto azul oscuro para contraste */
+        color: #1a237e;
         border: none;
         border-radius: 10px;
         font-size: 1rem;
@@ -286,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin-top: 20px;
         text-align: center;
         font-size: 0.75rem;
-        color: #78909c; /* Gris azulado más oscuro */
+        color: #78909c;
         line-height: 1.4;
     }
     
@@ -295,13 +294,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         opacity: 0.8;
     }
     
-    /* Clase especial para línea de contacto */
     .contact-line {
         display: inline;
         white-space: nowrap;
     }
     
-    /* Efecto de brillo sutil en los bordes */
     .login-container::before {
         content: '';
         position: absolute;
@@ -316,6 +313,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         border-radius: 20px 20px 0 0;
     }
     
+    .logo-img {
+        width: 320px;
+        height: auto;
+        max-width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    @media (max-width: 768px) {
+        .logo-img {
+            width: 300px;
+        }
+    }
+    
     @media (max-width: 480px) {
         .login-container {
             padding: 25px 20px;
@@ -324,16 +334,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             -webkit-backdrop-filter: blur(8px);
         }
         
-        .logo {
-            font-size: 2.5rem;
+        .logo-img {
+            width: 280px;
         }
         
         .logo-section h1 {
-            font-size: 1.1rem; /* Más pequeño para móviles */
-            letter-spacing: 0.1px; /* Espaciado mínimo */
+            font-size: 1.1rem;
+            letter-spacing: 0.1px;
             word-break: keep-all;
             overflow-wrap: break-word;
-            padding: 0 2px; /* Pequeño padding lateral */
+            padding: 0 2px;
         }
         
         .logo-section p {
@@ -348,16 +358,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 0.7rem;
             line-height: 1.5;
         }
-        
-        .contact-line {
-            display: inline-block;
-            white-space: nowrap;
-        }
     }
     
     @media (max-width: 380px) {
+        .logo-img {
+            width: 240px;
+        }
+        
         .logo-section h1 {
-            font-size: 1.05rem; /* Aún más pequeño para pantallas muy pequeñas */
+            font-size: 1.05rem;
             word-break: keep-all;
             overflow-wrap: break-word;
         }
@@ -373,102 +382,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 20px 15px;
         }
         
+        .logo-img {
+            width: 220px;
+        }
+        
         .logo-section h1 {
-            font-size: 1rem; /* Mínimo tamaño legible */
+            font-size: 1rem;
             word-break: keep-all;
             overflow-wrap: break-word;
         }
     }
-    /* Estilos responsivos para el logo */
-.logo-img {
-    width: 320px;
-    height: auto;
-    max-width: 100%;
-    transition: all 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .logo-img {
-        width: 300px;
-    }
-}
-
-@media (max-width: 480px) {
-    .login-container {
-        padding: 25px 20px;
-        max-width: 350px;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-    
-    .logo-img {
-        width: 280px;
-    }
-    
-    .logo-section h1 {
-        font-size: 1.1rem;
-        letter-spacing: 0.1px;
-        word-break: keep-all;
-        overflow-wrap: break-word;
-        padding: 0 2px;
-    }
-    
-    .logo-section p {
-        font-size: 0.8rem;
-    }
-    
-    .login-btn {
-        padding: 12px;
-    }
-    
-    .system-info p {
-        font-size: 0.7rem;
-        line-height: 1.5;
-    }
-}
-
-@media (max-width: 380px) {
-    .logo-img {
-        width: 240px;
-    }
-    
-    .logo-section h1 {
-        font-size: 1.05rem;
-        word-break: keep-all;
-        overflow-wrap: break-word;
-    }
-    
-    .system-info p {
-        font-size: 0.65rem;
-    }
-}
-
-@media (max-width: 350px) {
-    .login-container {
-        max-width: 320px;
-        padding: 20px 15px;
-    }
-    
-    .logo-img {
-        width: 220px;
-    }
-    
-    .logo-section h1 {
-        font-size: 1rem;
-        word-break: keep-all;
-        overflow-wrap: break-word;
-    }
-}
-</style>
+    </style>
 </head>
 <body>
     <div class="login-container">
         <div class="logo-section text-center">
-    <div class="logo mb-0">
-        <img src="imagenes/logosinfondo.png" alt="Logo" class="logo-img">
-    </div>
-        <p class="mt-0">Tienda virtual para la comercialización de maquinaria agrícola, repuestos automotrices y productos de iluminación.</p> 
-    </div>
+            <div class="logo mb-0">
+                <img src="imagenes/logosinfondo.png" alt="Logo" class="logo-img">
+            </div>
+            <p class="mt-0">Tienda virtual para la comercialización de maquinaria agrícola, repuestos automotrices y productos de iluminación.</p> 
+        </div>
+        
+        <?php if ($login_exitoso): ?>
+        <div class="success-message">
+            <i class="fas fa-check-circle"></i> ¡Inició correctamente!
+        </div>
+        <?php endif; ?>
         
         <?php if ($error): ?>
         <div class="error-message">
@@ -478,16 +417,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <form method="POST" action="">
             <div class="form-group">
-                <label for="nickname">Usuario</label>
+                <label for="email">Usuario</label>
                 <div class="input-with-icon">
                     <i class="fas fa-user"></i>
-                    <input type="text" 
-                           id="nickname" 
-                           name="nickname" 
-                           placeholder="Ingrese su nombre de usuario" 
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           placeholder="Ingrese su email" 
                            required
                            autocomplete="username"
-                           value="<?php echo isset($_POST['nickname']) ? htmlspecialchars($_POST['nickname']) : ''; ?>">
+                           value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
                 </div>
             </div>
             
@@ -516,8 +455,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="recuperar.php"><i class="fas fa-question-circle"></i> ¿Olvidó su contraseña?</a>
         </div>
     </div>
+    
     <script>
-        // Mostrar/ocultar contraseña
         document.addEventListener('DOMContentLoaded', function() {
             const passwordInput = document.getElementById('password');
             const togglePasswordBtn = document.getElementById('togglePassword');
@@ -528,7 +467,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
             });
             
-            // Efecto de enfoque en campos
             const inputs = document.querySelectorAll('input');
             inputs.forEach(input => {
                 input.addEventListener('focus', function() {
