@@ -22,7 +22,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "echo '🔨 Construyendo aplicación PHP...'",
+  "echo 'Construyendo aplicación PHP...'",
   "php -v",
   "echo 'Build completado'"
 ]
