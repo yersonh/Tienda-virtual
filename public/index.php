@@ -11,7 +11,7 @@ switch ($action) {
         break;
 
     case 'iniciarSesion':
-        require_once '../controllers/LoginController.php';
+        require_once '../controllers\LoginController.php';
         (new LoginController())->iniciarSesion();
         break;
 
