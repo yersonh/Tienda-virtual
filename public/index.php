@@ -5,7 +5,7 @@ require_once __DIR__ . '/../models/UsuarioModel.php';
 header('Content-Type: text/html; charset=utf-8');
 
 $pdo = Database::getConnection();
-$model = new UsuarioModel($pdo);*/
+$model = new UsuarioModel($pdo);
 $error = '';
 
 if (isset($_GET['logout']) && $_GET['logout'] == 'success') {
