@@ -196,13 +196,13 @@ body {
     <!-- LINKS -->
     <div style="text-align:center; margin-top:15px;">
         <a href="index.php?action=recuperar" style="color:#4fc3f7; font-size:13px;">
-            ❓ ¿Olvidó su contraseña?
+            ¿Olvidó su contraseña?
         </a>
     </div>
 
     <div style="text-align:center; margin-top:5px;">
         <a href="index.php?action=reactivar" style="color:#ffd54f; font-size:13px;">
-            🔄 ¿Quieres reactivar tu cuenta?
+            ¿Quieres reactivar tu cuenta?
         </a>
     </div>
 

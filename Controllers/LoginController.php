@@ -3,11 +3,6 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
 
 class LoginController {
-
-    public function mostrarLogin() {
-        require __DIR__ . '/../views/login.php';
-    }
-
     public function iniciarSesion() {
 
         session_start();
