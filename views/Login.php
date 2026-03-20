@@ -96,15 +96,22 @@ body {
 .register-btn {
     display: block;
     text-align: center;
-    margin-top: 10px;
-    background: #2196f3;
-    padding: 12px;
-    border-radius: 10px;
+    margin-top: 12px;
+    background: linear-gradient(135deg, #2196f3, #1976d2);
+    padding: 14px;
+    border-radius: 12px;
     color: white;
     text-decoration: none;
     font-weight: bold;
+    border: 2px solid #0d47a1;
+    box-shadow: 0 0 10px rgba(33,150,243,0.4);
+    transition: 0.3s;
 }
 
+.register-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(33,150,243,0.6);
+}
 /* MENSAJES */
 .error-message {
     background: rgba(244,67,54,0.2);
