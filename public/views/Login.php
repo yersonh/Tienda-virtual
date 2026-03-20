@@ -19,7 +19,7 @@ body {
     min-height: 100vh;
     background: 
         linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-        url('../public/imagenes/Fondo.png') no-repeat center center fixed;
+        url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size: cover;
     display: flex;
     justify-content: center;
@@ -136,7 +136,7 @@ body {
 <div class="login-container">
 
     <div class="logo-section">
-        <img src="../public/imagenes/logosinfondo.png" class="logo-img">
+        <img src="../imagenes/logosinfondo.png" class="logo-img">
         <p style="color:#ccc; font-size:14px;">
             Tienda virtual para la comercialización de maquinaria agrícola,
             repuestos automotrices y productos de iluminación.
