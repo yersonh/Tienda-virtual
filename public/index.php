@@ -8,7 +8,7 @@ $modalType = ''; // 'success' o 'error'
 
 // Procesar login si se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../controllers/LoginController.php';
+    require_once __DIR__ . '/../Controllers/LoginController.php';
     $login = new LoginController();
     
     // Llamar al método que procesa el login pero capturar el resultado
