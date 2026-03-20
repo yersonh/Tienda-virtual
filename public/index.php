@@ -19,7 +19,7 @@ switch ($action) {
         require_once __DIR__ . '/../controllers/LoginController.php';
         (new LoginController())->logout();
         break;
-        
+
     case 'registro':
         require_once __DIR__ . '/../controllers/RegistroController.php';
         (new RegistroController())->mostrarRegistro();
