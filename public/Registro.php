@@ -6,6 +6,9 @@ require_once __DIR__ . '/../models/UsuarioModel.php';
 $pdo = Database::getConnection();
 $model = new UsuarioModel($pdo);
 
+// Variable para controlar si se registró exitosamente
+$registroExitoso = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Recoger datos del formulario
     $nombres = trim($_POST['nombres'] ?? '');
@@ -17,9 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
     
-    // Validaciones básicas
-    if (empty($nombres) || empty($apellidos) || empty($username) || empty($password)) {
-        $_SESSION['error'] = 'Por favor complete los campos obligatorios.';
+    // Validar que TODOS los campos estén llenos
+    if (empty($nombres) || empty($apellidos) || empty($cc) || empty($correo) || empty($telefono) || empty($direccion) || empty($username) || empty($password)) {
+        $_SESSION['error'] = 'Todos los campos son obligatorios.';
         header('Location: registrar.php');
         exit();
     } elseif (strlen($password) < 6) {
@@ -34,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
         // Verificar si la cédula ya existe
-        elseif (!empty($cc) && $model->ccExiste($cc)) {
+        elseif ($model->ccExiste($cc)) {
             $_SESSION['error'] = 'La cédula ya está registrada en el sistema.';
             header('Location: registrar.php');
             exit();
@@ -55,8 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($resultado['success']) {
                 $_SESSION['success'] = '¡Usuario registrado exitosamente!';
-                header('Location: registrar.php');
-                exit();
+                $registroExitoso = true;
+                // NO redirigimos inmediatamente, dejamos que se muestre el mensaje
+                // y vaciamos POST para que no se rellenen los campos
+                $_POST = [];
             } else {
                 $_SESSION['error'] = 'Error al registrar: ' . $resultado['message'];
                 header('Location: registrar.php');
@@ -71,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Registro</title>
+    <meta http-equiv="refresh" content="3;url=index.php">
     <style>
         body {
             background: #0f172a;
@@ -129,6 +135,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #16a34a;
         }
 
+        button:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+        }
+
         .error {
             background: #dc2626;
             color: white;
@@ -167,6 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: center;
             margin-top: 10px;
         }
+
+        .redirect-message {
+            font-size: 13px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -184,50 +202,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <?php if (isset($_SESSION['success'])): ?>
             <div class="success">
-                <?php 
-                    echo $_SESSION['success']; 
-                    unset($_SESSION['success']); 
-                ?>
+                <strong>✓ <?php echo $_SESSION['success']; ?></strong>
+                <div style="margin-top: 15px; font-size: 14px;">
+                    Serás redirigido al inicio de sesión en 3 segundos...
+                </div>
                 <div style="margin-top: 10px;">
-                    <a href="login.php" style="color: white; font-weight: bold;">Iniciar sesión →</a>
+                    <a href="index.php" style="color: white; font-weight: bold;">O haz clic aquí para ir ahora</a>
                 </div>
             </div>
+            <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
         <form method="POST" action="registrar.php">
             <input type="text" name="nombres" placeholder="Nombres *" required 
-                   value="<?php echo isset($_POST['nombres']) ? htmlspecialchars($_POST['nombres']) : ''; ?>">
+                   value="<?php echo isset($_POST['nombres']) ? htmlspecialchars($_POST['nombres']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
             <input type="text" name="apellidos" placeholder="Apellidos *" required
-                   value="<?php echo isset($_POST['apellidos']) ? htmlspecialchars($_POST['apellidos']) : ''; ?>">
+                   value="<?php echo isset($_POST['apellidos']) ? htmlspecialchars($_POST['apellidos']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
-            <input type="text" name="cc" placeholder="Cédula (opcional)"
-                   value="<?php echo isset($_POST['cc']) ? htmlspecialchars($_POST['cc']) : ''; ?>">
+            <input type="text" name="cc" placeholder="Cédula *" required
+                   value="<?php echo isset($_POST['cc']) ? htmlspecialchars($_POST['cc']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
-            <input type="email" name="correo" placeholder="Correo electrónico (opcional)"
-                   value="<?php echo isset($_POST['correo']) ? htmlspecialchars($_POST['correo']) : ''; ?>">
+            <input type="email" name="correo" placeholder="Correo electrónico *" required
+                   value="<?php echo isset($_POST['correo']) ? htmlspecialchars($_POST['correo']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
-            <input type="text" name="telefono" placeholder="Teléfono (opcional)"
-                   value="<?php echo isset($_POST['telefono']) ? htmlspecialchars($_POST['telefono']) : ''; ?>">
+            <input type="text" name="telefono" placeholder="Teléfono *" required
+                   value="<?php echo isset($_POST['telefono']) ? htmlspecialchars($_POST['telefono']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
-            <input type="text" name="direccion" placeholder="Dirección (opcional)"
-                   value="<?php echo isset($_POST['direccion']) ? htmlspecialchars($_POST['direccion']) : ''; ?>">
+            <input type="text" name="direccion" placeholder="Dirección *" required
+                   value="<?php echo isset($_POST['direccion']) ? htmlspecialchars($_POST['direccion']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
             <input type="text" name="username" placeholder="Nombre de usuario *" required
-                   value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>">
+                   value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
             
-            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres) *" required>
+            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres) *" required
+                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
 
-            <button type="submit">Registrarse</button>
+            <button type="submit" <?php echo $registroExitoso ? 'disabled' : ''; ?>>Registrarse</button>
         </form>
 
+        <?php if (!$registroExitoso): ?>
         <div class="login-link">
-            ¿Ya tienes cuenta? <a href="login.php">Inicia sesión aquí</a>
+            ¿Ya tienes cuenta? <a href="index.php">Inicia sesión aquí</a>
         </div>
+        <?php endif; ?>
         
         <div class="note">
-            * Campos obligatorios
+            * Todos los campos son obligatorios
         </div>
+
+        <?php if ($registroExitoso): ?>
+        <div class="redirect-message">
+            <i class="fas fa-spinner fa-spin"></i> Redirigiendo...
+        </div>
+        <?php endif; ?>
     </div>
+
+    <?php if ($registroExitoso): ?>
+    <script>
+        // Redirección JavaScript por si el meta refresh no funciona
+        setTimeout(function() {
+            window.location.href = 'index.php';
+        }, 3000);
+    </script>
+    <?php endif; ?>
 </body>
 </html>
