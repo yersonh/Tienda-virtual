@@ -32,4 +32,4 @@ switch ($action) {
 
     default:
         echo "Ruta no encontrada";
-}
+}s
