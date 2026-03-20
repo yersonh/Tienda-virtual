@@ -6,8 +6,8 @@ require_once __DIR__ . '/../models/UsuarioModel.php';
 $pdo = Database::getConnection();
 $model = new UsuarioModel($pdo);
 
-// Variable para controlar si se registró exitosamente
-$registroExitoso = false;
+$error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Recoger datos del formulario
@@ -20,27 +20,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
     
-    // Validar que TODOS los campos estén llenos
+    // Validar campos obligatorios
     if (empty($nombres) || empty($apellidos) || empty($cc) || empty($correo) || empty($telefono) || empty($direccion) || empty($username) || empty($password)) {
-        $_SESSION['error'] = 'Todos los campos son obligatorios.';
-        header('Location: registrar.php');
-        exit();
-    } elseif (strlen($password) < 6) {
-        $_SESSION['error'] = 'La contraseña debe tener al menos 6 caracteres.';
-        header('Location: registrar.php');
-        exit();
+        $error = 'Todos los campos son obligatorios.';
+    } 
+    // Validar que cédula sea numérica y de 10 dígitos
+    elseif (!is_numeric($cc) || strlen($cc) != 10) {
+        $error = 'La cédula debe tener exactamente 10 dígitos numéricos.';
+    }
+    // Validar que teléfono sea numérico y de 10 dígitos
+    elseif (!is_numeric($telefono) || strlen($telefono) != 10) {
+        $error = 'El teléfono debe tener exactamente 10 dígitos numéricos.';
+    }
+    elseif (strlen($password) < 6) {
+        $error = 'La contraseña debe tener al menos 6 caracteres.';
     } else {
         // Verificar si el username ya existe
         if ($model->usernameExiste($username)) {
-            $_SESSION['error'] = 'El nombre de usuario ya está en uso.';
-            header('Location: registrar.php');
-            exit();
+            $error = 'El nombre de usuario ya está en uso.';
         }
         // Verificar si la cédula ya existe
         elseif ($model->ccExiste($cc)) {
-            $_SESSION['error'] = 'La cédula ya está registrada en el sistema.';
-            header('Location: registrar.php');
-            exit();
+            $error = 'La cédula ya está registrada en el sistema.';
         } else {
             $data = [
                 'nombres' => $nombres,
@@ -51,21 +52,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'direccion' => $direccion,
                 'username' => $username,
                 'password' => $password,
-                'id_tipo' => 3 // Por defecto: usuario cliente tienda virtual
+                'id_tipo' => 3
             ];
 
             $resultado = $model->crearConPersona($data);
 
             if ($resultado['success']) {
-                $_SESSION['success'] = '¡Usuario registrado exitosamente!';
-                $registroExitoso = true;
-                // NO redirigimos inmediatamente, dejamos que se muestre el mensaje
-                // y vaciamos POST para que no se rellenen los campos
+                $success = '¡Usuario registrado exitosamente!';
+                // Limpiar POST para no rellenar el formulario
                 $_POST = [];
             } else {
-                $_SESSION['error'] = 'Error al registrar: ' . $resultado['message'];
-                header('Location: registrar.php');
-                exit();
+                $error = 'Error al registrar: ' . $resultado['message'];
             }
         }
     }
@@ -76,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Registro</title>
-    <meta http-equiv="refresh" content="3;url=index.php">
     <style>
         body {
             background: #0f172a;
@@ -135,11 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #16a34a;
         }
 
-        button:disabled {
-            background: #4a5568;
-            cursor: not-allowed;
-        }
-
         .error {
             background: #dc2626;
             color: white;
@@ -152,10 +143,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .success {
             background: #22c55e;
             color: white;
-            padding: 10px;
+            padding: 15px;
             margin-bottom: 15px;
             border-radius: 8px;
             text-align: center;
+            font-weight: bold;
         }
 
         .login-link {
@@ -178,100 +170,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: center;
             margin-top: 10px;
         }
-
-        .redirect-message {
-            font-size: 13px;
-            color: #94a3b8;
-            text-align: center;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Registro de Usuario</h2>
 
-        <?php if (isset($_SESSION['error'])): ?>
+        <?php if ($error): ?>
             <div class="error">
-                <?php 
-                    echo $_SESSION['error']; 
-                    unset($_SESSION['error']); 
-                ?>
+                <?php echo $error; ?>
             </div>
         <?php endif; ?>
 
-        <?php if (isset($_SESSION['success'])): ?>
+        <?php if ($success): ?>
             <div class="success">
-                <strong>✓ <?php echo $_SESSION['success']; ?></strong>
-                <div style="margin-top: 15px; font-size: 14px;">
-                    Serás redirigido al inicio de sesión en 3 segundos...
-                </div>
-                <div style="margin-top: 10px;">
-                    <a href="index.php" style="color: white; font-weight: bold;">O haz clic aquí para ir ahora</a>
+                ✓ <?php echo $success; ?>
+                <div style="margin-top: 15px;">
+                    <a href="index.php" style="color: white; font-weight: bold;">→ Iniciar sesión ←</a>
                 </div>
             </div>
-            <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
-        <form method="POST" action="registrar.php">
-            <input type="text" name="nombres" placeholder="Nombres *" required 
-                   value="<?php echo isset($_POST['nombres']) ? htmlspecialchars($_POST['nombres']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+        <?php if (!$success): ?>
+        <form method="POST" action="Registro.php">
+            <input type="text" name="nombres" placeholder="Nombres" required 
+                   value="<?php echo isset($_POST['nombres']) ? htmlspecialchars($_POST['nombres']) : ''; ?>">
             
-            <input type="text" name="apellidos" placeholder="Apellidos *" required
-                   value="<?php echo isset($_POST['apellidos']) ? htmlspecialchars($_POST['apellidos']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+            <input type="text" name="apellidos" placeholder="Apellidos" required
+                   value="<?php echo isset($_POST['apellidos']) ? htmlspecialchars($_POST['apellidos']) : ''; ?>">
             
-            <input type="text" name="cc" placeholder="Cédula *" required
+            <input type="text" name="cc" placeholder="Cédula (10 dígitos)" required maxlength="10" pattern="[0-9]{10}"
                    value="<?php echo isset($_POST['cc']) ? htmlspecialchars($_POST['cc']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+                   title="La cédula debe tener exactamente 10 dígitos numéricos">
             
-            <input type="email" name="correo" placeholder="Correo electrónico *" required
-                   value="<?php echo isset($_POST['correo']) ? htmlspecialchars($_POST['correo']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+            <input type="email" name="correo" placeholder="Correo electrónico" required
+                   value="<?php echo isset($_POST['correo']) ? htmlspecialchars($_POST['correo']) : ''; ?>">
             
-            <input type="text" name="telefono" placeholder="Teléfono *" required
+            <input type="text" name="telefono" placeholder="Teléfono (10 dígitos)" required maxlength="10" pattern="[0-9]{10}"
                    value="<?php echo isset($_POST['telefono']) ? htmlspecialchars($_POST['telefono']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+                   title="El teléfono debe tener exactamente 10 dígitos numéricos">
             
-            <input type="text" name="direccion" placeholder="Dirección *" required
-                   value="<?php echo isset($_POST['direccion']) ? htmlspecialchars($_POST['direccion']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+            <input type="text" name="direccion" placeholder="Dirección" required
+                   value="<?php echo isset($_POST['direccion']) ? htmlspecialchars($_POST['direccion']) : ''; ?>">
             
-            <input type="text" name="username" placeholder="Nombre de usuario *" required
-                   value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+            <input type="text" name="username" placeholder="Nombre de usuario" required
+                   value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>">
             
-            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres) *" required
-                   <?php echo $registroExitoso ? 'disabled' : ''; ?>>
+            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
 
-            <button type="submit" <?php echo $registroExitoso ? 'disabled' : ''; ?>>Registrarse</button>
+            <button type="submit">Registrarse</button>
         </form>
 
-        <?php if (!$registroExitoso): ?>
         <div class="login-link">
             ¿Ya tienes cuenta? <a href="index.php">Inicia sesión aquí</a>
         </div>
-        <?php endif; ?>
         
         <div class="note">
-            * Todos los campos son obligatorios
-        </div>
-
-        <?php if ($registroExitoso): ?>
-        <div class="redirect-message">
-            <i class="fas fa-spinner fa-spin"></i> Redirigiendo...
+            * Cédula y teléfono deben tener exactamente 10 dígitos
         </div>
         <?php endif; ?>
     </div>
-
-    <?php if ($registroExitoso): ?>
-    <script>
-        // Redirección JavaScript por si el meta refresh no funciona
-        setTimeout(function() {
-            window.location.href = 'index.php';
-        }, 3000);
-    </script>
-    <?php endif; ?>
 </body>
 </html>
