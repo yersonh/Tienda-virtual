@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $pdo = Database::getConnection();
         $model = new UsuarioModel($pdo);
-        $usuario = $model->verificarCredenciales($nickname, $password);
+        $usuario = $model->validarCredenciales($nickname, $password);
         
         if ($usuario) {
             if ($usuario['estado'] !== 'Activo') {
