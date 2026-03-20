@@ -6,7 +6,7 @@ $action = $_GET['action'] ?? 'login';
 switch ($action) {
 
     case 'login':
-        require_once '../controllers/LoginController.php';
+        require_once 'TIENDA-VIRTUAL/controllers/LoginController.php';
         (new LoginController())->mostrarLogin();
         break;
 
