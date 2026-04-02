@@ -34,13 +34,13 @@ body {
 
 .form-group { margin-bottom:20px; }
 
-.input-with-icon { position:relative; }
+.input-with-icon { position:relative;  width: 100%;}
 .input-with-icon i {
     position:absolute; left:12px; top:50%;
     transform:translateY(-50%); color:#aaa;
 }
 .input-with-icon input {
-    width:100%; padding:12px 45px 12px 40px;
+    width:100%; padding:12px 55px 12px 40px; 
     border-radius:10px; border:none;
     background:#2c2f36; color:white;
 }
@@ -49,6 +49,7 @@ body {
     position:absolute; right:12px; top:50%;
     transform:translateY(-50%);
     background:none; border:none; color:#aaa; cursor:pointer;
+    z-index: 10;
 }
 
 .login-btn {
