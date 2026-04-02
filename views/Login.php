@@ -96,6 +96,14 @@ body {
         <img src="../imagenes/logosinfondo.png" class="logo-img">
     </div>
 
+    <div class="logo-section">
+        <img src="../imagenes/logosinfondo.png" class="logo-img">
+        <p style="color:#ccc; font-size:14px;">
+            Tienda virtual para la comercialización de maquinaria agrícola,
+            repuestos automotrices y productos de iluminación.
+        </p>
+    </div>
+
     <!-- MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
         <div class="error-message">
@@ -138,6 +146,20 @@ body {
         </a>
 
     </form>
+
+       <!-- LINKS -->
+    <div style="text-align:center; margin-top:15px;">
+        <a href="index.php?action=recuperar" style="color:#4fc3f7; font-size:13px;">
+            ¿Olvidó su contraseña?
+        </a>
+    </div>
+
+    <div style="text-align:center; margin-top:5px;">
+        <a href="index.php?action=reactivar" style="color:#ffd54f; font-size:13px;">
+            ¿Quieres reactivar tu cuenta?
+        </a>
+    </div>
+    
 </div>
 
 <script>
