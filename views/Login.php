@@ -40,7 +40,7 @@ body {
     transform:translateY(-50%); color:#aaa;
 }
 .input-with-icon input {
-    width:100%; padding:12px 40px;
+    width:100%; padding:12px 45px 12px 40px;
     border-radius:10px; border:none;
     background:#2c2f36; color:white;
 }
