@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../controllers/LoginController.php';
-require_once __DIR__ . '/../controllers/RegistroController.php';
+require_once __DIR__ . '/../Controllers/LoginController.php';
+require_once __DIR__ . '/../Controllers/RegistroController.php';
 
 $action = $_GET['action'] ?? 'login';
 
