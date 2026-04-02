@@ -94,10 +94,6 @@ body {
 
     <div class="logo-section">
         <img src="../imagenes/logosinfondo.png" class="logo-img">
-    </div>
-
-    <div class="logo-section">
-        <img src="../imagenes/logosinfondo.png" class="logo-img">
         <p style="color:#ccc; font-size:14px;">
             Tienda virtual para la comercialización de maquinaria agrícola,
             repuestos automotrices y productos de iluminación.
@@ -159,7 +155,7 @@ body {
             ¿Quieres reactivar tu cuenta?
         </a>
     </div>
-    
+
 </div>
 
 <script>
