@@ -16,6 +16,12 @@ if (!in_array($action, $publicas)) {
 
 switch ($action) {
 
+    switch ($action) {
+
+    case 'login':
+        require_once __DIR__ . '/../views/Login.php';
+        break;
+
     case 'iniciarSesion':
         (new LoginController())->iniciarSesion();
         break;
@@ -40,11 +46,14 @@ switch ($action) {
         Auth::soloClientes();
         require_once __DIR__ . '/../views/Tienda.php';
         break;
+
     case 'admin_panel':
         Auth::soloAdmin();
         require_once __DIR__ . '/../views/admin/nav.php';
         break;
+
     default:
         require_once __DIR__ . '/../views/Login.php';
         break;
+}
 }
