@@ -8,25 +8,26 @@ require_once __DIR__ . '/layouts/navbar.php';
 <div class="main container">
 
     <div style="
-        text-align:center;
-        margin-top:80px;
-        background:rgba(30,41,59,0.8);
+        max-width:600px;
+        margin:80px auto;
+        background:rgba(30,41,59,0.9);
         padding:40px;
         border-radius:15px;
-        box-shadow:0 0 20px rgba(0,0,0,0.5);
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(10px);
+        text-align:center;
         color:#e2e8f0;
+        box-shadow:0 0 25px rgba(0,0,0,0.6);
     ">
 
-        <h1 style="margin-bottom:15px; color:#38bdf8;">
+        <h1 style="color:#38bdf8;">
             👋 Bienvenido a NAYLEX Store
         </h1>
 
-        <p style="font-size:18px;">
+        <p style="margin-top:15px;">
             Selecciona una opción del menú para comenzar.
         </p>
 
-        <div style="margin-top:30px;">
+        <div style="margin-top:25px;">
 
             <a href="index.php?action=tienda" style="
                 background:linear-gradient(135deg,#38bdf8,#2563eb);

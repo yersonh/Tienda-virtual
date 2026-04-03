@@ -17,7 +17,7 @@ body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
     background:
-        linear-gradient(rgba(15,23,42,0.9), rgba(15,23,42,0.9)),
+        linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.7)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size: cover;
 }
@@ -27,7 +27,7 @@ body {
     display: flex;
     align-items: center;
     padding: 10px 30px;
-    background: rgba(30,41,59,0.8);
+    background: rgba(30,41,59,0.85);
     backdrop-filter: blur(10px);
     color: white;
     height: 90px;
@@ -60,6 +60,13 @@ body {
     font-weight: bold;
     font-size: 20px;
 }
+
+/* 🔥 SOLUCIÓN VISUAL */
+.main {
+    padding: 40px;
+    min-height: calc(100vh - 130px);
+}
+</style>
 </head>
 
 <body>
@@ -68,15 +75,16 @@ body {
 
     <h2>NAYLEX<br>STORE</h2>
 
-    <<a href="index.php?action=inicio">🌅Inicio</a>
+    <a href="index.php?action=inicio">🌅Inicio</a>
     <a href="index.php?action=tienda">🚜Productos</a>
     <a href="#">🛍️Pedidos</a>
     <a href="index.php?action=logout">🚫Cerrar sesión</a>
+
     <div class="sidebar-space"></div>
 
     <?php if(isset($_SESSION['nickname'])): ?>
-        <span style="background:#ceff39;color:#000;padding:6px 15px;border-radius:6px;">
-            ¡Bienvenido <?= $_SESSION['nickname'] ?>!
+        <span style="background:#38bdf8;color:#000;padding:6px 15px;border-radius:6px;">
+            👋 <?= $_SESSION['nickname'] ?>
         </span>
     <?php endif; ?>
 
