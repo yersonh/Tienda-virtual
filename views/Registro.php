@@ -1,7 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 $old = $_SESSION['old'] ?? [];
 ?>
 
@@ -14,17 +11,13 @@ $old = $_SESSION['old'] ?? [];
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-* {
-    box-sizing:border-box;
-}
-
 body {
-    margin:0;
-    font-family:'Segoe UI',sans-serif;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
     background:
-        linear-gradient(rgba(15,23,42,0.4), rgba(15,23,42,0.5)),
+        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
-    background-size:cover;
+    background-size: cover;
 
     display:flex;
     justify-content:center;
@@ -32,16 +25,26 @@ body {
     min-height:100vh;
 }
 
-/* CONTENEDOR */
+/* 🔥 CONTENEDOR GLASS */
 .container {
     background:rgba(30,41,59,0.7);
     backdrop-filter: blur(14px);
     padding:35px;
     border-radius:18px;
     width:420px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.6);
+    border:1px solid rgba(56,189,248,0.2);
 }
 
-/* INPUT */
+/* TÍTULO */
+h2 {
+    text-align:center;
+    margin-bottom:20px;
+    color:#38bdf8;
+    text-shadow:0 0 10px rgba(56,189,248,0.5);
+}
+
+/* INPUTS CON ICONOS */
 .input-group {
     position: relative;
     margin-bottom:12px;
@@ -57,14 +60,14 @@ body {
 
 .input-group input {
     width:100%;
-    padding:10px 15px 10px 40px; /* 🔥 PERFECTO */
+    padding:10px 10px 10px 40px;
     border-radius:8px;
     border:none;
     background:#334155;
     color:white;
 }
 
-/* BOTON */
+/* BOTÓN */
 button {
     width:100%;
     padding:12px;
@@ -73,6 +76,12 @@ button {
     border-radius:10px;
     color:white;
     font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover {
+    transform:scale(1.03);
 }
 
 /* MENSAJES */
@@ -82,6 +91,16 @@ button {
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
+    text-align:center;
+}
+
+.success {
+    background:rgba(34,197,94,0.2);
+    color:#86efac;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+    text-align:center;
 }
 </style>
 </head>
@@ -90,63 +109,113 @@ button {
 
 <div class="container">
 
-    <h2 style="text-align:center;color:#38bdf8;">Registro</h2>
+    <h2>Registro</h2>
 
+    <!-- MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
-        <div class="error">
+        <div class="error" id="mensajeError">
             <?= $_SESSION['error']; unset($_SESSION['error']); ?>
         </div>
     <?php endif; ?>
 
+    <?php if(isset($_SESSION['success'])): ?>
+        <div class="success" id="mensajeSuccess">
+            <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- FORMULARIO -->
     <form method="POST" action="index.php?action=guardarRegistro">
 
+        <!-- NOMBRES -->
         <div class="input-group">
             <i class="fas fa-user"></i>
-            <input type="text" name="nombres" placeholder="Nombres" required value="<?= $old['nombres'] ?? '' ?>">
+            <input type="text" name="nombres" placeholder="Nombres" required
+                value="<?= $old['nombres'] ?? '' ?>">
         </div>
 
+        <!-- APELLIDOS -->
         <div class="input-group">
             <i class="fas fa-user"></i>
-            <input type="text" name="apellidos" placeholder="Apellidos" required value="<?= $old['apellidos'] ?? '' ?>">
+            <input type="text" name="apellidos" placeholder="Apellidos" required
+                value="<?= $old['apellidos'] ?? '' ?>">
         </div>
 
+        <!-- CÉDULA -->
         <div class="input-group">
             <i class="fas fa-id-card"></i>
             <input type="text" name="cc" placeholder="Cédula" maxlength="10" required
-            oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
             value="<?= $old['cc'] ?? '' ?>">
         </div>
 
+        <!-- CORREO -->
         <div class="input-group">
             <i class="fas fa-envelope"></i>
-            <input type="email" name="correo" placeholder="Correo" required value="<?= $old['correo'] ?? '' ?>">
+            <input type="email" name="correo" placeholder="Correo electrónico" required
+                value="<?= $old['correo'] ?? '' ?>">
         </div>
 
+        <!-- TELÉFONO -->
         <div class="input-group">
             <i class="fas fa-phone"></i>
             <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" required
-            oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
             value="<?= $old['telefono'] ?? '' ?>">
         </div>
 
+        <!-- DIRECCIÓN -->
         <div class="input-group">
             <i class="fas fa-map-marker-alt"></i>
-            <input type="text" name="direccion" placeholder="Dirección" required value="<?= $old['direccion'] ?? '' ?>">
+            <input type="text" name="direccion" placeholder="Dirección" required
+                value="<?= $old['direccion'] ?? '' ?>">
         </div>
 
+        <!-- USUARIO -->
         <div class="input-group">
             <i class="fas fa-user-circle"></i>
-            <input type="text" name="username" placeholder="Usuario" required value="<?= $old['username'] ?? '' ?>">
+            <input type="text" name="username" placeholder="Usuario" required
+                value="<?= $old['username'] ?? '' ?>">
         </div>
 
+        <!-- PASSWORD -->
         <div class="input-group">
             <i class="fas fa-lock"></i>
-            <input type="password" name="password" placeholder="Contraseña" required>
+            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
         </div>
 
-        <button type="submit">Registrarse</button>
+        <!-- BOTÓN -->
+        <button type="submit">
+            <i class="fas fa-user-plus"></i> Registrarse
+        </button>
 
     </form>
+
+    <!-- VOLVER -->
+    <div style="text-align:center; margin-top:10px;">
+        <a href="index.php" style="color:#38bdf8;">
+            <i class="fas fa-arrow-left"></i> Volver al login
+        </a>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            const error = document.getElementById("mensajeError");
+            const success = document.getElementById("mensajeSuccess");
+
+            [error, success].forEach(msg => {
+                if (msg) {
+                    msg.style.opacity = "0";
+                    msg.style.transition = "0.5s";
+
+                    setTimeout(() => {
+                        msg.style.display = "none";
+                    }, 500);
+                }
+            });
+
+        }, 2500);
+    </script>
 
 </div>
 
