@@ -100,14 +100,14 @@ button {
         <input type="text" name="apellidos" placeholder="Apellidos" required
                value="<?= $old['apellidos'] ?? '' ?>">
 
-       <input type="text" name="cc" maxlength="10" required
+       <input type="text" name="cc" placeholder="Cédula" maxlength="10" required
         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
         value="<?= $old['cc'] ?? '' ?>">
 
         <input type="email" name="correo" placeholder="Correo electrónico" required
                value="<?= $old['correo'] ?? '' ?>">
 
-        <<input type="text" name="telefono" maxlength="10" required
+        <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" required
         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
         value="<?= $old['telefono'] ?? '' ?>">
 
