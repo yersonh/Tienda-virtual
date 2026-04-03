@@ -96,7 +96,7 @@ body {
 
     <?php if(isset($_SESSION['nickname'])): ?>
         <span style="background:#38bdf8;color:#000;padding:6px 15px;border-radius:6px;">
-            <i class="fas fa-user"></i> <?= $_SESSION['nickname'] ?>
+            <i class="fas fa-user"></i> Bienvenido <?= $_SESSION['nickname'] ?>
         </span>
     <?php endif; ?>
 
