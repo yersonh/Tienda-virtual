@@ -20,11 +20,10 @@ body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
     background:
-        linear-gradient(rgba(15,23,42,0.5), rgba(15,23,42,0.6)),
+        linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.3)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size: cover;
 }
-
 .sidebar {
     display: flex;
     align-items: center;
