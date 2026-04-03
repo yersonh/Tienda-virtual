@@ -10,10 +10,9 @@
     align-items: center;
     backdrop-filter: blur(10px);
 ">
+    <i class="fas fa-store"></i>&nbsp;
     Tienda Virtual del Sistema de Inventario TechSolutions
 </div>
-
-<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> -->
 
 </body>
 </html>
