@@ -11,6 +11,11 @@ $old = $_SESSION['old'] ?? [];
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
@@ -29,11 +34,12 @@ body {
 .container {
     background:rgba(30,41,59,0.7);
     backdrop-filter: blur(14px);
-    padding:35px;
+    padding:30px 20px;
     border-radius:18px;
-    width:420px;
+    width:100%;
     box-shadow:0 15px 40px rgba(0,0,0,0.6);
     border:1px solid rgba(56,189,248,0.2);
+    max-width:420px; 
 }
 
 /* TÍTULO */
@@ -60,11 +66,12 @@ h2 {
 
 .input-group input {
     width:100%;
-    padding:10px 10px 10px 40px;
-    border-radius:8px;
+    padding:12px 15px 12px 45px;
+    border-radius:10px;
     border:none;
     background:#334155;
     color:white;
+    box-sizing: border-box; 
 }
 
 /* BOTÓN */
@@ -101,6 +108,12 @@ button:hover {
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding:25px 15px;
+    }
 }
 </style>
 </head>
