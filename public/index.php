@@ -33,12 +33,12 @@ switch ($action) {
         break;
 
     case 'inicio':
-        require_once __DIR__ . '/../views/inicio.php';
+        require_once __DIR__ . '/../views/Inicio.php';
         break;
 
     case 'tienda':
         Auth::soloClientes();
-        require_once __DIR__ . '/../views/tienda.php';
+        require_once __DIR__ . '/../views/Tienda.php';
         break;
 
     default:
