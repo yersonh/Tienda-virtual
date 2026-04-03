@@ -1,4 +1,7 @@
 <?php
+echo "LOGIN OK";
+exit();
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
