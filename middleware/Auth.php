@@ -24,4 +24,14 @@ class Auth {
             exit();
         }
     }
+    public static function soloAdmin() {
+
+        self::verificarSesion();
+
+        if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 1) {
+            $_SESSION['error'] = "Acceso denegado. Área de administradores";
+            header("Location: index.php");
+            exit();
+        }
+    }
 }
