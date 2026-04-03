@@ -256,12 +256,6 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
 
         <div class="nav-menu">
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-            </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
@@ -272,16 +266,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
-                    <i class="fas fa-tags"></i>
-                    <span>Categorías</span>
-                </a>
-            </div>
-
-            <div class="nav-item">
-                <a href="#" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
                     <span>Pedidos</span>
-                    <span class="nav-badge">12</span>
                 </a>
             </div>
 
@@ -289,20 +275,6 @@ if (session_status() === PHP_SESSION_NONE) {
                 <a href="#" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span>Clientes</span>
-                </a>
-            </div>
-
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Ventas</span>
-                </a>
-            </div>
-
-            <div class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Reportes</span>
                 </a>
             </div>
 
