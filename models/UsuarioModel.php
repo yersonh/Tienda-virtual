@@ -71,14 +71,14 @@ class UsuarioModel {
     }
 
     /**
-     * Validar login SOLO CLIENTES
+     * Validar login
      */
     public function validarCredenciales($username, $password) {
 
         $query = "SELECT u.*, p.nombres, p.apellidos, p.cc, p.correo, p.telefono, p.direccion
                   FROM usuario u
                   INNER JOIN persona p ON u.id_persona = p.id_persona
-                  WHERE u.username = :username AND u.id_tipo = 3";
+                  WHERE u.username = :username";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':username' => $username]);
