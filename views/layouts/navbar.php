@@ -15,7 +15,11 @@ if (session_status() === PHP_SESSION_NONE) {
 <style>
 body {
     margin: 0;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-family: 'Segoe UI', sans-serif;
+    background:
+        linear-gradient(rgba(15,23,42,0.9), rgba(15,23,42,0.9)),
+        url('../imagenes/Fondo.png') no-repeat center center fixed;
+    background-size: cover;
 }
 
 /* 🔵 NAVBAR */
@@ -23,25 +27,28 @@ body {
     display: flex;
     align-items: center;
     padding: 10px 30px;
-    background-color: #00008B;
+    background: rgba(30,41,59,0.8);
+    backdrop-filter: blur(10px);
     color: white;
     height: 90px;
 }
 
 .sidebar h2 {
     margin-right: 40px;
+    color: #38bdf8;
 }
 
 .sidebar a {
-    color: white;
+    color: #e2e8f0;
     margin-right: 25px;
     text-decoration: none;
     font-weight: bold;
     font-size: 18px;
+    transition: 0.3s;
 }
 
 .sidebar a:hover {
-    color: #ddd;
+    color: #38bdf8;
 }
 
 .sidebar-space {
@@ -49,17 +56,10 @@ body {
 }
 
 .carrito-link {
-    color: #FFD700;
+    color: #facc15;
     font-weight: bold;
     font-size: 20px;
 }
-
-/* CONTENIDO */
-.main {
-    margin-top: 30px;
-    margin-bottom: 60px;
-}
-</style>
 </head>
 
 <body>
@@ -68,11 +68,10 @@ body {
 
     <h2>NAYLEX<br>STORE</h2>
 
-    <a href="index.php?action=inicio">🌅Inicio</a>
-    <a href="#">🚜Productos</a>
+    <<a href="index.php?action=inicio">🌅Inicio</a>
+    <a href="index.php?action=tienda">🚜Productos</a>
     <a href="#">🛍️Pedidos</a>
     <a href="index.php?action=logout">🚫Cerrar sesión</a>
-
     <div class="sidebar-space"></div>
 
     <?php if(isset($_SESSION['nickname'])): ?>
