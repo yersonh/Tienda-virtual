@@ -5,13 +5,22 @@ require_once __DIR__ . '/../Controllers/LoginController.php';
 require_once __DIR__ . '/../Controllers/RegistroController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
-$action = $_GET['action'] ?? 'login';
+// 🔥 OBTENER ACTION
+$action = $_GET['action'] ?? null;
 
-// RUTAS PUBLICAS
+// 🔥 SI NO HAY ACTION → FORZAR LOGIN
+if (!$action) {
+    header("Location: index.php?action=login");
+    exit();
+}
+
+// 🔥 RUTAS PUBLICAS
 $publicas = ['login','registro','guardarRegistro','iniciarSesion'];
 
-if (!in_array($action, $publicas)) {
-    Auth::verificarSesion();
+// 🔥 PROTEGER RUTAS PRIVADAS
+if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas)) {
+    header("Location: index.php?action=login");
+    exit();
 }
 
 switch ($action) {
@@ -51,7 +60,6 @@ switch ($action) {
         break;
 
     default:
-        require_once __DIR__ . '/../views/Login.php';
-        break;
-
+        header("Location: index.php?action=login");
+        exit();
 }
