@@ -86,7 +86,7 @@ body {
 /* 👁️ */
 .toggle-password {
     position:absolute;
-    right:25px;
+    right:40px;
     top:50%;
     transform:translateY(-50%);
     background:none;
