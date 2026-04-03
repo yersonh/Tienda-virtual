@@ -6,7 +6,6 @@ class LoginController {
 
     public function iniciarSesion() {
 
-        // ✅ CORREGIDO
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -41,26 +40,13 @@ class LoginController {
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
 
-        switch ($usuario['id_tipo']) {
-            case 1:
-                header('Location: admin_dashboard.php');
-                break;
-            case 2:
-                header('Location: dashboard.php');
-                break;
-            case 3:
-                header('Location: tienda.php');
-                break;
-            default:
-                header('Location: dashboard.php');
-        }
-
+        // 🔥 CORREGIDO (MVC)
+        header("Location: index.php?action=inicio");
         exit();
     }
 
     public function logout() {
 
-        // ✅ CORREGIDO
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -69,4 +55,4 @@ class LoginController {
         header("Location: index.php");
         exit();
     }
-}
+} 
