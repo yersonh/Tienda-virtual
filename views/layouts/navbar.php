@@ -12,6 +12,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+<!-- 🔥 FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
 body {
     margin: 0;
@@ -22,7 +25,6 @@ body {
     background-size: cover;
 }
 
-/* 🔵 NAVBAR */
 .sidebar {
     display: flex;
     align-items: center;
@@ -49,6 +51,7 @@ body {
 
 .sidebar a:hover {
     color: #38bdf8;
+    transform: scale(1.05);
 }
 
 .sidebar-space {
@@ -57,15 +60,9 @@ body {
 
 .carrito-link {
     color: #facc15;
-    font-weight: bold;
     font-size: 20px;
 }
 
-a:hover {
-    transform: scale(1.05);
-}
-
-/* 🔥 SOLUCIÓN VISUAL */
 .main {
     padding: 40px;
     min-height: calc(100vh - 130px);
@@ -79,20 +76,38 @@ a:hover {
 
     <h2>NAYLEX<br>STORE</h2>
 
-    <a href="index.php?action=inicio">🌅Inicio</a>
-    <a href="index.php?action=tienda">🚜Productos</a>
-    <a href="#">🛍️Pedidos</a>
-    <a href="index.php?action=logout">🚫Cerrar sesión</a>
+    <a href="index.php?action=inicio">
+        <i class="fas fa-home"></i> Inicio
+    </a>
+
+    <a href="index.php?action=tienda">
+        <i class="fas fa-tractor"></i> Productos
+    </a>
+
+    <a href="#">
+        <i class="fas fa-box"></i> Pedidos
+    </a>
+
+    <a href="index.php?action=logout">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+    </a>
 
     <div class="sidebar-space"></div>
 
     <?php if(isset($_SESSION['nickname'])): ?>
         <span style="background:#38bdf8;color:#000;padding:6px 15px;border-radius:6px;">
-            👋 <?= $_SESSION['nickname'] ?>
+            <i class="fas fa-user"></i> <?= $_SESSION['nickname'] ?>
         </span>
     <?php endif; ?>
 
-    <a href="#" class="carrito-link">🛒</a>
-    <a href="#">Perfil 👤</a>
+    <div class="sidebar-space"></div>
+
+    <a href="#" class="carrito-link">
+        <i class="fas fa-shopping-cart"></i>
+    </a>
+
+    <a href="#">
+        <i class="fas fa-user-circle"></i> Perfil
+    </a>
 
 </div>
