@@ -47,7 +47,7 @@ h2 {
     text-align:center;
     margin-bottom:20px;
     color:#38bdf8;
-    text-shadow:0 0 10px rgba(56,189,248,0.5);
+    text-shadow:0 0 16px rgba(56,189,248,0.5);
 }
 
 /* INPUTS CON ICONOS */
