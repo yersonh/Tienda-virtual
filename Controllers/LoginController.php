@@ -40,9 +40,15 @@ class LoginController {
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
 
-        // 🔥 CORREGIDO (MVC)
-        header("Location: index.php?action=inicio");
-        exit();
+        if ($usuario['id_tipo'] == 1) {
+            header("Location: index.php?action=admin_panel");
+            exit();
+        }
+
+        if ($usuario['id_tipo'] == 3) {
+            header("Location: index.php?action=inicio");
+            exit();
+        }
     }
 
     public function logout() {
