@@ -8,66 +8,99 @@ $old = $_SESSION['old'] ?? [];
 <meta charset="UTF-8">
 <title>Registro</title>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
 body {
-    background:#0f172a;
-    color:white;
-    font-family:sans-serif;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background:
+        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
+        url('../imagenes/Fondo.png') no-repeat center center fixed;
+    background-size: cover;
+
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
+    min-height:100vh;
 }
 
+/* 🔥 CONTENEDOR GLASS */
 .container {
-    background:#1e293b;
-    padding:30px;
-    border-radius:15px;
-    width:400px;
+    background:rgba(30,41,59,0.7);
+    backdrop-filter: blur(14px);
+    padding:35px;
+    border-radius:18px;
+    width:420px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.6);
+    border:1px solid rgba(56,189,248,0.2);
 }
 
+/* TÍTULO */
 h2 {
     text-align:center;
-    margin-bottom:15px;
+    margin-bottom:20px;
+    color:#38bdf8;
+    text-shadow:0 0 10px rgba(56,189,248,0.5);
 }
 
-input {
+/* INPUTS CON ICONOS */
+.input-group {
+    position: relative;
+    margin-bottom:12px;
+}
+
+.input-group i {
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#94a3b8;
+}
+
+.input-group input {
     width:100%;
-    padding:10px;
-    margin-bottom:10px;
+    padding:10px 10px 10px 40px;
     border-radius:8px;
     border:none;
     background:#334155;
     color:white;
 }
 
+/* BOTÓN */
 button {
     width:100%;
     padding:12px;
-    background:#22c55e;
+    background:linear-gradient(135deg,#38bdf8,#2563eb);
     border:none;
     border-radius:10px;
     color:white;
     font-weight:bold;
     cursor:pointer;
+    transition:0.3s;
 }
 
+button:hover {
+    transform:scale(1.03);
+}
+
+/* MENSAJES */
 .error {
-    background:#dc2626;
+    background:rgba(220,38,38,0.2);
+    color:#fca5a5;
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
-    transition: opacity 0.5s;
 }
 
 .success {
-    background:#22c55e;
+    background:rgba(34,197,94,0.2);
+    color:#86efac;
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
-    transition: opacity 0.5s;
 }
 </style>
 </head>
@@ -94,36 +127,75 @@ button {
     <!-- FORMULARIO -->
     <form method="POST" action="index.php?action=guardarRegistro">
 
-        <input type="text" name="nombres" placeholder="Nombres" required
-               value="<?= $old['nombres'] ?? '' ?>">
+        <!-- NOMBRES -->
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" name="nombres" placeholder="Nombres" required
+                value="<?= $old['nombres'] ?? '' ?>">
+        </div>
 
-        <input type="text" name="apellidos" placeholder="Apellidos" required
-               value="<?= $old['apellidos'] ?? '' ?>">
+        <!-- APELLIDOS -->
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" name="apellidos" placeholder="Apellidos" required
+                value="<?= $old['apellidos'] ?? '' ?>">
+        </div>
 
-       <input type="text" name="cc" placeholder="Cédula" maxlength="10" required
-        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
-        value="<?= $old['cc'] ?? '' ?>">
+        <!-- CÉDULA -->
+        <div class="input-group">
+            <i class="fas fa-id-card"></i>
+            <input type="text" name="cc" placeholder="Cédula" maxlength="10" required
+            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+            value="<?= $old['cc'] ?? '' ?>">
+        </div>
 
-        <input type="email" name="correo" placeholder="Correo electrónico" required
-               value="<?= $old['correo'] ?? '' ?>">
+        <!-- CORREO -->
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" name="correo" placeholder="Correo electrónico" required
+                value="<?= $old['correo'] ?? '' ?>">
+        </div>
 
-        <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" required
-        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
-        value="<?= $old['telefono'] ?? '' ?>">
+        <!-- TELÉFONO -->
+        <div class="input-group">
+            <i class="fas fa-phone"></i>
+            <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" required
+            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+            value="<?= $old['telefono'] ?? '' ?>">
+        </div>
 
-        <input type="text" name="direccion" placeholder="Dirección" required
-               value="<?= $old['direccion'] ?? '' ?>">
+        <!-- DIRECCIÓN -->
+        <div class="input-group">
+            <i class="fas fa-map-marker-alt"></i>
+            <input type="text" name="direccion" placeholder="Dirección" required
+                value="<?= $old['direccion'] ?? '' ?>">
+        </div>
 
-        <input type="text" name="username" placeholder="Usuario" required
-               value="<?= $old['username'] ?? '' ?>">
+        <!-- USUARIO -->
+        <div class="input-group">
+            <i class="fas fa-user-circle"></i>
+            <input type="text" name="username" placeholder="Usuario" required
+                value="<?= $old['username'] ?? '' ?>">
+        </div>
 
-        <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
+        <!-- PASSWORD -->
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
+        </div>
 
-        <button type="submit">Registrarse</button>
+        <!-- BOTÓN -->
+        <button type="submit">
+            <i class="fas fa-user-plus"></i> Registrarse
+        </button>
+
     </form>
 
+    <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php" style="color:#22c55e;">← Volver al login</a>
+        <a href="index.php" style="color:#38bdf8;">
+            <i class="fas fa-arrow-left"></i> Volver al login
+        </a>
     </div>
 
     <script>
