@@ -6,7 +6,10 @@ class LoginController {
 
     public function iniciarSesion() {
 
-        session_start();
+        // ✅ CORREGIDO
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
         $pdo = Database::getConnection();
         $model = new UsuarioModel($pdo);
@@ -20,7 +23,6 @@ class LoginController {
             exit();
         }
 
-        // 🔥 CORREGIDO
         $usuario = $model->validarCredenciales($nickname, $password);
 
         if (!$usuario) {
@@ -35,12 +37,10 @@ class LoginController {
             exit();
         }
 
-        // SESIÓN
         $_SESSION['id_usuario'] = $usuario['id_usuario'];
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
 
-        // REDIRECCIÓN
         switch ($usuario['id_tipo']) {
             case 1:
                 header('Location: admin_dashboard.php');
@@ -59,8 +59,14 @@ class LoginController {
     }
 
     public function logout() {
-        session_start();
+
+        // ✅ CORREGIDO
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         session_destroy();
         header("Location: index.php");
+        exit();
     }
 }
