@@ -58,6 +58,7 @@ button {
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
+    transition: opacity 0.5s;
 }
 
 .success {
@@ -66,6 +67,7 @@ button {
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
+    transition: opacity 0.5s;
 }
 </style>
 </head>
@@ -78,13 +80,13 @@ button {
 
     <!-- MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
-        <div class="error">
+        <div class="error" id="mensajeError">
             <?= $_SESSION['error']; unset($_SESSION['error']); ?>
         </div>
     <?php endif; ?>
 
     <?php if(isset($_SESSION['success'])): ?>
-        <div class="success">
+        <div class="success" id="mensajeSuccess">
             <?= $_SESSION['success']; unset($_SESSION['success']); ?>
         </div>
     <?php endif; ?>
@@ -98,14 +100,16 @@ button {
         <input type="text" name="apellidos" placeholder="Apellidos" required
                value="<?= $old['apellidos'] ?? '' ?>">
 
-        <input type="text" name="cc" placeholder="Cédula (10 dígitos)" required
-               value="<?= $old['cc'] ?? '' ?>">
+       <input type="text" name="cc" maxlength="10" required
+        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+        value="<?= $old['cc'] ?? '' ?>">
 
         <input type="email" name="correo" placeholder="Correo electrónico" required
                value="<?= $old['correo'] ?? '' ?>">
 
-        <input type="text" name="telefono" placeholder="Teléfono (10 dígitos)" required
-               value="<?= $old['telefono'] ?? '' ?>">
+        <<input type="text" name="telefono" maxlength="10" required
+        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+        value="<?= $old['telefono'] ?? '' ?>">
 
         <input type="text" name="direccion" placeholder="Dirección" required
                value="<?= $old['direccion'] ?? '' ?>">
@@ -121,6 +125,25 @@ button {
     <div style="text-align:center; margin-top:10px;">
         <a href="index.php" style="color:#22c55e;">← Volver al login</a>
     </div>
+
+    <script>
+        setTimeout(() => {
+            const error = document.getElementById("mensajeError");
+            const success = document.getElementById("mensajeSuccess");
+
+            [error, success].forEach(msg => {
+                if (msg) {
+                    msg.style.opacity = "0";
+                    msg.style.transition = "0.5s";
+
+                    setTimeout(() => {
+                        msg.style.display = "none";
+                    }, 500);
+                }
+            });
+
+        }, 2500);
+    </script>
 
 </div>
 
