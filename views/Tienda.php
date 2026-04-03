@@ -7,12 +7,16 @@ require_once __DIR__ . '/layouts/navbar.php';
 
 <div class="main container">
 
-    <div style="text-align:center; margin-top:80px;">
+    <div style="
+        background:rgba(30,41,59,0.8);
+        padding:30px;
+        border-radius:15px;
+        color:#e2e8f0;
+        backdrop-filter: blur(10px);
+    ">
+        <h2 style="color:#38bdf8;">🛒 Catálogo de productos</h2>
 
-        <h2>Productos</h2>
-
-        <p>Aquí se mostrará el catálogo próximamente</p>
-
+        <p>Aquí se mostrarán los productos próximamente.</p>
     </div>
 
 </div>

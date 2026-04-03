@@ -10,27 +10,30 @@ require_once __DIR__ . '/layouts/navbar.php';
     <div style="
         text-align:center;
         margin-top:80px;
-        background:#1e293b;
+        background:rgba(30,41,59,0.8);
         padding:40px;
         border-radius:15px;
-        box-shadow:0 0 20px rgba(0,0,0,0.4);
+        box-shadow:0 0 20px rgba(0,0,0,0.5);
+        backdrop-filter: blur(12px);
+        color:#e2e8f0;
     ">
 
-        <h1 style="margin-bottom:15px;">
+        <h1 style="margin-bottom:15px; color:#38bdf8;">
             👋 Bienvenido a NAYLEX Store
         </h1>
 
-        <p style="font-size:18px; color:#ccc;">
+        <p style="font-size:18px;">
             Selecciona una opción del menú para comenzar.
         </p>
 
         <div style="margin-top:30px;">
+
             <a href="index.php?action=tienda" style="
-                background:#4fc3f7;
+                background:linear-gradient(135deg,#38bdf8,#2563eb);
                 padding:12px 25px;
                 border-radius:10px;
                 text-decoration:none;
-                color:#000;
+                color:white;
                 font-weight:bold;
                 margin-right:10px;
             ">
@@ -38,15 +41,16 @@ require_once __DIR__ . '/layouts/navbar.php';
             </a>
 
             <a href="#" style="
-                background:#22c55e;
+                background:linear-gradient(135deg,#22c55e,#16a34a);
                 padding:12px 25px;
                 border-radius:10px;
                 text-decoration:none;
-                color:#000;
+                color:white;
                 font-weight:bold;
             ">
                 🛍️ Mis pedidos
             </a>
+
         </div>
 
     </div>
