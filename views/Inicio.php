@@ -10,16 +10,17 @@ require_once __DIR__ . '/layouts/navbar.php';
     <div style="
         max-width:600px;
         margin:80px auto;
-        background:rgba(30,41,59,0.9);
+        background:rgba(30,41,59,0.65);
         padding:40px;
-        border-radius:15px;
-        backdrop-filter: blur(10px);
+        border-radius:18px;
+        backdrop-filter: blur(14px);
         text-align:center;
         color:#e2e8f0;
-        box-shadow:0 0 25px rgba(0,0,0,0.6);
+        box-shadow:0 10px 40px rgba(0,0,0,0.5);
+        border:1px solid rgba(56,189,248,0.2);
     ">
 
-        <h1 style="color:#38bdf8;">
+        <h1 style="color:#38bdf8; text-shadow:0 0 10px rgba(56,189,248,0.5);">
             👋 Bienvenido a NAYLEX Store
         </h1>
 

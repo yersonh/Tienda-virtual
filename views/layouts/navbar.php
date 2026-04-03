@@ -17,7 +17,7 @@ body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
     background:
-        linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.7)),
+        linear-gradient(rgba(15,23,42,0.5), rgba(15,23,42,0.6)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size: cover;
 }
@@ -59,6 +59,10 @@ body {
     color: #facc15;
     font-weight: bold;
     font-size: 20px;
+}
+
+a:hover {
+    transform: scale(1.05);
 }
 
 /* 🔥 SOLUCIÓN VISUAL */

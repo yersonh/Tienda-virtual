@@ -14,21 +14,22 @@ class RegistroController {
         $model = new UsuarioModel($pdo);
 
         $data = [
-            'nombres' => trim($_POST['nombres']),
-            'apellidos' => trim($_POST['apellidos']),
-            'cc' => trim($_POST['cc']),
-            'correo' => trim($_POST['correo']),
-            'telefono' => trim($_POST['telefono']),
-            'direccion' => trim($_POST['direccion']),
-            'username' => trim($_POST['username']),
-            'password' => trim($_POST['password']),
-            'id_tipo' => 3
+            'nombres' => trim($_POST['nombres'] ?? ''),
+            'apellidos' => trim($_POST['apellidos'] ?? ''),
+            'cc' => trim($_POST['cc'] ?? ''),
+            'correo' => trim($_POST['correo'] ?? ''),
+            'telefono' => trim($_POST['telefono'] ?? ''),
+            'direccion' => trim($_POST['direccion'] ?? ''),
+            'username' => trim($_POST['username'] ?? ''),
+            'password' => trim($_POST['password'] ?? ''),
+            'id_tipo' => 3 // SOLO CLIENTES
         ];
 
-        // 🔥 Guardar datos para no perderlos
+        // 🔥 Guardar datos para repoblar formulario
         $_SESSION['old'] = $data;
 
-        // VALIDACIONES
+        // ================= VALIDACIONES =================
+
         if (in_array('', $data)) {
             $_SESSION['error'] = "Todos los campos son obligatorios";
             header("Location: index.php?action=registro");
@@ -48,32 +49,39 @@ class RegistroController {
         }
 
         if (!is_numeric($data['cc']) || strlen($data['cc']) != 10) {
-            $_SESSION['error'] = "Cédula inválida";
+            $_SESSION['error'] = "La cédula debe tener 10 dígitos";
+            header("Location: index.php?action=registro");
+            exit();
+        }
+
+        if (!is_numeric($data['telefono']) || strlen($data['telefono']) != 10) {
+            $_SESSION['error'] = "El teléfono debe tener 10 dígitos";
             header("Location: index.php?action=registro");
             exit();
         }
 
         if ($model->usernameExiste($data['username'])) {
-            $_SESSION['error'] = "Usuario ya existe";
+            $_SESSION['error'] = "El usuario ya está en uso";
             header("Location: index.php?action=registro");
             exit();
         }
 
         if ($model->ccExiste($data['cc'])) {
-            $_SESSION['error'] = "Cédula ya registrada";
+            $_SESSION['error'] = "La cédula ya está registrada";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        // 🚀 REGISTRO
+        // ================= REGISTRO =================
+
         $resultado = $model->crearConPersona($data);
 
         if ($resultado['success']) {
-            unset($_SESSION['old']); // limpiar datos
-            $_SESSION['success'] = "¡Registro exitoso!";
+            unset($_SESSION['old']);
+            $_SESSION['success'] = "¡Registro exitoso! Ahora puedes iniciar sesión";
             header("Location: index.php");
         } else {
-            $_SESSION['error'] = "Error al registrar usuario";
+            $_SESSION['error'] = "Error al registrar el usuario";
             header("Location: index.php?action=registro");
         }
 
