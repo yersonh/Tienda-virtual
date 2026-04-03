@@ -1,3 +1,7 @@
+<?php
+$old = $_SESSION['old'] ?? [];
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -22,6 +26,11 @@ body {
     width:400px;
 }
 
+h2 {
+    text-align:center;
+    margin-bottom:15px;
+}
+
 input {
     width:100%;
     padding:10px;
@@ -40,6 +49,7 @@ button {
     border-radius:10px;
     color:white;
     font-weight:bold;
+    cursor:pointer;
 }
 
 .error {
@@ -47,6 +57,7 @@ button {
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
+    text-align:center;
 }
 
 .success {
@@ -54,6 +65,7 @@ button {
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
+    text-align:center;
 }
 </style>
 </head>
@@ -61,8 +73,10 @@ button {
 <body>
 
 <div class="container">
+
     <h2>Registro</h2>
 
+    <!-- MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
         <div class="error">
             <?= $_SESSION['error']; unset($_SESSION['error']); ?>
@@ -75,22 +89,36 @@ button {
         </div>
     <?php endif; ?>
 
+    <!-- FORMULARIO -->
     <form method="POST" action="index.php?action=guardarRegistro">
 
-        <input type="text" name="nombres" placeholder="Nombres" required>
-        <input type="text" name="apellidos" placeholder="Apellidos" required>
-        <input type="text" name="cc" placeholder="Cédula" required>
-        <input type="email" name="correo" placeholder="Correo" required>
-        <input type="text" name="telefono" placeholder="Teléfono" required>
-        <input type="text" name="direccion" placeholder="Dirección" required>
-        <input type="text" name="username" placeholder="Usuario" required>
-        <input type="password" name="password" placeholder="Contraseña" required>
+        <input type="text" name="nombres" placeholder="Nombres" required
+               value="<?= $old['nombres'] ?? '' ?>">
+
+        <input type="text" name="apellidos" placeholder="Apellidos" required
+               value="<?= $old['apellidos'] ?? '' ?>">
+
+        <input type="text" name="cc" placeholder="Cédula (10 dígitos)" required
+               value="<?= $old['cc'] ?? '' ?>">
+
+        <input type="email" name="correo" placeholder="Correo electrónico" required
+               value="<?= $old['correo'] ?? '' ?>">
+
+        <input type="text" name="telefono" placeholder="Teléfono (10 dígitos)" required
+               value="<?= $old['telefono'] ?? '' ?>">
+
+        <input type="text" name="direccion" placeholder="Dirección" required
+               value="<?= $old['direccion'] ?? '' ?>">
+
+        <input type="text" name="username" placeholder="Usuario" required
+               value="<?= $old['username'] ?? '' ?>">
+
+        <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
 
         <button type="submit">Registrarse</button>
-
     </form>
 
-    <div style="margin-top:10px;">
+    <div style="text-align:center; margin-top:10px;">
         <a href="index.php" style="color:#22c55e;">← Volver al login</a>
     </div>
 
