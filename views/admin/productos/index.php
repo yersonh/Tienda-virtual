@@ -15,7 +15,6 @@
         <table class="productos-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Imagen</th>
                     <th>Código</th>
                     <th>Nombre</th>
@@ -28,8 +27,7 @@
             </thead>
             <tbody>
                 <?php foreach($productos as $producto): ?>
-                <tr>
-                    <td style="vertical-align: middle;"><?= $producto['id_producto'] ?></td>
+                <tr style="height: 70px;">
                     <td style="vertical-align: middle;">
                         <?php 
                         $primeraImagen = !empty($producto['imagenes']) ? $producto['imagenes'][0] : null;
@@ -53,16 +51,18 @@
                             <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'Activo' : 'Inactivo' ?>
                         </span>
                     </td>
-                    <td style="vertical-align: middle;" class="acciones">
-                        <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="Ver">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="Eliminar" onclick="return confirm('¿Eliminar este producto?')">
-                            <i class="fas fa-trash"></i>
-                        </a>
+                    <td style="vertical-align: middle;">
+                        <div class="acciones">
+                            <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="Ver">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="Eliminar" onclick="return confirm('¿Eliminar este producto?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -80,6 +80,7 @@
         text-decoration: none;
         font-weight: 600;
         transition: 0.3s;
+        display: inline-block;
     }
     .btn-nuevo:hover {
         transform: translateY(-2px);
@@ -100,6 +101,7 @@
         padding: 12px;
         border-bottom: 1px solid rgba(56,189,248,0.2);
         color: #38bdf8;
+        vertical-align: middle;
     }
     .productos-table td {
         padding: 12px;
@@ -119,12 +121,15 @@
         height: 50px;
         object-fit: cover;
         border-radius: 8px;
+        display: block;
     }
     .badge {
         padding: 4px 10px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
+        display: inline-block;
+        white-space: nowrap;
     }
     .badge-success {
         background: rgba(34,197,94,0.2);
@@ -137,6 +142,7 @@
     .acciones {
         display: flex;
         gap: 12px;
+        align-items: center;
     }
     .btn-ver, .btn-editar, .btn-eliminar {
         color: #94a3b8;
