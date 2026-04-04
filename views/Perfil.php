@@ -1,5 +1,16 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 
+<?php
+// 🔥 GENERAR INICIALES DINÁMICAS
+$nombres = !empty($usuario['nombres']) ? explode(" ", $usuario['nombres']) : [''];
+$apellidos = !empty($usuario['apellidos']) ? explode(" ", $usuario['apellidos']) : [''];
+
+$inicialNombre = !empty($nombres[0]) ? strtoupper(substr($nombres[0], 0, 1)) : '';
+$inicialApellido = !empty($apellidos[0]) ? strtoupper(substr($apellidos[0], 0, 1)) : '';
+
+$iniciales = $inicialNombre . $inicialApellido;
+?>
+
 <div class="container-perfil">
 
     <!-- 🔥 MENSAJES -->
@@ -18,7 +29,7 @@
     <!-- 🔥 HEADER -->
     <div class="perfil-header">
         <div class="avatar">
-            <?= strtoupper(substr($_SESSION['nickname'], 0, 2)) ?>
+            <?= $iniciales ?>
         </div>
         <div>
             <h2>Perfil</h2>
