@@ -30,10 +30,20 @@
                 <?php foreach($productos as $producto): ?>
                 <tr>
                     <td><?= $producto['id_producto'] ?></td>
-                    <td>
-                        <div class="producto-imagen-mini">
-                            <i class="fas fa-image"></i>
-                        </div>
+                    <td class="imagen-cell">
+                        <?php 
+                        // La variable $imagenesProducto debe venir del controlador
+                        // Por ahora usamos la primera imagen si existe
+                        $primeraImagen = !empty($producto['imagenes']) ? $producto['imagenes'][0] : null;
+                        if ($primeraImagen):
+                            $nombreArchivo = basename($primeraImagen['url']);
+                        ?>
+                            <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" class="producto-imagen-mini-img">
+                        <?php else: ?>
+                            <div class="producto-imagen-mini">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        <?php endif; ?>
                     </td>
                     <td><?= htmlspecialchars($producto['codigo']) ?></td>
                     <td><?= htmlspecialchars($producto['nombre']) ?></td>
@@ -41,8 +51,8 @@
                     <td>$<?= number_format($producto['precio'], 2) ?></td>
                     <td><?= $producto['stock_p'] ?></td>
                     <td>
-                        <span class="badge <?= $producto['estado'] == 'Activo' ? 'badge-success' : 'badge-danger' ?>">
-                            <?= $producto['estado'] ?>
+                        <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
+                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'Activo' : 'Inactivo' ?>
                         </span>
                     </td>
                     <td class="acciones">
@@ -94,14 +104,23 @@
         padding: 12px;
         border-bottom: 1px solid rgba(56,189,248,0.1);
     }
+    .imagen-cell {
+        width: 60px;
+    }
     .producto-imagen-mini {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         background: rgba(56,189,248,0.1);
         border-radius: 8px;
         display: flex;
-            align-items: center;
-            justify-content: center;
+        align-items: center;
+        justify-content: center;
+    }
+    .producto-imagen-mini-img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 8px;
     }
     .badge {
         padding: 4px 10px;

@@ -17,6 +17,10 @@ class ProductoController {
         Auth::soloAdmin();
         $productos = $this->model->obtenerTodos();
         
+        foreach ($productos as &$producto) {
+            $producto['imagenes'] = $this->model->obtenerImagenes($producto['id_producto']);
+        }
+        
         ob_start();
         require_once __DIR__ . '/../views/admin/productos/index.php';
         $contenido = ob_get_clean();

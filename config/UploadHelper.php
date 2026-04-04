@@ -94,7 +94,7 @@ class UploadHelper {
         if (move_uploaded_file($archivo['tmp_name'], $rutaAbsoluta)) {
             error_log("Imagen guardada en: " . $rutaAbsoluta);
             
-            // Opcional: Redimensionar imagen si es muy grande
+            // Redimensionar imagen si es muy grande
             self::redimensionarImagen($rutaAbsoluta, $extension);
             
             return $rutaRelativa;
@@ -105,9 +105,63 @@ class UploadHelper {
     
     // Redimensionar imagen (opcional)
     private static function redimensionarImagen($ruta, $extension) {
-        // Aquí puedes implementar redimensionamiento con GD si lo necesitas
-        // Por ahora solo registramos que se guardó
-        error_log("Imagen lista: " . $ruta);
+        // Solo redimensionar si la extensión es jpg o jpeg
+        if (!in_array($extension, ['jpg', 'jpeg'])) {
+            return;
+        }
+        
+        // Cargar la imagen
+        $imagen = imagecreatefromjpeg($ruta);
+        if (!$imagen) {
+            return;
+        }
+        
+        // Obtener dimensiones actuales
+        $ancho_actual = imagesx($imagen);
+        $alto_actual = imagesy($imagen);
+        
+        // Verificar si necesita redimensionar
+        if ($ancho_actual <= self::$config['max_width'] && $alto_actual <= self::$config['max_height']) {
+            imagedestroy($imagen);
+            return;
+        }
+        
+        // Calcular nuevas dimensiones manteniendo proporción
+        $ratio_ancho = self::$config['max_width'] / $ancho_actual;
+        $ratio_alto = self::$config['max_height'] / $alto_actual;
+        $ratio = min($ratio_ancho, $ratio_alto);
+        
+        $nuevo_ancho = round($ancho_actual * $ratio);
+        $nuevo_alto = round($alto_actual * $ratio);
+        
+        // Crear imagen redimensionada
+        $nueva_imagen = imagecreatetruecolor($nuevo_ancho, $nuevo_alto);
+        imagecopyresampled($nueva_imagen, $imagen, 0, 0, 0, 0, $nuevo_ancho, $nuevo_alto, $ancho_actual, $alto_actual);
+        
+        // Guardar imagen redimensionada
+        imagejpeg($nueva_imagen, $ruta, self::$config['jpeg_quality']);
+        
+        // Liberar memoria
+        imagedestroy($imagen);
+        imagedestroy($nueva_imagen);
+        
+        error_log("Imagen redimensionada: " . $ruta);
+    }
+    
+    // Obtener la URL para mostrar la imagen usando image.php
+    public static function getImageUrl($rutaRelativa) {
+        // Si la ruta está vacía, devolver la imagen por defecto
+        if (empty($rutaRelativa)) {
+            return self::getDefaultPhoto();
+        }
+        
+        // Extraer el nombre del archivo y la carpeta
+        // Ejemplo: uploads/productos/1775266610_17_0.jpg
+        $partes = explode('/', $rutaRelativa);
+        $carpeta = $partes[1] ?? 'productos';
+        $archivo = end($partes);
+        
+        return 'image.php?folder=' . $carpeta . '&path=' . urlencode($archivo);
     }
     
     // Obtener configuración
