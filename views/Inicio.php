@@ -5,6 +5,9 @@ Auth::verificarSesion();
 require_once __DIR__ . '/layouts/navbar.php';
 ?>
 
+<!-- 🔥 FUENTES ELEGANTES -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
 <div class="main container">
 
     <div class="card-inicio">
@@ -35,6 +38,11 @@ require_once __DIR__ . '/layouts/navbar.php';
 
 <style>
 
+/* 🔥 FUENTE GLOBAL */
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
 /* CONTENEDOR */
 .card-inicio {
     max-width:600px;
@@ -49,15 +57,25 @@ require_once __DIR__ . '/layouts/navbar.php';
     border:1px solid rgba(56,189,248,0.2);
 }
 
-/* TITULO */
+/* 🔥 TITULO ELEGANTE */
 .card-inicio h1 {
     color:#38bdf8;
     margin-bottom:10px;
+    font-family: 'Playfair Display', serif; /* 🔥 elegante */
+    font-size: 34px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 15px rgba(56,189,248,0.6);
 }
 
 /* ICONO TITULO */
 .card-inicio h1 i {
     margin-right:10px;
+}
+
+/* TEXTO */
+.card-inicio p {
+    font-size:15px;
+    opacity:0.9;
 }
 
 /* BOTONES */
@@ -74,9 +92,9 @@ require_once __DIR__ . '/layouts/navbar.php';
     border-radius:10px;
     text-decoration:none;
     color:white;
-    font-weight:bold;
+    font-weight:500;
     margin-right:10px;
-    transition:0.3s;
+    transition:all 0.3s ease;
 }
 
 /* BOTON VERDE */
@@ -88,8 +106,8 @@ require_once __DIR__ . '/layouts/navbar.php';
     border-radius:10px;
     text-decoration:none;
     color:white;
-    font-weight:bold;
-    transition:0.3s;
+    font-weight:500;
+    transition:all 0.3s ease;
 }
 
 /* ICONOS BOTONES */
@@ -98,10 +116,11 @@ require_once __DIR__ . '/layouts/navbar.php';
     margin-right:8px;
 }
 
-/* HOVER */
+/* 🔥 HOVER MÁS PRO */
 .btn-azul:hover,
 .btn-verde:hover {
     transform:scale(1.05);
+    box-shadow:0 0 20px rgba(56,189,248,0.6);
 }
 
 </style>
