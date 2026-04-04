@@ -67,8 +67,13 @@
                     <label>Imágenes actuales</label>
                     <div class="imagenes-existentes">
                         <?php foreach($imagenes as $img): ?>
+                            <?php
+                            // Extraer el nombre del archivo de la ruta
+                            // Ejemplo: uploads/productos/1775266610_17_0.jpg -> 1775266610_17_0.jpg
+                            $nombreArchivo = basename($img['url']);
+                            ?>
                             <div class="imagen-item">
-                                <img src="<?= $img['url'] ?>" alt="Producto">
+                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto">
                                 <a href="index.php?action=productos_eliminar_imagen&id=<?= $img['id_imagen'] ?>&producto=<?= $producto['id_producto'] ?>" class="btn-eliminar-img" onclick="return confirm('¿Eliminar esta imagen?')">
                                     <i class="fas fa-trash"></i>
                                 </a>
