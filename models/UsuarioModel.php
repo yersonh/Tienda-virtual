@@ -15,7 +15,6 @@ class UsuarioModel {
         try {
             $this->conn->beginTransaction();
 
-            // INSERT persona
             $queryPersona = "INSERT INTO persona (nombres, apellidos, cc, correo, telefono, direccion)
                              VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)";
 
@@ -31,7 +30,6 @@ class UsuarioModel {
 
             $id_persona = $this->conn->lastInsertId();
 
-            // INSERT usuario
             $queryUsuario = "INSERT INTO usuario (id_persona, id_tipo, username, password, estado)
                              VALUES (:id_persona, :id_tipo, :username, :password, :estado)";
 
@@ -43,8 +41,6 @@ class UsuarioModel {
                 ':password' => password_hash($data['password'], PASSWORD_DEFAULT),
                 ':estado' => 'Activo'
             ]);
-
-            $id_usuario = $this->conn->lastInsertId();
 
             $this->conn->commit();
 
@@ -90,15 +86,8 @@ class UsuarioModel {
         return $stmt->fetchColumn() > 0;
     }
 
-    public function ccExiste($cc) {
+    public function ccExiste($cc, $id_persona = null) {
         $query = "SELECT COUNT(*) FROM persona WHERE cc = :cc";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':cc' => $cc]);
-        return $stmt->fetchColumn() > 0;
-    }
-
-    public function correoExiste($correo, $id_persona = null) {
-        $query = "SELECT COUNT(*) FROM persona WHERE correo = :correo";
 
         if ($id_persona) {
             $query .= " AND id_persona != :id_persona";
@@ -108,33 +97,42 @@ class UsuarioModel {
 
         if ($id_persona) {
             $stmt->execute([
-                ':correo' => $correo,
+                ':cc' => $cc,
                 ':id_persona' => $id_persona
             ]);
         } else {
-            $stmt->execute([':correo' => $correo]);
+            $stmt->execute([':cc' => $cc]);
         }
 
         return $stmt->fetchColumn() > 0;
     }
 
-    public function telefonoExiste($telefono, $id_persona = null) {
-        $query = "SELECT COUNT(*) FROM persona WHERE telefono = :telefono";
-
-        if ($id_persona) {
-            $query .= " AND id_persona != :id_persona";
-        }
+    public function correoExiste($correo, $id_persona) {
+        $query = "SELECT COUNT(*) 
+                  FROM persona 
+                  WHERE correo = :correo 
+                  AND id_persona != :id_persona";
 
         $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ':correo' => $correo,
+            ':id_persona' => $id_persona
+        ]);
 
-        if ($id_persona) {
-            $stmt->execute([
-                ':telefono' => $telefono,
-                ':id_persona' => $id_persona
-            ]);
-        } else {
-            $stmt->execute([':telefono' => $telefono]);
-        }
+        return $stmt->fetchColumn() > 0;
+    }
+
+    public function telefonoExiste($telefono, $id_persona) {
+        $query = "SELECT COUNT(*) 
+                  FROM persona 
+                  WHERE telefono = :telefono 
+                  AND id_persona != :id_persona";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ':telefono' => $telefono,
+            ':id_persona' => $id_persona
+        ]);
 
         return $stmt->fetchColumn() > 0;
     }
@@ -155,13 +153,12 @@ class UsuarioModel {
     }
 
     /**
-     * ACTUALIZAR PERFIL CON VALIDACIONES
+     * ACTUALIZAR PERFIL INTELIGENTE
      */
     public function actualizarPerfil($id_usuario, $data) {
 
         try {
 
-            // Obtener persona
             $usuario = $this->obtenerPorId($id_usuario);
 
             if (!$usuario) {
@@ -170,16 +167,27 @@ class UsuarioModel {
 
             $id_persona = $usuario['id_persona'];
 
-            // 🔥 VALIDACIONES
-            if ($this->correoExiste($data['correo'], $id_persona)) {
-                return ['success' => false, 'message' => 'El correo ya está en uso'];
+            // 🔥 SOLO VALIDAR SI CAMBIÓ
+
+            if ($data['correo'] !== $usuario['correo']) {
+                if ($this->correoExiste($data['correo'], $id_persona)) {
+                    return ['success' => false, 'message' => 'El correo ya está en uso'];
+                }
             }
 
-            if ($this->telefonoExiste($data['telefono'], $id_persona)) {
-                return ['success' => false, 'message' => 'El teléfono ya está en uso'];
+            if ($data['telefono'] !== $usuario['telefono']) {
+                if ($this->telefonoExiste($data['telefono'], $id_persona)) {
+                    return ['success' => false, 'message' => 'El teléfono ya está en uso'];
+                }
             }
 
-            // UPDATE
+            if ($data['cc'] !== $usuario['cc']) {
+                if ($this->ccExiste($data['cc'], $id_persona)) {
+                    return ['success' => false, 'message' => 'La cédula ya está en uso'];
+                }
+            }
+
+            // 🔥 UPDATE
             $query = "UPDATE persona 
                       SET cc = :cc,
                           nombres = :nombres,
