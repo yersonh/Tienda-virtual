@@ -258,7 +258,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="nav-menu">
 
             <div class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="index.php?action=productos" class="nav-link">
                     <i class="fas fa-box"></i>
                     <span>Productos</span>
                 </a>

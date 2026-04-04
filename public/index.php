@@ -58,7 +58,40 @@ switch ($action) {
         Auth::soloAdmin();
         require_once __DIR__ . '/../views/admin/nav.php';
         break;
+    case 'productos':
+        $controller = new ProductoController();
+        $controller->index();
+        break;
 
+    case 'productos_crear':
+        $controller = new ProductoController();
+        $controller->crear();
+        break;
+
+    case 'productos_guardar':
+        $controller = new ProductoController();
+        $controller->guardar();
+        break;
+
+    case 'productos_editar':
+        $controller = new ProductoController();
+        $controller->editar();
+        break;
+
+    case 'productos_actualizar':
+        $controller = new ProductoController();
+        $controller->actualizar();
+        break;
+
+    case 'productos_eliminar':
+        $controller = new ProductoController();
+        $controller->eliminar();
+        break;
+        
+    case 'productos_eliminar_imagen':
+        $controller = new ProductoController();
+        $controller->eliminarImagen();
+        break;
     default:
         header("Location: index.php?action=login");
         exit();
