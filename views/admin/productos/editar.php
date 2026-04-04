@@ -68,15 +68,13 @@
                     <div class="imagenes-existentes">
                         <?php foreach($imagenes as $img): ?>
                             <?php
-                            // Extraer el nombre del archivo de la ruta
-                            // Ejemplo: uploads/productos/1775266610_17_0.jpg -> 1775266610_17_0.jpg
                             $nombreArchivo = basename($img['url']);
                             ?>
-                            <div class="imagen-item">
+                            <div class="imagen-item" data-id="<?= $img['id_imagen'] ?>" data-producto="<?= $producto['id_producto'] ?>">
                                 <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto">
-                                <a href="index.php?action=productos_eliminar_imagen&id=<?= $img['id_imagen'] ?>&producto=<?= $producto['id_producto'] ?>" class="btn-eliminar-img" onclick="return confirm('¿Eliminar esta imagen?')">
+                                <button type="button" class="btn-eliminar-img" onclick="showDeleteModal(<?= $img['id_imagen'] ?>, <?= $producto['id_producto'] ?>)">
                                     <i class="fas fa-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -106,6 +104,28 @@
                 <a href="index.php?action=productos" class="btn-cancelar">Cancelar</a>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-trash-alt"></i>
+            <h3>Confirmar Eliminación</h3>
+        </div>
+        <div class="modal-body">
+            <p>¿Estás seguro de que deseas eliminar esta imagen?</p>
+            <p class="modal-warning">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-btn cancelar" onclick="closeModal()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <a href="#" id="confirmDeleteBtn" class="modal-btn eliminar">
+                <i class="fas fa-trash"></i> Eliminar
+            </a>
+        </div>
     </div>
 </div>
 
@@ -192,6 +212,12 @@
         justify-content: center;
         text-decoration: none;
         font-size: 12px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-eliminar-img:hover {
+        background: #ef4444;
+        transform: scale(1.1);
     }
     .upload-area {
         border: 2px dashed rgba(56,189,248,0.3);
@@ -279,6 +305,10 @@
         border-radius: 8px;
         cursor: pointer;
         font-weight: 600;
+        transition: 0.3s;
+    }
+    .btn-guardar:hover {
+        transform: translateY(-2px);
     }
     .btn-cancelar {
         background: rgba(239,68,68,0.1);
@@ -286,6 +316,10 @@
         text-decoration: none;
         padding: 12px 24px;
         border-radius: 8px;
+        transition: 0.3s;
+    }
+    .btn-cancelar:hover {
+        background: rgba(239,68,68,0.2);
     }
     .alert-error {
         background: rgba(239,68,68,0.2);
@@ -294,9 +328,160 @@
         border-radius: 10px;
         margin-bottom: 20px;
     }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        margin: 15% auto;
+        width: 90%;
+        max-width: 450px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        border: 1px solid rgba(239,68,68,0.3);
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .modal-header i {
+        font-size: 48px;
+        color: #ef4444;
+        margin-bottom: 10px;
+    }
+
+    .modal-header h3 {
+        color: white;
+        margin: 0;
+        font-size: 20px;
+    }
+
+    .modal-body {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .modal-body p {
+        color: #e2e8f0;
+        margin: 0 0 10px 0;
+    }
+
+    .modal-warning {
+        color: #f87171 !important;
+        font-size: 12px;
+    }
+
+    .modal-footer {
+        padding: 20px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        border-top: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .modal-btn {
+        padding: 10px 24px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.3s;
+        cursor: pointer;
+        border: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .modal-btn.cancelar {
+        background: rgba(100,116,139,0.2);
+        color: #94a3b8;
+    }
+
+    .modal-btn.cancelar:hover {
+        background: rgba(100,116,139,0.4);
+    }
+
+    .modal-btn.eliminar {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .modal-btn.eliminar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(239,68,68,0.4);
+    }
 </style>
 
 <script>
+    let pendingDelete = { id: null, producto: null };
+
+    function showDeleteModal(idImagen, idProducto) {
+        pendingDelete.id = idImagen;
+        pendingDelete.producto = idProducto;
+        
+        const modal = document.getElementById('deleteModal');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        
+        confirmBtn.href = `index.php?action=productos_eliminar_imagen&id=${idImagen}&producto=${idProducto}`;
+        
+        modal.style.display = 'block';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = 'none';
+        pendingDelete = { id: null, producto: null };
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+        const modal = document.getElementById('deleteModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+
+    // Cerrar con tecla ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Vista previa de imágenes
     document.getElementById('imagenes').addEventListener('change', function(e) {
         const preview = document.getElementById('previewImages');
         preview.innerHTML = '';
