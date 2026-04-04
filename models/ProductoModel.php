@@ -38,20 +38,23 @@ class ProductoModel {
 
     // Crear producto
     public function crear($datos) {
-        $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
-                  VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':nombre' => $datos['nombre'],
-            ':codigo' => $datos['codigo'],
-            ':descripcion' => $datos['descripcion'],
-            ':precio' => $datos['precio'],
-            ':stock' => $datos['stock'],
-            ':estado' => $datos['estado'],
-            ':id_categoria' => $datos['id_categoria']
-        ]);
-        return $this->conn->lastInsertId();
-    }
+    // Convertir estado a booleano
+    $estadoBool = ($datos['estado'] === 'Activo') ? true : false;
+    
+    $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
+              VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([
+        ':nombre' => $datos['nombre'],
+        ':codigo' => $datos['codigo'],
+        ':descripcion' => $datos['descripcion'],
+        ':precio' => $datos['precio'],
+        ':stock' => $datos['stock'],
+        ':estado' => $estadoBool,
+        ':id_categoria' => $datos['id_categoria']
+    ]);
+    return $this->conn->lastInsertId();
+}
 
     // Guardar imagen
     public function guardarImagen($id_producto, $url, $orden) {
@@ -66,28 +69,32 @@ class ProductoModel {
     }
 
     // Actualizar producto
-    public function actualizar($id, $datos) {
-        $query = "UPDATE producto SET 
-                  nombre = :nombre,
-                  codigo = :codigo,
-                  descripcion = :descripcion,
-                  precio = :precio,
-                  stock_p = :stock,
-                  estado = :estado,
-                  id_categoria = :id_categoria
-                  WHERE id_producto = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':id' => $id,
-            ':nombre' => $datos['nombre'],
-            ':codigo' => $datos['codigo'],
-            ':descripcion' => $datos['descripcion'],
-            ':precio' => $datos['precio'],
-            ':stock' => $datos['stock'],
-            ':estado' => $datos['estado'],
-            ':id_categoria' => $datos['id_categoria']
-        ]);
-    }
+   // Actualizar producto
+public function actualizar($id, $datos) {
+    // Convertir estado a booleano
+    $estadoBool = ($datos['estado'] === 'Activo') ? true : false;
+    
+    $query = "UPDATE producto SET 
+              nombre = :nombre,
+              codigo = :codigo,
+              descripcion = :descripcion,
+              precio = :precio,
+              stock_p = :stock,
+              estado = :estado,
+              id_categoria = :id_categoria
+              WHERE id_producto = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute([
+        ':id' => $id,
+        ':nombre' => $datos['nombre'],
+        ':codigo' => $datos['codigo'],
+        ':descripcion' => $datos['descripcion'],
+        ':precio' => $datos['precio'],
+        ':stock' => $datos['stock'],
+        ':estado' => $estadoBool,
+        ':id_categoria' => $datos['id_categoria']
+    ]);
+}
 
     // Eliminar producto
     public function eliminar($id) {
