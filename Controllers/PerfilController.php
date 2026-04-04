@@ -28,7 +28,7 @@ class PerfilController {
 
         // 🔥 Validar campos vacíos
         if (
-            empty($_POST['cc']) ||
+            // empty($_POST['cc']) ||
             empty($_POST['nombres']) ||
             empty($_POST['apellidos']) ||
             empty($_POST['correo']) ||
@@ -44,7 +44,7 @@ class PerfilController {
         $model = new UsuarioModel($pdo);
 
         $data = [
-            'cc' => trim($_POST['cc']),
+            // 'cc' => trim($_POST['cc']),
             'nombres' => trim($_POST['nombres']),
             'apellidos' => trim($_POST['apellidos']),
             'correo' => trim($_POST['correo']),

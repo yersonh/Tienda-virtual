@@ -40,13 +40,13 @@ $iniciales = $inicialNombre . $inicialApellido;
     <form method="POST" action="index.php?action=actualizarPerfil">
 
         <!-- CÉDULA -->
-        <div class="input-group-perfil">
+        <!-- <div class="input-group-perfil">
             <label>Cédula</label>
             <div class="input-icon">
                 <i class="fas fa-id-card"></i>
                 <input type="text" name="cc" value="<?= $usuario['cc'] ?>" required>
             </div>
-        </div>
+        </div> -->
 
         <!-- NOMBRES -->
         <div class="input-group-perfil">
