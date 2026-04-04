@@ -21,21 +21,49 @@ class PerfilController {
 
     public function actualizar() {
 
+        if (!isset($_SESSION['id_usuario'])) {
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        // 🔥 Validar campos vacíos
+        if (
+            empty($_POST['cc']) ||
+            empty($_POST['nombres']) ||
+            empty($_POST['apellidos']) ||
+            empty($_POST['correo']) ||
+            empty($_POST['telefono']) ||
+            empty($_POST['direccion'])
+        ) {
+            $_SESSION['error'] = "Todos los campos son obligatorios";
+            header("Location: index.php?action=perfil");
+            exit();
+        }
+
         $pdo = Database::getConnection();
         $model = new UsuarioModel($pdo);
 
         $data = [
-            'cc' => $_POST['cc'],
-            'nombres' => $_POST['nombres'],
-            'apellidos' => $_POST['apellidos'],
-            'correo' => $_POST['correo'],
-            'telefono' => $_POST['telefono'],
-            'direccion' => $_POST['direccion'],
+            'cc' => trim($_POST['cc']),
+            'nombres' => trim($_POST['nombres']),
+            'apellidos' => trim($_POST['apellidos']),
+            'correo' => trim($_POST['correo']),
+            'telefono' => trim($_POST['telefono']),
+            'direccion' => trim($_POST['direccion']),
         ];
 
-        $model->actualizarPerfil($_SESSION['id_usuario'], $data);
+        // 🔥 Ejecutar actualización
+        $resultado = $model->actualizarPerfil($_SESSION['id_usuario'], $data);
+
+        // 🔥 Manejo de respuesta del modelo
+        if (!$resultado['success']) {
+            $_SESSION['error'] = $resultado['message'];
+            header("Location: index.php?action=perfil");
+            exit();
+        }
 
         $_SESSION['success'] = "Datos actualizados correctamente";
         header("Location: index.php?action=perfil");
+        exit();
     }
 }
