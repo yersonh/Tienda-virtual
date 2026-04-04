@@ -4,6 +4,7 @@ session_start();
 require_once __DIR__ . '/../Controllers/LoginController.php';
 require_once __DIR__ . '/../Controllers/RegistroController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
+require_once __DIR__ . '/../Controllers/PerfilController.php';
 require_once __DIR__ . '/../Controllers/ProductoController.php';
 
 // 🔥 OBTENER ACTION
