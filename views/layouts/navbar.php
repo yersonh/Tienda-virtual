@@ -134,7 +134,7 @@ body {
         <i class="fas fa-shopping-cart"></i>
     </a>
 
-    <a href="#">
+    <a href="index.php?action=perfil">
         <i class="fas fa-user-circle"></i> Perfil
     </a>
 
