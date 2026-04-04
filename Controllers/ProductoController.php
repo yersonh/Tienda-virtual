@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/ProductoModel.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/UploadHelper.php';
 
 class ProductoController {
 
@@ -52,7 +53,7 @@ class ProductoController {
             
             $id_producto = $this->model->crear($datos);
             
-            // Guardar imágenes
+            // Guardar imágenes usando UploadHelper
             if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
                 $this->guardarImagenes($id_producto, $_FILES['imagenes']);
             }
@@ -96,7 +97,7 @@ class ProductoController {
             
             $this->model->actualizar($id, $datos);
             
-            // Guardar nuevas imágenes
+            // Guardar nuevas imágenes usando UploadHelper
             if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
                 $this->guardarImagenes($id, $_FILES['imagenes']);
             }
@@ -112,12 +113,16 @@ class ProductoController {
         Auth::soloAdmin();
         $id = $_GET['id'] ?? 0;
         
-        // Eliminar archivos del servidor
+        // Eliminar archivos del servidor usando UploadHelper
         $imagenes = $this->model->obtenerImagenes($id);
         foreach ($imagenes as $img) {
-            $ruta = __DIR__ . '/../' . $img['url'];
-            if (file_exists($ruta)) {
-                unlink($ruta);
+            // Extraer la ruta relativa del volumen
+            $rutaRelativa = str_replace('/uploads/', '', $img['url']);
+            $rutaAbsoluta = UploadHelper::getBasePath() . $rutaRelativa;
+            
+            if (file_exists($rutaAbsoluta)) {
+                unlink($rutaAbsoluta);
+                error_log("Archivo eliminado: " . $rutaAbsoluta);
             }
         }
         
@@ -142,9 +147,13 @@ class ProductoController {
         $img = $this->model->obtenerUrlImagen($id_imagen);
         
         if ($img) {
-            $ruta = __DIR__ . '/../' . $img['url'];
-            if (file_exists($ruta)) {
-                unlink($ruta);
+            // Extraer la ruta relativa del volumen
+            $rutaRelativa = str_replace('/uploads/', '', $img['url']);
+            $rutaAbsoluta = UploadHelper::getBasePath() . $rutaRelativa;
+            
+            if (file_exists($rutaAbsoluta)) {
+                unlink($rutaAbsoluta);
+                error_log("Archivo eliminado: " . $rutaAbsoluta);
             }
         }
         
@@ -157,19 +166,25 @@ class ProductoController {
     }
 
     private function guardarImagenes($id_producto, $archivos) {
-        $carpeta = 'uploads/productos/';
-        if (!is_dir(__DIR__ . '/../' . $carpeta)) {
-            mkdir(__DIR__ . '/../' . $carpeta, 0777, true);
-        }
-        
         $orden = 0;
         foreach ($archivos['tmp_name'] as $key => $tmp_name) {
             if ($archivos['error'][$key] === 0) {
-                $nombre = time() . '_' . $id_producto . '_' . $key . '.jpg';
-                $ruta = $carpeta . $nombre;
-                move_uploaded_file($tmp_name, __DIR__ . '/../' . $ruta);
-                $this->model->guardarImagen($id_producto, $ruta, $orden);
-                $orden++;
+                $archivo = [
+                    'name' => $archivos['name'][$key],
+                    'type' => $archivos['type'][$key],
+                    'tmp_name' => $archivos['tmp_name'][$key],
+                    'size' => $archivos['size'][$key]
+                ];
+                
+                try {
+                    // Usar UploadHelper para procesar y guardar la imagen
+                    $rutaRelativa = UploadHelper::procesarImagen($archivo, $id_producto, $orden);
+                    $this->model->guardarImagen($id_producto, $rutaRelativa, $orden);
+                    $orden++;
+                } catch (Exception $e) {
+                    error_log("Error al guardar imagen: " . $e->getMessage());
+                    $_SESSION['error'] = $e->getMessage();
+                }
             }
         }
     }
