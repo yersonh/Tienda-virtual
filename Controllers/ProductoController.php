@@ -182,27 +182,30 @@ class ProductoController {
     }
 
     private function guardarImagenes($id_producto, $archivos) {
-        $orden = 0;
-        foreach ($archivos['tmp_name'] as $key => $tmp_name) {
-            if ($archivos['error'][$key] === 0) {
-                $archivo = [
-                    'name' => $archivos['name'][$key],
-                    'type' => $archivos['type'][$key],
-                    'tmp_name' => $archivos['tmp_name'][$key],
-                    'size' => $archivos['size'][$key]
-                ];
-                
-                try {
-                    // Usar UploadHelper para procesar y guardar la imagen
-                    $rutaRelativa = UploadHelper::procesarImagen($archivo, $id_producto, $orden);
-                    $this->model->guardarImagen($id_producto, $rutaRelativa, $orden);
-                    $orden++;
-                } catch (Exception $e) {
-                    error_log("Error al guardar imagen: " . $e->getMessage());
-                    $_SESSION['error'] = $e->getMessage();
-                }
+    // Obtener el orden actual de las imágenes existentes
+    $imagenesExistentes = $this->model->obtenerImagenes($id_producto);
+    $orden = count($imagenesExistentes);
+    
+    foreach ($archivos['tmp_name'] as $key => $tmp_name) {
+        if ($archivos['error'][$key] === 0) {
+            $archivo = [
+                'name' => $archivos['name'][$key],
+                'type' => $archivos['type'][$key],
+                'tmp_name' => $archivos['tmp_name'][$key],
+                'size' => $archivos['size'][$key]
+            ];
+            
+            try {
+                // Usar UploadHelper para procesar y guardar la imagen
+                $rutaRelativa = UploadHelper::procesarImagen($archivo, $id_producto, $orden);
+                $this->model->guardarImagen($id_producto, $rutaRelativa, $orden);
+                $orden++;
+            } catch (Exception $e) {
+                error_log("Error al guardar imagen: " . $e->getMessage());
+                $_SESSION['error'] = $e->getMessage();
             }
         }
     }
+}
 }
 ?>

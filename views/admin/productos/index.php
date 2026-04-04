@@ -15,7 +15,6 @@
         <table class="productos-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Imagen</th>
                     <th>Código</th>
                     <th>Nombre</th>
@@ -29,7 +28,6 @@
             <tbody>
                 <?php foreach($productos as $producto): ?>
                 <tr>
-                    <td><?= $producto['id_producto'] ?></td>
                     <td class="imagen-cell">
                         <?php 
                         // La variable $imagenesProducto debe venir del controlador
