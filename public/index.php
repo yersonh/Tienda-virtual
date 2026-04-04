@@ -102,7 +102,12 @@ switch ($action) {
         $controller = new ProductoController();
         $controller->eliminarImagen();
         break;
-    default:
+    case 'productos_ver':
+        Auth::soloAdmin();
+        $controller = new ProductoController();
+        $controller->ver();
+        break;
+        default:
         header("Location: index.php?action=login");
         exit();
 }
