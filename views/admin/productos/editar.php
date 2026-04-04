@@ -51,8 +51,8 @@
                 <div class="form-group">
                     <label for="estado">Estado *</label>
                     <select id="estado" name="estado" required>
-                        <option value="Activo" <?= $producto['estado'] == 'Activo' ? 'selected' : '' ?>>Activo</option>
-                        <option value="Inactivo" <?= $producto['estado'] == 'Inactivo' ? 'selected' : '' ?>>Inactivo</option>
+                        <option value="1" <?= ($producto['estado'] == '1' || $producto['estado'] === true || $producto['estado'] === 't') ? 'selected' : '' ?>>Activo</option>
+                        <option value="0" <?= ($producto['estado'] == '0' || $producto['estado'] === false || $producto['estado'] === 'f') ? 'selected' : '' ?>>Inactivo</option>
                     </select>
                 </div>
 

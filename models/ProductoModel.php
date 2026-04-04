@@ -38,23 +38,23 @@ class ProductoModel {
 
     // Crear producto
     public function crear($datos) {
-    // Convertir estado a booleano
-    $estadoBool = ($datos['estado'] === 'Activo') ? true : false;
-    
-    $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
-              VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)";
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute([
-        ':nombre' => $datos['nombre'],
-        ':codigo' => $datos['codigo'],
-        ':descripcion' => $datos['descripcion'],
-        ':precio' => $datos['precio'],
-        ':stock' => $datos['stock'],
-        ':estado' => $estadoBool,
-        ':id_categoria' => $datos['id_categoria']
-    ]);
-    return $this->conn->lastInsertId();
-}
+        // Convertir estado a booleano
+        $estadoBool = ($datos['estado'] === 'Activo' || $datos['estado'] === '1' || $datos['estado'] === true) ? true : false;
+        
+        $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
+                  VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ':nombre' => $datos['nombre'],
+            ':codigo' => (int)$datos['codigo'],  // Convertir a entero
+            ':descripcion' => $datos['descripcion'],
+            ':precio' => (float)$datos['precio'],  // Convertir a decimal
+            ':stock' => (int)$datos['stock'],  // Convertir a entero
+            ':estado' => $estadoBool,
+            ':id_categoria' => (int)$datos['id_categoria']
+        ]);
+        return $this->conn->lastInsertId();
+    }
 
     // Guardar imagen
     public function guardarImagen($id_producto, $url, $orden) {
@@ -69,32 +69,31 @@ class ProductoModel {
     }
 
     // Actualizar producto
-   // Actualizar producto
-public function actualizar($id, $datos) {
-    // Convertir estado a booleano
-    $estadoBool = ($datos['estado'] === 'Activo') ? true : false;
-    
-    $query = "UPDATE producto SET 
-              nombre = :nombre,
-              codigo = :codigo,
-              descripcion = :descripcion,
-              precio = :precio,
-              stock_p = :stock,
-              estado = :estado,
-              id_categoria = :id_categoria
-              WHERE id_producto = :id";
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute([
-        ':id' => $id,
-        ':nombre' => $datos['nombre'],
-        ':codigo' => $datos['codigo'],
-        ':descripcion' => $datos['descripcion'],
-        ':precio' => $datos['precio'],
-        ':stock' => $datos['stock'],
-        ':estado' => $estadoBool,
-        ':id_categoria' => $datos['id_categoria']
-    ]);
-}
+    public function actualizar($id, $datos) {
+        // Convertir estado a booleano
+        $estadoBool = ($datos['estado'] === 'Activo' || $datos['estado'] === '1' || $datos['estado'] === true) ? true : false;
+        
+        $query = "UPDATE producto SET 
+                  nombre = :nombre,
+                  codigo = :codigo,
+                  descripcion = :descripcion,
+                  precio = :precio,
+                  stock_p = :stock,
+                  estado = :estado,
+                  id_categoria = :id_categoria
+                  WHERE id_producto = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ':id' => $id,
+            ':nombre' => $datos['nombre'],
+            ':codigo' => (int)$datos['codigo'],
+            ':descripcion' => $datos['descripcion'],
+            ':precio' => (float)$datos['precio'],
+            ':stock' => (int)$datos['stock'],
+            ':estado' => $estadoBool,
+            ':id_categoria' => (int)$datos['id_categoria']
+        ]);
+    }
 
     // Eliminar producto
     public function eliminar($id) {
@@ -103,14 +102,14 @@ public function actualizar($id, $datos) {
         $stmt->execute([':id' => $id]);
     }
 
-    // Eliminar TODAS las imágenes de un producto (para cuando se elimina el producto completo)
+    // Eliminar TODAS las imágenes de un producto
     public function eliminarImagenes($id_producto) {
         $query = "DELETE FROM producto_imagen WHERE id_producto = :id_producto";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':id_producto' => $id_producto]);
     }
 
-    // Eliminar UNA sola imagen por su ID (para cuando se elimina desde editar)
+    // Eliminar UNA sola imagen por su ID
     public function eliminarImagen($id_imagen) {
         $query = "DELETE FROM producto_imagen WHERE id_imagen = :id";
         $stmt = $this->conn->prepare($query);

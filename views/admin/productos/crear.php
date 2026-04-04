@@ -47,8 +47,8 @@
                 <div class="form-group">
                     <label for="estado">Estado *</label>
                     <select id="estado" name="estado" required>
-                        <option value="Activo">Activo</option>
-                        <option value="Inactivo">Inactivo</option>
+                        <option value="1" selected>Activo</option>
+                        <option value="0">Inactivo</option>
                     </select>
                 </div>
 
