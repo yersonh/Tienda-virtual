@@ -59,6 +59,14 @@ switch ($action) {
         Auth::soloAdmin();
         require_once __DIR__ . '/../views/admin/nav.php';
         break;
+
+    case 'perfil':
+        (new PerfilController())->verPerfil();
+        break;
+
+    case 'actualizarPerfil':
+        (new PerfilController())->actualizar();
+        break;
     case 'productos':
         $controller = new ProductoController();
         $controller->index();
