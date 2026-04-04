@@ -111,7 +111,19 @@ class ProductoController {
             exit();
         }
     }
-
+    // Ver detalle del producto
+    public function ver() {
+        Auth::soloAdmin();
+        $id = $_GET['id'] ?? 0;
+        $producto = $this->model->obtenerPorId($id);
+        $imagenes = $this->model->obtenerImagenes($id);
+        
+        ob_start();
+        require_once __DIR__ . '/../views/admin/productos/ver.php';
+        $contenido = ob_get_clean();
+        
+        require_once __DIR__ . '/../views/admin/nav.php';
+    }
     // Eliminar producto COMPLETO (con todas sus imágenes)
     public function eliminar() {
         Auth::soloAdmin();

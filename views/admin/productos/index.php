@@ -56,12 +56,16 @@
                         </span>
                     </td>
                     <td class="acciones">
+                        <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver">
+                            <i class="fas fa-eye"></i>
+                        </a>
                         <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar">
                             <i class="fas fa-edit"></i>
                         </a>
                         <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" onclick="return confirm('¿Eliminar este producto?')">
                             <i class="fas fa-trash"></i>
                         </a>
+
                     </td>
                 </tr>
                 <?php endforeach; ?>
