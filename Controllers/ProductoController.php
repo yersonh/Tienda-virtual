@@ -17,8 +17,8 @@ class ProductoController {
         Auth::soloAdmin();
         $productos = $this->model->obtenerTodos();
         
-        foreach ($productos as &$producto) {
-            $producto['imagenes'] = $this->model->obtenerImagenes($producto['id_producto']);
+        foreach ($productos as $key => $producto) {
+            $productos[$key]['imagenes'] = $this->model->obtenerImagenes($producto['id_producto']);
         }
         
         ob_start();
