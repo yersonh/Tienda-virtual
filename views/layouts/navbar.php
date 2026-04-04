@@ -15,6 +15,8 @@ if (session_status() === PHP_SESSION_NONE) {
 <!-- 🔥 FONT AWESOME -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
 <style>
 body {
     margin: 0;
@@ -38,6 +40,7 @@ body {
     margin-right: 40px;
     color: #38bdf8;
 }
+
 
 .sidebar a {
     color: #e2e8f0;
@@ -66,6 +69,29 @@ body {
     padding: 40px;
     min-height: calc(100vh - 130px);
 }
+
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: #38bdf8;
+
+    display: flex;
+    flex-direction: column; /* 🔥 esto lo baja */
+    line-height: 1.1;
+
+    letter-spacing: 2px;
+    text-transform: uppercase;
+
+    text-shadow: 0 0 10px rgba(56,189,248,0.6);
+}
+
+/* 🔥 STORE abajo más pequeño */
+.logo span {
+    font-size: 16px;
+    letter-spacing: 4px;
+    opacity: 0.7;
+}
 </style>
 </head>
 
@@ -73,7 +99,10 @@ body {
 
 <div class="sidebar">
 
-    <h2>NAYLEX<br>STORE</h2>
+    <h2 class="logo">
+        NAYLEX
+        <span>STORE</span>
+    </h2>
 
     <a href="index.php?action=inicio">
         <i class="fas fa-home"></i> Inicio
