@@ -15,6 +15,7 @@
         <table class="productos-table">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Imagen</th>
                     <th>Código</th>
                     <th>Nombre</th>
@@ -28,10 +29,9 @@
             <tbody>
                 <?php foreach($productos as $producto): ?>
                 <tr>
-                    <td class="imagen-cell">
+                    <td style="vertical-align: middle;"><?= $producto['id_producto'] ?></td>
+                    <td style="vertical-align: middle;">
                         <?php 
-                        // La variable $imagenesProducto debe venir del controlador
-                        // Por ahora usamos la primera imagen si existe
                         $primeraImagen = !empty($producto['imagenes']) ? $producto['imagenes'][0] : null;
                         if ($primeraImagen):
                             $nombreArchivo = basename($primeraImagen['url']);
@@ -43,27 +43,26 @@
                             </div>
                         <?php endif; ?>
                     </td>
-                    <td><?= htmlspecialchars($producto['codigo']) ?></td>
-                    <td><?= htmlspecialchars($producto['nombre']) ?></td>
-                    <td><?= htmlspecialchars($producto['categoria_nombre']) ?></td>
-                    <td>$<?= number_format($producto['precio'], 2) ?></td>
-                    <td><?= $producto['stock_p'] ?></td>
-                    <td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['codigo']) ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['nombre']) ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['categoria_nombre']) ?></td>
+                    <td style="vertical-align: middle;">$<?= number_format($producto['precio'], 2) ?></td>
+                    <td style="vertical-align: middle;"><?= $producto['stock_p'] ?></td>
+                    <td style="vertical-align: middle;">
                         <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
                             <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'Activo' : 'Inactivo' ?>
                         </span>
                     </td>
-                    <td class="acciones">
-                        <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver">
+                    <td style="vertical-align: middle;" class="acciones">
+                        <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="Ver">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar">
+                        <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" onclick="return confirm('¿Eliminar este producto?')">
+                        <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="Eliminar" onclick="return confirm('¿Eliminar este producto?')">
                             <i class="fas fa-trash"></i>
                         </a>
-
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -106,9 +105,6 @@
         padding: 12px;
         border-bottom: 1px solid rgba(56,189,248,0.1);
     }
-    .imagen-cell {
-        width: 60px;
-    }
     .producto-imagen-mini {
         width: 50px;
         height: 50px;
@@ -140,12 +136,16 @@
     }
     .acciones {
         display: flex;
-        gap: 10px;
+        gap: 12px;
     }
-    .btn-editar, .btn-eliminar {
+    .btn-ver, .btn-editar, .btn-eliminar {
         color: #94a3b8;
         text-decoration: none;
         transition: 0.3s;
+        font-size: 16px;
+    }
+    .btn-ver:hover {
+        color: #38bdf8;
     }
     .btn-editar:hover {
         color: #38bdf8;
