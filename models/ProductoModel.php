@@ -91,19 +91,26 @@ class ProductoModel {
 
     // Eliminar producto
     public function eliminar($id) {
-            $query = "DELETE FROM producto WHERE id_producto = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':id' => $id]);
-        }
+        $query = "DELETE FROM producto WHERE id_producto = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':id' => $id]);
+    }
 
-        // Eliminar imágenes de un producto
-        public function eliminarImagen($id_imagen) {
+    // Eliminar TODAS las imágenes de un producto (para cuando se elimina el producto completo)
+    public function eliminarImagenes($id_producto) {
+        $query = "DELETE FROM producto_imagen WHERE id_producto = :id_producto";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':id_producto' => $id_producto]);
+    }
+
+    // Eliminar UNA sola imagen por su ID (para cuando se elimina desde editar)
+    public function eliminarImagen($id_imagen) {
         $query = "DELETE FROM producto_imagen WHERE id_imagen = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':id' => $id_imagen]);
     }
 
-// Obtener URL de imagen por ID
+    // Obtener URL de imagen por ID
     public function obtenerUrlImagen($id_imagen) {
         $query = "SELECT url FROM producto_imagen WHERE id_imagen = :id";
         $stmt = $this->conn->prepare($query);

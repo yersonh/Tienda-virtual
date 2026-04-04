@@ -16,8 +16,11 @@ class ProductoController {
         Auth::soloAdmin();
         $productos = $this->model->obtenerTodos();
         
-        require_once __DIR__ . '/../views/admin/nav.php';
+        ob_start();
         require_once __DIR__ . '/../views/admin/productos/index.php';
+        $contenido = ob_get_clean();
+        
+        require_once __DIR__ . '/../views/admin/nav.php';
     }
 
     // Mostrar formulario crear
@@ -25,8 +28,11 @@ class ProductoController {
         Auth::soloAdmin();
         $categorias = $this->model->obtenerCategorias();
         
-        require_once __DIR__ . '/../views/admin/nav.php';
+        ob_start();
         require_once __DIR__ . '/../views/admin/productos/crear.php';
+        $contenido = ob_get_clean();
+        
+        require_once __DIR__ . '/../views/admin/nav.php';
     }
 
     // Guardar producto nuevo
@@ -65,8 +71,11 @@ class ProductoController {
         $imagenes = $this->model->obtenerImagenes($id);
         $categorias = $this->model->obtenerCategorias();
         
-        require_once __DIR__ . '/../views/admin/nav.php';
+        ob_start();
         require_once __DIR__ . '/../views/admin/productos/editar.php';
+        $contenido = ob_get_clean();
+        
+        require_once __DIR__ . '/../views/admin/nav.php';
     }
 
     // Actualizar producto
@@ -98,12 +107,12 @@ class ProductoController {
         }
     }
 
-    // Eliminar producto
+    // Eliminar producto COMPLETO (con todas sus imágenes)
     public function eliminar() {
         Auth::soloAdmin();
         $id = $_GET['id'] ?? 0;
         
-        // Eliminar imágenes del servidor
+        // Eliminar archivos del servidor
         $imagenes = $this->model->obtenerImagenes($id);
         foreach ($imagenes as $img) {
             $ruta = __DIR__ . '/../' . $img['url'];
@@ -112,7 +121,10 @@ class ProductoController {
             }
         }
         
-        $this->model->eliminarImagen($id);
+        // Eliminar TODAS las imágenes de la BD
+        $this->model->eliminarImagenes($id);
+        
+        // Eliminar el producto
         $this->model->eliminar($id);
         
         $_SESSION['success'] = "Producto eliminado exitosamente";
@@ -120,12 +132,13 @@ class ProductoController {
         exit();
     }
 
+    // Eliminar UNA sola imagen (desde el formulario de editar)
     public function eliminarImagen() {
         Auth::soloAdmin();
         $id_imagen = $_GET['id'] ?? 0;
         $id_producto = $_GET['producto'] ?? 0;
         
-        // Obtener la URL de la imagen usando el modelo
+        // Obtener la URL de la imagen
         $img = $this->model->obtenerUrlImagen($id_imagen);
         
         if ($img) {
@@ -135,7 +148,7 @@ class ProductoController {
             }
         }
         
-        // Eliminar de la BD usando el modelo
+        // Eliminar SOLO esa imagen de la BD
         $this->model->eliminarImagen($id_imagen);
         
         $_SESSION['success'] = "Imagen eliminada";

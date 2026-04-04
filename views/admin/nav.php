@@ -307,11 +307,19 @@ if (session_status() === PHP_SESSION_NONE) {
     </aside>
 
     <main class="main-content">
-        <div class="welcome-message">
-            <i class="fas fa-store"></i>
-            <h1>Bienvenido al Panel de Administración</h1>
-            <p>Selecciona una opción del menú lateral para comenzar</p>
-        </div>
+        <?php
+        if (isset($contenido) && !empty($contenido)) {
+            echo $contenido;
+        } else {
+            ?>
+            <div class="welcome-message">
+                <i class="fas fa-store"></i>
+                <h1>Bienvenido al Panel de Administración</h1>
+                <p>Selecciona una opción del menú lateral para comenzar</p>
+            </div>
+            <?php
+        }
+        ?>
     </main>
 </div>
 
