@@ -4,8 +4,11 @@
 
 /* 🌄 FONDO */
 body {
-    background: url('/img/fondo.jpg') no-repeat center center fixed;
-    background-size: cover;
+    min-height:100vh;
+    background:
+        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
+        url('../imagenes/Fondo.png') no-repeat center center fixed;
+    background-size:cover;
 }
 
 /* CONTENEDOR */
