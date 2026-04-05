@@ -1,131 +1,174 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 
 <style>
-
-/* 🌄 FONDO */
+/* 🌄 FONDO GLOBAL (IGUAL LOGIN) */
 body {
     min-height:100vh;
     background:
-        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
+        linear-gradient(rgba(15,23,42,0.5), rgba(15,23,42,0.6)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size:cover;
 }
 
-/* CONTENEDOR */
+/* CONTENEDOR PRINCIPAL */
 .main.container {
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 20px;
-    margin: 20px;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 30px;
+    margin: 30px auto;
+    max-width: 1200px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
 
 /* TITULO */
 .titulo {
     color: #38bdf8;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    font-weight: 600;
 }
 
 /* BUSCADOR GLOBAL */
 .buscador-global {
-    text-align: center;
-    margin-bottom: 20px;
+    text-align:center;
+    margin-bottom:25px;
 }
 
 .buscador-global input {
     width: 60%;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: #f1f5f9;
+    outline: none;
 }
 
-/* HEADER */
+/* HEADER CATEGORIA */
 .categoria-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
     margin: 30px 0 10px;
 }
 
 .categoria {
     color: #0f172a;
+    font-weight: 600;
 }
 
-/* BUSCADOR */
+/* BUSCADOR CATEGORIA */
 .buscador-categoria {
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: none;
+    background: #e2e8f0;
 }
 
-/* SCROLL */
-.carousel-container { position: relative; }
+/* CARRUSEL */
+.carousel-container {
+    position: relative;
+}
 
+/* BOTONES */
 .btn-scroll {
     position: absolute;
     top: 40%;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.5);
     border: none;
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     padding: 10px;
     border-radius: 50%;
     cursor: pointer;
+    z-index: 2;
 }
 
-.btn-left { left: -10px; }
-.btn-right { right: -10px; }
+.btn-left { left: -15px; }
+.btn-right { right: -15px; }
 
+/* SCROLL */
 .contenedor-productos {
     display: flex;
-    gap: 20px;
+    gap: 25px;
     overflow-x: auto;
-    padding: 10px 30px;
+    padding: 15px 35px;
 }
 
-.contenedor-productos::-webkit-scrollbar { display: none; }
+.contenedor-productos::-webkit-scrollbar {
+    display: none;
+}
 
 /* CARD */
 .card-producto {
-    background: rgba(255,255,255,0.95);
-    border-radius: 15px;
-    padding: 15px;
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
     width: 220px;
     min-width: 220px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    transition: 0.3s;
 }
 
+.card-producto:hover {
+    transform: translateY(-6px);
+}
+
+/* IMAGEN */
 .img-producto {
     width: 100%;
     height: 140px;
     object-fit: contain;
+    background: #f8fafc;
+    border-radius: 10px;
 }
 
-.nombre { margin: 10px 0; }
+/* TEXTO */
+.nombre {
+    margin: 10px 0;
+    font-size: 15px;
+}
 
 .precio {
     color: #2563eb;
     font-weight: bold;
+    margin-bottom: 5px;
 }
 
-.stock { font-size: 14px; }
+/* STOCK */
+.stock {
+    font-size: 13px;
+    margin-bottom: 10px;
+}
 
+/* FORM */
 .form-carrito {
     display: flex;
-    gap: 5px;
+    gap: 8px;
+    align-items: center;
 }
 
-.input-cantidad { width: 60px; }
+.input-cantidad {
+    width: 60px;
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
 
+/* BOTON */
 .btn-carrito {
     background: #38bdf8;
     border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
+    padding: 6px 12px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: 0.3s;
 }
 
+.btn-carrito:hover {
+    background: #2563eb;
+    color: white;
+}
 </style>
 
 <div class="main container">
