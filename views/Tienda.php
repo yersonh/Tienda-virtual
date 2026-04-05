@@ -164,3 +164,275 @@ max="<?= $p['stock_p'] ?>">
 </div>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
+<?php require_once __DIR__ . '/layouts/navbar.php'; ?>
+
+<style>
+body {
+    min-height:100vh;
+    background:
+        linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.95)),
+        url('../imagenes/Fondo.png') no-repeat center center fixed;
+    background-size:cover;
+    font-family: 'Poppins', sans-serif;
+}
+
+.main { padding: 40px; }
+
+.catalogo {
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 30px;
+}
+
+/* 🔥 TITULO */
+.titulo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    color: #38bdf8;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+/* 🔍 FILTROS */
+.filtros {
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:25px;
+}
+
+.filtros input, .filtros select {
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    background:#020617;
+    color:white;
+    outline:none;
+}
+
+.filtros button {
+    background:#38bdf8;
+    border:none;
+    border-radius:10px;
+    padding:10px 15px;
+    cursor:pointer;
+}
+
+/* CARD CATEGORIA */
+.categoria-card {
+    background:#1e293b;
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:30px;
+}
+
+.categoria { color:white; margin-bottom:10px; }
+
+/* PRODUCTOS */
+.contenedor-productos {
+    display:flex;
+    gap:20px;
+    overflow-x:auto;
+    padding:10px;
+}
+
+.contenedor-productos::-webkit-scrollbar {
+    display:none;
+}
+
+/* CARD */
+.card-producto {
+    background:#020617;
+    border-radius:15px;
+    padding:15px;
+    width:260px;
+    min-width:260px;
+    color:white;
+    transition:0.3s;
+}
+
+.card-producto:hover {
+    transform:scale(1.05);
+}
+
+.img-producto {
+    width:100%;
+    height:120px;
+    object-fit:contain;
+    background:#000;
+    border-radius:10px;
+}
+
+.nombre { margin:10px 0; }
+
+.precio {
+    color:#38bdf8;
+    font-weight:bold;
+}
+
+.stock {
+    font-size:12px;
+    margin-bottom:10px;
+}
+
+/* FORM */
+.form-carrito {
+    display:flex;
+    gap:5px;
+}
+
+.input-cantidad {
+    width:60px;
+    background:#000;
+    color:white;
+    border:none;
+    border-radius:5px;
+    padding:5px;
+}
+
+/* BOTON */
+.btn-carrito {
+    background: linear-gradient(135deg,#38bdf8,#2563eb);
+    border:none;
+    border-radius:6px;
+    padding:5px 10px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.btn-carrito:hover {
+    transform:scale(1.1);
+}
+</style>
+
+<div class="main">
+<div class="catalogo">
+
+<h2 class="titulo">CATÁLOGO DE PRODUCTOS</h2>
+
+<!-- 🔥 FILTROS -->
+<form method="GET" class="filtros">
+
+<input type="text" name="filtro" placeholder="Buscar..."
+value="<?= $_GET['filtro'] ?? '' ?>">
+
+<input type="number" name="precio_min" placeholder="Precio min"
+value="<?= $_GET['precio_min'] ?? '' ?>">
+
+<input type="number" name="precio_max" placeholder="Precio max"
+value="<?= $_GET['precio_max'] ?? '' ?>">
+
+<select name="categoria">
+<option value="">Todas las categorías</option>
+
+<?php foreach(array_keys($categorias) as $cat): ?>
+<option value="<?= $cat ?>"
+<?= (($_GET['categoria'] ?? '') == $cat) ? 'selected' : '' ?>>
+<?= $cat ?>
+</option>
+<?php endforeach; ?>
+
+</select>
+
+<button>Filtrar</button>
+
+</form>
+
+<?php foreach($categorias as $categoria => $productos): ?>
+
+<div class="categoria-card">
+
+<h3 class="categoria"><?= $categoria ?></h3>
+
+<div class="contenedor-productos">
+
+<?php foreach($productos as $p): ?>
+
+<div class="card-producto">
+
+<img src="<?= !empty($p['imagen']) 
+? 'image.php?folder=productos&path=' . basename($p['imagen']) 
+: 'default.png' ?>" class="img-producto">
+
+<div class="nombre"><?= $p['nombre'] ?></div>
+<div class="precio">$<?= number_format($p['precio'],0,',','.') ?></div>
+
+<div class="stock">
+<?= $p['stock_p'] > 0 ? 'Disponible: '.$p['stock_p'] : '<span style="color:red;">Agotado</span>' ?>
+</div>
+
+<div class="form-carrito">
+
+<input type="number"
+value="1"
+min="1"
+max="<?= $p['stock_p'] ?>"
+class="input-cantidad cantidad-input"
+data-id="<?= $p['id_producto'] ?>"
+<?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
+
+<button 
+class="btn-carrito agregar-carrito"
+data-id="<?= $p['id_producto'] ?>"
+<?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
+🛒
+</button>
+
+</div>
+
+</div>
+
+<?php endforeach; ?>
+
+</div>
+
+</div>
+
+<?php endforeach; ?>
+
+</div>
+</div>
+
+<!-- 🔥 JS AJAX -->
+<script>
+
+document.querySelectorAll(".agregar-carrito").forEach(btn => {
+
+    btn.addEventListener("click", function(){
+
+        let id = this.dataset.id;
+
+        let input = document.querySelector(`.cantidad-input[data-id='${id}']`);
+        let cantidad = input.value;
+
+        fetch("index.php?action=agregarCarrito", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: "id_producto=" + id + "&cantidad=" + cantidad
+        })
+        .then(res => res.text())
+        .then(response => {
+
+            if(response === "no_auth"){
+                alert("Debes iniciar sesión");
+                window.location.href = "index.php?action=login";
+                return;
+            }
+
+            this.innerHTML = "✅";
+
+            setTimeout(()=>{
+                this.innerHTML="🛒";
+            },1000);
+
+        });
+
+    });
+
+});
+
+</script>
+
+<?php require_once __DIR__ . '/layouts/footer.php'; ?>

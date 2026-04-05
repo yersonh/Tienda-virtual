@@ -13,16 +13,32 @@ require_once __DIR__ . '/../middleware/Auth.php';
 $action = $_GET['action'] ?? 'login';
 
 // 🔥 RUTAS PUBLICAS
-$publicas = ['login','registro','guardarRegistro','iniciarSesion','tienda','productoDetalle'];
+$publicas = [
+    'login',
+    'registro',
+    'guardarRegistro',
+    'iniciarSesion',
+    'tienda',
+    'productoDetalle',
+    'agregarCarrito' // 🔥 importante para AJAX
+];
 
 // 🔐 PROTECCIÓN
 if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas)) {
+
+    // 🔥 SI ES AJAX → NO REDIRIGIR
+    if ($action === 'agregarCarrito') {
+        echo "no_auth";
+        exit();
+    }
+
     header("Location: index.php?action=login");
     exit();
 }
 
 switch ($action) {
 
+    // 🔐 LOGIN
     case 'login':
         require_once __DIR__ . '/../views/Login.php';
         break;
@@ -43,11 +59,12 @@ switch ($action) {
         (new RegistroController())->registrar();
         break;
 
+    // 🏠 INICIO
     case 'inicio':
         require_once __DIR__ . '/../views/Inicio.php';
         break;
 
-    // 🛒 TIENDA
+    // 🛒 TIENDA (PUBLICA)
     case 'tienda':
         (new TiendaController())->index();
         break;
@@ -60,18 +77,19 @@ switch ($action) {
         (new CarritoController())->agregar();
         break;
 
-    // 🔐 ADMIN
-    case 'admin_panel':
-        Auth::soloAdmin();
-        require_once __DIR__ . '/../views/admin/nav.php';
-        break;
-
+    // 👤 PERFIL
     case 'perfil':
         (new PerfilController())->verPerfil();
         break;
 
     case 'actualizarPerfil':
         (new PerfilController())->actualizar();
+        break;
+
+    // 🔐 ADMIN
+    case 'admin_panel':
+        Auth::soloAdmin();
+        require_once __DIR__ . '/../views/admin/nav.php';
         break;
 
     case 'productos':
@@ -114,6 +132,7 @@ switch ($action) {
         (new ProductoController())->ver();
         break;
 
+    // ❌ DEFAULT
     default:
         header("Location: index.php?action=login");
         exit();
