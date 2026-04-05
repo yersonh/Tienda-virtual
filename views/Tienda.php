@@ -5,30 +5,33 @@
 body {
     min-height:100vh;
     background:
-        linear-gradient(rgba(15,23,42,0.5), rgba(15,23,42,0.6)),
+        linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.95)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size:cover;
+    font-family: 'Poppins', sans-serif;
 }
 
-/* CONTENEDOR PRINCIPAL */
-.main.container {
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(12px);
-    border-radius: 18px;
+/* CONTENEDOR */
+.main {
+    padding: 40px;
+}
+
+/* 🔥 CONTENEDOR GENERAL */
+.catalogo {
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
     padding: 30px;
-    margin: 30px auto;
-    max-width: 1200px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
 /* TITULO */
 .titulo {
     color: #38bdf8;
-    margin-bottom: 25px;
-    font-weight: 600;
+    margin-bottom: 20px;
 }
 
-/* BUSCADOR */
+/* 🔍 BUSCADOR GLOBAL */
 .buscador-global {
     text-align:center;
     margin-bottom:25px;
@@ -39,8 +42,18 @@ body {
     padding: 12px;
     border-radius: 12px;
     border: none;
-    background: #f1f5f9;
+    background: #020617;
+    color: white;
     outline: none;
+}
+
+/* 🔥 CARD CATEGORIA */
+.categoria-card {
+    background: linear-gradient(145deg,#1e293b,#020617);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.6);
 }
 
 /* HEADER */
@@ -48,129 +61,134 @@ body {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin: 30px 0 10px;
+    margin-bottom: 15px;
 }
 
 .categoria {
-    color: #0f172a;
+    color: #e2e8f0;
+    font-size: 20px;
     font-weight: 600;
 }
 
+/* BUSCADOR CATEGORIA */
 .buscador-categoria {
     padding: 8px 12px;
     border-radius: 10px;
     border: none;
-    background: #e2e8f0;
+    background: #020617;
+    color: white;
 }
 
 /* CARRUSEL */
-.carousel-container { position: relative; }
+.carousel-container { position:relative; }
 
+/* BOTONES */
 .btn-scroll {
-    position: absolute;
-    top: 40%;
+    position:absolute;
+    top:40%;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.6);
-    border: none;
-    color: white;
-    font-size: 18px;
-    padding: 10px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 2;
+    background: rgba(255,255,255,0.15);
+    border:none;
+    color:white;
+    font-size:18px;
+    padding:10px;
+    border-radius:50%;
+    cursor:pointer;
+    z-index:2;
+    transition:0.3s;
 }
 
-.btn-left { left: -15px; }
-.btn-right { right: -15px; }
+.btn-scroll:hover {
+    background:#38bdf8;
+}
+
+.btn-left { left:-15px; }
+.btn-right { right:-15px; }
 
 /* SCROLL */
 .contenedor-productos {
-    display: flex;
-    gap: 25px;
-    overflow-x: auto;
-    padding: 15px 35px;
+    display:flex;
+    gap:20px;
+    overflow-x:auto;
+    padding:10px 20px;
 }
 
-.contenedor-productos::-webkit-scrollbar {
-    display: none;
-}
+.contenedor-productos::-webkit-scrollbar { display:none; }
 
-/* 🔥 CARD OSCURA PRO */
+/* 🔥 CARD PRODUCTO */
 .card-producto {
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    border-radius: 18px;
-    padding: 18px;
-    width: 220px;
-    min-width: 220px;
-    color: #e2e8f0;
+    background: linear-gradient(145deg,#0f172a,#020617);
+    border-radius: 15px;
+    padding: 15px;
+    width: 200px;
+    min-width: 200px;
+    color: white;
     box-shadow: 0 6px 20px rgba(0,0,0,0.6);
     transition: 0.3s;
 }
 
 .card-producto:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+    transform: translateY(-6px) scale(1.03);
 }
 
 /* IMAGEN */
 .img-producto {
-    width: 100%;
-    height: 140px;
-    object-fit: contain;
-    background: #020617;
-    border-radius: 10px;
+    width:100%;
+    height:120px;
+    object-fit:contain;
+    background:#000;
+    border-radius:10px;
 }
 
 /* TEXTO */
 .nombre {
-    margin: 10px 0;
-    font-size: 15px;
-    color: #f1f5f9;
+    font-size:14px;
+    margin:10px 0;
 }
 
 .precio {
-    color: #38bdf8;
-    font-weight: bold;
-    margin-bottom: 5px;
+    color:#38bdf8;
+    font-weight:bold;
 }
 
+/* STOCK */
 .stock {
-    font-size: 13px;
-    margin-bottom: 10px;
+    font-size:12px;
+    margin-bottom:10px;
 }
 
 /* FORM */
 .form-carrito {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+    display:flex;
+    gap:5px;
 }
 
 .input-cantidad {
-    width: 60px;
-    padding: 5px;
-    border-radius: 6px;
-    border: none;
-    background: #020617;
-    color: white;
+    width:50px;
+    background:#000;
+    color:white;
+    border:none;
+    border-radius:5px;
 }
 
 /* BOTON */
 .btn-carrito {
     background: linear-gradient(135deg,#38bdf8,#2563eb);
-    border: none;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
+    border:none;
+    border-radius:6px;
+    padding:5px 10px;
+    cursor:pointer;
+    transition:0.3s;
 }
 
 .btn-carrito:hover {
-    transform: scale(1.1);
+    transform:scale(1.1);
 }
 </style>
 
-<div class="main container">
+<div class="main">
+
+<div class="catalogo">
 
 <h2 class="titulo">🛒 Catálogo de productos</h2>
 
@@ -180,56 +198,63 @@ body {
 
 <?php foreach($categorias as $categoria => $productos): ?>
 
-<div class="categoria-header">
-    <h3 class="categoria"><?= $categoria ?></h3>
-    <input type="text" class="buscador-categoria" placeholder="Buscar en <?= $categoria ?>">
-</div>
+<div class="categoria-card">
 
-<div class="carousel-container">
+    <div class="categoria-header">
+        <h3 class="categoria"><?= $categoria ?></h3>
+        <input type="text" class="buscador-categoria" placeholder="Buscar en <?= $categoria ?>">
+    </div>
 
-<button class="btn-scroll btn-left" onclick="scrollLeft('<?= md5($categoria) ?>')">❮</button>
-<button class="btn-scroll btn-right" onclick="scrollRight('<?= md5($categoria) ?>')">❯</button>
+    <div class="carousel-container">
 
-<div class="contenedor-productos" id="scroll-<?= md5($categoria) ?>">
+        <button class="btn-scroll btn-left" onclick="scrollLeft('<?= md5($categoria) ?>')">❮</button>
+        <button class="btn-scroll btn-right" onclick="scrollRight('<?= md5($categoria) ?>')">❯</button>
 
-<?php foreach($productos as $p): ?>
+        <div class="contenedor-productos" id="scroll-<?= md5($categoria) ?>">
 
-<div class="card-producto" data-nombre="<?= strtolower($p['nombre']) ?>">
+        <?php foreach($productos as $p): ?>
 
-<a href="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>">
+        <div class="card-producto" data-nombre="<?= strtolower($p['nombre']) ?>">
 
-<img src="<?= !empty($p['imagen']) 
-? 'image.php?folder=productos&path=' . basename($p['imagen']) 
-: 'default.png' ?>" class="img-producto">
+            <a href="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>">
 
-<div class="nombre"><?= $p['nombre'] ?></div>
-<div class="precio">$<?= number_format($p['precio'], 0, ',', '.') ?></div>
+                <img src="<?= !empty($p['imagen']) 
+                ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
+                : 'default.png' ?>" class="img-producto">
 
-</a>
+                <div class="nombre"><?= $p['nombre'] ?></div>
+                <div class="precio">$<?= number_format($p['precio'], 0, ',', '.') ?></div>
 
-<div class="stock">
-<?= $p['stock_p'] > 0 ? 'Disponible: '.$p['stock_p'] : '<span style="color:red;">Agotado</span>' ?>
-</div>
+            </a>
 
-<form method="POST" action="index.php?action=agregarCarrito" class="form-carrito">
+            <div class="stock">
+            <?= $p['stock_p'] > 0 ? 'Disponible: '.$p['stock_p'] : '<span style="color:red;">Agotado</span>' ?>
+            </div>
 
-<input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
+            <form method="POST" action="index.php?action=agregarCarrito" class="form-carrito">
 
-<input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>" class="input-cantidad"
-<?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
+                <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
 
-<button class="btn-carrito" <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>🛒</button>
+                <input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>"
+                class="input-cantidad" <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
 
-</form>
+                <button class="btn-carrito" <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>🛒</button>
+
+            </form>
+
+        </div>
+
+        <?php endforeach; ?>
+
+        </div>
+
+    </div>
 
 </div>
 
 <?php endforeach; ?>
 
 </div>
-</div>
-
-<?php endforeach; ?>
 
 </div>
 
@@ -246,7 +271,7 @@ document.getElementById("buscadorGlobal").addEventListener("keyup", function() {
 document.querySelectorAll(".buscador-categoria").forEach(input=>{
     input.addEventListener("keyup", function(){
         let v = this.value.toLowerCase();
-        let cards = this.closest(".categoria-header").nextElementSibling.querySelectorAll(".card-producto");
+        let cards = this.closest(".categoria-card").querySelectorAll(".card-producto");
         cards.forEach(p=>{
             p.style.display = p.dataset.nombre.includes(v) ? "block" : "none";
         });
