@@ -5,45 +5,23 @@ Auth::verificarSesion();
 require_once __DIR__ . '/layouts/navbar.php';
 ?>
 
-<!-- 🔥 FUENTES ELEGANTES -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
-
-<div class="main container">
-
-    <div class="card-inicio">
-
-        <h1>
-            <i class="fas fa-hand-wave"></i> Bienvenido a NAYLEX Store
-        </h1>
-
-        <p>
-            Selecciona una opción del menú para comenzar.
-        </p>
-
-        <div class="botones">
-
-            <a href="index.php?action=tienda" class="btn-azul">
-                <i class="fas fa-tractor"></i> Ver productos
-            </a>
-
-            <a href="#" class="btn-verde">
-                <i class="fas fa-box"></i> Mis pedidos
-            </a>
-
-        </div>
-
-    </div>
-
-</div>
 
 <style>
 
-/* 🔥 FUENTE GLOBAL */
+/* 🌄 FONDO GLOBAL */
 body {
+    background: url('/img/fondo.jpg') no-repeat center center fixed;
+    background-size: cover;
     font-family: 'Poppins', sans-serif;
 }
 
-/* CONTENEDOR */
+/* CONTENEDOR GENERAL (TRANSPARENTE) */
+.main.container {
+    background: transparent;
+}
+
+/* CARD PRINCIPAL */
 .card-inicio {
     max-width:600px;
     margin:80px auto;
@@ -57,19 +35,14 @@ body {
     border:1px solid rgba(56,189,248,0.2);
 }
 
-/* 🔥 TITULO ELEGANTE */
+/* TITULO */
 .card-inicio h1 {
     color:#38bdf8;
     margin-bottom:10px;
-    font-family: 'Playfair Display', serif; /* 🔥 elegante */
+    font-family: 'Playfair Display', serif;
     font-size: 34px;
     letter-spacing: 1px;
     text-shadow: 0 0 15px rgba(56,189,248,0.6);
-}
-
-/* ICONO TITULO */
-.card-inicio h1 i {
-    margin-right:10px;
 }
 
 /* TEXTO */
@@ -83,46 +56,61 @@ body {
     margin-top:25px;
 }
 
-/* BOTON AZUL */
-.btn-azul {
+/* BOTONES */
+.btn-azul, .btn-verde {
     display:inline-block;
+    padding:12px 25px;
+    border-radius:10px;
+    text-decoration:none;
+    color:white;
+    font-weight:500;
+    transition:all 0.3s ease;
+}
+
+.btn-azul {
     background:linear-gradient(135deg,#38bdf8,#2563eb);
     box-shadow:0 5px 15px rgba(37,99,235,0.5);
-    padding:12px 25px;
-    border-radius:10px;
-    text-decoration:none;
-    color:white;
-    font-weight:500;
-    margin-right:10px;
-    transition:all 0.3s ease;
 }
 
-/* BOTON VERDE */
 .btn-verde {
-    display:inline-block;
     background:linear-gradient(135deg,#22c55e,#16a34a);
     box-shadow:0 5px 15px rgba(34,197,94,0.5);
-    padding:12px 25px;
-    border-radius:10px;
-    text-decoration:none;
-    color:white;
-    font-weight:500;
-    transition:all 0.3s ease;
 }
 
-/* ICONOS BOTONES */
-.btn-azul i,
-.btn-verde i {
-    margin-right:8px;
-}
-
-/* 🔥 HOVER MÁS PRO */
-.btn-azul:hover,
-.btn-verde:hover {
+/* HOVER */
+.btn-azul:hover, .btn-verde:hover {
     transform:scale(1.05);
     box-shadow:0 0 20px rgba(56,189,248,0.6);
 }
 
 </style>
+
+<div class="main container">
+
+    <div class="card-inicio">
+
+        <h1>
+            👋 Bienvenido a NAYLEX Store
+        </h1>
+
+        <p>
+            Selecciona una opción del menú para comenzar.
+        </p>
+
+        <div class="botones">
+
+            <a href="index.php?action=tienda" class="btn-azul">
+                🛒 Ver productos
+            </a>
+
+            <a href="#" class="btn-verde">
+                📦 Mis pedidos
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
