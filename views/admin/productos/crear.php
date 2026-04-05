@@ -63,7 +63,7 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Arrastra o haz clic para subir imágenes</p>
                         <input type="file" id="imagenes" name="imagenes[]" multiple accept="image/jpeg,image/png,image/jpg" style="display: none;">
-                        <button type="button" class="btn-upload" onclick="document.getElementById('imagenes').click()">
+                        <button type="button" class="btn-upload">
                             Seleccionar imágenes
                         </button>
                     </div>
