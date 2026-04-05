@@ -3,23 +3,19 @@ session_start();
 
 require_once __DIR__ . '/../Controllers/LoginController.php';
 require_once __DIR__ . '/../Controllers/RegistroController.php';
-require_once __DIR__ . '/../middleware/Auth.php';
 require_once __DIR__ . '/../Controllers/PerfilController.php';
 require_once __DIR__ . '/../Controllers/ProductoController.php';
+require_once __DIR__ . '/../Controllers/TiendaController.php';
+require_once __DIR__ . '/../Controllers/CarritoController.php';
+require_once __DIR__ . '/../middleware/Auth.php';
 
-// 🔥 OBTENER ACTION
-$action = $_GET['action'] ?? null;
+// 🔥 ACTION
+$action = $_GET['action'] ?? 'login';
 
-// 🔥 SI NO HAY ACTION → FORZAR LOGIN
-if (!$action) {
-    header("Location: index.php?action=login");
-    exit();
-}
+// 🔥 RUTAS PUBLICAS (IMPORTANTE)
+$publicas = ['login','registro','guardarRegistro','iniciarSesion','tienda','productoDetalle'];
 
-// 🔥 RUTAS PUBLICAS
-$publicas = ['login','registro','guardarRegistro','iniciarSesion'];
-
-// 🔥 PROTEGER RUTAS PRIVADAS
+// 🔥 PROTEGER SOLO LO NECESARIO
 if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas)) {
     header("Location: index.php?action=login");
     exit();
@@ -51,11 +47,20 @@ switch ($action) {
         require_once __DIR__ . '/../views/Inicio.php';
         break;
 
+    // 🛍️ TIENDA (LIBRE)
     case 'tienda':
-        Auth::soloClientes();
-        require_once __DIR__ . '/../views/Tienda.php';
+        (new TiendaController())->index();
         break;
 
+    case 'productoDetalle':
+        (new TiendaController())->detalle();
+        break;
+
+    case 'agregarCarrito':
+        (new CarritoController())->agregar();
+        break;
+
+    // 🔐 ADMIN
     case 'admin_panel':
         Auth::soloAdmin();
         require_once __DIR__ . '/../views/admin/nav.php';
@@ -68,46 +73,48 @@ switch ($action) {
     case 'actualizarPerfil':
         (new PerfilController())->actualizar();
         break;
+
     case 'productos':
-        $controller = new ProductoController();
-        $controller->index();
+        Auth::soloAdmin();
+        (new ProductoController())->index();
         break;
 
     case 'productos_crear':
-        $controller = new ProductoController();
-        $controller->crear();
+        Auth::soloAdmin();
+        (new ProductoController())->crear();
         break;
 
     case 'productos_guardar':
-        $controller = new ProductoController();
-        $controller->guardar();
+        Auth::soloAdmin();
+        (new ProductoController())->guardar();
         break;
 
     case 'productos_editar':
-        $controller = new ProductoController();
-        $controller->editar();
+        Auth::soloAdmin();
+        (new ProductoController())->editar();
         break;
 
     case 'productos_actualizar':
-        $controller = new ProductoController();
-        $controller->actualizar();
+        Auth::soloAdmin();
+        (new ProductoController())->actualizar();
         break;
 
     case 'productos_eliminar':
-        $controller = new ProductoController();
-        $controller->eliminar();
+        Auth::soloAdmin();
+        (new ProductoController())->eliminar();
         break;
-        
+
     case 'productos_eliminar_imagen':
-        $controller = new ProductoController();
-        $controller->eliminarImagen();
+        Auth::soloAdmin();
+        (new ProductoController())->eliminarImagen();
         break;
+
     case 'productos_ver':
         Auth::soloAdmin();
-        $controller = new ProductoController();
-        $controller->ver();
+        (new ProductoController())->ver();
         break;
-        default:
+
+    default:
         header("Location: index.php?action=login");
         exit();
 }

@@ -2,6 +2,14 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// 🔥 CONTADOR DEL CARRITO
+$carritoCount = 0;
+if (isset($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $cantidad) {
+        $carritoCount += $cantidad;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -11,49 +19,31 @@ if (session_status() === PHP_SESSION_NONE) {
 <title>NAYLEX Store</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- 🔥 FONT AWESOME -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
 body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
-    background:
-        linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.3)),
-        url('../imagenes/Fondo.png') no-repeat center center fixed;
-    background-size: cover;
 }
+
 .sidebar {
     display: flex;
     align-items: center;
     padding: 10px 30px;
-    background: rgba(30,41,59,0.85);
-    backdrop-filter: blur(10px);
+    background: rgba(30,41,59,0.9);
     color: white;
-    height: 90px;
 }
-
-.sidebar h2 {
-    margin-right: 40px;
-    color: #38bdf8;
-}
-
 
 .sidebar a {
     color: #e2e8f0;
     margin-right: 25px;
     text-decoration: none;
     font-weight: bold;
-    font-size: 18px;
-    transition: 0.3s;
 }
 
 .sidebar a:hover {
     color: #38bdf8;
-    transform: scale(1.05);
 }
 
 .sidebar-space {
@@ -61,36 +51,9 @@ body {
 }
 
 .carrito-link {
-    color: #facc15;
+    position: relative;
     font-size: 20px;
-}
-
-.main {
-    padding: 40px;
-    min-height: calc(100vh - 130px);
-}
-
-.logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 28px;
-    font-weight: 600;
-    color: #38bdf8;
-
-    display: flex;
-    flex-direction: column; /* 🔥 esto lo baja */
-    line-height: 1.1;
-
-    letter-spacing: 2px;
-    text-transform: uppercase;
-
-    text-shadow: 0 0 10px rgba(56,189,248,0.6);
-}
-
-/* 🔥 STORE abajo más pequeño */
-.logo span {
-    font-size: 16px;
-    letter-spacing: 4px;
-    opacity: 0.7;
+    color: #facc15;
 }
 </style>
 </head>
@@ -99,43 +62,46 @@ body {
 
 <div class="sidebar">
 
-    <h2 class="logo">
-        NAYLEX
-        <span>STORE</span>
-    </h2>
+    <h3>NAYLEX STORE</h3>
 
-    <a href="index.php?action=inicio">
-        <i class="fas fa-home"></i> Inicio
-    </a>
-
-    <a href="index.php?action=tienda">
-        <i class="fas fa-tractor"></i> Productos
-    </a>
-
-    <a href="#">
-        <i class="fas fa-box"></i> Pedidos
-    </a>
-
-    <a href="index.php?action=logout">
-        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-    </a>
+    <a href="index.php?action=inicio">🏠 Inicio</a>
+    <a href="index.php?action=tienda">🛒 Productos</a>
 
     <div class="sidebar-space"></div>
 
-    <?php if(isset($_SESSION['nickname'])): ?>
-        <span style="background:#38bdf8;color:#000;padding:6px 15px;border-radius:6px;">
-            <i class="fas fa-user"></i> Bienvenido <?= $_SESSION['nickname'] ?>
-        </span>
+    <!-- 🔥 LOGIN / LOGOUT -->
+    <?php if(isset($_SESSION['id_usuario'])): ?>
+
+        <a href="index.php?action=perfil">👤 Perfil</a>
+        <a href="index.php?action=logout">🚪 Salir</a>
+
+    <?php else: ?>
+
+        <a href="index.php?action=login">🔑 Login</a>
+        <a href="index.php?action=registro">📝 Registro</a>
+
     <?php endif; ?>
 
-    <div class="sidebar-space"></div>
+    <!-- 🛒 CARRITO -->
+    <a href="index.php?action=verCarrito" class="carrito-link">
 
-    <a href="#" class="carrito-link">
         <i class="fas fa-shopping-cart"></i>
-    </a>
 
-    <a href="index.php?action=perfil">
-        <i class="fas fa-user-circle"></i> Perfil
+        <?php if($carritoCount > 0): ?>
+            <span style="
+                position:absolute;
+                top:-8px;
+                right:-10px;
+                background:red;
+                color:white;
+                font-size:12px;
+                padding:3px 7px;
+                border-radius:50%;
+            ">
+                <?= $carritoCount ?>
+            </span>
+        <?php endif; ?>
+
     </a>
 
 </div>
