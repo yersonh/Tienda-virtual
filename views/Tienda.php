@@ -8,47 +8,16 @@
 
 .categoria {
     color: white;
-    margin: 30px 0 10px;
+    margin-top: 30px;
 }
 
-/* CONTENEDOR GENERAL */
-.carousel-container {
-    position: relative;
-}
-
-/* BOTONES */
-.btn-scroll {
-    position: absolute;
-    top: 40%;
-    transform: translateY(-50%);
-    background: rgba(0,0,0,0.6);
-    border: none;
-    color: white;
-    font-size: 20px;
-    padding: 10px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 2;
-}
-
-.btn-left { left: -10px; }
-.btn-right { right: -10px; }
-
-/* SCROLL */
 .contenedor-productos {
     display: flex;
     gap: 20px;
     overflow-x: auto;
-    scroll-behavior: smooth;
-    padding: 10px 30px;
+    padding-bottom: 10px;
 }
 
-/* OCULTAR SCROLL */
-.contenedor-productos::-webkit-scrollbar {
-    display: none;
-}
-
-/* CARD */
 .card-producto {
     background: white;
     border-radius: 15px;
@@ -87,10 +56,12 @@
 .form-carrito {
     display: flex;
     gap: 5px;
+    align-items: center;
 }
 
 .input-cantidad {
     width: 60px;
+    padding: 3px;
 }
 
 .btn-carrito {
@@ -100,95 +71,81 @@
     border-radius: 5px;
     cursor: pointer;
 }
+
+.btn-carrito:disabled {
+    background: gray;
+    cursor: not-allowed;
+}
 </style>
 
 <div class="main container">
 
 <h2 class="titulo">🛒 Catálogo de productos</h2>
 
+<?php if(empty($categorias)): ?>
+    <p style="color:white;">No hay productos disponibles</p>
+<?php endif; ?>
+
 <?php foreach($categorias as $categoria => $productos): ?>
 
     <h3 class="categoria"><?= $categoria ?></h3>
 
-    <div class="carousel-container">
+    <div class="contenedor-productos">
 
-        <!-- BOTONES -->
-        <button class="btn-scroll btn-left" onclick="scrollLeft('<?= md5($categoria) ?>')">❮</button>
-        <button class="btn-scroll btn-right" onclick="scrollRight('<?= md5($categoria) ?>')">❯</button>
+    <?php foreach($productos as $p): ?>
 
-        <div class="contenedor-productos" id="scroll-<?= md5($categoria) ?>">
+        <div class="card-producto">
 
-        <?php foreach($productos as $p): ?>
+            <a href="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>">
 
-            <div class="card-producto">
+                <img 
+                    src="<?= !empty($p['imagen']) 
+                        ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
+                        : 'default.png' ?>" 
+                    class="img-producto">
 
-                <a href="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>">
+                <div class="nombre"><?= $p['nombre'] ?></div>
 
-                    <img 
-                        src="<?= !empty($p['imagen']) 
-                            ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
-                            : 'default.png' ?>" 
-                        class="img-producto">
+                <div class="precio">$<?= number_format($p['precio'], 0, ',', '.') ?></div>
 
-                    <div class="nombre"><?= $p['nombre'] ?></div>
+            </a>
 
-                    <div class="precio">$<?= number_format($p['precio'], 0, ',', '.') ?></div>
-
-                </a>
-
-                <div class="stock">
-                    <?= $p['stock_p'] > 0 
-                        ? 'Disponible: '.$p['stock_p'] 
-                        : '<span style="color:red;">Agotado</span>' ?>
-                </div>
-
-                <form method="POST" action="index.php?action=agregarCarrito" class="form-carrito">
-
-                    <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
-
-                    <input 
-                        type="number" 
-                        name="cantidad" 
-                        value="1" 
-                        min="1" 
-                        max="<?= $p['stock_p'] ?>" 
-                        class="input-cantidad"
-                        <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
-
-                    <button 
-                        class="btn-carrito"
-                        <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
-                        🛒
-                    </button>
-
-                </form>
-
+            <div class="stock">
+                <?= $p['stock_p'] > 0 
+                    ? 'Disponible: '.$p['stock_p'] 
+                    : '<span style="color:red;">Agotado</span>' ?>
             </div>
 
-        <?php endforeach; ?>
+            <!-- 🛒 CARRITO -->
+            <form method="POST" action="index.php?action=agregarCarrito" class="form-carrito">
+
+                <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
+
+                <input 
+                    type="number" 
+                    name="cantidad" 
+                    value="1" 
+                    min="1" 
+                    max="<?= $p['stock_p'] ?>" 
+                    class="input-cantidad"
+                    <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
+
+                <button 
+                    class="btn-carrito"
+                    <?= $p['stock_p'] <= 0 ? 'disabled' : '' ?>>
+                    🛒
+                </button>
+
+            </form>
 
         </div>
+
+    <?php endforeach; ?>
 
     </div>
 
 <?php endforeach; ?>
 
 </div>
-
-<script>
-function scrollLeft(id) {
-    document.getElementById('scroll-' + id).scrollBy({
-        left: -300,
-        behavior: 'smooth'
-    });
-}
-
-function scrollRight(id) {
-    document.getElementById('scroll-' + id).scrollBy({
-        left: 300,
-        behavior: 'smooth'
-    });
-}
-</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
