@@ -181,26 +181,43 @@ max="<?= $p['stock_p'] ?>">
 <!-- 🔥 JS PRO -->
 <script>
 
-// 🔍 BUSQUEDA EN TIEMPO REAL
+// 🔥 FILTRO EN TIEMPO REAL INTELIGENTE
 const buscador = document.getElementById('buscador');
 
-buscador.addEventListener('keyup', function() {
+buscador.addEventListener('keyup', filtrarTodo);
 
-    let filtro = this.value.toLowerCase();
+function filtrarTodo() {
 
-    document.querySelectorAll('.card-producto').forEach(card => {
+    let texto = buscador.value.toLowerCase();
 
-        let nombre = card.querySelector('.nombre-producto').innerText.toLowerCase();
+    document.querySelectorAll('.categoria').forEach(cat => {
 
-        if (nombre.includes(filtro)) {
-            card.style.display = "block";
+        let productos = cat.querySelectorAll('.producto');
+        let visibles = 0;
+
+        productos.forEach(prod => {
+
+            let nombre = prod.querySelector('.nombre-producto').innerText.toLowerCase();
+
+            if (nombre.includes(texto)) {
+                prod.style.display = "block";
+                visibles++;
+            } else {
+                prod.style.display = "none";
+            }
+
+        });
+
+        // 🔥 OCULTAR CATEGORIA SI NO TIENE PRODUCTOS
+        if (visibles > 0) {
+            cat.style.display = "block";
         } else {
-            card.style.display = "none";
+            cat.style.display = "none";
         }
 
     });
 
-});
+}
 
 
 // 💰 FORMATO DE MILES

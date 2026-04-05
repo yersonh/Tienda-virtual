@@ -37,12 +37,12 @@ class TiendaController {
             // 💰 PRECIO
             $match_precio = true;
 
-            if ($precio_min !== '') {
-                $match_precio = $p['precio'] >= $precio_min;
+           if ($precio_min !== '') {
+                $match_precio = $p['precio'] >= str_replace('.', '', $precio_min);
             }
 
             if ($precio_max !== '') {
-                $match_precio = $match_precio && $p['precio'] <= $precio_max;
+                $match_precio = $match_precio && $p['precio'] <= str_replace('.', '', $precio_max);
             }
 
             // 📦 CATEGORIA
