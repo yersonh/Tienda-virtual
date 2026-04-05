@@ -12,10 +12,10 @@ require_once __DIR__ . '/../middleware/Auth.php';
 // 🔥 ACTION
 $action = $_GET['action'] ?? 'login';
 
-// 🔥 RUTAS PUBLICAS (IMPORTANTE)
+// 🔥 RUTAS PUBLICAS
 $publicas = ['login','registro','guardarRegistro','iniciarSesion','tienda','productoDetalle'];
 
-// 🔥 PROTEGER SOLO LO NECESARIO
+// 🔐 PROTECCIÓN
 if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas)) {
     header("Location: index.php?action=login");
     exit();
@@ -47,7 +47,7 @@ switch ($action) {
         require_once __DIR__ . '/../views/Inicio.php';
         break;
 
-    // 🛍️ TIENDA (LIBRE)
+    // 🛒 TIENDA
     case 'tienda':
         (new TiendaController())->index();
         break;
