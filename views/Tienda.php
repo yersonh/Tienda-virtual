@@ -1,7 +1,7 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 
 <style>
-/* 🌄 FONDO GLOBAL (IGUAL LOGIN) */
+/* 🌄 FONDO GLOBAL */
 body {
     min-height:100vh;
     background:
@@ -28,7 +28,7 @@ body {
     font-weight: 600;
 }
 
-/* BUSCADOR GLOBAL */
+/* BUSCADOR */
 .buscador-global {
     text-align:center;
     margin-bottom:25px;
@@ -43,7 +43,7 @@ body {
     outline: none;
 }
 
-/* HEADER CATEGORIA */
+/* HEADER */
 .categoria-header {
     display:flex;
     justify-content:space-between;
@@ -56,7 +56,6 @@ body {
     font-weight: 600;
 }
 
-/* BUSCADOR CATEGORIA */
 .buscador-categoria {
     padding: 8px 12px;
     border-radius: 10px;
@@ -65,16 +64,13 @@ body {
 }
 
 /* CARRUSEL */
-.carousel-container {
-    position: relative;
-}
+.carousel-container { position: relative; }
 
-/* BOTONES */
 .btn-scroll {
     position: absolute;
     top: 40%;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.6);
     border: none;
     color: white;
     font-size: 18px;
@@ -99,19 +95,21 @@ body {
     display: none;
 }
 
-/* CARD */
+/* 🔥 CARD OSCURA PRO */
 .card-producto {
-    background: white;
+    background: linear-gradient(145deg, #1e293b, #0f172a);
     border-radius: 18px;
     padding: 18px;
     width: 220px;
     min-width: 220px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    color: #e2e8f0;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
     transition: 0.3s;
 }
 
 .card-producto:hover {
-    transform: translateY(-6px);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.8);
 }
 
 /* IMAGEN */
@@ -119,7 +117,7 @@ body {
     width: 100%;
     height: 140px;
     object-fit: contain;
-    background: #f8fafc;
+    background: #020617;
     border-radius: 10px;
 }
 
@@ -127,15 +125,15 @@ body {
 .nombre {
     margin: 10px 0;
     font-size: 15px;
+    color: #f1f5f9;
 }
 
 .precio {
-    color: #2563eb;
+    color: #38bdf8;
     font-weight: bold;
     margin-bottom: 5px;
 }
 
-/* STOCK */
 .stock {
     font-size: 13px;
     margin-bottom: 10px;
@@ -152,12 +150,14 @@ body {
     width: 60px;
     padding: 5px;
     border-radius: 6px;
-    border: 1px solid #ccc;
+    border: none;
+    background: #020617;
+    color: white;
 }
 
 /* BOTON */
 .btn-carrito {
-    background: #38bdf8;
+    background: linear-gradient(135deg,#38bdf8,#2563eb);
     border: none;
     padding: 6px 12px;
     border-radius: 8px;
@@ -166,8 +166,7 @@ body {
 }
 
 .btn-carrito:hover {
-    background: #2563eb;
-    color: white;
+    transform: scale(1.1);
 }
 </style>
 
