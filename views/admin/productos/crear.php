@@ -254,6 +254,9 @@
     const imagenesInput = document.getElementById('imagenes');
     const uploadArea = document.getElementById('uploadArea');
     const preview = document.getElementById('previewImages');
+    
+    // Array para almacenar todos los archivos
+    let archivosAcumulados = [];
 
     // Prevenir comportamiento por defecto del navegador al arrastrar
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -283,19 +286,27 @@
         uploadArea.classList.remove('drag-over');
     }
 
-    // Manejar el drop de archivos
+    // Manejar el drop de archivos (ACUMULA las imágenes)
     uploadArea.addEventListener('drop', handleDrop, false);
 
     function handleDrop(e) {
         const dt = e.dataTransfer;
-        const files = dt.files;
-        imagenesInput.files = files; // Asignar archivos al input
-        mostrarPrevisualizacion(files);
+        const nuevosArchivos = Array.from(dt.files);
+        
+        // Acumular los nuevos archivos con los existentes
+        archivosAcumulados = [...archivosAcumulados, ...nuevosArchivos];
+        
+        // Actualizar el input con todos los archivos
+        const dataTransfer = new DataTransfer();
+        archivosAcumulados.forEach(file => dataTransfer.items.add(file));
+        imagenesInput.files = dataTransfer.files;
+        
+        // Mostrar todas las previsualizaciones
+        mostrarTodasPrevisualizaciones();
     }
 
-    // Manejar selección de archivos por click
+    // Manejar selección de archivos por click (ACUMULA también)
     uploadArea.addEventListener('click', function(e) {
-        // Evitar que se abra si el clic fue en el botón
         if (!e.target.classList.contains('btn-upload')) {
             imagenesInput.click();
         }
@@ -303,17 +314,38 @@
 
     // Cuando se seleccionan archivos por el input
     imagenesInput.addEventListener('change', function(e) {
-        mostrarPrevisualizacion(e.target.files);
+        const nuevosArchivos = Array.from(e.target.files);
+        
+        // Acumular los nuevos archivos (sin duplicados)
+        nuevosArchivos.forEach(nuevoArchivo => {
+            const existe = archivosAcumulados.some(existente => 
+                existente.name === nuevoArchivo.name && 
+                existente.size === nuevoArchivo.size &&
+                existente.lastModified === nuevoArchivo.lastModified
+            );
+            
+            if (!existe) {
+                archivosAcumulados.push(nuevoArchivo);
+            }
+        });
+        
+        // Actualizar el input
+        const dataTransfer = new DataTransfer();
+        archivosAcumulados.forEach(file => dataTransfer.items.add(file));
+        imagenesInput.files = dataTransfer.files;
+        
+        // Mostrar todas las previsualizaciones
+        mostrarTodasPrevisualizaciones();
     });
 
-    // Función para mostrar previsualización
-    function mostrarPrevisualizacion(files) {
+    // Función para mostrar todas las previsualizaciones
+    function mostrarTodasPrevisualizaciones() {
         preview.innerHTML = '';
         
-        Array.from(files).forEach((file, index) => {
+        archivosAcumulados.forEach((file, index) => {
             // Validar tipo de archivo
             if (!file.type.match('image.*')) {
-                alert(`El archivo ${file.name} no es una imagen válida`);
+                console.log(`El archivo ${file.name} no es una imagen válida`);
                 return;
             }
             
@@ -337,20 +369,22 @@
         });
     }
 
-    // Eliminar vista previa (solo visual, no afecta el input)
+    // Eliminar vista previa y el archivo del array
     preview.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-img')) {
             const item = e.target.closest('.preview-item');
             const index = Array.from(preview.children).indexOf(item);
-            item.remove();
             
-            // Actualizar el FileList del input (esto es más complejo)
-            // Por simplicidad, se recomienda recrear el FileList o simplemente
-            // dejar que el usuario seleccione de nuevo las imágenes
-            const newFiles = Array.from(imagenesInput.files).filter((_, i) => i !== index);
+            // Eliminar del array acumulador
+            archivosAcumulados.splice(index, 1);
+            
+            // Actualizar el input
             const dataTransfer = new DataTransfer();
-            newFiles.forEach(file => dataTransfer.items.add(file));
+            archivosAcumulados.forEach(file => dataTransfer.items.add(file));
             imagenesInput.files = dataTransfer.files;
+            
+            // Volver a mostrar todas las previsualizaciones
+            mostrarTodasPrevisualizaciones();
         }
     });
 </script>
