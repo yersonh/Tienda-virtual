@@ -1,12 +1,16 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 
 <?php
-// 🔥 GENERAR INICIALES DINÁMICAS
-$nombres = !empty($usuario['nombres']) ? explode(" ", $usuario['nombres']) : [''];
-$apellidos = !empty($usuario['apellidos']) ? explode(" ", $usuario['apellidos']) : [''];
+// 🔥 DATOS SEGUROS
+$nombres = $usuario['nombres'] ?? '';
+$apellidos = $usuario['apellidos'] ?? '';
 
-$inicialNombre = !empty($nombres[0]) ? strtoupper(substr($nombres[0], 0, 1)) : '';
-$inicialApellido = !empty($apellidos[0]) ? strtoupper(substr($apellidos[0], 0, 1)) : '';
+// 🔥 GENERAR INICIALES SEGURAS
+$nombresArray = !empty($nombres) ? explode(" ", $nombres) : [''];
+$apellidosArray = !empty($apellidos) ? explode(" ", $apellidos) : [''];
+
+$inicialNombre = !empty($nombresArray[0]) ? strtoupper(substr($nombresArray[0], 0, 1)) : '';
+$inicialApellido = !empty($apellidosArray[0]) ? strtoupper(substr($apellidosArray[0], 0, 1)) : '';
 
 $iniciales = $inicialNombre . $inicialApellido;
 ?>
@@ -39,21 +43,15 @@ $iniciales = $inicialNombre . $inicialApellido;
 
     <form method="POST" action="index.php?action=actualizarPerfil">
 
-        <!-- CÉDULA -->
-        <!-- <div class="input-group-perfil">
-            <label>Cédula</label>
-            <div class="input-icon">
-                <i class="fas fa-id-card"></i>
-                <input type="text" name="cc" value="<?= $usuario['cc'] ?>" required>
-            </div>
-        </div> -->
-
         <!-- NOMBRES -->
         <div class="input-group-perfil">
             <label>Nombres</label>
             <div class="input-icon">
                 <i class="fas fa-user"></i>
-                <input type="text" name="nombres" value="<?= $usuario['nombres'] ?>" required>
+                <input type="text" name="nombres"
+                    value="<?= htmlspecialchars($usuario['nombres'] ?? '') ?>"
+                    placeholder="Ingrese sus nombres"
+                    required>
             </div>
         </div>
 
@@ -62,7 +60,10 @@ $iniciales = $inicialNombre . $inicialApellido;
             <label>Apellidos</label>
             <div class="input-icon">
                 <i class="fas fa-user"></i>
-                <input type="text" name="apellidos" value="<?= $usuario['apellidos'] ?>" required>
+                <input type="text" name="apellidos"
+                    value="<?= htmlspecialchars($usuario['apellidos'] ?? '') ?>"
+                    placeholder="Ingrese sus apellidos"
+                    required>
             </div>
         </div>
 
@@ -71,7 +72,10 @@ $iniciales = $inicialNombre . $inicialApellido;
             <label>Correo electrónico</label>
             <div class="input-icon">
                 <i class="fas fa-envelope"></i>
-                <input type="email" name="correo" value="<?= $usuario['correo'] ?>" required>
+                <input type="email" name="correo"
+                    value="<?= htmlspecialchars($usuario['correo'] ?? '') ?>"
+                    placeholder="Ingrese su correo"
+                    required>
             </div>
         </div>
 
@@ -80,7 +84,12 @@ $iniciales = $inicialNombre . $inicialApellido;
             <label>Teléfono</label>
             <div class="input-icon">
                 <i class="fas fa-phone"></i>
-                <input type="text" name="telefono" value="<?= $usuario['telefono'] ?>" required>
+                <input type="text" name="telefono"
+                    value="<?= htmlspecialchars($usuario['telefono'] ?? '') ?>"
+                    placeholder="Ingrese su teléfono"
+                    maxlength="10"
+                    required
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)">
             </div>
         </div>
 
@@ -89,7 +98,10 @@ $iniciales = $inicialNombre . $inicialApellido;
             <label>Dirección</label>
             <div class="input-icon">
                 <i class="fas fa-map-marker-alt"></i>
-                <input type="text" name="direccion" value="<?= $usuario['direccion'] ?>" required>
+                <input type="text" name="direccion"
+                    value="<?= htmlspecialchars($usuario['direccion'] ?? '') ?>"
+                    placeholder="Ingrese su dirección"
+                    required>
             </div>
         </div>
 
@@ -188,7 +200,7 @@ $iniciales = $inicialNombre . $inicialApellido;
     transition:0.3s;
 }
 
-/* EFECTO PRO */
+/* EFECTO */
 .input-icon input:focus {
     outline:none;
     background:#3b4a61;
@@ -220,10 +232,6 @@ button i {
 button:hover {
     transform:scale(1.03);
     box-shadow:0 0 20px rgba(56,189,248,0.6);
-}
-
-button:active {
-    transform:scale(0.98);
 }
 
 /* MENSAJES */

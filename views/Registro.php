@@ -138,7 +138,7 @@ button:hover {
     <?php endif; ?>
 
     <!-- FORMULARIO -->
-    <form method="POST" action="index.php?action=guardarRegistro">
+   <form method="POST" action="index.php?action=guardarRegistro">
 
         <!-- NOMBRES -->
         <div class="input-group">
@@ -154,13 +154,7 @@ button:hover {
                 value="<?= $old['apellidos'] ?? '' ?>">
         </div>
 
-        <!-- CÉDULA -->
-        <div class="input-group">
-            <i class="fas fa-id-card"></i>
-            <input type="text" name="cc" placeholder="Cédula" maxlength="10" required
-            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
-            value="<?= $old['cc'] ?? '' ?>">
-        </div>
+        <!-- ❌ CÉDULA ELIMINADA -->
 
         <!-- CORREO -->
         <div class="input-group">

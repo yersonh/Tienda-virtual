@@ -16,13 +16,12 @@ class RegistroController {
         $data = [
             'nombres' => trim($_POST['nombres'] ?? ''),
             'apellidos' => trim($_POST['apellidos'] ?? ''),
-            'cc' => trim($_POST['cc'] ?? ''),
             'correo' => trim($_POST['correo'] ?? ''),
             'telefono' => trim($_POST['telefono'] ?? ''),
             'direccion' => trim($_POST['direccion'] ?? ''),
             'username' => trim($_POST['username'] ?? ''),
             'password' => trim($_POST['password'] ?? ''),
-            'id_tipo' => 3 // SOLO CLIENTES
+            'id_tipo' => 3 // CLIENTE
         ];
 
         // 🔥 Guardar datos para repoblar formulario
@@ -30,49 +29,53 @@ class RegistroController {
 
         // ================= VALIDACIONES =================
 
-        if (in_array('', $data)) {
+        // Campos obligatorios (sin cc)
+        if (
+            empty($data['nombres']) ||
+            empty($data['apellidos']) ||
+            empty($data['correo']) ||
+            empty($data['telefono']) ||
+            empty($data['direccion']) ||
+            empty($data['username']) ||
+            empty($data['password'])
+        ) {
             $_SESSION['error'] = "Todos los campos son obligatorios";
             header("Location: index.php?action=registro");
             exit();
         }
 
+        // Contraseña
         if (strlen($data['password']) < 6) {
             $_SESSION['error'] = "La contraseña debe tener mínimo 6 caracteres";
             header("Location: index.php?action=registro");
             exit();
         }
 
+        // Correo válido
         if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
             $_SESSION['error'] = "Correo inválido";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        if (!is_numeric($data['cc']) || strlen($data['cc']) != 10) {
-            $_SESSION['error'] = "La cédula debe tener 10 dígitos";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
+        // Teléfono válido
         if (!is_numeric($data['telefono']) || strlen($data['telefono']) != 10) {
             $_SESSION['error'] = "El teléfono debe tener 10 dígitos";
             header("Location: index.php?action=registro");
             exit();
         }
 
+        // Usuario único
         if ($model->usernameExiste($data['username'])) {
             $_SESSION['error'] = "El usuario ya está en uso";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        if ($model->ccExiste($data['cc'])) {
-            $_SESSION['error'] = "La cédula ya está registrada";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
         // ================= REGISTRO =================
+
+        // 🔥 Agregar cc NULL manualmente
+        $data['cc'] = null;
 
         $resultado = $model->crearConPersona($data);
 

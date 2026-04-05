@@ -26,9 +26,7 @@ class PerfilController {
             exit();
         }
 
-        // 🔥 Validar campos vacíos
         if (
-            // empty($_POST['cc']) ||
             empty($_POST['nombres']) ||
             empty($_POST['apellidos']) ||
             empty($_POST['correo']) ||
@@ -44,7 +42,6 @@ class PerfilController {
         $model = new UsuarioModel($pdo);
 
         $data = [
-            // 'cc' => trim($_POST['cc']),
             'nombres' => trim($_POST['nombres']),
             'apellidos' => trim($_POST['apellidos']),
             'correo' => trim($_POST['correo']),
@@ -52,10 +49,8 @@ class PerfilController {
             'direccion' => trim($_POST['direccion']),
         ];
 
-        // 🔥 Ejecutar actualización
         $resultado = $model->actualizarPerfil($_SESSION['id_usuario'], $data);
 
-        // 🔥 Manejo de respuesta del modelo
         if (!$resultado['success']) {
             $_SESSION['error'] = $resultado['message'];
             header("Location: index.php?action=perfil");

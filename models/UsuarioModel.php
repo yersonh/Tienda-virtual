@@ -155,7 +155,7 @@ class UsuarioModel {
     /**
      * ACTUALIZAR PERFIL INTELIGENTE
      */
-    public function actualizarPerfil($id_usuario, $data) {
+  public function actualizarPerfil($id_usuario, $data) {
 
         try {
 
@@ -167,7 +167,7 @@ class UsuarioModel {
 
             $id_persona = $usuario['id_persona'];
 
-            // 🔥 SOLO VALIDAR SI CAMBIÓ
+            // 🔥 Validar solo si cambian
 
             if ($data['correo'] !== $usuario['correo']) {
                 if ($this->correoExiste($data['correo'], $id_persona)) {
@@ -181,26 +181,18 @@ class UsuarioModel {
                 }
             }
 
-            if ($data['cc'] !== $usuario['cc']) {
-                if ($this->ccExiste($data['cc'], $id_persona)) {
-                    return ['success' => false, 'message' => 'La cédula ya está en uso'];
-                }
-            }
-
-            // 🔥 UPDATE
+            // 🔥 UPDATE SIN CC
             $query = "UPDATE persona 
-                      SET cc = :cc,
-                          nombres = :nombres,
-                          apellidos = :apellidos,
-                          correo = :correo,
-                          telefono = :telefono,
-                          direccion = :direccion
-                      WHERE id_persona = :id_persona";
+                    SET nombres = :nombres,
+                        apellidos = :apellidos,
+                        correo = :correo,
+                        telefono = :telefono,
+                        direccion = :direccion
+                    WHERE id_persona = :id_persona";
 
             $stmt = $this->conn->prepare($query);
 
             $stmt->execute([
-                ':cc' => $data['cc'],
                 ':nombres' => $data['nombres'],
                 ':apellidos' => $data['apellidos'],
                 ':correo' => $data['correo'],
