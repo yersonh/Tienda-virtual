@@ -19,14 +19,20 @@ body {
     padding: 30px;
 }
 
+/* 🔥 TITULO NIVEL MARCA */
 .titulo {
     font-family: 'Orbitron', sans-serif;
-    font-size: 32px;
-    color: #38bdf8;
+    font-size: 38px;
+    background: linear-gradient(90deg, #38bdf8, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     text-transform: uppercase;
-    margin-bottom: 15px;
+    letter-spacing: 3px;
+    text-shadow: 0 0 25px rgba(56,189,248,0.7);
+    margin-bottom: 25px;
 }
 
+/* 🔍 FILTROS */
 .filtros {
     display:flex;
     gap:10px;
@@ -51,6 +57,7 @@ body {
     cursor:pointer;
 }
 
+/* 📦 CATEGORIA */
 .categoria-card {
     background:#1e293b;
     border-radius:20px;
@@ -58,12 +65,14 @@ body {
     margin-bottom:30px;
 }
 
+/* 🧱 PRODUCTOS */
 .contenedor-productos {
     display:flex;
     gap:20px;
     overflow-x:auto;
 }
 
+/* 🧾 CARD */
 .card-producto {
     background:#020617;
     border-radius:15px;
@@ -79,6 +88,7 @@ body {
     object-fit:contain;
 }
 
+/* 🛒 BOTON */
 .btn-carrito {
     background:#38bdf8;
     border:none;
@@ -93,17 +103,21 @@ body {
 
 <h2 class="titulo">CATÁLOGO DE PRODUCTOS</h2>
 
+<!-- 🔥 FILTROS -->
 <form method="GET" action="index.php" class="filtros">
 
     <input type="hidden" name="action" value="tienda">
 
-    <input type="text" name="filtro" placeholder="Buscar..."
+    <input type="text" 
+    id="buscador" 
+    name="filtro" 
+    placeholder="Buscar producto..."
     value="<?= $_GET['filtro'] ?? '' ?>">
 
-    <input type="number" name="precio_min" placeholder="Precio min"
+    <input type="text" id="precio_min" name="precio_min" placeholder="Precio min"
     value="<?= $_GET['precio_min'] ?? '' ?>">
 
-    <input type="number" name="precio_max" placeholder="Precio max"
+    <input type="text" id="precio_max" name="precio_max" placeholder="Precio max"
     value="<?= $_GET['precio_max'] ?? '' ?>">
 
     <select name="categoria">
@@ -120,8 +134,7 @@ body {
 
 </form>
 
-</form>
-
+<!-- 🔥 PRODUCTOS -->
 <?php foreach($categorias as $categoria => $productos): ?>
 
 <div class="categoria-card">
@@ -138,7 +151,7 @@ body {
 ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
 : 'default.png' ?>" class="img-producto">
 
-<div><?= $p['nombre'] ?></div>
+<div class="nombre-producto"><?= $p['nombre'] ?></div>
 <div>$<?= number_format($p['precio']) ?></div>
 
 <form method="POST" action="index.php?action=agregarCarrito">
@@ -164,5 +177,53 @@ max="<?= $p['stock_p'] ?>">
 
 </div>
 </div>
+
+<!-- 🔥 JS PRO -->
+<script>
+
+// 🔍 BUSQUEDA EN TIEMPO REAL
+const buscador = document.getElementById('buscador');
+
+buscador.addEventListener('keyup', function() {
+
+    let filtro = this.value.toLowerCase();
+
+    document.querySelectorAll('.card-producto').forEach(card => {
+
+        let nombre = card.querySelector('.nombre-producto').innerText.toLowerCase();
+
+        if (nombre.includes(filtro)) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+
+});
+
+
+// 💰 FORMATO DE MILES
+function formatoMiles(input) {
+
+    input.addEventListener('input', function() {
+
+        let valor = this.value.replace(/\D/g, '');
+
+        if (valor === '') {
+            this.value = '';
+            return;
+        }
+
+        this.value = Number(valor).toLocaleString('es-CO');
+
+    });
+
+}
+
+formatoMiles(document.getElementById('precio_min'));
+formatoMiles(document.getElementById('precio_max'));
+
+</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
