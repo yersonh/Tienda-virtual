@@ -137,7 +137,7 @@ body {
 <!-- 🔥 PRODUCTOS -->
 <?php foreach($categorias as $categoria => $productos): ?>
 
-<div class="categoria-card">
+<div class="categoria-card categoria">
 
 <h3 style="color:white;"><?= $categoria ?></h3>
 
@@ -145,7 +145,7 @@ body {
 
 <?php foreach($productos as $p): ?>
 
-<div class="card-producto">
+<div class="card-producto producto">
 
 <img src="<?= !empty($p['imagen']) 
 ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
@@ -184,7 +184,7 @@ max="<?= $p['stock_p'] ?>">
 // 🔥 FILTRO EN TIEMPO REAL INTELIGENTE
 const buscador = document.getElementById('buscador');
 
-buscador.addEventListener('keyup', filtrarTodo);
+buscador.addEventListener('input', filtrarTodo);
 
 function filtrarTodo() {
 
