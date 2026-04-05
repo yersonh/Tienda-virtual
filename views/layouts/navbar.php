@@ -55,6 +55,24 @@ body {
     font-size: 20px;
     color: #facc15;
 }
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: #38bdf8;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(56,189,248,0.6);
+}
+
+.logo span {
+    font-size: 16px;
+    letter-spacing: 4px;
+    opacity: 0.7;
+}
 </style>
 </head>
 
@@ -62,7 +80,10 @@ body {
 
 <div class="sidebar">
 
-    <h3>NAYLEX STORE</h3>
+    <h2 class="logo">
+        NAYLEX
+        <span>STORE</span>
+    </h2>
 
     <a href="index.php?action=inicio">🏠 Inicio</a>
     <a href="index.php?action=tienda">🛒 Productos</a>

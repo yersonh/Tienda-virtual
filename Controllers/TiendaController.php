@@ -16,14 +16,14 @@ class TiendaController {
 
         $productos = $this->model->obtenerCatalogo();
 
-        // AGRUPAR POR CATEGORIA
         $categorias = [];
 
         foreach ($productos as $p) {
-            $categorias[$p['categoria_nombre']][] = $p;
+            $cat = $p['categoria_nombre'] ?? 'Sin categoría';
+            $categorias[$cat][] = $p;
         }
 
-        require_once __DIR__ . '/../views/tienda/productos.php';
+        require_once __DIR__ . '/../views/Tienda.php';
     }
 
     // 🔍 DETALLE
