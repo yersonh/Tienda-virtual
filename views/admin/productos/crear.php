@@ -243,15 +243,86 @@
         border-radius: 10px;
         margin-bottom: 20px;
     }
+    .upload-area.drag-over {
+    border-color: #38bdf8;
+    background: rgba(56,189,248,0.1);
+    transform: scale(1.02);
+}
 </style>
 
 <script>
-    // Vista previa de imágenes
-    document.getElementById('imagenes').addEventListener('change', function(e) {
-        const preview = document.getElementById('previewImages');
+    const imagenesInput = document.getElementById('imagenes');
+    const uploadArea = document.getElementById('uploadArea');
+    const preview = document.getElementById('previewImages');
+
+    // Prevenir comportamiento por defecto del navegador al arrastrar
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Resaltar área cuando se arrastra un archivo
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        uploadArea.classList.add('drag-over');
+    }
+
+    function unhighlight(e) {
+        uploadArea.classList.remove('drag-over');
+    }
+
+    // Manejar el drop de archivos
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        imagenesInput.files = files; // Asignar archivos al input
+        mostrarPrevisualizacion(files);
+    }
+
+    // Manejar selección de archivos por click
+    uploadArea.addEventListener('click', function(e) {
+        // Evitar que se abra si el clic fue en el botón
+        if (!e.target.classList.contains('btn-upload')) {
+            imagenesInput.click();
+        }
+    });
+
+    // Cuando se seleccionan archivos por el input
+    imagenesInput.addEventListener('change', function(e) {
+        mostrarPrevisualizacion(e.target.files);
+    });
+
+    // Función para mostrar previsualización
+    function mostrarPrevisualizacion(files) {
         preview.innerHTML = '';
         
-        Array.from(e.target.files).forEach((file, index) => {
+        Array.from(files).forEach((file, index) => {
+            // Validar tipo de archivo
+            if (!file.type.match('image.*')) {
+                alert(`El archivo ${file.name} no es una imagen válida`);
+                return;
+            }
+            
+            // Validar tamaño (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`La imagen ${file.name} excede el tamaño máximo de 5MB`);
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(event) {
                 const div = document.createElement('div');
@@ -264,17 +335,22 @@
             };
             reader.readAsDataURL(file);
         });
-    });
+    }
 
     // Eliminar vista previa (solo visual, no afecta el input)
-    document.getElementById('previewImages').addEventListener('click', function(e) {
+    preview.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-img')) {
-            e.target.closest('.preview-item').remove();
+            const item = e.target.closest('.preview-item');
+            const index = Array.from(preview.children).indexOf(item);
+            item.remove();
+            
+            // Actualizar el FileList del input (esto es más complejo)
+            // Por simplicidad, se recomienda recrear el FileList o simplemente
+            // dejar que el usuario seleccione de nuevo las imágenes
+            const newFiles = Array.from(imagenesInput.files).filter((_, i) => i !== index);
+            const dataTransfer = new DataTransfer();
+            newFiles.forEach(file => dataTransfer.items.add(file));
+            imagenesInput.files = dataTransfer.files;
         }
-    });
-
-    // Click en el área de upload
-    document.getElementById('uploadArea').addEventListener('click', function() {
-        document.getElementById('imagenes').click();
     });
 </script>
