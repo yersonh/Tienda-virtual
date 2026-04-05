@@ -93,30 +93,32 @@ body {
 
 <h2 class="titulo">CATÁLOGO DE PRODUCTOS</h2>
 
-<form method="GET" class="filtros">
+<form method="GET" action="index.php" class="filtros">
 
-<input type="text" name="filtro" placeholder="Buscar..."
-value="<?= $_GET['filtro'] ?? '' ?>">
+    <input type="hidden" name="action" value="tienda">
 
-<input type="number" name="precio_min" placeholder="Precio min"
-value="<?= $_GET['precio_min'] ?? '' ?>">
+    <input type="text" name="filtro" placeholder="Buscar..."
+    value="<?= $_GET['filtro'] ?? '' ?>">
 
-<input type="number" name="precio_max" placeholder="Precio max"
-value="<?= $_GET['precio_max'] ?? '' ?>">
+    <input type="number" name="precio_min" placeholder="Precio min"
+    value="<?= $_GET['precio_min'] ?? '' ?>">
 
-<select name="categoria">
-<option value="">Todas las categorías</option>
+    <input type="number" name="precio_max" placeholder="Precio max"
+    value="<?= $_GET['precio_max'] ?? '' ?>">
 
-<?php foreach(array_keys($categorias) as $cat): ?>
-<option value="<?= $cat ?>"
-<?= (($_GET['categoria'] ?? '') == $cat) ? 'selected' : '' ?>>
-<?= $cat ?>
-</option>
-<?php endforeach; ?>
+    <select name="categoria">
+        <option value="">Todas las categorías</option>
+        <?php foreach(array_keys($categorias) as $cat): ?>
+            <option value="<?= $cat ?>"
+            <?= (($_GET['categoria'] ?? '') == $cat) ? 'selected' : '' ?>>
+                <?= $cat ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
 
-</select>
+    <button>Filtrar</button>
 
-<button>Filtrar</button>
+</form>
 
 </form>
 
