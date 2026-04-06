@@ -234,16 +234,16 @@ data-categoria="<?= $categoria ?>">
 
 <div class="info-producto">
 
-    <div class="nombre-producto"><?= $p['nombre'] ?></div>
+    <<div><?= $p['nombre'] ?></div>
 
     <div><strong>Código:</strong> <?= $p['id_producto'] ?></div>
 
-    <div>
+    <!-- <div>
         <strong>Estado:</strong> 
         <span style="color:#38bdf8;">
             <?= $p['estado'] ?? 'Activo' ?>
         </span>
-    </div>
+    </div> -->
 
  
     <div><strong>Disponible:</strong> <?= $p['stock_p'] ?></div>
@@ -252,9 +252,7 @@ data-categoria="<?= $categoria ?>">
         <?= $_SESSION['carrito'][$p['codigo']] ?? 0 ?>
     </div>
 
-    <div class="precio-producto">
-        $<?= number_format($p['precio']) ?>
-    </div>
+    <div>$<?= number_format($p['precio']) ?></div>
 
 </div>
 
