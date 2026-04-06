@@ -105,12 +105,60 @@ body {
 }
 
 /* botones */
+.carrito-box {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 4px;
+    gap: 6px;
+}
+
+/* input más integrado */
+.input-cantidad {
+    width: 55px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    background: #e5e7eb;
+    color: #020617;
+    outline: none;
+}
+
+/* 🔥 BOTÓN PRO */
 .btn-carrito {
-    background:#38bdf8;
-    border:none;
-    padding:5px 10px;
-    border-radius:5px;
-    cursor:pointer;
+    height: 32px;
+    width: 38px;
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    box-shadow: 0 3px 8px rgba(56,189,248,0.3);
+}
+
+/* icono centrado perfecto */
+.btn-carrito i {
+    font-size: 14px;
+}
+
+/* hover elegante */
+.btn-carrito:hover {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(56,189,248,0.5);
+}
+
+/* click */
+.btn-carrito:active {
+    transform: scale(0.92);
 }
 
 /* flechas */
@@ -189,8 +237,22 @@ data-categoria="<?= $categoria ?>">
 
 <form method="POST" action="index.php?action=agregarCarrito">
 <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
-<input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>">
-<button class="btn-carrito">🛒</button>
+<div class="carrito-box">
+
+    <input 
+        type="number" 
+        name="cantidad" 
+        value="1" 
+        min="1" 
+        max="<?= $p['stock_p'] ?>"
+        class="input-cantidad"
+    >
+
+    <button class="btn-carrito" title="Agregar al carrito">
+        <i class="fas fa-cart-plus"></i>
+    </button>
+
+</div>
 </form>
 
 </div>
