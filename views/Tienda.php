@@ -225,37 +225,68 @@ buscador.addEventListener('input', ()=>{
     filtrar();
     filtrarCategorias();
 });
-precioMin.addEventListener('input', filtrar);
-precioMax.addEventListener('input', filtrar);
-categoria.addEventListener('change', filtrar);
+
+precioMin.addEventListener('input', ()=>{
+    filtrar();
+    filtrarCategorias();
+});
+
+precioMax.addEventListener('input', ()=>{
+    filtrar();
+    filtrarCategorias();
+});
+
+categoria.addEventListener('change', ()=>{
+    filtrar();
+    filtrarCategorias();
+});
 
 // 🔥 FILTRO PRINCIPAL
-function filtrar() {
+function filtrarCategorias(){
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g,'');
     let max = precioMax.value.replace(/\./g,'');
     let cat = categoria.value;
 
-    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
-        let productos = categoriaDiv.querySelectorAll('.producto');
-        let visibles = 0;
+    categoria.innerHTML = "";
 
-        productos.forEach(prod=>{
-            let nombre = prod.dataset.nombre;
-            let precio = parseInt(prod.dataset.precio);
-            let categoriaProd = prod.dataset.categoria;
+    let categoriasVisibles = new Set();
 
-            let ok = nombre.includes(texto)
-                && (min=="" || precio>=min)
-                && (max=="" || precio<=max)
-                && (cat=="" || categoriaProd==cat);
+    document.querySelectorAll('.producto').forEach(prod=>{
+        let nombre = prod.dataset.nombre;
+        let precio = parseInt(prod.dataset.precio);
+        let categoriaProd = prod.dataset.categoria;
 
-            prod.style.display = ok ? "block":"none";
-            if(ok) visibles++;
-        });
+        let ok = nombre.includes(texto)
+            && (min=="" || precio>=min)
+            && (max=="" || precio<=max)
+            && (cat=="" || categoriaProd==cat);
 
-        categoriaDiv.style.display = visibles>0?"block":"none";
+        if(ok){
+            categoriasVisibles.add(categoriaProd);
+        }
     });
+
+    // opción "todas"
+    let optionTodas = document.createElement("option");
+    optionTodas.value = "";
+    optionTodas.textContent = "Todas las categorías";
+    categoria.appendChild(optionTodas);
+
+    // agregar solo categorías válidas
+    opcionesOriginales.forEach(op=>{
+        if(op.value !== "" && categoriasVisibles.has(op.value)){
+            categoria.appendChild(op.cloneNode(true));
+        }
+    });
+
+    // restaurar todo si no hay filtros
+    if(texto==="" && min==="" && max===""){
+        categoria.innerHTML = "";
+        opcionesOriginales.forEach(op=>{
+            categoria.appendChild(op.cloneNode(true));
+        });
+    }
 }
 
 // 🔥 NUEVO: FILTRAR SELECT SEGÚN BÚSQUEDA
