@@ -1,326 +1,172 @@
-<?php require_once __DIR__ . '/layouts/navbar.php'; ?>
+import 'package:flutter/material.dart';
+import 'register_screen.dart';
 
-<style>
-body {
-    min-height:100vh;
-    background:
-        linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.95)),
-        url('../imagenes/Fondo.png') no-repeat center center fixed;
-    background-size:cover;
-    font-family: 'Poppins', sans-serif;
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-.main { padding: 40px; }
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-.catalogo {
-    background: rgba(15,23,42,0.85);
-    backdrop-filter: blur(14px);
-    border-radius: 20px;
-    padding: 30px;
-}
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-.titulo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 38px;
-    background: linear-gradient(90deg, #38bdf8, #60a5fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    text-shadow: 0 0 25px rgba(56,189,248,0.7);
-    margin-bottom: 25px;
-}
-
-/* FILTROS */
-.filtros {
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    justify-content:center;
-    margin-bottom:25px;
-}
-
-.filtros input, .filtros select {
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    background:#020617;
-    color:white;
-}
-
-.btn-limpiar {
-    background:#ef4444;
-    border:none;
-    border-radius:10px;
-    padding:10px 15px;
-    cursor:pointer;
-    color:white;
-}
-
-/* CATEGORIA */
-.categoria-card {
-    background:#1e293b;
-    border-radius:20px;
-    padding:20px;
-    margin-bottom:30px;
-}
-
-/* 🔥 CARRUSEL PRO */
-.slider-container {
-    position: relative;
-}
-
-.contenedor-productos {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    flex-wrap: nowrap;
-    padding:10px 0;
-}
-
-/* ocultar scrollbar */
-.contenedor-productos::-webkit-scrollbar {
-    display: none;
-}
-.contenedor-productos {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* cards */
-.card-producto {
-    min-width:260px;
-    flex:0 0 auto;
-    background:#020617;
-    border-radius:15px;
-    padding:15px;
-    color:white;
-}
-
-.img-producto {
-    width:100%;
-    height:120px;
-    object-fit:contain;
-}
-
-/* botones */
-.btn-carrito {
-    background:#38bdf8;
-    border:none;
-    padding:5px 10px;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-/* flechas */
-.flecha {
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    background:rgba(56,189,248,0.9);
-    border:none;
-    color:white;
-    font-size:20px;
-    padding:12px;
-    cursor:pointer;
-    border-radius:50%;
-    z-index:10;
-    transition:0.3s;
-}
-
-.flecha:hover { background:#0ea5e9; }
-
-.flecha.izquierda { left:-15px; }
-.flecha.derecha { right:-15px; }
-
-.flecha.oculta {
-    opacity:0;
-    pointer-events:none;
-}
-</style>
-
-<div class="main">
-<div class="catalogo">
-
-<h2 class="titulo">CATÁLOGO DE PRODUCTOS</h2>
-
-<!-- FILTROS -->
-<div class="filtros">
-<input type="text" id="buscador" placeholder="Buscar producto...">
-<input type="text" id="precio_min" placeholder="Precio min">
-<input type="text" id="precio_max" placeholder="Precio max">
-
-<select id="categoria">
-<option value="">Todas las categorías</option>
-<?php foreach(array_keys($categorias) as $cat): ?>
-<option value="<?= strtolower($cat) ?>"><?= $cat ?></option>
-<?php endforeach; ?>
-</select>
-
-<button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar</button>
-</div>
-
-<!-- PRODUCTOS -->
-<?php foreach($categorias as $categoria => $productos): ?>
-
-<div class="categoria-card categoria">
-<h3 style="color:white;"><?= $categoria ?></h3>
-
-<div class="slider-container">
-
-<button class="flecha izquierda">❮</button>
-
-<div class="contenedor-productos">
-
-<?php foreach($productos as $p): ?>
-
-<div class="card-producto producto"
-data-nombre="<?= strtolower($p['nombre']) ?>"
-data-precio="<?= $p['precio'] ?>"
-data-categoria="<?= strtolower($categoria) ?>"
-
-<img src="<?= !empty($p['imagen']) 
-? 'image.php?folder=productos&path=' . basename($p['imagen']) 
-: 'default.png' ?>" class="img-producto">
-
-<div><?= $p['nombre'] ?></div>
-<div>$<?= number_format($p['precio']) ?></div>
-
-<form method="POST" action="index.php?action=agregarCarrito">
-<input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
-<input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>">
-<button class="btn-carrito">🛒</button>
-</form>
-
-</div>
-
-<?php endforeach; ?>
-
-</div>
-
-<button class="flecha derecha">❯</button>
-
-</div>
-</div>
-
-<?php endforeach; ?>
-
-</div>
-</div>
-
-<script>
-
-// FILTROS
-const buscador = document.getElementById('buscador');
-const precioMin = document.getElementById('precio_min');
-const precioMax = document.getElementById('precio_max');
-const categoria = document.getElementById('categoria');
-
-buscador.addEventListener('input', filtrar);
-precioMin.addEventListener('input', filtrar);
-precioMax.addEventListener('input', filtrar);
-categoria.addEventListener('change', filtrar);
-
-function filtrar() {
-
-    let texto = buscador.value.toLowerCase().trim();
-    let min = precioMin.value.replace(/\./g, '');
-    let max = precioMax.value.replace(/\./g, '');
-    let cat = categoria.value.toLowerCase();
-
-    document.querySelectorAll('.categoria-card').forEach(categoriaDiv => {
-
-        let productos = categoriaDiv.querySelectorAll('.producto');
-        let visibles = 0;
-
-        productos.forEach(prod => {
-
-            let nombre = prod.dataset.nombre.toLowerCase();
-            let precio = parseInt(prod.dataset.precio);
-            let categoriaProd = prod.dataset.categoria.toLowerCase();
-
-            let matchTexto = (texto === "" || nombre.includes(texto));
-            let matchMin = (min === "" || precio >= parseInt(min));
-            let matchMax = (max === "" || precio <= parseInt(max));
-            let matchCat = (cat === "" || categoriaProd === cat);
-
-            if (matchTexto && matchMin && matchMax && matchCat) {
-                prod.style.display = "block";
-                visibles++;
-            } else {
-                prod.style.display = "none";
-            }
-
-        });
-
-        categoriaDiv.style.display = visibles === 0 ? "none" : "block";
-
-    });
-
-}
-
-function limpiarFiltros(){
-    buscador.value="";
-    precioMin.value="";
-    precioMax.value="";
-    categoria.value="";
-    filtrar();
-}
-
-// FORMATO
-function formatoMiles(input){
-    input.addEventListener('input',function(){
-        let valor=this.value.replace(/\D/g,'');
-        if(valor==='') return;
-        this.value=Number(valor).toLocaleString('es-CO');
-    });
-}
-formatoMiles(precioMin);
-formatoMiles(precioMax);
-
-// 🔥 CARRUSEL PRO
-document.querySelectorAll('.slider-container').forEach(slider=>{
-
-    const contenedor = slider.querySelector('.contenedor-productos');
-    const btnIzq = slider.querySelector('.flecha.izquierda');
-    const btnDer = slider.querySelector('.flecha.derecha');
-
-    function actualizar(){
-        btnIzq.classList.toggle('oculta', contenedor.scrollLeft<=0);
-        btnDer.classList.toggle('oculta',
-            contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth-5
+  void _handleLogin() {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      
+      // Aquí después conectaremos con el backend
+      Future.delayed(const Duration(seconds: 1), () {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Inicio de sesión exitoso (demo)')),
         );
+        // Aquí navegarías a la pantalla principal
+      });
     }
+  }
 
-    btnIzq.onclick = ()=>contenedor.scrollBy({left:-contenedor.clientWidth,behavior:'smooth'});
-    btnDer.onclick = ()=>contenedor.scrollBy({left:contenedor.clientWidth,behavior:'smooth'});
-
-    contenedor.addEventListener('scroll', actualizar);
-
-    // drag
-    let isDown=false,startX,scrollLeft;
-
-    contenedor.addEventListener('mousedown',e=>{
-        isDown=true;
-        startX=e.pageX-contenedor.offsetLeft;
-        scrollLeft=contenedor.scrollLeft;
-    });
-
-    contenedor.addEventListener('mouseleave',()=>isDown=false);
-    contenedor.addEventListener('mouseup',()=>isDown=false);
-
-    contenedor.addEventListener('mousemove',e=>{
-        if(!isDown) return;
-        e.preventDefault();
-        const x=e.pageX-contenedor.offsetLeft;
-        const walk=(x-startX)*1.5;
-        contenedor.scrollLeft=scrollLeft-walk;
-    });
-
-    actualizar();
-});
-
-</script>
-
-<?php require_once __DIR__ . '/layouts/footer.php'; ?>
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo o ícono
+                  Icon(
+                    Icons.eco,
+                    size: 80,
+                    color: Colors.green[700],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'EcoRuta',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[800],
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  
+                  // Campo Email
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Correo electrónico',
+                      prefixIcon: Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa tu correo';
+                      }
+                      if (!value.contains('@') || !value.contains('.')) {
+                        return 'Ingresa un correo válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Campo Contraseña
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Contraseña',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa tu contraseña';
+                      }
+                      if (value.length < 6) {
+                        return 'La contraseña debe tener al menos 6 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Botón Login
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[700],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Iniciar Sesión',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Enlace a Registro
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('¿No tienes cuenta?'),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Regístrate'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
