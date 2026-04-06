@@ -23,42 +23,21 @@ body {
 .titulo {
     font-family: 'Orbitron', sans-serif;
     font-size: 38px;
-    background: linear-gradient(90deg, #38bdf8, #60a5fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    text-shadow: 0 0 25px rgba(56,189,248,0.7);
+@@ -32,7 +31,7 @@
     margin-bottom: 25px;
 }
 
 /* 🔍 FILTROS */
+/* FILTROS */
 .filtros {
     display:flex;
     gap:10px;
-    flex-wrap:wrap;
-    justify-content:center;
-    margin-bottom:25px;
-}
-
-.filtros input, .filtros select {
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    background:#020617;
-    color:white;
-}
-
-.btn-limpiar {
-    background:#ef4444;
-    border:none;
-    border-radius:10px;
-    padding:10px 15px;
-    cursor:pointer;
+@@ -58,29 +57,44 @@
     color:white;
 }
 
 /* 📦 CATEGORIA */
+/* CATEGORIA */
 .categoria-card {
     background:#1e293b;
     border-radius:20px;
@@ -67,16 +46,38 @@ body {
 }
 
 /* PRODUCTOS */
+/* 🔥 CARRUSEL PRO */
+.slider-container {
+    position: relative;
+}
+
 .contenedor-productos {
+    display:flex;
+    gap:20px;
+    overflow-x:hidden; /* 🔥 quitamos la barra */
+    scroll-behavior:smooth;
     display: flex;
     gap: 20px;
-    overflow-x: hidden;
+    overflow-x: auto;
     scroll-behavior: smooth;
-    flex-wrap: nowrap; 
+    flex-wrap: nowrap;
+    padding:10px 0;
 }
 
 /* CARD */
+/* ocultar scrollbar */
+.contenedor-productos::-webkit-scrollbar {
+    display: none;
+}
+.contenedor-productos {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* cards */
 .card-producto {
+    min-width:260px;
+    flex:0 0 auto;
     background:#020617;
     border-radius:15px;
     padding:15px;
@@ -85,18 +86,16 @@ body {
     color:white;
 }
 
-.img-producto {
-    width:100%;
-    height:120px;
+@@ -90,7 +104,7 @@
     object-fit:contain;
 }
 
 /* BOTON */
+/* botones */
 .btn-carrito {
     background:#38bdf8;
     border:none;
-    padding:5px 10px;
-    border-radius:5px;
+@@ -99,203 +113,204 @@
     cursor:pointer;
 }
 
@@ -104,29 +103,40 @@ body {
     position: relative;
 }
 
+/* flechas */
 .flecha {
     position:absolute;
     top:50%;
     transform:translateY(-50%);
     background:rgba(56,189,248,0.8);
+    background:rgba(56,189,248,0.9);
     border:none;
     color:white;
     font-size:22px;
     padding:10px 14px;
+    font-size:20px;
+    padding:12px;
     cursor:pointer;
     border-radius:50%;
     z-index:10;
+    transition:0.3s;
 }
 
 .flecha.izquierda { left:-10px; }
 .flecha.derecha { right:-10px; }
+.flecha:hover { background:#0ea5e9; }
 
 .flecha:hover {
     background:#38bdf8;
 }
+.flecha.izquierda { left:-15px; }
+.flecha.derecha { right:-15px; }
 
 .contenedor-productos::-webkit-scrollbar {
     display: none;
+.flecha.oculta {
+    opacity:0;
+    pointer-events:none;
 }
 
 </style>
@@ -137,6 +147,7 @@ body {
 <h2 class="titulo">CATÁLOGO DE PRODUCTOS</h2>
 
 <!-- 🔥 FILTROS PRO -->
+<!-- FILTROS -->
 <div class="filtros">
 
 <input type="text" id="buscador" placeholder="Buscar producto...">
@@ -150,6 +161,10 @@ body {
     <?php foreach(array_keys($categorias) as $cat): ?>
         <option value="<?= $cat ?>"><?= $cat ?></option>
     <?php endforeach; ?>
+<option value="">Todas las categorías</option>
+<?php foreach(array_keys($categorias) as $cat): ?>
+<option value="<?= $cat ?>"><?= $cat ?></option>
+<?php endforeach; ?>
 </select>
 
 <button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar</button>
@@ -157,6 +172,7 @@ body {
 </div>
 
 <!-- 🔥 PRODUCTOS -->
+<!-- PRODUCTOS -->
 <?php foreach($categorias as $categoria => $productos): ?>
 
 <div class="categoria-card categoria">
@@ -166,38 +182,60 @@ body {
 <div class="slider-container">
 
     <button class="flecha izquierda" onclick="scrollIzquierda(this)">❮</button>
+<button class="flecha izquierda">❮</button>
 
     <div class="contenedor-productos">
+<div class="contenedor-productos">
 
         <?php foreach($productos as $p): ?>
+<?php foreach($productos as $p): ?>
 
         <div class="card-producto producto"
             data-nombre="<?= strtolower($p['nombre']) ?>"
             data-precio="<?= $p['precio'] ?>"
             data-categoria="<?= $categoria ?>">
+<div class="card-producto producto"
+data-nombre="<?= strtolower($p['nombre']) ?>"
+data-precio="<?= $p['precio'] ?>"
+data-categoria="<?= $categoria ?>">
 
             <img src="<?= !empty($p['imagen']) 
             ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
             : 'default.png' ?>" class="img-producto">
+<img src="<?= !empty($p['imagen']) 
+? 'image.php?folder=productos&path=' . basename($p['imagen']) 
+: 'default.png' ?>" class="img-producto">
 
             <div class="nombre-producto"><?= $p['nombre'] ?></div>
             <div>$<?= number_format($p['precio']) ?></div>
+<div><?= $p['nombre'] ?></div>
+<div>$<?= number_format($p['precio']) ?></div>
 
             <form method="POST" action="index.php?action=agregarCarrito">
                 <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
                 <input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>">
                 <button class="btn-carrito">🛒</button>
             </form>
+<form method="POST" action="index.php?action=agregarCarrito">
+<input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
+<input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>">
+<button class="btn-carrito">🛒</button>
+</form>
 
         </div>
+</div>
 
         <?php endforeach; ?>
+<?php endforeach; ?>
 
     </div>
+</div>
 
     <!-- 🔥 LA FLECHA VA AQUÍ DENTRO -->
     <button class="flecha derecha" onclick="scrollDerecha(this)">❯</button>
+<button class="flecha derecha">❯</button>
 
+</div>
 </div>
 
 <?php endforeach; ?>
@@ -209,6 +247,7 @@ body {
 <script>
 
 // ELEMENTOS
+// FILTROS
 const buscador = document.getElementById('buscador');
 const precioMin = document.getElementById('precio_min');
 const precioMax = document.getElementById('precio_max');
@@ -226,15 +265,19 @@ function filtrar() {
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g, '');
     let max = precioMax.value.replace(/\./g, '');
+    let min = precioMin.value.replace(/\./g,'');
+    let max = precioMax.value.replace(/\./g,'');
     let cat = categoria.value;
 
     document.querySelectorAll('.categoria').forEach(categoriaDiv => {
 
+    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
         let productos = categoriaDiv.querySelectorAll('.producto');
         let visibles = 0;
 
         productos.forEach(prod => {
 
+        productos.forEach(prod=>{
             let nombre = prod.dataset.nombre;
             let precio = parseInt(prod.dataset.precio);
             let categoriaProd = prod.dataset.categoria;
@@ -250,11 +293,18 @@ function filtrar() {
             } else {
                 prod.style.display = "none";
             }
+            let ok = nombre.includes(texto)
+                && (min=="" || precio>=min)
+                && (max=="" || precio<=max)
+                && (cat=="" || categoriaProd==cat);
 
+            prod.style.display = ok ? "block":"none";
+            if(ok) visibles++;
         });
 
         categoriaDiv.style.display = visibles > 0 ? "block" : "none";
 
+        categoriaDiv.style.display = visibles>0?"block":"none";
     });
 
 }
@@ -265,38 +315,86 @@ function limpiarFiltros() {
     precioMin.value = "";
     precioMax.value = "";
     categoria.value = "";
+function limpiarFiltros(){
+    buscador.value="";
+    precioMin.value="";
+    precioMax.value="";
+    categoria.value="";
     filtrar();
 }
 
 // 💰 FORMATO DE MILES
 function formatoMiles(input) {
+// FORMATO
+function formatoMiles(input){
+    input.addEventListener('input',function(){
+        let valor=this.value.replace(/\D/g,'');
+        if(valor==='') return;
+        this.value=Number(valor).toLocaleString('es-CO');
+    });
+}
+formatoMiles(precioMin);
+formatoMiles(precioMax);
 
     input.addEventListener('input', function() {
+// 🔥 CARRUSEL PRO
+document.querySelectorAll('.slider-container').forEach(slider=>{
 
         let valor = this.value.replace(/\D/g, '');
         if (valor === '') return;
+    const contenedor = slider.querySelector('.contenedor-productos');
+    const btnIzq = slider.querySelector('.flecha.izquierda');
+    const btnDer = slider.querySelector('.flecha.derecha');
 
         this.value = Number(valor).toLocaleString('es-CO');
+    function actualizar(){
+        btnIzq.classList.toggle('oculta', contenedor.scrollLeft<=0);
+        btnDer.classList.toggle('oculta',
+            contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth-5
+        );
+    }
 
     });
+    btnIzq.onclick = ()=>contenedor.scrollBy({left:-contenedor.clientWidth,behavior:'smooth'});
+    btnDer.onclick = ()=>contenedor.scrollBy({left:contenedor.clientWidth,behavior:'smooth'});
 
 }
+    contenedor.addEventListener('scroll', actualizar);
 
 formatoMiles(precioMin);
 formatoMiles(precioMax);
+    // drag
+    let isDown=false,startX,scrollLeft;
 
 function scrollIzquierda(btn) {
     let contenedor = btn.parentElement.querySelector('.contenedor-productos');
     contenedor.scrollBy({ left: -300, behavior: 'smooth' });
 }
+    contenedor.addEventListener('mousedown',e=>{
+        isDown=true;
+        startX=e.pageX-contenedor.offsetLeft;
+        scrollLeft=contenedor.scrollLeft;
+    });
 
 function scrollDerecha(btn) {
     let contenedor = btn.parentElement.querySelector('.contenedor-productos');
     contenedor.scrollBy({ left: 300, behavior: 'smooth' });
 }
+    contenedor.addEventListener('mouseleave',()=>isDown=false);
+    contenedor.addEventListener('mouseup',()=>isDown=false);
 
 </script>
+    contenedor.addEventListener('mousemove',e=>{
+        if(!isDown) return;
+        e.preventDefault();
+        const x=e.pageX-contenedor.offsetLeft;
+        const walk=(x-startX)*1.5;
+        contenedor.scrollLeft=scrollLeft-walk;
+    });
 
+    actualizar();
+});
 
+</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
