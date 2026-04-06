@@ -211,17 +211,25 @@ data-categoria="<?= $categoria ?>">
 
 <script>
 
-// FILTROS
+// ELEMENTOS
 const buscador = document.getElementById('buscador');
 const precioMin = document.getElementById('precio_min');
 const precioMax = document.getElementById('precio_max');
 const categoria = document.getElementById('categoria');
 
-buscador.addEventListener('input', filtrar);
+// 🔥 GUARDAR OPCIONES ORIGINALES DEL SELECT
+const opcionesOriginales = Array.from(categoria.options);
+
+// EVENTOS
+buscador.addEventListener('input', ()=>{
+    filtrar();
+    filtrarCategorias();
+});
 precioMin.addEventListener('input', filtrar);
 precioMax.addEventListener('input', filtrar);
 categoria.addEventListener('change', filtrar);
 
+// 🔥 FILTRO PRINCIPAL
 function filtrar() {
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g,'');
@@ -250,11 +258,58 @@ function filtrar() {
     });
 }
 
+// 🔥 NUEVO: FILTRAR SELECT SEGÚN BÚSQUEDA
+function filtrarCategorias(){
+    let texto = buscador.value.toLowerCase();
+
+    categoria.innerHTML = "";
+
+    let categoriasVisibles = new Set();
+
+    // Detectar categorías que tienen productos visibles
+    document.querySelectorAll('.producto').forEach(prod=>{
+        let nombre = prod.dataset.nombre;
+
+        if(nombre.includes(texto)){
+            categoriasVisibles.add(prod.dataset.categoria);
+        }
+    });
+
+    // Siempre agregar "Todas"
+    let optionTodas = document.createElement("option");
+    optionTodas.value = "";
+    optionTodas.textContent = "Todas las categorías";
+    categoria.appendChild(optionTodas);
+
+    // Agregar solo las categorías que coinciden
+    opcionesOriginales.forEach(op=>{
+        if(op.value !== "" && categoriasVisibles.has(op.value)){
+            categoria.appendChild(op.cloneNode(true));
+        }
+    });
+
+    // Si no hay texto, restaurar todo
+    if(texto === ""){
+        categoria.innerHTML = "";
+        opcionesOriginales.forEach(op=>{
+            categoria.appendChild(op.cloneNode(true));
+        });
+    }
+}
+
+// LIMPIAR
 function limpiarFiltros(){
     buscador.value="";
     precioMin.value="";
     precioMax.value="";
     categoria.value="";
+
+    // restaurar categorías
+    categoria.innerHTML = "";
+    opcionesOriginales.forEach(op=>{
+        categoria.appendChild(op.cloneNode(true));
+    });
+
     filtrar();
 }
 
@@ -269,7 +324,7 @@ function formatoMiles(input){
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-// 🔥 CARRUSEL PRO
+// 🔥 CARRUSEL (igual que el tuyo)
 document.querySelectorAll('.slider-container').forEach(slider=>{
 
     const contenedor = slider.querySelector('.contenedor-productos');
@@ -288,7 +343,6 @@ document.querySelectorAll('.slider-container').forEach(slider=>{
 
     contenedor.addEventListener('scroll', actualizar);
 
-    // drag
     let isDown=false,startX,scrollLeft;
 
     contenedor.addEventListener('mousedown',e=>{
