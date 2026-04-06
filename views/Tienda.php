@@ -154,7 +154,7 @@ body {
 <select id="categoria">
 <option value="">Todas las categorías</option>
 <?php foreach(array_keys($categorias) as $cat): ?>
-<option value="<?= $cat ?>"><?= $cat ?></option>
+<option value="<?= strtolower($cat) ?>"><?= $cat ?></option>
 <?php endforeach; ?>
 </select>
 
@@ -178,7 +178,7 @@ body {
 <div class="card-producto producto"
 data-nombre="<?= strtolower($p['nombre']) ?>"
 data-precio="<?= $p['precio'] ?>"
-data-categoria="<?= $categoria ?>">
+data-categoria="<?= strtolower($categoria) ?>"
 
 <img src="<?= !empty($p['imagen']) 
 ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
@@ -223,31 +223,41 @@ precioMax.addEventListener('input', filtrar);
 categoria.addEventListener('change', filtrar);
 
 function filtrar() {
-    let texto = buscador.value.toLowerCase();
-    let min = precioMin.value.replace(/\./g,'');
-    let max = precioMax.value.replace(/\./g,'');
-    let cat = categoria.value;
 
-    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
+    let texto = buscador.value.toLowerCase().trim();
+    let min = precioMin.value.replace(/\./g, '');
+    let max = precioMax.value.replace(/\./g, '');
+    let cat = categoria.value.toLowerCase();
+
+    document.querySelectorAll('.categoria-card').forEach(categoriaDiv => {
+
         let productos = categoriaDiv.querySelectorAll('.producto');
         let visibles = 0;
 
-        productos.forEach(prod=>{
-            let nombre = prod.dataset.nombre;
+        productos.forEach(prod => {
+
+            let nombre = prod.dataset.nombre.toLowerCase();
             let precio = parseInt(prod.dataset.precio);
-            let categoriaProd = prod.dataset.categoria;
+            let categoriaProd = prod.dataset.categoria.toLowerCase();
 
-            let ok = nombre.includes(texto)
-                && (min=="" || precio>=min)
-                && (max=="" || precio<=max)
-                && (cat=="" || categoriaProd==cat);
+            let matchTexto = (texto === "" || nombre.includes(texto));
+            let matchMin = (min === "" || precio >= parseInt(min));
+            let matchMax = (max === "" || precio <= parseInt(max));
+            let matchCat = (cat === "" || categoriaProd === cat);
 
-            prod.style.display = ok ? "block":"none";
-            if(ok) visibles++;
+            if (matchTexto && matchMin && matchMax && matchCat) {
+                prod.style.display = "block";
+                visibles++;
+            } else {
+                prod.style.display = "none";
+            }
+
         });
 
-        categoriaDiv.style.display = visibles>0?"block":"none";
+        categoriaDiv.style.display = visibles === 0 ? "none" : "block";
+
     });
+
 }
 
 function limpiarFiltros(){
