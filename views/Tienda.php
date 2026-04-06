@@ -217,110 +217,73 @@ const precioMin = document.getElementById('precio_min');
 const precioMax = document.getElementById('precio_max');
 const categoria = document.getElementById('categoria');
 
-// 🔥 GUARDAR OPCIONES ORIGINALES DEL SELECT
+// GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
 
-// EVENTOS
-buscador.addEventListener('input', ()=>{
-    filtrar();
-    filtrarCategorias();
+// 🔥 UN SOLO EVENTO PARA TODO
+[buscador, precioMin, precioMax, categoria].forEach(el=>{
+    el.addEventListener('input', actualizarFiltros);
 });
 
-precioMin.addEventListener('input', ()=>{
-    filtrar();
-    filtrarCategorias();
-});
+// 🔥 FUNCIÓN PRINCIPAL (TODO EN UNO)
+function actualizarFiltros(){
 
-precioMax.addEventListener('input', ()=>{
-    filtrar();
-    filtrarCategorias();
-});
-
-categoria.addEventListener('change', ()=>{
-    filtrar();
-    filtrarCategorias();
-});
-
-// 🔥 FILTRO PRINCIPAL
-function filtrarCategorias(){
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g,'');
     let max = precioMax.value.replace(/\./g,'');
     let cat = categoria.value;
 
-    categoria.innerHTML = "";
-
     let categoriasVisibles = new Set();
 
-    document.querySelectorAll('.producto').forEach(prod=>{
-        let nombre = prod.dataset.nombre;
-        let precio = parseInt(prod.dataset.precio);
-        let categoriaProd = prod.dataset.categoria;
+    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
+        let productos = categoriaDiv.querySelectorAll('.producto');
+        let visibles = 0;
 
-        let ok = nombre.includes(texto)
-            && (min=="" || precio>=min)
-            && (max=="" || precio<=max)
-            && (cat=="" || categoriaProd==cat);
+        productos.forEach(prod=>{
+            let nombre = prod.dataset.nombre;
+            let precio = parseInt(prod.dataset.precio);
+            let categoriaProd = prod.dataset.categoria;
 
-        if(ok){
-            categoriasVisibles.add(categoriaProd);
-        }
-    });
+            let ok = true;
 
-    // opción "todas"
-    let optionTodas = document.createElement("option");
-    optionTodas.value = "";
-    optionTodas.textContent = "Todas las categorías";
-    categoria.appendChild(optionTodas);
+            if(texto && !nombre.includes(texto)) ok = false;
+            if(min && precio < parseInt(min)) ok = false;
+            if(max && precio > parseInt(max)) ok = false;
+            if(cat && categoriaProd !== cat) ok = false;
 
-    // agregar solo categorías válidas
-    opcionesOriginales.forEach(op=>{
-        if(op.value !== "" && categoriasVisibles.has(op.value)){
-            categoria.appendChild(op.cloneNode(true));
-        }
-    });
+            prod.style.display = ok ? "block":"none";
 
-    // restaurar todo si no hay filtros
-    if(texto==="" && min==="" && max===""){
-        categoria.innerHTML = "";
-        opcionesOriginales.forEach(op=>{
-            categoria.appendChild(op.cloneNode(true));
+            if(ok){
+                visibles++;
+                categoriasVisibles.add(categoriaProd);
+            }
         });
-    }
-}
 
-// 🔥 NUEVO: FILTRAR SELECT SEGÚN BÚSQUEDA
-function filtrarCategorias(){
-    let texto = buscador.value.toLowerCase();
+        categoriaDiv.style.display = visibles>0?"block":"none";
+    });
+
+    // 🔥 ACTUALIZAR SELECT SIN ROMPER
+    let valorActual = categoria.value;
 
     categoria.innerHTML = "";
 
-    let categoriasVisibles = new Set();
-
-    // Detectar categorías que tienen productos visibles
-    document.querySelectorAll('.producto').forEach(prod=>{
-        let nombre = prod.dataset.nombre;
-
-        if(nombre.includes(texto)){
-            categoriasVisibles.add(prod.dataset.categoria);
-        }
-    });
-
-    // Siempre agregar "Todas"
     let optionTodas = document.createElement("option");
     optionTodas.value = "";
     optionTodas.textContent = "Todas las categorías";
     categoria.appendChild(optionTodas);
 
-    // Agregar solo las categorías que coinciden
     opcionesOriginales.forEach(op=>{
         if(op.value !== "" && categoriasVisibles.has(op.value)){
-            categoria.appendChild(op.cloneNode(true));
+            let nueva = op.cloneNode(true);
+            if(nueva.value === valorActual){
+                nueva.selected = true;
+            }
+            categoria.appendChild(nueva);
         }
     });
 
-    // Si no hay texto, restaurar todo
-    if(texto === ""){
+    // 🔥 RESTAURAR SI TODO VACÍO
+    if(!texto && !min && !max && !cat){
         categoria.innerHTML = "";
         opcionesOriginales.forEach(op=>{
             categoria.appendChild(op.cloneNode(true));
@@ -335,13 +298,12 @@ function limpiarFiltros(){
     precioMax.value="";
     categoria.value="";
 
-    // restaurar categorías
     categoria.innerHTML = "";
     opcionesOriginales.forEach(op=>{
         categoria.appendChild(op.cloneNode(true));
     });
 
-    filtrar();
+    actualizarFiltros();
 }
 
 // FORMATO
@@ -355,7 +317,7 @@ function formatoMiles(input){
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-// 🔥 CARRUSEL (igual que el tuyo)
+// 🔥 CARRUSEL (sin cambios)
 document.querySelectorAll('.slider-container').forEach(slider=>{
 
     const contenedor = slider.querySelector('.contenedor-productos');
