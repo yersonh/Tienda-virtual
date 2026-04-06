@@ -25,9 +25,6 @@ body {
     background: linear-gradient(90deg, #38bdf8, #60a5fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    text-shadow: 0 0 25px rgba(56,189,248,0.7);
     margin-bottom: 25px;
 }
 
@@ -53,7 +50,6 @@ body {
     border:none;
     border-radius:10px;
     padding:10px 15px;
-    cursor:pointer;
     color:white;
 }
 
@@ -65,30 +61,27 @@ body {
     margin-bottom:30px;
 }
 
-/* 🔥 CARRUSEL PRO */
+.categoria-card h3 {
+    color:#38bdf8;
+}
+
+/* CARRUSEL */
 .slider-container {
     position: relative;
 }
 
 .contenedor-productos {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    flex-wrap: nowrap;
-    padding:10px 0;
+    display:flex;
+    gap:20px;
+    overflow-x:auto;
+    scroll-behavior:smooth;
 }
 
-/* ocultar scrollbar */
 .contenedor-productos::-webkit-scrollbar {
-    display: none;
-}
-.contenedor-productos {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    display:none;
 }
 
-/* cards */
+/* CARD */
 .card-producto {
     min-width:260px;
     flex:0 0 auto;
@@ -96,48 +89,58 @@ body {
     border-radius:15px;
     padding:15px;
     color:white;
+    transition:0.3s;
+    cursor:pointer;
 }
 
+.card-producto:hover {
+    transform:translateY(-8px);
+    box-shadow:0 10px 25px rgba(56,189,248,0.4);
+}
+
+/* IMG */
 .img-producto {
     width:100%;
     height:120px;
     object-fit:contain;
+    transition:0.3s;
 }
 
-/* botones */
+.card-producto:hover .img-producto {
+    transform:scale(1.1);
+}
+
+/* BOTON */
 .btn-carrito {
     background:#38bdf8;
     border:none;
-    padding:5px 10px;
-    border-radius:5px;
+    padding:6px 12px;
+    border-radius:6px;
     cursor:pointer;
+    transition:0.2s;
 }
 
-/* flechas */
+.btn-carrito:hover {
+    background:#0ea5e9;
+    transform:scale(1.1);
+}
+
+/* FLECHAS */
 .flecha {
     position:absolute;
     top:50%;
     transform:translateY(-50%);
-    background:rgba(56,189,248,0.9);
+    background:#38bdf8;
     border:none;
     color:white;
-    font-size:20px;
-    padding:12px;
-    cursor:pointer;
+    padding:10px;
     border-radius:50%;
+    cursor:pointer;
     z-index:10;
-    transition:0.3s;
 }
-
-.flecha:hover { background:#0ea5e9; }
 
 .flecha.izquierda { left:-15px; }
 .flecha.derecha { right:-15px; }
-
-.flecha.oculta {
-    opacity:0;
-    pointer-events:none;
-}
 </style>
 
 <div class="main">
@@ -158,14 +161,14 @@ body {
 <?php endforeach; ?>
 </select>
 
-<button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar</button>
+<button onclick="limpiarFiltros()">Limpiar</button>
 </div>
 
 <!-- PRODUCTOS -->
 <?php foreach($categorias as $categoria => $productos): ?>
 
 <div class="categoria-card categoria">
-<h3 style="color:white;"><?= $categoria ?></h3>
+<h3><?= $categoria ?></h3>
 
 <div class="slider-container">
 
@@ -211,104 +214,90 @@ data-categoria="<?= $categoria ?>">
 
 <script>
 
-// FILTROS
+// ELEMENTOS
 const buscador = document.getElementById('buscador');
 const precioMin = document.getElementById('precio_min');
 const precioMax = document.getElementById('precio_max');
 const categoria = document.getElementById('categoria');
 
+// EVENTOS
 buscador.addEventListener('input', filtrar);
 precioMin.addEventListener('input', filtrar);
 precioMax.addEventListener('input', filtrar);
 categoria.addEventListener('change', filtrar);
 
+// FILTRO CLARO
 function filtrar() {
+
     let texto = buscador.value.toLowerCase();
-    let min = precioMin.value.replace(/\./g,'');
-    let max = precioMax.value.replace(/\./g,'');
+    let min = precioMin.value.replace(/\./g, '');
+    let max = precioMax.value.replace(/\./g, '');
     let cat = categoria.value;
 
-    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
+    document.querySelectorAll('.categoria').forEach(categoriaDiv => {
+
         let productos = categoriaDiv.querySelectorAll('.producto');
         let visibles = 0;
 
-        productos.forEach(prod=>{
+        productos.forEach(prod => {
+
             let nombre = prod.dataset.nombre;
             let precio = parseInt(prod.dataset.precio);
             let categoriaProd = prod.dataset.categoria;
 
-            let ok = nombre.includes(texto)
-                && (min=="" || precio>=min)
-                && (max=="" || precio<=max)
-                && (cat=="" || categoriaProd==cat);
+            let matchTexto = nombre.includes(texto);
+            let matchMin = (min === "" || precio >= parseInt(min));
+            let matchMax = (max === "" || precio <= parseInt(max));
+            let matchCat = (cat === "" || categoriaProd === cat);
 
-            prod.style.display = ok ? "block":"none";
-            if(ok) visibles++;
+            if (matchTexto && matchMin && matchMax && matchCat) {
+                prod.style.display = "block";
+                visibles++;
+            } else {
+                prod.style.display = "none";
+            }
+
         });
 
-        categoriaDiv.style.display = visibles>0?"block":"none";
+        categoriaDiv.style.display = visibles > 0 ? "block" : "none";
+
     });
 }
 
-function limpiarFiltros(){
-    buscador.value="";
-    precioMin.value="";
-    precioMax.value="";
-    categoria.value="";
+// LIMPIAR
+function limpiarFiltros() {
+    buscador.value = "";
+    precioMin.value = "";
+    precioMax.value = "";
+    categoria.value = "";
     filtrar();
 }
 
-// FORMATO
-function formatoMiles(input){
-    input.addEventListener('input',function(){
-        let valor=this.value.replace(/\D/g,'');
-        if(valor==='') return;
-        this.value=Number(valor).toLocaleString('es-CO');
-    });
-}
-formatoMiles(precioMin);
-formatoMiles(precioMax);
-
-// 🔥 CARRUSEL PRO
-document.querySelectorAll('.slider-container').forEach(slider=>{
+// CARRUSEL
+document.querySelectorAll('.slider-container').forEach(slider => {
 
     const contenedor = slider.querySelector('.contenedor-productos');
     const btnIzq = slider.querySelector('.flecha.izquierda');
     const btnDer = slider.querySelector('.flecha.derecha');
 
-    function actualizar(){
-        btnIzq.classList.toggle('oculta', contenedor.scrollLeft<=0);
-        btnDer.classList.toggle('oculta',
-            contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth-5
-        );
-    }
+    btnIzq.onclick = function() {
+        contenedor.scrollBy({ left: -contenedor.clientWidth, behavior: 'smooth' });
+    };
 
-    btnIzq.onclick = ()=>contenedor.scrollBy({left:-contenedor.clientWidth,behavior:'smooth'});
-    btnDer.onclick = ()=>contenedor.scrollBy({left:contenedor.clientWidth,behavior:'smooth'});
+    btnDer.onclick = function() {
+        contenedor.scrollBy({ left: contenedor.clientWidth, behavior: 'smooth' });
+    };
 
-    contenedor.addEventListener('scroll', actualizar);
+});
 
-    // drag
-    let isDown=false,startX,scrollLeft;
-
-    contenedor.addEventListener('mousedown',e=>{
-        isDown=true;
-        startX=e.pageX-contenedor.offsetLeft;
-        scrollLeft=contenedor.scrollLeft;
+// EFECTO BOTON
+document.querySelectorAll('.btn-carrito').forEach(btn => {
+    btn.addEventListener('click', function() {
+        btn.innerHTML = "✔";
+        setTimeout(() => {
+            btn.innerHTML = "🛒";
+        }, 700);
     });
-
-    contenedor.addEventListener('mouseleave',()=>isDown=false);
-    contenedor.addEventListener('mouseup',()=>isDown=false);
-
-    contenedor.addEventListener('mousemove',e=>{
-        if(!isDown) return;
-        e.preventDefault();
-        const x=e.pageX-contenedor.offsetLeft;
-        const walk=(x-startX)*1.5;
-        contenedor.scrollLeft=scrollLeft-walk;
-    });
-
-    actualizar();
 });
 
 </script>
