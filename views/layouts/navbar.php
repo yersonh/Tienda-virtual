@@ -36,14 +36,23 @@ body {
 }
 
 .sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: #e2e8f0;
     margin-right: 25px;
     text-decoration: none;
     font-weight: bold;
+    transition: 0.3s;
+}
+
+.sidebar a i {
+    font-size: 14px;
 }
 
 .sidebar a:hover {
     color: #38bdf8;
+    transform: scale(1.05);
 }
 
 .sidebar-space {
@@ -75,7 +84,6 @@ body {
     opacity: 0.7;
 }
 
-/* 🔥 ANIMACIÓN */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -90,7 +98,6 @@ body {
 .espacio-pequeno {
     width: 50px;
 }
-
 </style>
 </head>
 
@@ -106,8 +113,14 @@ body {
     
     <div class="espacio-pequeno"></div>
 
-    <a href="index.php?action=inicio">🏠 Inicio</a>
-    <a href="index.php?action=tienda">🛒 Productos</a>
+    <!-- 🔥 LINKS PRINCIPALES -->
+    <a href="index.php?action=inicio">
+        <i class="fas fa-house"></i> Inicio
+    </a>
+
+    <a href="index.php?action=tienda">
+        <i class="fas fa-box"></i> Productos
+    </a>
 
     <div class="sidebar-space"></div>
 
@@ -117,7 +130,6 @@ body {
         <!-- 👤 AVATAR + NOMBRE -->
         <div style="display:flex; align-items:center; gap:10px; margin-right:15px;">
 
-            <!-- 🔥 AVATAR -->
             <div style="
                 width:35px;
                 height:35px;
@@ -132,20 +144,29 @@ body {
                 <?= strtoupper(substr($_SESSION['nickname'], 0, 1)) ?>
             </div>
 
-            <!-- 👤 NOMBRE -->
             <span style="color:#38bdf8; font-weight:bold;">
                 <?= htmlspecialchars($_SESSION['nickname']) ?>
             </span>
 
         </div>
 
-        <a href="index.php?action=perfil">👤 Perfil</a>
-        <a href="index.php?action=logout">🚪 Salir</a>
+        <a href="index.php?action=perfil">
+            <i class="fas fa-user"></i> Perfil
+        </a>
+
+        <a href="index.php?action=logout">
+            <i class="fas fa-right-from-bracket"></i> Salir
+        </a>
 
     <?php else: ?>
 
-        <a href="index.php?action=login">🔑 Login</a>
-        <a href="index.php?action=registro">📝 Registro</a>
+        <a href="index.php?action=login">
+            <i class="fas fa-key"></i> Login
+        </a>
+
+        <a href="index.php?action=registro">
+            <i class="fas fa-user-plus"></i> Registro
+        </a>
 
     <?php endif; ?>
 
@@ -173,7 +194,7 @@ body {
 
 </div>
 
-<!-- 🔥 MENSAJE DE BIENVENIDA (SOLO UNA VEZ) -->
+<!-- 🔥 MENSAJE DE BIENVENIDA -->
 <?php if(isset($_SESSION['bienvenida'])): ?>
     <div style="
         background:#38bdf8;
