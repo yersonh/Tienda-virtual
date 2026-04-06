@@ -26,7 +26,6 @@ body {
     background: linear-gradient(90deg, #38bdf8, #60a5fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 25px;
 }
 
 /* FILTROS */
@@ -46,7 +45,6 @@ body {
     color:white;
 }
 
-/* 🔥 BOTÓN ROJO RESTAURADO */
 .btn-limpiar {
     background:#ef4444;
     border:none;
@@ -112,11 +110,6 @@ body {
     width:100%;
     height:120px;
     object-fit:contain;
-    transition:0.3s;
-}
-
-.card-producto:hover .img-producto {
-    transform:scale(1.1);
 }
 
 /* BOTON */
@@ -233,7 +226,7 @@ precioMin.addEventListener('input', filtrar);
 precioMax.addEventListener('input', filtrar);
 categoria.addEventListener('change', filtrar);
 
-// 🔥 FILTRO ORIGINAL (SIN CAMBIOS)
+// 🔥 TU LÓGICA ORIGINAL + FIX
 function filtrar() {
 
     let texto = buscador.value.toLowerCase();
@@ -266,12 +259,17 @@ function filtrar() {
 
         });
 
-        categoriaDiv.style.display = visibles > 0 ? "block" : "none";
+        // 🔥 FIX SIN CAMBIAR LÓGICA
+        if (visibles > 0) {
+            categoriaDiv.style.display = "";
+        } else {
+            categoriaDiv.style.display = "none";
+        }
 
     });
 }
 
-// 🔥 LIMPIAR
+// LIMPIAR
 function limpiarFiltros() {
     buscador.value = "";
     precioMin.value = "";
@@ -280,27 +278,22 @@ function limpiarFiltros() {
     filtrar();
 }
 
-// 🔥 FORMATO DE MILES (RESTAURADO)
+// FORMATO MILES
 function formatoMiles(input) {
-
     input.addEventListener('input', function() {
-
         let valor = this.value.replace(/\D/g, '');
         if (valor === '') {
             this.value = "";
             return;
         }
-
         this.value = Number(valor).toLocaleString('es-CO');
-
     });
-
 }
 
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-// CARRUSEL
+// CARRUSEL (FLECHAS)
 document.querySelectorAll('.slider-container').forEach(slider => {
 
     const contenedor = slider.querySelector('.contenedor-productos');
