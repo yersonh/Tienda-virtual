@@ -17,6 +17,7 @@ body {
     backdrop-filter: blur(14px);
     border-radius: 20px;
     padding: 30px;
+    overflow: visible;
 }
 
 .titulo {
@@ -59,6 +60,7 @@ body {
     border-radius:20px;
     padding:20px;
     margin-bottom:30px;
+    overflow: visible;
 }
 
 .categoria-card h3 {
@@ -68,6 +70,7 @@ body {
 /* CARRUSEL */
 .slider-container {
     position: relative;
+    overflow: visible; 
 }
 
 .contenedor-productos {
@@ -128,7 +131,7 @@ body {
 /* FLECHAS */
 .flecha {
     position:absolute;
-    top:50%;
+    top:45%;
     transform:translateY(-50%);
     background:#38bdf8;
     border:none;
