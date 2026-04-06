@@ -232,8 +232,31 @@ data-categoria="<?= $categoria ?>">
 ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
 : 'default.png' ?>" class="img-producto">
 
-<div><?= $p['nombre'] ?></div>
-<div>$<?= number_format($p['precio']) ?></div>
+<div class="info-producto">
+
+    <div class="nombre-producto"><?= $p['nombre'] ?></div>
+
+    <div><strong>Código:</strong> <?= $p['id_producto'] ?></div>
+
+    <div>
+        <strong>Estado:</strong> 
+        <span style="color:#38bdf8;">
+            <?= $p['estado'] ?? 'Activo' ?>
+        </span>
+    </div>
+
+ 
+    <div><strong>Disponible:</strong> <?= $p['stock_p'] ?></div>
+
+    <div><strong>En carrito:</strong> 
+        <?= $_SESSION['carrito'][$p['codigo']] ?? 0 ?>
+    </div>
+
+    <div class="precio-producto">
+        $<?= number_format($p['precio']) ?>
+    </div>
+
+</div>
 
 <form method="POST" action="index.php?action=agregarCarrito">
 <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
