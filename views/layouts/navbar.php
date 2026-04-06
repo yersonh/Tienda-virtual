@@ -88,7 +88,7 @@ body {
 }
 
 .espacio-pequeno {
-    width: 10px;
+    width: 50px;
 }
 
 </style>
