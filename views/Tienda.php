@@ -235,7 +235,7 @@ categoria.addEventListener('change', filtrar);
 // 🔥 FILTRO DEFINITIVO
 function filtrar() {
 
-    let texto = buscador.value.toLowerCase();
+    let texto = buscador.value.toLowerCase().trim();
     let min = precioMin.value.replace(/\./g, '');
     let max = precioMax.value.replace(/\./g, '');
     let cat = categoria.value;
@@ -247,11 +247,12 @@ function filtrar() {
 
         productos.forEach(prod => {
 
-            let nombre = prod.dataset.nombre;
+            let nombre = prod.dataset.nombre.toLowerCase();
             let precio = parseInt(prod.dataset.precio);
             let categoriaProd = prod.dataset.categoria;
 
-            let matchTexto = nombre.includes(texto);
+            // 🔥 FIX IMPORTANTE
+            let matchTexto = (texto === "" || nombre.includes(texto));
             let matchMin = (min === "" || precio >= parseInt(min));
             let matchMax = (max === "" || precio <= parseInt(max));
             let matchCat = (cat === "" || categoriaProd === cat);
@@ -265,14 +266,15 @@ function filtrar() {
 
         });
 
-        // 🔥 FIX REAL
-        if (visibles > 0) {
-            categoriaDiv.classList.remove("oculto");
-        } else {
+        // 🔥 OCULTAR CATEGORIA CORRECTAMENTE
+        if (visibles === 0) {
             categoriaDiv.classList.add("oculto");
+        } else {
+            categoriaDiv.classList.remove("oculto");
         }
 
     });
+
 }
 
 // LIMPIAR
