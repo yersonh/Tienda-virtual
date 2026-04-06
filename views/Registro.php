@@ -201,9 +201,17 @@ button:hover {
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
         <a href="index.php?action=login" style="color:#38bdf8;">
-            <i class="fas fa-arrow-left"></i> Volver al login
+            <i class="fas fa-arrow-left"></i> Ir al login
         </a>
     </div>
+
+    <!-- VOLVER -->
+    <div style="text-align:center; margin-top:10px;">
+        <a href="index.php?action=tienda" style="color:#38bdf8;">
+            <i class="fas fa-arrow-left"></i> Volver a la tienda
+        </a>
+    </div>
+
 
     <script>
         setTimeout(() => {
