@@ -234,7 +234,7 @@ data-categoria="<?= $categoria ?>">
 
 <div class="info-producto">
 
-    <<div><?= $p['nombre'] ?></div>
+    <div><?= $p['nombre'] ?></div>
 
     <div><strong>Código:</strong> <?= $p['id_producto'] ?></div>
 
