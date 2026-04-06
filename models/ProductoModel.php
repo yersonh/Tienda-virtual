@@ -9,22 +9,22 @@ class ProductoModel {
 
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
     public function obtenerCatalogo() {
-        $query = "SELECT 
-                    p.*, 
-                    c.nombre AS categoria_nombre,
-                    pi.url AS imagen
-                  FROM producto p
-                  INNER JOIN categoria_producto c 
-                      ON p.id_categoria = c.id_categoria
-                  LEFT JOIN producto_imagen pi 
-                      ON pi.id_producto = p.id_producto AND pi.orden = 1
-                  ORDER BY c.nombre, p.nombre";
+    $query = "SELECT 
+                p.*, 
+                c.nombre AS categoria_nombre,
+                pi.url AS imagen
+              FROM producto p
+              INNER JOIN categoria_producto c 
+                  ON p.id_categoria = c.id_categoria
+              LEFT JOIN producto_imagen pi 
+                  ON pi.id_producto = p.id_producto AND pi.orden = 0
+              ORDER BY c.nombre, p.nombre";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     public function obtenerTodos() {
         $query = "SELECT p.*, c.nombre as categoria_nombre 
