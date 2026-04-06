@@ -52,6 +52,8 @@ body {
 
 .filtros button {
     background:#38bdf8;
+}
+
 .btn-limpiar {
     background:#ef4444;
     border:none;
