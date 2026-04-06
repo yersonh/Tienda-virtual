@@ -86,6 +86,11 @@ body {
         transform: translateY(0);
     }
 }
+
+.espacio-pequeno {
+    width: 10px;
+}
+
 </style>
 </head>
 
@@ -99,7 +104,7 @@ body {
         <span>STORE</span>
     </h2>
     
-    <div class="sidebar-space"></div>
+    <div class="espacio-pequeno"></div>
 
     <a href="index.php?action=inicio">🏠 Inicio</a>
     <a href="index.php?action=tienda">🛒 Productos</a>
