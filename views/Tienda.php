@@ -45,6 +45,7 @@ body {
     color:white;
 }
 
+/* 🔥 BOTÓN ROJO */
 .btn-limpiar {
     background:#ef4444;
     border:none;
@@ -57,6 +58,11 @@ body {
 
 .btn-limpiar:hover {
     background:#dc2626;
+}
+
+/* 🔥 CLASE PARA OCULTAR */
+.oculto {
+    display: none !important;
 }
 
 /* CATEGORIA */
@@ -226,7 +232,7 @@ precioMin.addEventListener('input', filtrar);
 precioMax.addEventListener('input', filtrar);
 categoria.addEventListener('change', filtrar);
 
-// 🔥 TU LÓGICA ORIGINAL + FIX
+// 🔥 FILTRO DEFINITIVO
 function filtrar() {
 
     let texto = buscador.value.toLowerCase();
@@ -259,11 +265,11 @@ function filtrar() {
 
         });
 
-        // 🔥 FIX SIN CAMBIAR LÓGICA
+        // 🔥 FIX REAL
         if (visibles > 0) {
-            categoriaDiv.style.display = "";
+            categoriaDiv.classList.remove("oculto");
         } else {
-            categoriaDiv.style.display = "none";
+            categoriaDiv.classList.add("oculto");
         }
 
     });
@@ -293,20 +299,15 @@ function formatoMiles(input) {
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-// CARRUSEL (FLECHAS)
+// CARRUSEL
 document.querySelectorAll('.slider-container').forEach(slider => {
 
     const contenedor = slider.querySelector('.contenedor-productos');
     const btnIzq = slider.querySelector('.flecha.izquierda');
     const btnDer = slider.querySelector('.flecha.derecha');
 
-    btnIzq.onclick = function() {
-        contenedor.scrollBy({ left: -contenedor.clientWidth, behavior: 'smooth' });
-    };
-
-    btnDer.onclick = function() {
-        contenedor.scrollBy({ left: contenedor.clientWidth, behavior: 'smooth' });
-    };
+    btnIzq.onclick = () => contenedor.scrollBy({ left: -contenedor.clientWidth, behavior: 'smooth' });
+    btnDer.onclick = () => contenedor.scrollBy({ left: contenedor.clientWidth, behavior: 'smooth' });
 
 });
 
