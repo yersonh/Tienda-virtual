@@ -17,7 +17,6 @@ body {
     backdrop-filter: blur(14px);
     border-radius: 20px;
     padding: 30px;
-    overflow: visible;
 }
 
 .titulo {
@@ -26,6 +25,10 @@ body {
     background: linear-gradient(90deg, #38bdf8, #60a5fa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 25px rgba(56,189,248,0.7);
+    margin-bottom: 25px;
 }
 
 /* FILTROS */
@@ -45,7 +48,6 @@ body {
     color:white;
 }
 
-/* 🔥 BOTÓN ROJO */
 .btn-limpiar {
     background:#ef4444;
     border:none;
@@ -53,16 +55,6 @@ body {
     padding:10px 15px;
     cursor:pointer;
     color:white;
-    font-weight:bold;
-}
-
-.btn-limpiar:hover {
-    background:#dc2626;
-}
-
-/* 🔥 CLASE PARA OCULTAR */
-.oculto {
-    display: none !important;
 }
 
 /* CATEGORIA */
@@ -71,31 +63,32 @@ body {
     border-radius:20px;
     padding:20px;
     margin-bottom:30px;
-    overflow: visible;
 }
 
-.categoria-card h3 {
-    color:#38bdf8;
-}
-
-/* CARRUSEL */
+/* 🔥 CARRUSEL PRO */
 .slider-container {
     position: relative;
-    overflow: visible;
 }
 
 .contenedor-productos {
-    display:flex;
-    gap:20px;
-    overflow-x:auto;
-    scroll-behavior:smooth;
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    flex-wrap: nowrap;
+    padding:10px 0;
 }
 
+/* ocultar scrollbar */
 .contenedor-productos::-webkit-scrollbar {
-    display:none;
+    display: none;
+}
+.contenedor-productos {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-/* CARD */
+/* cards */
 .card-producto {
     min-width:260px;
     flex:0 0 auto;
@@ -103,50 +96,48 @@ body {
     border-radius:15px;
     padding:15px;
     color:white;
-    transition:0.3s;
 }
 
-.card-producto:hover {
-    transform:translateY(-8px);
-    box-shadow:0 10px 25px rgba(56,189,248,0.4);
-}
-
-/* IMG */
 .img-producto {
     width:100%;
     height:120px;
     object-fit:contain;
 }
 
-/* BOTON */
+/* botones */
 .btn-carrito {
     background:#38bdf8;
     border:none;
-    padding:6px 12px;
-    border-radius:6px;
+    padding:5px 10px;
+    border-radius:5px;
     cursor:pointer;
 }
 
-.btn-carrito:hover {
-    background:#0ea5e9;
-}
-
-/* FLECHAS */
+/* flechas */
 .flecha {
     position:absolute;
     top:50%;
     transform:translateY(-50%);
-    background:#38bdf8;
+    background:rgba(56,189,248,0.9);
     border:none;
     color:white;
-    padding:10px;
-    border-radius:50%;
+    font-size:20px;
+    padding:12px;
     cursor:pointer;
-    z-index:50;
+    border-radius:50%;
+    z-index:10;
+    transition:0.3s;
 }
+
+.flecha:hover { background:#0ea5e9; }
 
 .flecha.izquierda { left:-15px; }
 .flecha.derecha { right:-15px; }
+
+.flecha.oculta {
+    opacity:0;
+    pointer-events:none;
+}
 </style>
 
 <div class="main">
@@ -174,7 +165,7 @@ body {
 <?php foreach($categorias as $categoria => $productos): ?>
 
 <div class="categoria-card categoria">
-<h3><?= $categoria ?></h3>
+<h3 style="color:white;"><?= $categoria ?></h3>
 
 <div class="slider-container">
 
@@ -220,97 +211,104 @@ data-categoria="<?= $categoria ?>">
 
 <script>
 
-// ELEMENTOS
+// FILTROS
 const buscador = document.getElementById('buscador');
 const precioMin = document.getElementById('precio_min');
 const precioMax = document.getElementById('precio_max');
 const categoria = document.getElementById('categoria');
 
-// EVENTOS
 buscador.addEventListener('input', filtrar);
 precioMin.addEventListener('input', filtrar);
 precioMax.addEventListener('input', filtrar);
 categoria.addEventListener('change', filtrar);
 
-// 🔥 FILTRO DEFINITIVO
 function filtrar() {
-
-    let texto = buscador.value.toLowerCase().trim();
-    let min = precioMin.value.replace(/\./g, '');
-    let max = precioMax.value.replace(/\./g, '');
+    let texto = buscador.value.toLowerCase();
+    let min = precioMin.value.replace(/\./g,'');
+    let max = precioMax.value.replace(/\./g,'');
     let cat = categoria.value;
 
-    document.querySelectorAll('.categoria').forEach(categoriaDiv => {
-
+    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
         let productos = categoriaDiv.querySelectorAll('.producto');
         let visibles = 0;
 
-        productos.forEach(prod => {
-
-            let nombre = prod.dataset.nombre.toLowerCase();
+        productos.forEach(prod=>{
+            let nombre = prod.dataset.nombre;
             let precio = parseInt(prod.dataset.precio);
             let categoriaProd = prod.dataset.categoria;
 
-            // 🔥 FIX IMPORTANTE
-            let matchTexto = (texto === "" || nombre.includes(texto));
-            let matchMin = (min === "" || precio >= parseInt(min));
-            let matchMax = (max === "" || precio <= parseInt(max));
-            let matchCat = (cat === "" || categoriaProd === cat);
+            let ok = nombre.includes(texto)
+                && (min=="" || precio>=min)
+                && (max=="" || precio<=max)
+                && (cat=="" || categoriaProd==cat);
 
-            if (matchTexto && matchMin && matchMax && matchCat) {
-                prod.style.display = "block";
-                visibles++;
-            } else {
-                prod.style.display = "none";
-            }
-
+            prod.style.display = ok ? "block":"none";
+            if(ok) visibles++;
         });
 
-        // 🔥 OCULTAR CATEGORIA CORRECTAMENTE
-        if (visibles === 0) {
-            categoriaDiv.classList.add("oculto");
-        } else {
-            categoriaDiv.classList.remove("oculto");
-        }
-
+        categoriaDiv.style.display = visibles>0?"block":"none";
     });
-
 }
 
-// LIMPIAR
-function limpiarFiltros() {
-    buscador.value = "";
-    precioMin.value = "";
-    precioMax.value = "";
-    categoria.value = "";
+function limpiarFiltros(){
+    buscador.value="";
+    precioMin.value="";
+    precioMax.value="";
+    categoria.value="";
     filtrar();
 }
 
-// FORMATO MILES
-function formatoMiles(input) {
-    input.addEventListener('input', function() {
-        let valor = this.value.replace(/\D/g, '');
-        if (valor === '') {
-            this.value = "";
-            return;
-        }
-        this.value = Number(valor).toLocaleString('es-CO');
+// FORMATO
+function formatoMiles(input){
+    input.addEventListener('input',function(){
+        let valor=this.value.replace(/\D/g,'');
+        if(valor==='') return;
+        this.value=Number(valor).toLocaleString('es-CO');
     });
 }
-
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-// CARRUSEL
-document.querySelectorAll('.slider-container').forEach(slider => {
+// 🔥 CARRUSEL PRO
+document.querySelectorAll('.slider-container').forEach(slider=>{
 
     const contenedor = slider.querySelector('.contenedor-productos');
     const btnIzq = slider.querySelector('.flecha.izquierda');
     const btnDer = slider.querySelector('.flecha.derecha');
 
-    btnIzq.onclick = () => contenedor.scrollBy({ left: -contenedor.clientWidth, behavior: 'smooth' });
-    btnDer.onclick = () => contenedor.scrollBy({ left: contenedor.clientWidth, behavior: 'smooth' });
+    function actualizar(){
+        btnIzq.classList.toggle('oculta', contenedor.scrollLeft<=0);
+        btnDer.classList.toggle('oculta',
+            contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth-5
+        );
+    }
 
+    btnIzq.onclick = ()=>contenedor.scrollBy({left:-contenedor.clientWidth,behavior:'smooth'});
+    btnDer.onclick = ()=>contenedor.scrollBy({left:contenedor.clientWidth,behavior:'smooth'});
+
+    contenedor.addEventListener('scroll', actualizar);
+
+    // drag
+    let isDown=false,startX,scrollLeft;
+
+    contenedor.addEventListener('mousedown',e=>{
+        isDown=true;
+        startX=e.pageX-contenedor.offsetLeft;
+        scrollLeft=contenedor.scrollLeft;
+    });
+
+    contenedor.addEventListener('mouseleave',()=>isDown=false);
+    contenedor.addEventListener('mouseup',()=>isDown=false);
+
+    contenedor.addEventListener('mousemove',e=>{
+        if(!isDown) return;
+        e.preventDefault();
+        const x=e.pageX-contenedor.offsetLeft;
+        const walk=(x-startX)*1.5;
+        contenedor.scrollLeft=scrollLeft-walk;
+    });
+
+    actualizar();
 });
 
 </script>
