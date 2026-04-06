@@ -236,12 +236,12 @@ data-categoria="<?= $categoria ?>">
 
     <div><?= $p['nombre'] ?></div>
 
-    <div><strong>Código:</strong> <?= $p['id_producto'] ?></div>
+    <div><strong>Códigoo:</strong> <?= $p['id_producto'] ?></div>
 
     <!-- <div>
         <strong>Estado:</strong> 
         <span style="color:#38bdf8;">
-            <?= $p['estado'] ?? 'Activo' ?>
+           <?= $p['estado'] ?? 'Activo' ?>
         </span>
     </div> -->
 
