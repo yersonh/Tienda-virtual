@@ -10,7 +10,7 @@ require_once __DIR__ . '/../Controllers/CarritoController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
 // 🔥 ACTION
-$action = $_GET['action'] ?? 'login';
+$action = $_GET['action'] ?? 'tienda';
 
 // 🔥 RUTAS PUBLICAS
 $publicas = [
