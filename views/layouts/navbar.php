@@ -55,6 +55,7 @@ body {
     font-size: 20px;
     color: #facc15;
 }
+
 .logo {
     font-family: 'Orbitron', sans-serif;
     font-size: 28px;
@@ -73,25 +74,65 @@ body {
     letter-spacing: 4px;
     opacity: 0.7;
 }
+
+/* 🔥 ANIMACIÓN */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 </head>
 
 <body>
 
+<!-- 🔥 NAVBAR -->
 <div class="sidebar">
 
     <h2 class="logo">
         NAYLEX
         <span>STORE</span>
     </h2>
+    
+    <div class="sidebar-space"></div>
 
     <a href="index.php?action=inicio">🏠 Inicio</a>
     <a href="index.php?action=tienda">🛒 Productos</a>
 
     <div class="sidebar-space"></div>
 
-    <!-- 🔥 LOGIN / LOGOUT -->
+    <!-- 🔥 LOGIN / USUARIO -->
     <?php if(isset($_SESSION['id_usuario'])): ?>
+
+        <!-- 👤 AVATAR + NOMBRE -->
+        <div style="display:flex; align-items:center; gap:10px; margin-right:15px;">
+
+            <!-- 🔥 AVATAR -->
+            <div style="
+                width:35px;
+                height:35px;
+                background:#38bdf8;
+                color:#020617;
+                border-radius:50%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-weight:bold;
+            ">
+                <?= strtoupper(substr($_SESSION['nickname'], 0, 1)) ?>
+            </div>
+
+            <!-- 👤 NOMBRE -->
+            <span style="color:#38bdf8; font-weight:bold;">
+                <?= htmlspecialchars($_SESSION['nickname']) ?>
+            </span>
+
+        </div>
 
         <a href="index.php?action=perfil">👤 Perfil</a>
         <a href="index.php?action=logout">🚪 Salir</a>
@@ -126,3 +167,21 @@ body {
     </a>
 
 </div>
+
+<!-- 🔥 MENSAJE DE BIENVENIDA (SOLO UNA VEZ) -->
+<?php if(isset($_SESSION['bienvenida'])): ?>
+    <div style="
+        background:#38bdf8;
+        color:#020617;
+        padding:12px;
+        text-align:center;
+        font-weight:bold;
+        box-shadow:0 4px 10px rgba(0,0,0,0.2);
+        border-radius:0 0 12px 12px;
+        animation: fadeIn 0.4s ease;
+    ">
+        <?= $_SESSION['bienvenida']; ?>
+    </div>
+
+    <?php unset($_SESSION['bienvenida']); ?>
+<?php endif; ?>

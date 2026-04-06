@@ -39,6 +39,7 @@ class LoginController {
         $_SESSION['id_usuario'] = $usuario['id_usuario'];
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
+        $_SESSION['bienvenida'] = "👋 Bienvenido, " . $usuario['username'];
 
         if ($usuario['id_tipo'] == 1) {
             header("Location: index.php?action=admin_panel");

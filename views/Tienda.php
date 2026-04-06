@@ -70,7 +70,8 @@ body {
 .contenedor-productos {
     display:flex;
     gap:20px;
-    overflow-x:auto;
+    overflow-x:hidden; /* 🔥 quitamos la barra */
+    scroll-behavior:smooth;
 }
 
 /* CARD */
@@ -97,6 +98,36 @@ body {
     border-radius:5px;
     cursor:pointer;
 }
+
+.slider-container {
+    position: relative;
+}
+
+.flecha {
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    background:rgba(56,189,248,0.8);
+    border:none;
+    color:white;
+    font-size:22px;
+    padding:10px 14px;
+    cursor:pointer;
+    border-radius:50%;
+    z-index:10;
+}
+
+.flecha.izquierda { left:-10px; }
+.flecha.derecha { right:-10px; }
+
+.flecha:hover {
+    background:#38bdf8;
+}
+
+.contenedor-productos::-webkit-scrollbar {
+    display: none;
+}
+
 </style>
 
 <div class="main">
@@ -131,33 +162,40 @@ body {
 
 <h3 style="color:white;"><?= $categoria ?></h3>
 
-<div class="contenedor-productos">
+<div class="slider-container">
 
-<?php foreach($productos as $p): ?>
+    <button class="flecha izquierda" onclick="scrollIzquierda(this)">❮</button>
 
-<div class="card-producto producto"
-     data-nombre="<?= strtolower($p['nombre']) ?>"
-     data-precio="<?= $p['precio'] ?>"
-     data-categoria="<?= $categoria ?>">
+    <div class="contenedor-productos">
 
-<img src="<?= !empty($p['imagen']) 
-? 'image.php?folder=productos&path=' . basename($p['imagen']) 
-: 'default.png' ?>" class="img-producto">
+        <?php foreach($productos as $p): ?>
 
-<div class="nombre-producto"><?= $p['nombre'] ?></div>
-<div>$<?= number_format($p['precio']) ?></div>
+        <div class="card-producto producto"
+            data-nombre="<?= strtolower($p['nombre']) ?>"
+            data-precio="<?= $p['precio'] ?>"
+            data-categoria="<?= $categoria ?>">
 
-<form method="POST" action="index.php?action=agregarCarrito">
-<input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
-<input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>">
-<button class="btn-carrito">🛒</button>
-</form>
+            <img src="<?= !empty($p['imagen']) 
+            ? 'image.php?folder=productos&path=' . basename($p['imagen']) 
+            : 'default.png' ?>" class="img-producto">
 
-</div>
+            <div class="nombre-producto"><?= $p['nombre'] ?></div>
+            <div>$<?= number_format($p['precio']) ?></div>
 
-<?php endforeach; ?>
+            <form method="POST" action="index.php?action=agregarCarrito">
+                <input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
+                <input type="number" name="cantidad" value="1" min="1" max="<?= $p['stock_p'] ?>">
+                <button class="btn-carrito">🛒</button>
+            </form>
 
-</div>
+        </div>
+
+        <?php endforeach; ?>
+
+    </div>
+
+    <!-- 🔥 LA FLECHA VA AQUÍ DENTRO -->
+    <button class="flecha derecha" onclick="scrollDerecha(this)">❯</button>
 
 </div>
 
@@ -246,6 +284,18 @@ function formatoMiles(input) {
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
+function scrollIzquierda(btn) {
+    let contenedor = btn.parentElement.querySelector('.contenedor-productos');
+    contenedor.scrollBy({ left: -300, behavior: 'smooth' });
+}
+
+function scrollDerecha(btn) {
+    let contenedor = btn.parentElement.querySelector('.contenedor-productos');
+    contenedor.scrollBy({ left: 300, behavior: 'smooth' });
+}
+
 </script>
+
+
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
