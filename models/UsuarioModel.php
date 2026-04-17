@@ -92,13 +92,6 @@ class UsuarioModel {
         return $stmt->fetchColumn() > 0;
     }
 
-    public function correoExisteEmail($correo) {
-        $query = "SELECT COUNT(*) FROM persona WHERE correo = :correo";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':correo' => $correo]);
-        return $stmt->fetchColumn() > 0;
-    }
-
     public function ccExiste($cc, $id_persona = null) {
         $query = "SELECT COUNT(*) FROM persona WHERE cc = :cc";
 
