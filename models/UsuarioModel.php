@@ -93,10 +93,9 @@ class UsuarioModel {
     }
 
     public function correoExisteEmail($correo) {
-        $normalized = mb_strtolower(trim($correo), 'UTF-8');
-        $query = "SELECT COUNT(*) FROM persona WHERE LOWER(TRIM(correo)) = :correo";
+        $query = "SELECT COUNT(*) FROM persona WHERE TRIM(correo) ILIKE TRIM(:correo)";
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([':correo' => $normalized]);
+        $stmt->execute([':correo' => $correo]);
         return $stmt->fetchColumn() > 0;
     }
 

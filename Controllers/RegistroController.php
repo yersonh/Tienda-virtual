@@ -26,7 +26,7 @@ class RegistroController {
             'id_tipo' => 3
         ];
 
-        $data['correo'] = mb_strtolower(trim($data['correo']), 'UTF-8');
+        $data['correo'] = trim(mb_strtolower($data['correo'], 'UTF-8'));
         $_SESSION['old'] = $data;
 
         if (
