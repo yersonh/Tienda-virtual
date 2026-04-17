@@ -52,12 +52,12 @@ body {
 .container {
     background:var(--card-bg);
     backdrop-filter: blur(14px);
-    padding:24px 18px;
+    padding:26px 20px;
     border-radius:18px;
     width:100%;
     box-shadow:0 15px 40px rgba(0,0,0,0.6);
     border:1px solid var(--card-border);
-    max-width:380px;
+    max-width:420px;
     min-width:0;
 }
 
@@ -83,7 +83,7 @@ h2 {
     color:var(--muted);
 }
 
-..input-group input {
+.input-group input {
     width:100%;
     padding:10px 14px 10px 42px;
     border-radius:10px;
@@ -91,7 +91,8 @@ h2 {
     background:var(--input-bg);
     color:var(--input-text);
     font-size: 0.95rem;
-    box-sizing: border-box; 
+    min-height: 40px;
+    box-sizing: border-box;
 }
 .input-invalid {
     box-shadow: 0 0 0 2px rgba(248,113,113,0.25);
@@ -119,7 +120,7 @@ h2 {
 /* BOTÓN */
 button {
     width:100%;
-    padding:12px;
+    padding:10px;
     background:linear-gradient(135deg,#38bdf8,#2563eb);
     border:none;
     border-radius:10px;
@@ -129,8 +130,13 @@ button {
     transition:0.3s;
 }
 
-button:hover {
+button:not(:disabled):hover {
     transform:scale(1.03);
+}
+
+button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 /* MENSAJES */
