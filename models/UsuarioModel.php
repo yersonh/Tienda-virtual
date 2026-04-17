@@ -24,7 +24,7 @@ class UsuarioModel {
                 ':nombres' => $data['nombres'],
                 ':apellidos' => $data['apellidos'],
                 ':cc' => $data['cc'],
-                ':correo' => $data['correo'] ?? null,
+':correo' => isset($data['correo']) ? strtolower($data['correo']) : null,
                 ':telefono' => $data['telefono'] ?? null,
                 ':direccion' => $data['direccion'] ?? null
             ]);
@@ -93,7 +93,7 @@ class UsuarioModel {
     }
 
     public function correoExisteEmail($correo) {
-        $query = "SELECT COUNT(*) FROM persona WHERE correo = :correo";
+        $query = "SELECT COUNT(*) FROM persona WHERE LOWER(correo) = LOWER(:correo)";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':correo' => $correo]);
         return $stmt->fetchColumn() > 0;
