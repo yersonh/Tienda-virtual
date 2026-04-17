@@ -26,7 +26,6 @@ class RegistroController {
             'id_tipo' => 3
         ];
 
-        $data['correo'] = trim(mb_strtolower($data['correo'], 'UTF-8'));
         $_SESSION['old'] = $data;
 
         if (
@@ -58,12 +57,6 @@ class RegistroController {
 
         if ($model->correoExisteEmail($data['correo'])) {
             $_SESSION['error'] = "El correo ya esta en uso";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (preg_match('/\d/', $data['nombres']) || preg_match('/\d/', $data['apellidos'])) {
-            $_SESSION['error'] = "Los nombres y apellidos no pueden contener números";
             header("Location: index.php?action=registro");
             exit();
         }
