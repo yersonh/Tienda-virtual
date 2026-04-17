@@ -621,7 +621,7 @@
     <div class="section-header">
         <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
         <div class="section-actions">
-            <a class="see-all" href="#grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
+            <a class="see-all" href="#section-<?= strtolower(str_replace(' ', '-', $categoria)) ?>" onclick="showCategory('<?= $categoria ?>'); return false;">
                 <span class="see-all-label">
                     <span>Ver todos</span>
                     <span class="see-all-icon" aria-hidden="true">
@@ -715,6 +715,7 @@ let cart = {};
 <?php if(isset($_SESSION['carrito'])): ?>
 cart = <?= json_encode($_SESSION['carrito']) ?>;
 <?php endif; ?>
+const SHOP_STATE_KEY = 'tienda_virtual_state';
 
 function chgQty(id, delta){
     const el = document.getElementById('qty-'+id);
@@ -726,6 +727,7 @@ function chgQty(id, delta){
 function addCart(id, code){
     const qty = parseInt(document.getElementById('qty-'+id).textContent);
     cart[code] = qty;
+    saveShopState();
     const btn = document.getElementById('abtn-'+id);
     btn.innerHTML = `
         <span class="btn-icon" aria-hidden="true">
@@ -768,10 +770,54 @@ function scrollProducts(gridId, direction){
 function syncCategoryTabs(cat){
     tabsCategoria.forEach(tab=>{
         const valorTab = tab.dataset.cat || '';
-        const mostrar = !cat || valorTab === '' || valorTab === cat;
-        tab.style.display = mostrar ? 'inline-flex' : 'none';
         tab.classList.toggle('active', valorTab === (cat || ''));
     });
+}
+
+function showCategory(cat){
+    categoria.value = cat;
+    filterProducts();
+    const sectionId = 'section-' + cat.toLowerCase().replace(/\s+/g, '-');
+    const section = document.getElementById(sectionId);
+    if(section){
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function saveShopState(){
+    const state = {
+        scrollY: window.scrollY,
+        texto: buscador.value,
+        min: precioMin.value,
+        max: precioMax.value,
+        categoria: categoria.value
+    };
+    sessionStorage.setItem(SHOP_STATE_KEY, JSON.stringify(state));
+}
+
+function restoreShopState(){
+    const rawState = sessionStorage.getItem(SHOP_STATE_KEY);
+    if(!rawState) return;
+
+    try {
+        const state = JSON.parse(rawState);
+        buscador.value = state.texto || '';
+        precioMin.value = state.min || '';
+        precioMax.value = state.max || '';
+        categoria.value = state.categoria || '';
+        filterProducts();
+
+        requestAnimationFrame(() => {
+            window.scrollTo({
+                top: Number(state.scrollY || 0),
+                behavior: 'auto'
+            });
+        });
+    } catch (error) {
+        console.error('No se pudo restaurar el estado de la tienda', error);
+    }
+
+    sessionStorage.removeItem(SHOP_STATE_KEY);
 }
 
 // ELEMENTOS
@@ -874,6 +920,7 @@ function clearFilters(){
 }
 
 syncCategoryTabs(categoria.value);
+restoreShopState();
 
 // FORMATO
 function formatoMiles(input){
