@@ -85,7 +85,7 @@ h2 {
 
 .password-toggle {
     position: absolute;
-    right: 12px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
@@ -94,6 +94,7 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2;
 }
 
 .password-toggle:hover {
@@ -102,7 +103,7 @@ h2 {
 
 .input-group input {
     width:100%;
-    padding:10px 14px 10px 42px;
+    padding:10px 48px 10px 42px;
     border-radius:10px;
     border:none;
     background:var(--input-bg);
