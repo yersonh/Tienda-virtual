@@ -1,11 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
+require_once __DIR__ . '/../models/CarritoModel.php';
 
 class RegistroController {
 
     public function registrar() {
-
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -21,15 +21,11 @@ class RegistroController {
             'direccion' => trim($_POST['direccion'] ?? ''),
             'username' => trim($_POST['username'] ?? ''),
             'password' => trim($_POST['password'] ?? ''),
-            'id_tipo' => 3 // CLIENTE
+            'id_tipo' => 3
         ];
 
-        // 🔥 Guardar datos para repoblar formulario
         $_SESSION['old'] = $data;
 
-        // ================= VALIDACIONES =================
-
-        // Campos obligatorios (sin cc)
         if (
             empty($data['nombres']) ||
             empty($data['apellidos']) ||
@@ -44,45 +40,51 @@ class RegistroController {
             exit();
         }
 
-        // Contraseña
         if (strlen($data['password']) < 6) {
-            $_SESSION['error'] = "La contraseña debe tener mínimo 6 caracteres";
+            $_SESSION['error'] = "La contrasena debe tener minimo 6 caracteres";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        // Correo válido
         if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['error'] = "Correo inválido";
+            $_SESSION['error'] = "Correo invalido";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        // Teléfono válido
         if (!is_numeric($data['telefono']) || strlen($data['telefono']) != 10) {
-            $_SESSION['error'] = "El teléfono debe tener 10 dígitos";
+            $_SESSION['error'] = "El telefono debe tener 10 digitos";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        // Usuario único
         if ($model->usernameExiste($data['username'])) {
-            $_SESSION['error'] = "El usuario ya está en uso";
+            $_SESSION['error'] = "El usuario ya esta en uso";
             header("Location: index.php?action=registro");
             exit();
         }
 
-        // ================= REGISTRO =================
-
-        // 🔥 Agregar cc NULL manualmente
         $data['cc'] = null;
 
         $resultado = $model->crearConPersona($data);
 
         if ($resultado['success']) {
+            $idUsuario = (int) ($resultado['id_usuario'] ?? 0);
+            $carritoInvitado = $_SESSION['carrito'] ?? [];
+
             unset($_SESSION['old']);
-            $_SESSION['success'] = "¡Registro exitoso! Ahora puedes iniciar sesión";
-            header("Location: index.php");
+
+            $_SESSION['id_usuario'] = $idUsuario;
+            $_SESSION['nickname'] = $data['username'];
+            $_SESSION['tipo_usuario'] = 3;
+            $_SESSION['bienvenida'] = "Bienvenido, " . $data['username'];
+
+            $carritoModel = new CarritoModel($pdo);
+            $carritoModel->fusionarCarritoInvitado($idUsuario, $carritoInvitado);
+            $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario($idUsuario);
+
+            $_SESSION['success'] = "Registro exitoso";
+            header("Location: index.php?action=inicio");
         } else {
             $_SESSION['error'] = "Error al registrar el usuario";
             header("Location: index.php?action=registro");

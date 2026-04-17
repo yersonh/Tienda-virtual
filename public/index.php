@@ -9,10 +9,8 @@ require_once __DIR__ . '/../Controllers/TiendaController.php';
 require_once __DIR__ . '/../Controllers/CarritoController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
-// 🔥 ACTION
 $action = $_GET['action'] ?? 'tienda';
 
-// 🔥 RUTAS PUBLICAS
 $publicas = [
     'login',
     'registro',
@@ -20,14 +18,15 @@ $publicas = [
     'iniciarSesion',
     'tienda',
     'productoDetalle',
-    'agregarCarrito' // 🔥 importante para AJAX
+    'agregarCarrito',
+    'verCarrito',
+    'actualizarCarrito',
+    'eliminarCarrito',
+    'vaciarCarrito'
 ];
 
-// 🔐 PROTECCIÓN
-if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas)) {
-
-    // 🔥 SI ES AJAX → NO REDIRIGIR
-    if ($action === 'agregarCarrito') {
+if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas, true)) {
+    if (in_array($action, ['agregarCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
         echo "no_auth";
         exit();
     }
@@ -37,8 +36,6 @@ if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas)) {
 }
 
 switch ($action) {
-
-    // 🔐 LOGIN
     case 'login':
         require_once __DIR__ . '/../views/Login.php';
         break;
@@ -59,12 +56,10 @@ switch ($action) {
         (new RegistroController())->registrar();
         break;
 
-    // 🏠 INICIO
     case 'inicio':
         require_once __DIR__ . '/../views/Inicio.php';
         break;
 
-    // 🛒 TIENDA (PUBLICA)
     case 'tienda':
         (new TiendaController())->index();
         break;
@@ -77,7 +72,22 @@ switch ($action) {
         (new CarritoController())->agregar();
         break;
 
-    // 👤 PERFIL
+    case 'verCarrito':
+        (new CarritoController())->ver();
+        break;
+
+    case 'actualizarCarrito':
+        (new CarritoController())->actualizar();
+        break;
+
+    case 'eliminarCarrito':
+        (new CarritoController())->eliminar();
+        break;
+
+    case 'vaciarCarrito':
+        (new CarritoController())->vaciar();
+        break;
+
     case 'perfil':
         (new PerfilController())->verPerfil();
         break;
@@ -86,7 +96,6 @@ switch ($action) {
         (new PerfilController())->actualizar();
         break;
 
-    // 🔐 ADMIN
     case 'admin_panel':
         Auth::soloAdmin();
         require_once __DIR__ . '/../views/admin/nav.php';
@@ -132,7 +141,6 @@ switch ($action) {
         (new ProductoController())->ver();
         break;
 
-    // ❌ DEFAULT
     default:
         header("Location: index.php?action=login");
         exit();

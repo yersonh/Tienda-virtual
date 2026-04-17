@@ -16,7 +16,8 @@ class UsuarioModel {
             $this->conn->beginTransaction();
 
             $queryPersona = "INSERT INTO persona (nombres, apellidos, cc, correo, telefono, direccion)
-                             VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)";
+                             VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)
+                             RETURNING id_persona";
 
             $stmtPersona = $this->conn->prepare($queryPersona);
             $stmtPersona->execute([
@@ -28,10 +29,12 @@ class UsuarioModel {
                 ':direccion' => $data['direccion'] ?? null
             ]);
 
-            $id_persona = $this->conn->lastInsertId();
+            $persona = $stmtPersona->fetch(PDO::FETCH_ASSOC);
+            $id_persona = (int) ($persona['id_persona'] ?? 0);
 
             $queryUsuario = "INSERT INTO usuario (id_persona, id_tipo, username, password, estado)
-                             VALUES (:id_persona, :id_tipo, :username, :password, :estado)";
+                             VALUES (:id_persona, :id_tipo, :username, :password, :estado)
+                             RETURNING id_usuario";
 
             $stmtUsuario = $this->conn->prepare($queryUsuario);
             $stmtUsuario->execute([
@@ -42,9 +45,12 @@ class UsuarioModel {
                 ':estado' => 'Activo'
             ]);
 
+            $usuario = $stmtUsuario->fetch(PDO::FETCH_ASSOC);
+            $idUsuario = (int) ($usuario['id_usuario'] ?? 0);
+
             $this->conn->commit();
 
-            return ['success' => true];
+            return ['success' => true, 'id_usuario' => $idUsuario];
 
         } catch (Exception $e) {
             $this->conn->rollBack();

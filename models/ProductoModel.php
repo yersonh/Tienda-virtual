@@ -53,11 +53,39 @@ class ProductoModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function obtenerPorIds($ids) {
+        if (empty($ids)) {
+            return [];
+        }
+
+        $ids = array_values(array_filter(array_map('intval', $ids), fn($id) => $id > 0));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $query = "SELECT 
+                    p.*, 
+                    c.nombre AS categoria_nombre,
+                    pi.url AS imagen
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
+                  LEFT JOIN producto_imagen pi ON pi.id_producto = p.id_producto AND pi.orden = 0
+                  WHERE p.id_producto IN ($placeholders)
+                  ORDER BY p.nombre";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($ids);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function crear($datos) {
         $estadoBool = ($datos['estado'] === 'Activo' || $datos['estado'] === '1' || $datos['estado'] === true);
 
         $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
-                  VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)";
+                  VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)
+                  RETURNING id_producto";
         
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
@@ -70,7 +98,8 @@ class ProductoModel {
             ':id_categoria' => (int)$datos['id_categoria']
         ]);
 
-        return $this->conn->lastInsertId();
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) ($producto['id_producto'] ?? 0);
     }
 
     public function guardarImagen($id_producto, $url, $orden) {

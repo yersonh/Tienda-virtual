@@ -160,6 +160,25 @@
 .category-section {
     padding-bottom: 30px;
 }
+.detail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 32px 20px;
+    color: var(--secondary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+.detail-back:hover {
+    color: var(--accent);
+}
+[data-theme="light"] .detail-back {
+    color: #64748b;
+}
+[data-theme="light"] .detail-back:hover {
+    color: #0f766e;
+}
 
 /* SECTION HEADER */
 .section-header {
@@ -291,6 +310,15 @@
 }
 .product-grid::-webkit-scrollbar-track {
     background: transparent;
+}
+.product-grid.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    overflow: visible;
+    padding: 0 32px 20px;
+}
+.product-grid.detail-grid .product-card {
+    flex: initial;
 }
 [data-theme="light"] .product-grid {
     scrollbar-color: rgba(20, 184, 166, 0.35) transparent;
@@ -567,6 +595,10 @@
     .product-carousel {
         padding: 0 20px;
     }
+    .product-grid.detail-grid {
+        padding: 0 20px 20px;
+        grid-template-columns: 1fr;
+    }
     .product-card {
         flex-basis: 240px;
     }
@@ -591,37 +623,49 @@
 </style>
 
 <div class="hero">
-    <div class="hero-label">✦ Tienda de Repuestos</div>
-    <h1 class="hero-title">Catálogo de<br><em>Productos</em></h1>
-    <p class="hero-sub">Piezas originales para tu vehículo — calidad garantizada</p>
+    <div class="hero-label">ÃƒÂ¢Ã…â€œÃ‚Â¦ Tienda de Repuestos</div>
+    <h1 class="hero-title">CatÃƒÆ’Ã‚Â¡logo de<br><em>Productos</em></h1>
+    <p class="hero-sub">Piezas originales para tu vehÃƒÆ’Ã‚Â­culo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â calidad garantizada</p>
 </div>
 
 <div class="filters">
     <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" oninput="filterProducts()">
-    <input class="filter-input" type="number" placeholder="Precio mín" id="price-min" oninput="filterProducts()">
-    <input class="filter-input" type="number" placeholder="Precio máx" id="price-max" oninput="filterProducts()">
+    <input class="filter-input" type="number" placeholder="Precio mÃƒÂ­n" id="price-min" oninput="filterProducts()">
+    <input class="filter-input" type="number" placeholder="Precio mÃƒÂ¡x" id="price-max" oninput="filterProducts()">
     <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
-        <option value="">Todas las categorías</option>
+        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>>Todas las categorÃƒÂ­as</option>
         <?php foreach(array_keys($categorias) as $cat): ?>
-        <option value="<?= $cat ?>"><?= $cat ?></option>
+        <option value="<?= $cat ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= $cat ?></option>
         <?php endforeach; ?>
     </select>
     <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
 </div>
 
 <div class="cat-tabs">
-    <button class="cat-tab active" data-cat="" onclick="setTab(this,'')">Todo</button>
+    <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')">Todo</button>
     <?php foreach(array_keys($categorias) as $cat): ?>
-    <button class="cat-tab" data-cat="<?= $cat ?>" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
+    <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= $cat ?>" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
     <?php endforeach; ?>
 </div>
 
+<?php if(!empty($categoria_filtro)): ?>
+<a class="detail-back" href="index.php?action=tienda">
+    <span class="see-all-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M19 12H5"></path>
+            <path d="m11 18-6-6 6-6"></path>
+        </svg>
+    </span>
+    Volver al catalogo
+</a>
+<?php endif; ?>
+
 <?php foreach($categorias as $categoria => $productos): ?>
-<div id="section-<?= strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
+<div id="<?= !empty($categoria_filtro) ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
         <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
         <div class="section-actions">
-            <a class="see-all" href="#section-<?= strtolower(str_replace(' ', '-', $categoria)) ?>" onclick="showCategory('<?= $categoria ?>'); return false;">
+            <a class="see-all" href="index.php?action=tienda&categoria=<?= urlencode($categoria) ?>#category-detail">
                 <span class="see-all-label">
                     <span>Ver todos</span>
                     <span class="see-all-icon" aria-hidden="true">
@@ -632,20 +676,28 @@
                     </span>
                 </span>
             </a>
+            <?php if(empty($categoria_filtro)): ?>
             <div class="carousel-nav">
                 <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="Desplazar productos a la izquierda">&#8249;</button>
                 <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="Desplazar productos a la derecha">&#8250;</button>
             </div>
+            <?php endif; ?>
         </div>
     </div>
     <div class="product-carousel">
-        <div class="product-grid" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
+        <div class="product-grid <?= !empty($categoria_filtro) ? 'detail-grid' : '' ?>" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
             <?php foreach($productos as $p): ?>
             <div class="product-card producto"
                  data-nombre="<?= strtolower($p['nombre']) ?>"
                  data-precio="<?= $p['precio'] ?>"
                  data-categoria="<?= $categoria ?>"
-                 data-id="<?= $p['id_producto'] ?>">
+                 data-id="<?= $p['id_producto'] ?>"
+                 data-url="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>&categoria=<?= urlencode($categoria) ?>"
+                 onclick="openProductDetail(this, event)"
+                 onkeydown="openProductDetailFromKey(event, this)"
+                 tabindex="0"
+                 role="link"
+                 aria-label="Ver detalle de <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
                     <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= $p['nombre'] ?>" onerror="this.style.display='none'">
@@ -685,13 +737,13 @@
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
                     <div class="card-footer">
                         <div class="qty-wrap">
-                            <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, -1)">-</button>
-                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['codigo']]) ? $_SESSION['carrito'][$p['codigo']] : 1 ?></span>
-                            <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, 1)">+</button>
+                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1)">-</button>
+                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['id_producto']]) ? $_SESSION['carrito'][$p['id_producto']] : 1 ?></span>
+                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1)">+</button>
                         </div>
-                        <button class="add-btn <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'added' : '' ?>" 
+                        <button class="add-btn <?= isset($_SESSION['carrito'][$p['id_producto']]) && $_SESSION['carrito'][$p['id_producto']] > 0 ? 'added' : '' ?>" 
                                 id="abtn-<?= $p['id_producto'] ?>" 
-                                onclick="addCart(<?= $p['id_producto'] ?>, '<?= $p['codigo'] ?>')">
+                                onclick="event.stopPropagation(); addCart(<?= $p['id_producto'] ?>)">
                             <span class="btn-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24">
                                     <circle cx="9" cy="20" r="1"></circle>
@@ -699,7 +751,7 @@
                                     <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                                 </svg>
                             </span>
-                            <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'Agregado' : 'Agregar' ?>
+                            <?= isset($_SESSION['carrito'][$p['id_producto']]) && $_SESSION['carrito'][$p['id_producto']] > 0 ? 'Agregado' : 'Agregar' ?>
                         </button>
                     </div>
                 </div>
@@ -723,9 +775,9 @@ function chgQty(id, delta){
     el.textContent = v;
 }
 
-async function addCart(id, code){
+async function addCart(id){
     const qty = parseInt(document.getElementById('qty-'+id).textContent);
-    cart[code] = qty;
+    cart[id] = qty;
     const btn = document.getElementById('abtn-'+id);
     btn.innerHTML = `
         <span class="btn-icon" aria-hidden="true">
@@ -789,6 +841,21 @@ function scrollProducts(gridId, direction){
     });
 }
 
+function openProductDetail(card, event){
+    if(event.target.closest('.qty-wrap, .add-btn')) return;
+    const url = card.dataset.url;
+    if(url){
+        window.location.href = url;
+    }
+}
+
+function openProductDetailFromKey(event, card){
+    if(event.key === 'Enter' || event.key === ' '){
+        event.preventDefault();
+        openProductDetail(card, event);
+    }
+}
+
 function syncCategoryTabs(cat){
     tabsCategoria.forEach(tab=>{
         const valorTab = tab.dataset.cat || '';
@@ -816,12 +883,12 @@ const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
 
-// 🔥 UN SOLO EVENTO PARA TODO
+// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ UN SOLO EVENTO PARA TODO
 [buscador, precioMin, precioMax, categoria].forEach(el=>{
     el.addEventListener('input', filterProducts);
 });
 
-// 🔥 FUNCIÓN PRINCIPAL (TODO EN UNO)
+// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ FUNCIÃƒÆ’Ã¢â‚¬Å“N PRINCIPAL (TODO EN UNO)
 function filterProducts(){
 
     let texto = buscador.value.toLowerCase();
@@ -861,14 +928,14 @@ function filterProducts(){
 
     syncCategoryTabs(cat);
 
-    // 🔥 ACTUALIZAR SELECT SIN ROMPER
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ ACTUALIZAR SELECT SIN ROMPER
     let valorActual = categoria.value;
 
     categoria.innerHTML = "";
 
     let optionTodas = document.createElement("option");
     optionTodas.value = "";
-    optionTodas.textContent = "Todas las categorías";
+    optionTodas.textContent = "Todas las categorÃƒÆ’Ã‚Â­as";
     categoria.appendChild(optionTodas);
 
     opcionesOriginales.forEach(op=>{
@@ -881,7 +948,7 @@ function filterProducts(){
         }
     });
 
-    // 🔥 RESTAURAR SI TODO VACÍO
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ RESTAURAR SI TODO VACÃƒÆ’Ã‚ÂO
     if(!texto && !min && !max && !cat){
         categoria.innerHTML = "";
         opcionesOriginales.forEach(op=>{
