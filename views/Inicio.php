@@ -18,6 +18,12 @@ body {
     background-size:cover;
     font-family: 'Poppins', sans-serif;
 }
+[data-theme="light"] body {
+    background:
+        linear-gradient(rgba(255,255,255,0.82), rgba(241,245,249,0.92)),
+        url('../imagenes/Fondo.png') no-repeat center center fixed;
+    background-size: cover;
+}
 
 /* CONTENEDOR TRANSPARENTE */
 .main.container {
@@ -37,6 +43,12 @@ body {
     box-shadow:0 10px 40px rgba(0,0,0,0.5);
     border:1px solid rgba(56,189,248,0.2);
 }
+[data-theme="light"] .card-inicio {
+    background: rgba(255,255,255,0.84);
+    color: #334155;
+    box-shadow: 0 18px 40px rgba(148,163,184,0.18);
+    border-color: rgba(56,189,248,0.18);
+}
 
 /* TITULO */
 .card-inicio h1 {
@@ -52,6 +64,9 @@ body {
 .card-inicio p {
     font-size:15px;
     opacity:0.9;
+}
+[data-theme="light"] .card-inicio p {
+    color: #64748b;
 }
 
 /* BOTONES */
@@ -84,6 +99,10 @@ body {
 .btn-azul:hover, .btn-verde:hover {
     transform:scale(1.05);
     box-shadow:0 0 20px rgba(56,189,248,0.6);
+}
+[data-theme="light"] .btn-azul:hover,
+[data-theme="light"] .btn-verde:hover {
+    box-shadow: 0 10px 24px rgba(56,189,248,0.22);
 }
 
 </style>

@@ -164,6 +164,15 @@ body {
     color: var(--secondary);
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 </style>
 </head>
 
@@ -187,7 +196,7 @@ body {
         <button class="btn-primary">Registro</button>
       <?php endif; ?>
       <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'">🛒<span class="cart-badge" id="cart-count"><?php echo $carritoCount; ?></span></button>
-      <button class="theme-toggle" id="theme-toggle" title="Cambiar tema">🌙</button>
+      <button class="theme-toggle" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema"></button>
     </div>
 </nav>
 
@@ -195,16 +204,22 @@ body {
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
 
+function renderThemeIcon(theme) {
+    themeToggle.innerHTML = theme === 'dark'
+        ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>`
+        : `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>`;
+}
+
 themeToggle.addEventListener('click', () => {
     const currentTheme = body.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     body.setAttribute('data-theme', newTheme);
-    themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+    renderThemeIcon(newTheme);
     localStorage.setItem('theme', newTheme);
 });
 
 // Load saved theme
 const savedTheme = localStorage.getItem('theme') || 'dark';
 body.setAttribute('data-theme', savedTheme);
-themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+renderThemeIcon(savedTheme);
 </script>

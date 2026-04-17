@@ -11,6 +11,24 @@ $old = $_SESSION['old'] ?? [];
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+:root {
+    --bg-overlay-1: rgba(15,23,42,0.6);
+    --bg-overlay-2: rgba(15,23,42,0.7);
+    --card-bg: rgba(30,41,59,0.7);
+    --card-border: rgba(56,189,248,0.2);
+    --input-bg: #334155;
+    --input-text: #ffffff;
+    --muted: #94a3b8;
+}
+[data-theme="light"] {
+    --bg-overlay-1: rgba(255,255,255,0.82);
+    --bg-overlay-2: rgba(241,245,249,0.92);
+    --card-bg: rgba(255,255,255,0.84);
+    --card-border: rgba(56,189,248,0.18);
+    --input-bg: #eef2f7;
+    --input-text: #0f172a;
+    --muted: #64748b;
+}
 
 * {
     box-sizing: border-box;
@@ -20,7 +38,7 @@ body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
     background:
-        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
+        linear-gradient(var(--bg-overlay-1), var(--bg-overlay-2)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size: cover;
 
@@ -32,13 +50,13 @@ body {
 
 /* 🔥 CONTENEDOR GLASS */
 .container {
-    background:rgba(30,41,59,0.7);
+    background:var(--card-bg);
     backdrop-filter: blur(14px);
     padding:30px 20px;
     border-radius:18px;
     width:100%;
     box-shadow:0 15px 40px rgba(0,0,0,0.6);
-    border:1px solid rgba(56,189,248,0.2);
+    border:1px solid var(--card-border);
     max-width:420px; 
 }
 
@@ -61,7 +79,7 @@ h2 {
     left:12px;
     top:50%;
     transform:translateY(-50%);
-    color:#94a3b8;
+    color:var(--muted);
 }
 
 .input-group input {
@@ -69,9 +87,23 @@ h2 {
     padding:12px 15px 12px 45px;
     border-radius:10px;
     border:none;
-    background:#334155;
-    color:white;
+    background:var(--input-bg);
+    color:var(--input-text);
     box-sizing: border-box; 
+}
+.theme-toggle {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--input-text);
+    cursor: pointer;
+    font-size: 18px;
+    backdrop-filter: blur(10px);
 }
 
 /* BOTÓN */
@@ -118,7 +150,11 @@ button:hover {
 </style>
 </head>
 
-<body>
+<body data-theme="dark">
+
+<button type="button" class="theme-toggle" id="theme-toggle" title="Cambiar tema">
+    <i class="fas fa-moon"></i>
+</button>
 
 <div class="container">
 
@@ -214,6 +250,24 @@ button:hover {
 
 
     <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        function applyTheme(theme) {
+            body.setAttribute('data-theme', theme);
+            themeToggle.innerHTML = theme === 'dark'
+                ? '<i class="fas fa-moon"></i>'
+                : '<i class="fas fa-sun"></i>';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            applyTheme(nextTheme);
+            localStorage.setItem('theme', nextTheme);
+        });
+
+        applyTheme(localStorage.getItem('theme') || 'dark');
+
         setTimeout(() => {
             const error = document.getElementById("mensajeError");
             const success = document.getElementById("mensajeSuccess");

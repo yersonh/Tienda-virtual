@@ -76,14 +76,20 @@
     outline: none;
     cursor: pointer;
     appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 38px;
 }
 .filter-select option {
     color: #111827;
     background: #ffffff;
 }
 [data-theme="light"] .filter-select {
-    background: rgba(0,0,0,0.04);
-    border-color: rgba(0,0,0,0.08);
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
 }
 .btn-clear {
     background: rgba(0,229,192,0.1);
@@ -99,6 +105,14 @@
     white-space: nowrap;
 }
 .btn-clear:hover { background: rgba(0,229,192,0.2); }
+[data-theme="light"] .btn-clear {
+    background: #dff7f5;
+    border-color: #9fe8e1;
+    color: #0f766e;
+}
+[data-theme="light"] .btn-clear:hover {
+    background: #c8f2ee;
+}
 
 /* CATEGORY TABS */
 .cat-tabs {
@@ -127,6 +141,21 @@
     background: rgba(0,229,192,0.1);
     border-color: rgba(0,229,192,0.35);
     color: var(--accent);
+}
+[data-theme="light"] .cat-tab {
+    background: rgba(255,255,255,0.85);
+    border-color: #d6dee8;
+    color: #496588;
+    box-shadow: 0 10px 28px rgba(148, 163, 184, 0.12);
+}
+[data-theme="light"] .cat-tab:hover {
+    border-color: #7dded6;
+    color: #0f172a;
+}
+[data-theme="light"] .cat-tab.active {
+    background: linear-gradient(135deg, #dffaf7, #ecfeff);
+    border-color: #59d8cd;
+    color: #0f766e;
 }
 .category-section {
     padding-bottom: 30px;
@@ -172,6 +201,34 @@
     transition: opacity 0.2s;
 }
 .see-all:hover { opacity: 1; }
+.see-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.see-all-icon,
+.btn-icon,
+.meta-icon,
+.footer-icon,
+.placeholder-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.see-all-icon svg,
+.btn-icon svg,
+.meta-icon svg,
+.footer-icon svg,
+.placeholder-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 .section-actions {
     display: flex;
     align-items: center;
@@ -200,6 +257,14 @@
     background: rgba(0,229,192,0.16);
     border-color: rgba(0,229,192,0.4);
 }
+[data-theme="light"] .carousel-btn {
+    background: #f0fdfa;
+    border-color: #b5ebe5;
+    color: #0f766e;
+}
+[data-theme="light"] .carousel-btn:hover {
+    background: #dff7f5;
+}
 .product-carousel {
     position: relative;
     padding: 0 32px;
@@ -227,6 +292,12 @@
 .product-grid::-webkit-scrollbar-track {
     background: transparent;
 }
+[data-theme="light"] .product-grid {
+    scrollbar-color: rgba(20, 184, 166, 0.35) transparent;
+}
+[data-theme="light"] .product-grid::-webkit-scrollbar-thumb {
+    background: rgba(20, 184, 166, 0.35);
+}
 
 /* PRODUCT CARD */
 .product-card {
@@ -244,6 +315,15 @@
     transform: translateY(-4px);
     border-color: var(--hover);
     box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+}
+[data-theme="light"] .product-card {
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+    border-color: #d7e0ea;
+    box-shadow: 0 18px 38px rgba(148, 163, 184, 0.14);
+}
+[data-theme="light"] .product-card:hover {
+    border-color: #8de2da;
+    box-shadow: 0 20px 44px rgba(148, 163, 184, 0.22);
 }
 .card-badge {
     position: absolute;
@@ -268,7 +348,7 @@
     position: relative;
 }
 [data-theme="light"] .card-img-wrap {
-    background: #f1f5f9;
+    background: linear-gradient(180deg, #f8fbff, #eef5fb);
 }
 .card-img-wrap img {
     width: 100%;
@@ -283,7 +363,11 @@
     border-radius: 50%;
     background: var(--card-bg);
     display: flex; align-items: center; justify-content: center;
-    font-size: 30px;
+    color: var(--accent);
+}
+[data-theme="light"] .card-placeholder {
+    background: #e6fffb;
+    color: #0f766e;
 }
 .card-body {
     padding: 14px 16px 16px;
@@ -312,15 +396,30 @@
     color: var(--secondary);
     border: 1px solid var(--border);
 }
+[data-theme="light"] .meta-code {
+    background: #f8fafc;
+    border-color: #d6dee8;
+    color: #64748b;
+}
 .meta-stock {
     background: rgba(0,229,192,0.08);
     color: var(--accent);
     border: 1px solid rgba(0,229,192,0.15);
 }
+[data-theme="light"] .meta-stock {
+    background: #e7fffb;
+    border-color: #b4ece7;
+    color: #0f766e;
+}
 .meta-stock.low {
     background: rgba(250,199,117,0.1);
     color: #fac775;
     border-color: rgba(250,199,117,0.2);
+}
+[data-theme="light"] .meta-stock.low {
+    background: #fff4df;
+    border-color: #f4d59b;
+    color: #b7791f;
 }
 .card-price {
     font-family: 'Syne', sans-serif;
@@ -342,6 +441,10 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
+}
+[data-theme="light"] .qty-wrap {
+    background: #f8fafc;
+    border-color: #d6dee8;
 }
 .qty-btn {
     width: 28px; height: 32px;
@@ -381,6 +484,19 @@
 }
 .add-btn:hover { background: rgba(0,229,192,0.22); border-color: rgba(0,229,192,0.5); }
 .add-btn.added { background: rgba(0,229,192,0.25); border-color: var(--accent); }
+[data-theme="light"] .add-btn {
+    background: #ddfaf5;
+    border-color: #8ce0d7;
+    color: #0f766e;
+}
+[data-theme="light"] .add-btn:hover {
+    background: #caf5ef;
+    border-color: #59d8cd;
+}
+[data-theme="light"] .add-btn.added {
+    background: #c2f4ed;
+    border-color: #34cbbd;
+}
 
 /* FOOTER */
 .footer {
@@ -392,6 +508,25 @@
     gap: 8px;
     color: var(--secondary);
     font-size: 12px;
+}
+[data-theme="light"] .footer {
+    background: #334155;
+    border-top-color: #cbd5e1;
+    color: #e2e8f0;
+}
+[data-theme="light"] .hero::before {
+    background: radial-gradient(ellipse, rgba(20,184,166,0.12) 0%, transparent 72%);
+}
+[data-theme="light"] .hero-sub {
+    color: #64748b;
+}
+[data-theme="light"] .section-count {
+    background: #ffffff;
+    border-color: #d6dee8;
+    color: #64748b;
+}
+[data-theme="light"] .see-all {
+    color: #0f766e;
 }
 @media (max-width: 980px) {
     .filters {
@@ -475,9 +610,9 @@
 </div>
 
 <div class="cat-tabs">
-    <button class="cat-tab active" onclick="setTab(this,'')">Todo</button>
+    <button class="cat-tab active" data-cat="" onclick="setTab(this,'')">Todo</button>
     <?php foreach(array_keys($categorias) as $cat): ?>
-    <button class="cat-tab" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
+    <button class="cat-tab" data-cat="<?= $cat ?>" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
     <?php endforeach; ?>
 </div>
 
@@ -486,7 +621,17 @@
     <div class="section-header">
         <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
         <div class="section-actions">
-            <a class="see-all" href="#grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">Ver todos -></a>
+            <a class="see-all" href="#grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
+                <span class="see-all-label">
+                    <span>Ver todos</span>
+                    <span class="see-all-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14"></path>
+                            <path d="m13 6 6 6-6 6"></path>
+                        </svg>
+                    </span>
+                </span>
+            </a>
             <div class="carousel-nav">
                 <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="Desplazar productos a la izquierda">&#8249;</button>
                 <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="Desplazar productos a la derecha">&#8250;</button>
@@ -505,7 +650,15 @@
                     <?php if(!empty($p['imagen'])): ?>
                     <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= $p['nombre'] ?>" onerror="this.style.display='none'">
                     <?php else: ?>
-                    <div class="card-placeholder">IMG</div>
+                    <div class="card-placeholder">
+                        <span class="placeholder-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                                <circle cx="9" cy="10" r="1.5"></circle>
+                                <path d="M21 16 16 11 5 19"></path>
+                            </svg>
+                        </span>
+                    </div>
                     <?php endif; ?>
                 </div>
                 <div class="card-body">
@@ -513,7 +666,20 @@
                     <div class="card-meta">
                         <span class="meta-pill meta-code">#<?= $p['id_producto'] ?></span>
                         <span class="meta-pill meta-stock <?= $p['stock_p'] <= 4 ? 'low' : '' ?>">
-                            <?= $p['stock_p'] <= 4 ? 'Bajo ' : 'OK ' ?><?= $p['stock_p'] ?> uds
+                            <span class="meta-icon" aria-hidden="true">
+                                <?php if($p['stock_p'] <= 4): ?>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 9v4"></path>
+                                    <path d="M12 17h.01"></path>
+                                    <path d="M10.3 3.5 2.9 16.3A2 2 0 0 0 4.6 19h14.8a2 2 0 0 0 1.7-2.7L13.7 3.5a2 2 0 0 0-3.4 0z"></path>
+                                </svg>
+                                <?php else: ?>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="m5 12 5 5L20 7"></path>
+                                </svg>
+                                <?php endif; ?>
+                            </span>
+                            <?= $p['stock_p'] <= 4 ? 'Bajo ' : 'Disponible ' ?><?= $p['stock_p'] ?> uds
                         </span>
                     </div>
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
@@ -526,6 +692,13 @@
                         <button class="add-btn <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'added' : '' ?>" 
                                 id="abtn-<?= $p['id_producto'] ?>" 
                                 onclick="addCart(<?= $p['id_producto'] ?>, '<?= $p['codigo'] ?>')">
+                            <span class="btn-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="9" cy="20" r="1"></circle>
+                                    <circle cx="18" cy="20" r="1"></circle>
+                                    <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
+                                </svg>
+                            </span>
                             <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'Agregado' : 'Agregar' ?>
                         </button>
                     </div>
@@ -536,11 +709,6 @@
     </div>
 </div>
 <?php endforeach; ?>
-
-<div class="footer">
-    <span>🏪</span>
-    Tienda Virtual · Sistema de Inventario TechSolutions
-</div>
 
 <script>
 let cart = {};
@@ -559,7 +727,14 @@ function addCart(id, code){
     const qty = parseInt(document.getElementById('qty-'+id).textContent);
     cart[code] = qty;
     const btn = document.getElementById('abtn-'+id);
-    btn.textContent = '✓ Agregado';
+    btn.innerHTML = `
+        <span class="btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="m5 12 5 5L20 7"></path>
+            </svg>
+        </span>
+        Agregado
+    `;
     btn.classList.add('added');
     // Update cart count
     let total = 0;
@@ -575,8 +750,6 @@ function addCart(id, code){
 }
 
 function setTab(el, val){
-    document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
     document.getElementById('cat-select').value = val;
     filterProducts();
 }
@@ -592,11 +765,21 @@ function scrollProducts(gridId, direction){
     });
 }
 
+function syncCategoryTabs(cat){
+    tabsCategoria.forEach(tab=>{
+        const valorTab = tab.dataset.cat || '';
+        const mostrar = !cat || valorTab === '' || valorTab === cat;
+        tab.style.display = mostrar ? 'inline-flex' : 'none';
+        tab.classList.toggle('active', valorTab === (cat || ''));
+    });
+}
+
 // ELEMENTOS
 const buscador = document.getElementById('search-input');
 const precioMin = document.getElementById('price-min');
 const precioMax = document.getElementById('price-max');
 const categoria = document.getElementById('cat-select');
+const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
@@ -644,6 +827,8 @@ function filterProducts(){
         section.querySelector('.section-count').textContent = visibles + ' productos';
     });
 
+    syncCategoryTabs(cat);
+
     // 🔥 ACTUALIZAR SELECT SIN ROMPER
     let valorActual = categoria.value;
 
@@ -687,6 +872,8 @@ function clearFilters(){
 
     filterProducts();
 }
+
+syncCategoryTabs(categoria.value);
 
 // FORMATO
 function formatoMiles(input){
