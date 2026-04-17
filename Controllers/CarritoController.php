@@ -23,6 +23,22 @@ class CarritoController {
             $_SESSION['carrito'][$id] = $cantidad;
         }
 
+        $isAjax = (
+            (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch') ||
+            (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+        );
+
+        if ($isAjax) {
+            $total = array_sum($_SESSION['carrito']);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'ok' => true,
+                'total' => $total,
+                'cantidad' => $_SESSION['carrito'][$id]
+            ]);
+            exit();
+        }
+
         header("Location: index.php?action=tienda");
         exit();
     }

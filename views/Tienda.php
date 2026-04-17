@@ -715,7 +715,6 @@ let cart = {};
 <?php if(isset($_SESSION['carrito'])): ?>
 cart = <?= json_encode($_SESSION['carrito']) ?>;
 <?php endif; ?>
-const SHOP_STATE_KEY = 'tienda_virtual_state';
 
 function chgQty(id, delta){
     const el = document.getElementById('qty-'+id);
@@ -724,10 +723,9 @@ function chgQty(id, delta){
     el.textContent = v;
 }
 
-function addCart(id, code){
+async function addCart(id, code){
     const qty = parseInt(document.getElementById('qty-'+id).textContent);
     cart[code] = qty;
-    saveShopState();
     const btn = document.getElementById('abtn-'+id);
     btn.innerHTML = `
         <span class="btn-icon" aria-hidden="true">
@@ -738,17 +736,41 @@ function addCart(id, code){
         Agregado
     `;
     btn.classList.add('added');
-    // Update cart count
-    let total = 0;
-    for(let q of Object.values(cart)) total += q;
-    document.getElementById('cart-count').textContent = total;
-    // Submit form
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'index.php?action=agregarCarrito';
-    form.innerHTML = `<input name="id_producto" value="${id}"><input name="cantidad" value="${qty}">`;
-    document.body.appendChild(form);
-    form.submit();
+
+    try {
+        const response = await fetch('index.php?action=agregarCarrito', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams({
+                id_producto: id,
+                cantidad: qty
+            })
+        });
+
+        const data = await response.json();
+        if(!response.ok || !data.ok){
+            throw new Error('No se pudo agregar al carrito');
+        }
+
+        document.getElementById('cart-count').textContent = data.total;
+    } catch (error) {
+        console.error(error);
+        btn.classList.remove('added');
+        btn.innerHTML = `
+            <span class="btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="9" cy="20" r="1"></circle>
+                    <circle cx="18" cy="20" r="1"></circle>
+                    <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
+                </svg>
+            </span>
+            Agregar
+        `;
+    }
 }
 
 function setTab(el, val){
@@ -782,42 +804,6 @@ function showCategory(cat){
     if(section){
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-}
-
-function saveShopState(){
-    const state = {
-        scrollY: window.scrollY,
-        texto: buscador.value,
-        min: precioMin.value,
-        max: precioMax.value,
-        categoria: categoria.value
-    };
-    sessionStorage.setItem(SHOP_STATE_KEY, JSON.stringify(state));
-}
-
-function restoreShopState(){
-    const rawState = sessionStorage.getItem(SHOP_STATE_KEY);
-    if(!rawState) return;
-
-    try {
-        const state = JSON.parse(rawState);
-        buscador.value = state.texto || '';
-        precioMin.value = state.min || '';
-        precioMax.value = state.max || '';
-        categoria.value = state.categoria || '';
-        filterProducts();
-
-        requestAnimationFrame(() => {
-            window.scrollTo({
-                top: Number(state.scrollY || 0),
-                behavior: 'auto'
-            });
-        });
-    } catch (error) {
-        console.error('No se pudo restaurar el estado de la tienda', error);
-    }
-
-    sessionStorage.removeItem(SHOP_STATE_KEY);
 }
 
 // ELEMENTOS
@@ -920,7 +906,6 @@ function clearFilters(){
 }
 
 syncCategoryTabs(categoria.value);
-restoreShopState();
 
 // FORMATO
 function formatoMiles(input){
