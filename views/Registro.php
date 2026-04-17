@@ -52,18 +52,19 @@ body {
 .container {
     background:var(--card-bg);
     backdrop-filter: blur(14px);
-    padding:30px 20px;
+    padding:24px 18px;
     border-radius:18px;
     width:100%;
     box-shadow:0 15px 40px rgba(0,0,0,0.6);
     border:1px solid var(--card-border);
-    max-width:420px; 
+    max-width:380px;
+    min-width:0;
 }
 
 /* TÍTULO */
 h2 {
     text-align:center;
-    margin-bottom:20px;
+    margin-bottom:18px;
     color:#38bdf8;
     text-shadow:0 0 22px rgba(56,189,248,0.5);
 }
@@ -82,13 +83,14 @@ h2 {
     color:var(--muted);
 }
 
-.input-group input {
+..input-group input {
     width:100%;
-    padding:12px 15px 12px 45px;
+    padding:10px 14px 10px 42px;
     border-radius:10px;
     border:none;
     background:var(--input-bg);
     color:var(--input-text);
+    font-size: 0.95rem;
     box-sizing: border-box; 
 }
 .input-invalid {
@@ -152,7 +154,17 @@ button:hover {
 
 @media (max-width: 480px) {
     .container {
-        padding:25px 15px;
+        padding:18px 14px;
+        max-width:95%;
+    }
+
+    .input-group input,
+    button {
+        font-size: 0.95rem;
+    }
+
+    h2 {
+        font-size: 1.6rem;
     }
 }
 </style>
@@ -188,6 +200,7 @@ button:hover {
         <div class="input-group">
             <i class="fas fa-user"></i>
             <input type="text" name="nombres" placeholder="Nombres" required
+                oninput="this.value = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '')"
                 value="<?= $old['nombres'] ?? '' ?>">
         </div>
 
@@ -195,6 +208,7 @@ button:hover {
         <div class="input-group">
             <i class="fas fa-user"></i>
             <input type="text" name="apellidos" placeholder="Apellidos" required
+                oninput="this.value = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '')"
                 value="<?= $old['apellidos'] ?? '' ?>">
         </div>
 
@@ -289,72 +303,80 @@ button:hover {
 
         applyTheme(localStorage.getItem('theme') || 'dark');
 
-        const correoInput = document.getElementById('correo');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirm-password');
-        const emailStatus = document.getElementById('email-status');
-        const ruleLength = document.getElementById('rule-length');
-        const ruleNumber = document.getElementById('rule-number');
-        const ruleLetter = document.getElementById('rule-letter');
-        const ruleMatch = document.getElementById('rule-match');
-        const registrarBtn = document.getElementById('registrar-btn');
+        document.addEventListener('DOMContentLoaded', function() {
+            const correoInput = document.getElementById('correo');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const emailStatus = document.getElementById('email-status');
+            const ruleLength = document.getElementById('rule-length');
+            const ruleNumber = document.getElementById('rule-number');
+            const ruleLetter = document.getElementById('rule-letter');
+            const ruleMatch = document.getElementById('rule-match');
+            const registrarBtn = document.getElementById('registrar-btn');
 
-        function updatePasswordRules() {
-            const value = passwordInput.value;
-            const confirmValue = confirmPasswordInput.value;
-            const hasLength = value.length >= 6;
-            const hasNumber = /[0-9]/.test(value);
-            const hasLetter = /[a-zA-Z]/.test(value);
-            const match = value === confirmValue && value !== '';
-
-            ruleLength.style.color = hasLength ? '#22c55e' : '#f87171';
-            ruleNumber.style.color = hasNumber ? '#22c55e' : '#f87171';
-            ruleLetter.style.color = hasLetter ? '#22c55e' : '#f87171';
-            ruleMatch.style.color = match ? '#22c55e' : '#f87171';
-            ruleMatch.textContent = match ? '• Las contraseñas coinciden' : '• Las contraseñas no coinciden';
-
-            passwordInput.classList.toggle('input-invalid', !hasLength || !hasNumber || !hasLetter);
-            confirmPasswordInput.classList.toggle('input-invalid', !match && confirmValue !== '');
-        }
-
-        function updateEmailStatus() {
-            const value = correoInput.value.trim();
-            const isValid = /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(value);
-            if (value === '') {
-                emailStatus.textContent = '';
-                correoInput.classList.remove('input-invalid');
+            if (!correoInput || !passwordInput || !confirmPasswordInput || !registrarBtn) {
                 return;
             }
-            emailStatus.textContent = isValid ? 'Correo válido para registrar' : 'El correo debe terminar en @gmail.com';
-            emailStatus.style.color = isValid ? '#22c55e' : '#f87171';
-            correoInput.classList.toggle('input-invalid', !isValid);
-        }
 
-        function updateFormState() {
-            const emailValid = /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(correoInput.value.trim());
-            const password = passwordInput.value;
-            const confirmValue = confirmPasswordInput.value;
-            const passwordValid = password.length >= 6 && /[0-9]/.test(password) && /[a-zA-Z]/.test(password);
-            const passwordsMatch = password === confirmValue && password !== '';
-            registrarBtn.disabled = !(emailValid && passwordValid && passwordsMatch);
-            registrarBtn.style.opacity = registrarBtn.disabled ? '0.65' : '1';
-            registrarBtn.style.cursor = registrarBtn.disabled ? 'not-allowed' : 'pointer';
-        }
+            function updatePasswordRules() {
+                const value = passwordInput.value;
+                const confirmValue = confirmPasswordInput.value;
+                const hasLength = value.length >= 6;
+                const hasNumber = /[0-9]/.test(value);
+                const hasLetter = /[a-zA-Z]/.test(value);
+                const match = value === confirmValue && value !== '';
 
-        correoInput?.addEventListener('input', () => {
+                ruleLength.style.color = hasLength ? '#22c55e' : '#f87171';
+                ruleNumber.style.color = hasNumber ? '#22c55e' : '#f87171';
+                ruleLetter.style.color = hasLetter ? '#22c55e' : '#f87171';
+                ruleMatch.style.color = match ? '#22c55e' : '#f87171';
+                ruleMatch.textContent = match ? '• Las contraseñas coinciden' : '• Las contraseñas no coinciden';
+
+                passwordInput.classList.toggle('input-invalid', !hasLength || !hasNumber || !hasLetter);
+                confirmPasswordInput.classList.toggle('input-invalid', !match && confirmValue !== '');
+            }
+
+            function updateEmailStatus() {
+                const value = correoInput.value.trim();
+                const isValid = /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(value);
+                if (value === '') {
+                    emailStatus.textContent = '';
+                    correoInput.classList.remove('input-invalid');
+                    return;
+                }
+                emailStatus.textContent = isValid ? 'Correo válido para registrar' : 'El correo debe terminar en @gmail.com';
+                emailStatus.style.color = isValid ? '#22c55e' : '#f87171';
+                correoInput.classList.toggle('input-invalid', !isValid);
+            }
+
+            function updateFormState() {
+                const emailValid = /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(correoInput.value.trim());
+                const password = passwordInput.value;
+                const confirmValue = confirmPasswordInput.value;
+                const passwordValid = password.length >= 6 && /[0-9]/.test(password) && /[a-zA-Z]/.test(password);
+                const passwordsMatch = password === confirmValue && password !== '';
+                registrarBtn.disabled = !(emailValid && passwordValid && passwordsMatch);
+                registrarBtn.style.opacity = registrarBtn.disabled ? '0.65' : '1';
+                registrarBtn.style.cursor = registrarBtn.disabled ? 'not-allowed' : 'pointer';
+            }
+
+            correoInput.addEventListener('input', function() {
+                updateEmailStatus();
+                updateFormState();
+            });
+            passwordInput.addEventListener('input', function() {
+                updatePasswordRules();
+                updateFormState();
+            });
+            confirmPasswordInput.addEventListener('input', function() {
+                updatePasswordRules();
+                updateFormState();
+            });
+
             updateEmailStatus();
-            updateFormState();
-        });
-        passwordInput?.addEventListener('input', () => {
             updatePasswordRules();
             updateFormState();
         });
-        confirmPasswordInput?.addEventListener('input', () => {
-            updatePasswordRules();
-            updateFormState();
-        });
-
-        updateFormState();
 
         setTimeout(() => {
             const error = document.getElementById("mensajeError");
