@@ -77,6 +77,10 @@
     cursor: pointer;
     appearance: none;
 }
+.filter-select option {
+    color: #111827;
+    background: #ffffff;
+}
 [data-theme="light"] .filter-select {
     background: rgba(0,0,0,0.04);
     border-color: rgba(0,0,0,0.08);
@@ -124,6 +128,9 @@
     border-color: rgba(0,229,192,0.35);
     color: var(--accent);
 }
+.category-section {
+    padding-bottom: 30px;
+}
 
 /* SECTION HEADER */
 .section-header {
@@ -165,13 +172,60 @@
     transition: opacity 0.2s;
 }
 .see-all:hover { opacity: 1; }
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.carousel-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.carousel-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,229,192,0.24);
+    background: rgba(0,229,192,0.08);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+}
+.carousel-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(0,229,192,0.16);
+    border-color: rgba(0,229,192,0.4);
+}
+.product-carousel {
+    position: relative;
+    padding: 0 32px;
+}
 
 /* PRODUCT GRID */
 .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
     gap: 16px;
-    padding: 0 32px 40px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    padding: 0 0 10px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,229,192,0.3) transparent;
+}
+.product-grid::-webkit-scrollbar {
+    height: 8px;
+}
+.product-grid::-webkit-scrollbar-thumb {
+    background: rgba(0,229,192,0.24);
+    border-radius: 999px;
+}
+.product-grid::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 /* PRODUCT CARD */
@@ -183,6 +237,8 @@
     transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
     cursor: pointer;
     position: relative;
+    flex: 0 0 280px;
+    scroll-snap-align: start;
 }
 .product-card:hover {
     transform: translateY(-4px);
@@ -337,6 +393,66 @@
     color: var(--secondary);
     font-size: 12px;
 }
+@media (max-width: 980px) {
+    .filters {
+        grid-template-columns: 1fr 1fr;
+    }
+    .filters > :first-child {
+        grid-column: 1 / -1;
+    }
+    .btn-clear {
+        width: 100%;
+    }
+    .cat-tabs {
+        padding-bottom: 18px;
+    }
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+@media (max-width: 768px) {
+    .hero {
+        padding: 32px 20px 24px;
+    }
+    .hero-title {
+        font-size: 32px;
+    }
+    .filters {
+        grid-template-columns: 1fr;
+        padding: 0 20px 20px;
+    }
+    .cat-tabs {
+        display: none;
+    }
+    .section-header {
+        padding: 0 20px 14px;
+    }
+    .product-carousel {
+        padding: 0 20px;
+    }
+    .product-card {
+        flex-basis: 240px;
+    }
+    .see-all {
+        display: none;
+    }
+}
+@media (max-width: 520px) {
+    .carousel-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .carousel-btn {
+        width: 40px;
+        height: 40px;
+    }
+    .product-card {
+        flex-basis: 82vw;
+        max-width: 320px;
+    }
+}
 </style>
 
 <div class="hero">
@@ -369,46 +485,54 @@
 <div id="section-<?= strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
         <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
-        <a class="see-all">Ver todos →</a>
-    </div>
-    <div class="product-grid" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
-        <?php foreach($productos as $p): ?>
-        <div class="product-card producto"
-             data-nombre="<?= strtolower($p['nombre']) ?>"
-             data-precio="<?= $p['precio'] ?>"
-             data-categoria="<?= $categoria ?>"
-             data-id="<?= $p['id_producto'] ?>">
-            <div class="card-img-wrap">
-                <?php if(!empty($p['imagen'])): ?>
-                <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= $p['nombre'] ?>" onerror="this.style.display='none'">
-                <?php else: ?>
-                <div class="card-placeholder">🔧</div>
-                <?php endif; ?>
-            </div>
-            <div class="card-body">
-                <div class="card-name"><?= $p['nombre'] ?></div>
-                <div class="card-meta">
-                    <span class="meta-pill meta-code">#<?= $p['id_producto'] ?></span>
-                    <span class="meta-pill meta-stock <?= $p['stock_p'] <= 4 ? 'low' : '' ?>">
-                        <?= $p['stock_p'] <= 4 ? '⚠ ' : '✓ ' ?><?= $p['stock_p'] ?> uds
-                    </span>
-                </div>
-                <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
-                <div class="card-footer">
-                    <div class="qty-wrap">
-                        <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, -1)">−</button>
-                        <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['codigo']]) ? $_SESSION['carrito'][$p['codigo']] : 1 ?></span>
-                        <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, 1)">+</button>
-                    </div>
-                    <button class="add-btn <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'added' : '' ?>" 
-                            id="abtn-<?= $p['id_producto'] ?>" 
-                            onclick="addCart(<?= $p['id_producto'] ?>, '<?= $p['codigo'] ?>')">
-                        <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? '✓ Agregado' : '🛒 Agregar' ?>
-                    </button>
-                </div>
+        <div class="section-actions">
+            <a class="see-all" href="#grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">Ver todos -></a>
+            <div class="carousel-nav">
+                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="Desplazar productos a la izquierda">&#8249;</button>
+                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="Desplazar productos a la derecha">&#8250;</button>
             </div>
         </div>
-        <?php endforeach; ?>
+    </div>
+    <div class="product-carousel">
+        <div class="product-grid" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
+            <?php foreach($productos as $p): ?>
+            <div class="product-card producto"
+                 data-nombre="<?= strtolower($p['nombre']) ?>"
+                 data-precio="<?= $p['precio'] ?>"
+                 data-categoria="<?= $categoria ?>"
+                 data-id="<?= $p['id_producto'] ?>">
+                <div class="card-img-wrap">
+                    <?php if(!empty($p['imagen'])): ?>
+                    <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= $p['nombre'] ?>" onerror="this.style.display='none'">
+                    <?php else: ?>
+                    <div class="card-placeholder">IMG</div>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body">
+                    <div class="card-name"><?= $p['nombre'] ?></div>
+                    <div class="card-meta">
+                        <span class="meta-pill meta-code">#<?= $p['id_producto'] ?></span>
+                        <span class="meta-pill meta-stock <?= $p['stock_p'] <= 4 ? 'low' : '' ?>">
+                            <?= $p['stock_p'] <= 4 ? 'Bajo ' : 'OK ' ?><?= $p['stock_p'] ?> uds
+                        </span>
+                    </div>
+                    <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
+                    <div class="card-footer">
+                        <div class="qty-wrap">
+                            <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, -1)">-</button>
+                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['codigo']]) ? $_SESSION['carrito'][$p['codigo']] : 1 ?></span>
+                            <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, 1)">+</button>
+                        </div>
+                        <button class="add-btn <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'added' : '' ?>" 
+                                id="abtn-<?= $p['id_producto'] ?>" 
+                                onclick="addCart(<?= $p['id_producto'] ?>, '<?= $p['codigo'] ?>')">
+                            <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'Agregado' : 'Agregar' ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
     </div>
 </div>
 <?php endforeach; ?>
@@ -455,6 +579,17 @@ function setTab(el, val){
     el.classList.add('active');
     document.getElementById('cat-select').value = val;
     filterProducts();
+}
+
+function scrollProducts(gridId, direction){
+    const grid = document.getElementById(gridId);
+    if(!grid) return;
+    const card = grid.querySelector('.product-card');
+    const step = card ? card.offsetWidth + 16 : 320;
+    grid.scrollBy({
+        left: step * direction * 2,
+        behavior: 'smooth'
+    });
 }
 
 // ELEMENTOS
