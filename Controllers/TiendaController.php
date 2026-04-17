@@ -1,18 +1,34 @@
 <?php
 require_once __DIR__ . '/../models/ProductoModel.php';
+require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../config/database.php';
 
 class TiendaController {
 
     private $model;
+    private $carritoModel;
 
     public function __construct() {
         $pdo = Database::getConnection();
         $this->model = new ProductoModel($pdo);
+        $this->carritoModel = new CarritoModel($pdo);
+    }
+
+    private function syncCartSession() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (isset($_SESSION['id_usuario'])) {
+            $_SESSION['carrito'] = $this->carritoModel->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
+        } elseif (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
+            $_SESSION['carrito'] = [];
+        }
     }
 
     // 🛍️ CATÁLOGO
     public function index() {
+        $this->syncCartSession();
 
         $filtro = $_GET['filtro'] ?? '';
         $precio_min = $_GET['precio_min'] ?? '';
@@ -67,10 +83,16 @@ class TiendaController {
 
     // 🔍 DETALLE
     public function detalle() {
+        $this->syncCartSession();
 
         $id = $_GET['id'] ?? 0;
 
         $producto = $this->model->obtenerPorId($id);
+        if (!$producto) {
+            header("Location: index.php?action=tienda");
+            exit();
+        }
+
         $imagenes = $this->model->obtenerImagenes($id);
 
         require_once __DIR__ . '/../views/tienda/detalle.php';

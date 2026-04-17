@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
+require_once __DIR__ . '/../models/CarritoModel.php';
 
 class LoginController {
 
@@ -30,7 +31,8 @@ class LoginController {
             exit();
         }
 
-        if ($usuario['estado'] !== 'Activo') {
+        $estadoActivo = in_array($usuario['estado'], ['Activo', '1', 1, true, 't'], true);
+        if (!$estadoActivo) {
             $_SESSION['error'] = "Usuario inactivo";
             header("Location: index.php");
             exit();
@@ -40,6 +42,11 @@ class LoginController {
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
         $_SESSION['bienvenida'] = "👋 Bienvenido, " . $usuario['username'];
+
+        $carritoModel = new CarritoModel($pdo);
+        $carritoInvitado = $_SESSION['carrito'] ?? [];
+        $carritoModel->fusionarCarritoInvitado((int) $usuario['id_usuario'], $carritoInvitado);
+        $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario((int) $usuario['id_usuario']);
 
         if ($usuario['id_tipo'] == 1) {
             header("Location: index.php?action=admin_panel");

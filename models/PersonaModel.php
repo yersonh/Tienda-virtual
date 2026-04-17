@@ -10,11 +10,12 @@ class PersonaModel {
 
     public function crear($data) {
         $query = "INSERT INTO persona (nombres, apellidos, cc, correo, telefono, direccion)
-                  VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)";
+                  VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)
+                  RETURNING id_persona";
 
         $stmt = $this->conn->prepare($query);
 
-        return $stmt->execute([
+        $stmt->execute([
             ':nombres' => $data['nombres'],
             ':apellidos' => $data['apellidos'],
             ':cc' => $data['cc'],
@@ -22,6 +23,8 @@ class PersonaModel {
             ':telefono' => $data['telefono'],
             ':direccion' => $data['direccion']
         ]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function obtenerUltimoId() {
