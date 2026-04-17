@@ -75,6 +75,12 @@ class RegistroController {
             exit();
         }
 
+        if (!preg_match('/^[^@]+@gmail\.com$/', $data['correo'])) {
+            $_SESSION['error'] = "El correo debe ser @gmail.com";
+            header("Location: index.php?action=registro");
+            exit();
+        }
+
         if ($model->correoExisteEmail($data['correo'])) {
             $_SESSION['error'] = "El correo ya esta en uso";
             header("Location: index.php?action=registro");
