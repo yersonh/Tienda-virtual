@@ -47,6 +47,8 @@ class CarritoController {
 
     private function getDetailedItems() {
         $idUsuario = $this->getUsuarioId();
+        $ajustoCantidades = false;
+
         if ($idUsuario > 0) {
             $items = $this->carritoModel->obtenerItemsDetallados($idUsuario);
         } else {
@@ -64,9 +66,40 @@ class CarritoController {
 
         foreach ($items as &$item) {
             $item['cantidad'] = max(1, (int) ($item['cantidad'] ?? 1));
+            $stock = max(0, (int) ($item['stock_p'] ?? 0));
+
+            if ($stock === 0) {
+                if ($idUsuario > 0) {
+                    $this->carritoModel->eliminarProducto($idUsuario, (int) $item['id_producto']);
+                } else {
+                    unset($_SESSION['carrito'][(int) $item['id_producto']]);
+                }
+                $item['cantidad'] = 0;
+                $ajustoCantidades = true;
+                continue;
+            }
+
+            if ($item['cantidad'] > $stock) {
+                $item['cantidad'] = $stock;
+                if ($idUsuario > 0) {
+                    $this->carritoModel->actualizarCantidad($idUsuario, (int) $item['id_producto'], $stock);
+                } else {
+                    $_SESSION['carrito'][(int) $item['id_producto']] = $stock;
+                }
+                $ajustoCantidades = true;
+            }
+
             $item['total_linea'] = $item['cantidad'] * (float) $item['precio'];
         }
         unset($item);
+
+        $items = array_values(array_filter($items, function($item) {
+            return (int) ($item['cantidad'] ?? 0) > 0;
+        }));
+
+        if ($ajustoCantidades && $idUsuario > 0) {
+            $_SESSION['carrito'] = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
+        }
 
         return $items;
     }
@@ -76,6 +109,7 @@ class CarritoController {
         $cantidad = 0;
         $lineaTotal = 0;
         $subtotal = 0;
+        $stockDisponible = 0;
 
         foreach ($this->getDetailedItems() as $item) {
             $subtotal += $item['total_linea'];
@@ -83,6 +117,7 @@ class CarritoController {
             if ($idProducto !== null && (int) $item['id_producto'] === (int) $idProducto) {
                 $cantidad = (int) $item['cantidad'];
                 $lineaTotal = (float) $item['total_linea'];
+                $stockDisponible = (int) ($item['stock_p'] ?? 0);
             }
         }
 
@@ -91,7 +126,8 @@ class CarritoController {
             'total' => array_sum($carrito),
             'subtotal' => $subtotal,
             'cantidad' => $cantidad,
-            'linea_total' => $lineaTotal
+            'linea_total' => $lineaTotal,
+            'stock' => $stockDisponible
         ];
     }
 
@@ -101,8 +137,9 @@ class CarritoController {
         $id = (int) ($_POST['id_producto'] ?? 0);
         $cantidad = max(1, (int) ($_POST['cantidad'] ?? 1));
         $idUsuario = $this->getUsuarioId();
+        $producto = $this->productoModel->obtenerPorId($id);
 
-        if ($id <= 0) {
+        if ($id <= 0 || !$producto) {
             if ($this->isAjaxRequest()) {
                 header('Content-Type: application/json');
                 http_response_code(400);
@@ -114,19 +151,39 @@ class CarritoController {
             exit();
         }
 
+        $stockDisponible = max(0, (int) ($producto['stock_p'] ?? 0));
+        $carritoActual = $this->syncSessionCartFromSource();
+        $cantidadActual = (int) ($carritoActual[$id] ?? 0);
+        $cantidadFinal = min($stockDisponible, $cantidadActual + $cantidad);
+        $cantidadAgregar = max(0, $cantidadFinal - $cantidadActual);
+
+        if ($cantidadAgregar <= 0) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                http_response_code(422);
+                echo json_encode([
+                    'ok' => false,
+                    'message' => 'No hay stock disponible suficiente',
+                    'cantidad' => $cantidadActual,
+                    'stock' => $stockDisponible,
+                    'total' => array_sum($carritoActual)
+                ]);
+                exit();
+            }
+
+            header("Location: index.php?action=verCarrito");
+            exit();
+        }
+
         if ($idUsuario > 0) {
-            $this->carritoModel->agregarProducto($idUsuario, $id, $cantidad);
+            $this->carritoModel->agregarProducto($idUsuario, $id, $cantidadAgregar);
             $this->syncSessionCartFromSource();
         } else {
             if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
                 $_SESSION['carrito'] = [];
             }
 
-            if (isset($_SESSION['carrito'][$id])) {
-                $_SESSION['carrito'][$id] += $cantidad;
-            } else {
-                $_SESSION['carrito'][$id] = $cantidad;
-            }
+            $_SESSION['carrito'][$id] = $cantidadFinal;
         }
 
         if ($this->isAjaxRequest()) {
@@ -157,6 +214,43 @@ class CarritoController {
         $id = (int) ($_POST['id_producto'] ?? 0);
         $cantidad = max(1, (int) ($_POST['cantidad'] ?? 1));
         $idUsuario = $this->getUsuarioId();
+        $producto = $this->productoModel->obtenerPorId($id);
+
+        if (!$producto) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                http_response_code(404);
+                echo json_encode(['ok' => false, 'message' => 'Producto no encontrado']);
+                exit();
+            }
+
+            header("Location: index.php?action=verCarrito");
+            exit();
+        }
+
+        $stockDisponible = max(0, (int) ($producto['stock_p'] ?? 0));
+        if ($stockDisponible <= 0) {
+            if ($idUsuario > 0) {
+                $this->carritoModel->eliminarProducto($idUsuario, $id);
+                $this->syncSessionCartFromSource();
+            } else {
+                unset($_SESSION['carrito'][$id]);
+            }
+            $cantidad = 0;
+        } else {
+            $cantidad = min($cantidad, $stockDisponible);
+        }
+
+        if ($cantidad <= 0) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode($this->buildCartResponse($id));
+                exit();
+            }
+
+            header("Location: index.php?action=verCarrito");
+            exit();
+        }
 
         if ($idUsuario > 0) {
             $this->carritoModel->actualizarCantidad($idUsuario, $id, $cantidad);

@@ -26,7 +26,7 @@ class TiendaController {
         }
     }
 
-    // 🛍️ CATÁLOGO
+    // Ã°Å¸â€ºÂÃ¯Â¸Â CATÃƒÂLOGO
     public function index() {
         $this->syncCartSession();
 
@@ -39,7 +39,7 @@ class TiendaController {
 
         $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
 
-            // 🔍 TEXTO
+            // Ã°Å¸â€Â TEXTO
             $match_texto = true;
             if (!empty($filtro)) {
                 $f = strtolower($filtro);
@@ -50,7 +50,7 @@ class TiendaController {
                     str_contains(strtolower($p['descripcion']), $f);
             }
 
-            // 💰 PRECIO
+            // Ã°Å¸â€™Â° PRECIO
             $match_precio = true;
 
            if ($precio_min !== '') {
@@ -61,7 +61,7 @@ class TiendaController {
                 $match_precio = $match_precio && $p['precio'] <= str_replace('.', '', $precio_max);
             }
 
-            // 📦 CATEGORIA
+            // Ã°Å¸â€œÂ¦ CATEGORIA
             $match_categoria = true;
             if (!empty($categoria_filtro)) {
                 $match_categoria = $p['categoria_nombre'] === $categoria_filtro;
@@ -70,18 +70,21 @@ class TiendaController {
             return $match_texto && $match_precio && $match_categoria;
         });
 
-        // 🔥 AGRUPAR
+        // Ã°Å¸â€Â¥ AGRUPAR
         $categorias = [];
+        $todasCategorias = array_map(function($cat) {
+            return $cat['nombre'];
+        }, $this->model->obtenerCategorias());
 
         foreach ($productos as $p) {
-            $cat = $p['categoria_nombre'] ?? 'Sin categoría';
+            $cat = $p['categoria_nombre'] ?? 'Sin categoria';
             $categorias[$cat][] = $p;
         }
 
         require_once __DIR__ . '/../views/Tienda.php';
     }
 
-    // 🔍 DETALLE
+    // Ã°Å¸â€Â DETALLE
     public function detalle() {
         $this->syncCartSession();
 

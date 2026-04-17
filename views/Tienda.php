@@ -623,18 +623,18 @@
 </style>
 
 <div class="hero">
-    <div class="hero-label">ÃƒÂ¢Ã…â€œÃ‚Â¦ Tienda de Repuestos</div>
-    <h1 class="hero-title">CatÃƒÆ’Ã‚Â¡logo de<br><em>Productos</em></h1>
-    <p class="hero-sub">Piezas originales para tu vehÃƒÆ’Ã‚Â­culo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â calidad garantizada</p>
+    <div class="hero-label">Tienda de Repuestos</div>
+    <h1 class="hero-title">Cat&aacute;logo de<br><em>Productos</em></h1>
+    <p class="hero-sub">Piezas originales para tu veh&iacute;culo - calidad garantizada</p>
 </div>
 
 <div class="filters">
-    <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" oninput="filterProducts()">
-    <input class="filter-input" type="number" placeholder="Precio mÃƒÂ­n" id="price-min" oninput="filterProducts()">
-    <input class="filter-input" type="number" placeholder="Precio mÃƒÂ¡x" id="price-max" oninput="filterProducts()">
+    <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="number" placeholder="Precio min" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="number" placeholder="Precio max" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
-        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>>Todas las categorÃƒÂ­as</option>
-        <?php foreach(array_keys($categorias) as $cat): ?>
+        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>>Todas las categorias</option>
+        <?php foreach($todasCategorias as $cat): ?>
         <option value="<?= $cat ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= $cat ?></option>
         <?php endforeach; ?>
     </select>
@@ -643,7 +643,7 @@
 
 <div class="cat-tabs">
     <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')">Todo</button>
-    <?php foreach(array_keys($categorias) as $cat): ?>
+    <?php foreach($todasCategorias as $cat): ?>
     <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= $cat ?>" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
     <?php endforeach; ?>
 </div>
@@ -665,7 +665,7 @@
     <div class="section-header">
         <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
         <div class="section-actions">
-            <a class="see-all" href="index.php?action=tienda&categoria=<?= urlencode($categoria) ?>#category-detail">
+            <a class="see-all" href="index.php?action=tienda&categoria=<?= urlencode($categoria) ?>#category-detail" onclick="event.preventDefault(); showCategory('<?= $categoria ?>');">
                 <span class="see-all-label">
                     <span>Ver todos</span>
                     <span class="see-all-icon" aria-hidden="true">
@@ -692,6 +692,7 @@
                  data-precio="<?= $p['precio'] ?>"
                  data-categoria="<?= $categoria ?>"
                  data-id="<?= $p['id_producto'] ?>"
+                 data-stock="<?= (int) $p['stock_p'] ?>"
                  data-url="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>&categoria=<?= urlencode($categoria) ?>"
                  onclick="openProductDetail(this, event)"
                  onkeydown="openProductDetailFromKey(event, this)"
@@ -737,9 +738,9 @@
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
                     <div class="card-footer">
                         <div class="qty-wrap">
-                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1)">-</button>
-                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['id_producto']]) ? $_SESSION['carrito'][$p['id_producto']] : 1 ?></span>
-                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1)">+</button>
+                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= (int) $p['stock_p'] ?>)">-</button>
+                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['id_producto']]) ? min((int) $_SESSION['carrito'][$p['id_producto']], (int) $p['stock_p']) : 1 ?></span>
+                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= (int) $p['stock_p'] ?>)">+</button>
                         </div>
                         <button class="add-btn <?= isset($_SESSION['carrito'][$p['id_producto']]) && $_SESSION['carrito'][$p['id_producto']] > 0 ? 'added' : '' ?>" 
                                 id="abtn-<?= $p['id_producto'] ?>" 
@@ -768,10 +769,11 @@ let cart = {};
 cart = <?= json_encode($_SESSION['carrito']) ?>;
 <?php endif; ?>
 
-function chgQty(id, delta){
+function chgQty(id, delta, stock){
     const el = document.getElementById('qty-'+id);
     let v = parseInt(el.textContent) + delta;
     if(v < 1) v = 1;
+    if(stock && v > stock) v = stock;
     el.textContent = v;
 }
 
@@ -805,10 +807,26 @@ async function addCart(id){
 
         const data = await response.json();
         if(!response.ok || !data.ok){
-            throw new Error('No se pudo agregar al carrito');
+            if(data && typeof data.cantidad !== 'undefined'){
+                document.getElementById('qty-'+id).textContent = data.cantidad || 1;
+                if((data.cantidad || 0) > 0){
+                    btn.classList.add('added');
+                    btn.innerHTML = `
+                        <span class="btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m5 12 5 5L20 7"></path>
+                            </svg>
+                        </span>
+                        Agregado
+                    `;
+                    throw new Error((data && data.message) ? data.message : 'No se pudo agregar al carrito');
+                }
+            }
+            throw new Error((data && data.message) ? data.message : 'No se pudo agregar al carrito');
         }
 
         document.getElementById('cart-count').textContent = data.total;
+        document.getElementById('qty-'+id).textContent = data.cantidad || qty;
     } catch (error) {
         console.error(error);
         btn.classList.remove('added');
@@ -826,6 +844,20 @@ async function addCart(id){
 }
 
 function setTab(el, val){
+    if(detailMode){
+        const texto = buscador.value.trim();
+        const min = precioMin.value.replace(/\./g,'').trim();
+        const max = precioMax.value.replace(/\./g,'').trim();
+        const params = new URLSearchParams();
+        params.set('action', 'tienda');
+        if(texto) params.set('filtro', texto);
+        if(min) params.set('precio_min', min);
+        if(max) params.set('precio_max', max);
+        if(val) params.set('categoria', val);
+        const destino = `index.php?${params.toString()}${val ? '#category-detail' : ''}`;
+        window.location.href = destino;
+        return;
+    }
     document.getElementById('cat-select').value = val;
     filterProducts();
 }
@@ -864,13 +896,16 @@ function syncCategoryTabs(cat){
 }
 
 function showCategory(cat){
-    categoria.value = cat;
-    filterProducts();
-    const sectionId = 'section-' + cat.toLowerCase().replace(/\s+/g, '-');
-    const section = document.getElementById(sectionId);
-    if(section){
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    const texto = buscador.value.trim();
+    const min = precioMin.value.replace(/\./g,'').trim();
+    const max = precioMax.value.replace(/\./g,'').trim();
+    const params = new URLSearchParams();
+    params.set('action', 'tienda');
+    if(texto) params.set('filtro', texto);
+    if(min) params.set('precio_min', min);
+    if(max) params.set('precio_max', max);
+    if(cat) params.set('categoria', cat);
+    window.location.href = `index.php?${params.toString()}${cat ? '#category-detail' : ''}`;
 }
 
 // ELEMENTOS
@@ -879,22 +914,35 @@ const precioMin = document.getElementById('price-min');
 const precioMax = document.getElementById('price-max');
 const categoria = document.getElementById('cat-select');
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
+const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
 
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ UN SOLO EVENTO PARA TODO
+// UN SOLO EVENTO PARA TODO
 [buscador, precioMin, precioMax, categoria].forEach(el=>{
     el.addEventListener('input', filterProducts);
 });
 
-// ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ FUNCIÃƒÆ’Ã¢â‚¬Å“N PRINCIPAL (TODO EN UNO)
+// FUNCION PRINCIPAL (TODO EN UNO)
 function filterProducts(){
 
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g,'');
     let max = precioMax.value.replace(/\./g,'');
     let cat = categoria.value;
+
+    if(detailMode){
+        const params = new URLSearchParams();
+        params.set('action', 'tienda');
+        if(texto) params.set('filtro', texto);
+        if(min) params.set('precio_min', min);
+        if(max) params.set('precio_max', max);
+        if(cat) params.set('categoria', cat);
+        const hash = cat ? '#category-detail' : '';
+        window.location.href = `index.php?${params.toString()}${hash}`;
+        return;
+    }
 
     let categoriasVisibles = new Set();
 
@@ -928,14 +976,14 @@ function filterProducts(){
 
     syncCategoryTabs(cat);
 
-    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ ACTUALIZAR SELECT SIN ROMPER
+    // ACTUALIZAR SELECT SIN ROMPER
     let valorActual = categoria.value;
 
     categoria.innerHTML = "";
 
     let optionTodas = document.createElement("option");
     optionTodas.value = "";
-    optionTodas.textContent = "Todas las categorÃƒÆ’Ã‚Â­as";
+    optionTodas.textContent = "Todas las categorias";
     categoria.appendChild(optionTodas);
 
     opcionesOriginales.forEach(op=>{
@@ -948,7 +996,7 @@ function filterProducts(){
         }
     });
 
-    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ RESTAURAR SI TODO VACÃƒÆ’Ã‚ÂO
+    // RESTAURAR SI TODO VACIO
     if(!texto && !min && !max && !cat){
         categoria.innerHTML = "";
         opcionesOriginales.forEach(op=>{
@@ -959,6 +1007,11 @@ function filterProducts(){
 
 // LIMPIAR
 function clearFilters(){
+    if(detailMode){
+        window.location.href = 'index.php?action=tienda';
+        return;
+    }
+
     buscador.value="";
     precioMin.value="";
     precioMax.value="";

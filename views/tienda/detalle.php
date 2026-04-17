@@ -428,7 +428,7 @@ if (!empty($imagenesProducto)) {
                                     <circle cx="9" cy="10" r="1.5"></circle>
                                     <path d="M21 16 16 11 5 19"></path>
                                 </svg>
-                                <span>Este producto aún no tiene imágenes cargadas.</span>
+                                <span>Este producto aun no tiene imagenes cargadas.</span>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -453,7 +453,7 @@ if (!empty($imagenesProducto)) {
             <aside class="detail-info">
                 <div class="detail-category"><?= htmlspecialchars($producto['categoria_nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') ?></div>
                 <h1 class="detail-title"><?= htmlspecialchars($producto['nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="detail-subline">Explora todas las imágenes, revisa disponibilidad y consulta los detalles antes de agregarlo al carrito.</p>
+                <p class="detail-subline">Explora todas las imagenes, revisa disponibilidad y consulta los detalles antes de agregarlo al carrito.</p>
 
                 <div class="detail-meta">
                     <span class="detail-chip">
@@ -463,7 +463,7 @@ if (!empty($imagenesProducto)) {
                             <path d="M9 17h4"></path>
                             <path d="M5 4h14v16H5z"></path>
                         </svg>
-                        Código <?= htmlspecialchars($producto['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                        Codigo <?= htmlspecialchars($producto['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                     </span>
                     <span class="detail-chip <?= ($producto['stock_p'] ?? 0) <= 4 ? 'low' : '' ?>">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -485,15 +485,15 @@ if (!empty($imagenesProducto)) {
                 </div>
 
                 <div class="detail-description">
-                    <h2>Descripción</h2>
-                    <p><?= !empty($producto['descripcion']) ? nl2br(htmlspecialchars($producto['descripcion'], ENT_QUOTES, 'UTF-8')) : 'Este producto no tiene una descripción registrada todavía.' ?></p>
+                    <h2>Descripcion</h2>
+                    <p><?= !empty($producto['descripcion']) ? nl2br(htmlspecialchars($producto['descripcion'], ENT_QUOTES, 'UTF-8')) : 'Este producto no tiene una descripcion registrada todavia.' ?></p>
                 </div>
 
                 <div class="detail-cart-row">
                     <div class="detail-qty">
-                        <button type="button" onclick="changeDetailQty(-1)">-</button>
-                        <span id="detail-qty-value"><?= isset($_SESSION['carrito'][$producto['id_producto']]) ? (int) $_SESSION['carrito'][$producto['id_producto']] : 1 ?></span>
-                        <button type="button" onclick="changeDetailQty(1)">+</button>
+                        <button type="button" onclick="changeDetailQty(-1, <?= (int) ($producto['stock_p'] ?? 0) ?>)">-</button>
+                        <span id="detail-qty-value"><?= isset($_SESSION['carrito'][$producto['id_producto']]) ? min((int) $_SESSION['carrito'][$producto['id_producto']], (int) ($producto['stock_p'] ?? 0)) : 1 ?></span>
+                        <button type="button" onclick="changeDetailQty(1, <?= (int) ($producto['stock_p'] ?? 0) ?>)">+</button>
                     </div>
                     <button
                         class="detail-add-btn <?= isset($_SESSION['carrito'][$producto['id_producto']]) && $_SESSION['carrito'][$producto['id_producto']] > 0 ? 'added' : '' ?>"
@@ -574,10 +574,11 @@ function changeImage(direction) {
     }
 }
 
-function changeDetailQty(delta) {
+function changeDetailQty(delta, stock) {
     const qtyEl = document.getElementById('detail-qty-value');
     let value = parseInt(qtyEl.textContent, 10) + delta;
     if (value < 1) value = 1;
+    if (stock && value > stock) value = stock;
     qtyEl.textContent = value;
 }
 
@@ -602,11 +603,19 @@ async function addDetailToCart(idProducto) {
 
         const data = await response.json();
         if (!response.ok || !data.ok) {
+            if (data && typeof data.cantidad !== 'undefined') {
+                document.getElementById('detail-qty-value').textContent = data.cantidad || 1;
+                if ((data.cantidad || 0) > 0) {
+                    btn.classList.add('added');
+                    label.textContent = 'Agregado al carrito';
+                }
+            }
             throw new Error('No se pudo agregar el producto');
         }
 
         btn.classList.add('added');
         label.textContent = 'Agregado al carrito';
+        document.getElementById('detail-qty-value').textContent = data.cantidad || qty;
 
         const cartCount = document.getElementById('cart-count');
         if (cartCount) {
