@@ -89,7 +89,57 @@ h2 {
     border:none;
     background:var(--input-bg);
     color:var(--input-text);
-    box-sizing: border-box; 
+    box-sizing: border-box;
+    padding-right: 48px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    color: #38bdf8;
+}
+
+.validation-msg {
+    font-size: 12px;
+    margin-top: -8px;
+    margin-bottom: 8px;
+    min-height: 16px;
+}
+
+.validation-msg.error {
+    color: #f87171;
+}
+
+.validation-msg.success {
+    color: #22c55e;
+}
+
+.password-rules {
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: grid;
+    gap: 4px;
+}
+
+.rule {
+    color: #f87171;
+}
+
+.rule.valid {
+    color: #22c55e;
 }
 .theme-toggle {
     position: fixed;
@@ -195,9 +245,10 @@ button:hover {
         <!-- CORREO -->
         <div class="input-group">
             <i class="fas fa-envelope"></i>
-            <input type="email" name="correo" placeholder="Correo electrónico" required
+            <input type="email" id="correo" name="correo" placeholder="Correo electrónico" required
                 value="<?= $old['correo'] ?? '' ?>">
         </div>
+        <div class="validation-msg" id="correo-msg"></div>
 
         <!-- TELÉFONO -->
         <div class="input-group">
@@ -217,18 +268,38 @@ button:hover {
         <!-- USUARIO -->
         <div class="input-group">
             <i class="fas fa-user-circle"></i>
-            <input type="text" name="username" placeholder="Usuario" required
+            <input type="text" id="username" name="username" placeholder="Usuario" required
                 value="<?= $old['username'] ?? '' ?>">
         </div>
+        <div class="validation-msg" id="username-msg"></div>
 
         <!-- PASSWORD -->
         <div class="input-group">
             <i class="fas fa-lock"></i>
-            <input type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
+            <input type="password" id="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
+            <button type="button" class="password-toggle" data-target="password" title="Mostrar contraseña">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <!-- CONFIRMAR PASSWORD -->
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmar contraseña" required>
+            <button type="button" class="password-toggle" data-target="confirm_password" title="Mostrar contraseña">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <div class="password-rules">
+            <div class="rule" id="rule-length">• Mínimo 6 caracteres</div>
+            <div class="rule" id="rule-number">• Contiene número</div>
+            <div class="rule" id="rule-letter">• Contiene letra</div>
+            <div class="rule" id="rule-match">• Las contraseñas coinciden</div>
         </div>
 
         <!-- BOTÓN -->
-        <button type="submit">
+        <button type="submit" id="registro-btn" disabled style="margin-top:8px;">
             <i class="fas fa-user-plus"></i> Registrarse
         </button>
 
@@ -267,6 +338,174 @@ button:hover {
         });
 
         applyTheme(localStorage.getItem('theme') || 'dark');
+
+        // Validación de contraseñas, correo y usuario en tiempo real
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirm_password');
+        const correoInput = document.getElementById('correo');
+        const usernameInput = document.getElementById('username');
+        const correoMsg = document.getElementById('correo-msg');
+        const usernameMsg = document.getElementById('username-msg');
+        const submitBtn = document.getElementById('registro-btn');
+        let correoValido = false;
+        let usernameValido = false;
+
+        function updatePasswordRules() {
+            const pwd = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            const hasLength = pwd.length >= 6;
+            const hasNumber = /[0-9]/.test(pwd);
+            const hasLetter = /[a-zA-Z]/.test(pwd);
+            const match = pwd === confirm && pwd !== '';
+
+            document.getElementById('rule-length').classList.toggle('valid', hasLength);
+            document.getElementById('rule-number').classList.toggle('valid', hasNumber);
+            document.getElementById('rule-letter').classList.toggle('valid', hasLetter);
+            document.getElementById('rule-match').classList.toggle('valid', match);
+
+            checkFormValidity();
+        }
+
+        function validateEmail() {
+            const email = correoInput.value.trim().toLowerCase();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!email) {
+                correoMsg.textContent = '';
+                correoMsg.className = 'validation-msg';
+                correoValido = false;
+                return;
+            }
+
+            if (!emailRegex.test(email)) {
+                correoMsg.textContent = 'Correo inválido';
+                correoMsg.className = 'validation-msg error';
+                correoValido = false;
+                checkFormValidity();
+                return;
+            }
+
+            // Verificar si el correo ya existe en la base de datos
+            correoMsg.textContent = 'Verificando...';
+            correoMsg.className = 'validation-msg';
+
+            fetch('index.php?action=verificarCorreo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'correo=' + encodeURIComponent(email)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.existe) {
+                    correoMsg.textContent = 'El correo ya está registrado';
+                    correoMsg.className = 'validation-msg error';
+                    correoValido = false;
+                } else {
+                    correoMsg.textContent = 'Correo disponible';
+                    correoMsg.className = 'validation-msg success';
+                    correoValido = true;
+                }
+                checkFormValidity();
+            })
+            .catch(error => {
+                console.error('Error verificando correo:', error);
+                correoMsg.textContent = 'Error al verificar correo';
+                correoMsg.className = 'validation-msg error';
+                correoValido = false;
+                checkFormValidity();
+            });
+        }
+
+        function checkFormValidity() {
+            const pwd = passwordInput.value;
+            const confirm = confirmInput.value;
+            const hasLength = pwd.length >= 6;
+            const hasNumber = /[0-9]/.test(pwd);
+            const hasLetter = /[a-zA-Z]/.test(pwd);
+            const match = pwd === confirm && pwd !== '';
+
+            const isValid = correoValido && usernameValido && hasLength && hasNumber && hasLetter && match;
+            submitBtn.disabled = !isValid;
+            submitBtn.style.opacity = isValid ? '1' : '0.5';
+            submitBtn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+        }
+
+        function validateUsername() {
+            const username = usernameInput.value.trim();
+
+            if (!username) {
+                usernameMsg.textContent = '';
+                usernameMsg.className = 'validation-msg';
+                usernameValido = false;
+                checkFormValidity();
+                return;
+            }
+
+            if (username.length < 3) {
+                usernameMsg.textContent = 'El usuario debe tener mínimo 3 caracteres';
+                usernameMsg.className = 'validation-msg error';
+                usernameValido = false;
+                checkFormValidity();
+                return;
+            }
+
+            usernameMsg.textContent = 'Verificando...';
+            usernameMsg.className = 'validation-msg';
+
+            fetch('index.php?action=verificarUsername', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'username=' + encodeURIComponent(username)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.existe) {
+                    usernameMsg.textContent = 'Este usuario ya está en uso';
+                    usernameMsg.className = 'validation-msg error';
+                    usernameValido = false;
+                } else {
+                    usernameMsg.textContent = 'Usuario disponible';
+                    usernameMsg.className = 'validation-msg success';
+                    usernameValido = true;
+                }
+                checkFormValidity();
+            })
+            .catch(error => {
+                console.error('Error verificando usuario:', error);
+                usernameMsg.textContent = 'Error al verificar usuario';
+                usernameMsg.className = 'validation-msg error';
+                usernameValido = false;
+                checkFormValidity();
+            });
+        }
+
+        // Toggle visibilidad de contraseña
+        document.querySelectorAll('.password-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = btn.dataset.target;
+                const input = document.getElementById(targetId);
+                const icon = btn.querySelector('i');
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                icon.classList.toggle('fa-eye', !isPassword);
+                icon.classList.toggle('fa-eye-slash', isPassword);
+            });
+        });
+
+        correoInput?.addEventListener('input', validateEmail);
+        correoInput?.addEventListener('blur', validateEmail);
+        usernameInput?.addEventListener('input', validateUsername);
+        usernameInput?.addEventListener('blur', validateUsername);
+        passwordInput?.addEventListener('input', updatePasswordRules);
+        confirmInput?.addEventListener('input', updatePasswordRules);
+
+        checkFormValidity();
 
         setTimeout(() => {
             const error = document.getElementById("mensajeError");

@@ -15,6 +15,8 @@ $publicas = [
     'login',
     'registro',
     'guardarRegistro',
+    'verificarCorreo',
+    'verificarUsername',
     'iniciarSesion',
     'tienda',
     'productoDetalle',
@@ -54,6 +56,14 @@ switch ($action) {
 
     case 'guardarRegistro':
         (new RegistroController())->registrar();
+        break;
+
+    case 'verificarCorreo':
+        (new RegistroController())->verificarCorreo();
+        break;
+
+    case 'verificarUsername':
+        (new RegistroController())->verificarUsername();
         break;
 
     case 'inicio':
