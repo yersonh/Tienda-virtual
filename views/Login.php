@@ -14,6 +14,26 @@ if (session_status() === PHP_SESSION_NONE) {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
+:root {
+    --bg-overlay-1: rgba(15,23,42,0.6);
+    --bg-overlay-2: rgba(15,23,42,0.7);
+    --card-bg: rgba(30,41,59,0.7);
+    --card-border: rgba(56,189,248,0.2);
+    --input-bg: #334155;
+    --input-text: #ffffff;
+    --muted: #94a3b8;
+    --body-text: #e5e7eb;
+}
+[data-theme="light"] {
+    --bg-overlay-1: rgba(255,255,255,0.82);
+    --bg-overlay-2: rgba(241,245,249,0.92);
+    --card-bg: rgba(255,255,255,0.84);
+    --card-border: rgba(56,189,248,0.18);
+    --input-bg: #eef2f7;
+    --input-text: #0f172a;
+    --muted: #64748b;
+    --body-text: #334155;
+}
 * {
     margin:0;
     padding:0;
@@ -24,25 +44,26 @@ if (session_status() === PHP_SESSION_NONE) {
 body {
     min-height:100vh;
     background:
-        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
+        linear-gradient(var(--bg-overlay-1), var(--bg-overlay-2)),
         url('../imagenes/Fondo.png') no-repeat center center fixed;
     background-size:cover;
 
     display:flex;
     justify-content:center;
     align-items:center;
+    color: var(--body-text);
 }
 
 /* 🔥 CONTENEDOR */
 .login-container {
-    background:rgba(30,41,59,0.7);
+    background:var(--card-bg);
     backdrop-filter:blur(14px);
     border-radius:20px;
     padding:40px;
     max-width:420px;
     width:100%;
     box-shadow:0 15px 40px rgba(0,0,0,0.6);
-    border:1px solid rgba(56,189,248,0.2);
+    border:1px solid var(--card-border);
 }
 
 /* LOGO */
@@ -70,7 +91,7 @@ body {
     left:12px;
     top:50%;
     transform:translateY(-50%);
-    color:#94a3b8;
+    color:var(--muted);
     z-index: 2;
 }
 
@@ -79,8 +100,8 @@ body {
     padding:12px 30px 12px 40px;
     border-radius:10px;
     border:none;
-    background:#334155;
-    color:white;
+    background:var(--input-bg);
+    color:var(--input-text);
 }
 
 /* 👁️ */
@@ -91,8 +112,22 @@ body {
     transform:translateY(-50%);
     background:none;
     border:none;
-    color:#94a3b8;
+    color:var(--muted);
     cursor:pointer;
+}
+.theme-toggle {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--body-text);
+    cursor: pointer;
+    font-size: 18px;
+    backdrop-filter: blur(10px);
 }
 
 /* BOTONES */
@@ -158,7 +193,11 @@ a:hover {
 </style>
 </head>
 
-<body>
+<body data-theme="dark">
+
+<button type="button" class="theme-toggle" id="theme-toggle" title="Cambiar tema">
+    <i class="fas fa-moon"></i>
+</button>
 
 <div class="login-container">
 
@@ -240,6 +279,8 @@ a:hover {
 const toggle = document.getElementById('togglePassword');
 const password = document.getElementById('password');
 const icon = document.getElementById('iconEye');
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
 
 toggle.addEventListener('click', () => {
 
@@ -254,6 +295,21 @@ toggle.addEventListener('click', () => {
     }
 
 });
+
+function applyTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    themeToggle.innerHTML = theme === 'dark'
+        ? '<i class="fas fa-moon"></i>'
+        : '<i class="fas fa-sun"></i>';
+}
+
+themeToggle.addEventListener('click', () => {
+    const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+});
+
+applyTheme(localStorage.getItem('theme') || 'dark');
 </script>
 
 </body>

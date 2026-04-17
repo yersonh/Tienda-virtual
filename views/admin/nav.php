@@ -15,6 +15,26 @@ if (session_status() === PHP_SESSION_NONE) {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
 <style>
+    :root {
+        --admin-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --sidebar-bg: linear-gradient(180deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,0.98) 100%);
+        --sidebar-text: #e2e8f0;
+        --panel-muted: #94a3b8;
+        --panel-line: rgba(56,189,248,0.15);
+        --panel-soft: rgba(56,189,248,0.08);
+        --content-bg: rgba(15,23,42,0.6);
+        --welcome-bg: rgba(30,41,59,0.8);
+    }
+    [data-theme="light"] {
+        --admin-bg: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+        --sidebar-bg: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.98) 100%);
+        --sidebar-text: #334155;
+        --panel-muted: #64748b;
+        --panel-line: rgba(148,163,184,0.22);
+        --panel-soft: rgba(20,184,166,0.08);
+        --content-bg: rgba(255,255,255,0.55);
+        --welcome-bg: rgba(255,255,255,0.75);
+    }
     * {
         margin: 0;
         padding: 0;
@@ -23,7 +43,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
     body {
         font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        background: var(--admin-bg);
         overflow-x: hidden;
     }
 
@@ -34,22 +54,22 @@ if (session_status() === PHP_SESSION_NONE) {
 
     .admin-sidebar {
         width: 280px;
-        background: linear-gradient(180deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,0.98) 100%);
-        color: #e2e8f0;
+        background: var(--sidebar-bg);
+        color: var(--sidebar-text);
         display: flex;
         flex-direction: column;
         position: fixed;
         height: 100vh;
         left: 0;
         top: 0;
-        border-right: 1px solid rgba(56,189,248,0.15);
+        border-right: 1px solid var(--panel-line);
         box-shadow: 8px 0 32px rgba(0,0,0,0.3);
         z-index: 1000;
     }
 
     .sidebar-header {
         padding: 32px 24px;
-        border-bottom: 1px solid rgba(56,189,248,0.2);
+        border-bottom: 1px solid var(--panel-line);
         margin-bottom: 24px;
     }
 
@@ -63,7 +83,7 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     .sidebar-header p {
-        color: #94a3b8;
+        color: var(--panel-muted);
         font-size: 12px;
         margin-top: 8px;
         margin-bottom: 0;
@@ -84,7 +104,7 @@ if (session_status() === PHP_SESSION_NONE) {
         align-items: center;
         gap: 14px;
         padding: 12px 16px;
-        color: #cbd5e1;
+        color: var(--sidebar-text);
         text-decoration: none;
         border-radius: 12px;
         font-weight: 500;
@@ -97,12 +117,12 @@ if (session_status() === PHP_SESSION_NONE) {
         width: 22px;
         font-size: 18px;
         text-align: center;
-        color: #64748b;
+        color: var(--panel-muted);
         transition: all 0.25s ease;
     }
 
     .nav-link:hover {
-        background: rgba(56,189,248,0.1);
+        background: var(--panel-soft);
         color: #38bdf8;
         transform: translateX(4px);
     }
@@ -113,7 +133,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
     .sidebar-footer {
         padding: 20px 16px 28px;
-        border-top: 1px solid rgba(56,189,248,0.15);
+        border-top: 1px solid var(--panel-line);
         margin-top: auto;
     }
 
@@ -122,7 +142,7 @@ if (session_status() === PHP_SESSION_NONE) {
         align-items: center;
         gap: 12px;
         padding: 12px;
-        background: rgba(56,189,248,0.08);
+        background: var(--panel-soft);
         border-radius: 12px;
         margin-bottom: 16px;
     }
@@ -137,7 +157,7 @@ if (session_status() === PHP_SESSION_NONE) {
         justify-content: center;
         font-weight: 700;
         font-size: 18px;
-        color: white;
+        color: var(--sidebar-text);
     }
 
     .user-details {
@@ -153,7 +173,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
     .user-role {
         font-size: 11px;
-        color: #94a3b8;
+        color: var(--panel-muted);
         font-weight: 500;
     }
 
@@ -181,7 +201,7 @@ if (session_status() === PHP_SESSION_NONE) {
         flex: 1;
         padding: 24px 32px;
         min-height: 100vh;
-        background: rgba(15,23,42,0.6);
+        background: var(--content-bg);
     }
 
     .admin-sidebar::-webkit-scrollbar {
@@ -223,11 +243,11 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     .welcome-message {
-        background: rgba(30,41,59,0.8);
+        background: var(--welcome-bg);
         border-radius: 20px;
         padding: 40px;
         text-align: center;
-        color: white;
+        color: var(--sidebar-text);
     }
 
     .welcome-message i {
@@ -242,11 +262,25 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     .welcome-message p {
-        color: #94a3b8;
+        color: var(--panel-muted);
+    }
+
+    .theme-toggle-admin {
+        width: 100%;
+        margin-bottom: 12px;
+        border: 1px solid var(--panel-line);
+        background: transparent;
+        color: var(--sidebar-text);
+        border-radius: 10px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
     }
 </style>
 </head>
-<body>
+<body data-theme="dark">
 
 <div class="admin-wrapper">
     <aside class="admin-sidebar">
@@ -287,6 +321,10 @@ if (session_status() === PHP_SESSION_NONE) {
         </div>
 
         <div class="sidebar-footer">
+            <button type="button" class="theme-toggle-admin" id="theme-toggle-admin">
+                <i class="fas fa-moon"></i>
+                <span>Cambiar tema</span>
+            </button>
             <?php if(isset($_SESSION['nickname'])): ?>
                 <div class="user-info">
                     <div class="user-avatar">
@@ -322,6 +360,26 @@ if (session_status() === PHP_SESSION_NONE) {
         ?>
     </main>
 </div>
+
+<script>
+const adminThemeToggle = document.getElementById('theme-toggle-admin');
+const adminBody = document.body;
+
+function applyAdminTheme(theme) {
+    adminBody.setAttribute('data-theme', theme);
+    adminThemeToggle.innerHTML = theme === 'dark'
+        ? '<i class="fas fa-moon"></i><span>Cambiar tema</span>'
+        : '<i class="fas fa-sun"></i><span>Cambiar tema</span>';
+}
+
+adminThemeToggle.addEventListener('click', () => {
+    const nextTheme = adminBody.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyAdminTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+});
+
+applyAdminTheme(localStorage.getItem('theme') || 'dark');
+</script>
 
 </body>
 </html>

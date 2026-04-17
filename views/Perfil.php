@@ -127,6 +127,12 @@ $iniciales = $inicialNombre . $inicialApellido;
     box-shadow:0 15px 50px rgba(0,0,0,0.6);
     animation: fadeIn 0.4s ease;
 }
+[data-theme="light"] .container-perfil {
+    background: rgba(255,255,255,0.88);
+    color: #334155;
+    border: 1px solid rgba(56,189,248,0.16);
+    box-shadow: 0 18px 40px rgba(148,163,184,0.18);
+}
 
 /* HEADER */
 .perfil-header {
@@ -163,6 +169,9 @@ $iniciales = $inicialNombre . $inicialApellido;
     font-size:13px;
     opacity:0.7;
 }
+[data-theme="light"] .perfil-header p {
+    color: #64748b;
+}
 
 /* INPUT GROUP */
 .input-group-perfil {
@@ -174,6 +183,9 @@ $iniciales = $inicialNombre . $inicialApellido;
     color:#94a3b8;
     margin-bottom:5px;
     display:block;
+}
+[data-theme="light"] .input-group-perfil label {
+    color: #64748b;
 }
 
 /* INPUT */
@@ -199,6 +211,11 @@ $iniciales = $inicialNombre . $inicialApellido;
     font-size:14px;
     transition:0.3s;
 }
+[data-theme="light"] .input-icon input {
+    background: #eef2f7;
+    color: #0f172a;
+    border: 1px solid #d6dee8;
+}
 
 /* EFECTO */
 .input-icon input:focus {
@@ -206,10 +223,17 @@ $iniciales = $inicialNombre . $inicialApellido;
     background:#3b4a61;
     box-shadow:0 0 10px rgba(56,189,248,0.4);
 }
+[data-theme="light"] .input-icon input:focus {
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(56,189,248,0.14);
+}
 
 .input-icon input::placeholder {
     color:#94a3b8;
     opacity:0.6;
+}
+[data-theme="light"] .input-icon input::placeholder {
+    color: #94a3b8;
 }
 
 /* BOTÓN */
@@ -242,6 +266,10 @@ button:hover {
     border-radius:8px;
     margin-bottom:10px;
 }
+[data-theme="light"] .success {
+    background: rgba(34,197,94,0.12);
+    color: #15803d;
+}
 
 .error {
     background:rgba(220,38,38,0.2);
@@ -249,6 +277,10 @@ button:hover {
     padding:10px;
     border-radius:8px;
     margin-bottom:10px;
+}
+[data-theme="light"] .error {
+    background: rgba(220,38,38,0.12);
+    color: #b91c1c;
 }
 
 /* ANIMACIÓN */
