@@ -253,7 +253,7 @@
         <div class="cart-head">
             <div>
                 <h1 class="cart-title">Carrito de compras</h1>
-                <p class="cart-sub">Revisa tus productos, ajusta cantidades y continúa con tu compra.</p>
+                <p class="cart-sub">Revisa tus productos, ajusta cantidades y continua con tu compra.</p>
             </div>
             <?php if (!empty($items)): ?>
                 <button class="cart-clear" type="button" onclick="vaciarCarrito()">
@@ -276,8 +276,8 @@
                         <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                     </svg>
                 </div>
-                <h2>Tu carrito está vacío</h2>
-                <p>Cuando agregues productos, aparecerán aquí con su resumen y cantidades.</p>
+                <h2>Tu carrito esta vacio</h2>
+                <p>Cuando agregues productos, apareceran aqui con su resumen y cantidades.</p>
                 <a class="cart-checkout" href="index.php?action=tienda">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
                     Ir a la tienda
@@ -309,15 +309,15 @@
                                 </div>
                                 <div class="cart-item-meta">
                                     <span>#<?= (int) $item['id_producto'] ?></span>
-                                    <span><?= htmlspecialchars($item['categoria_nombre'] ?? 'Sin categoría', ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span><?= htmlspecialchars($item['categoria_nombre'] ?? 'Sin categoria', ENT_QUOTES, 'UTF-8') ?></span>
                                     <span>Stock <?= (int) ($item['stock_p'] ?? 0) ?></span>
                                 </div>
                                 <div class="cart-item-price">Precio unitario: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
                                 <div class="cart-controls">
                                     <div class="cart-qty">
-                                        <button type="button" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1)">-</button>
+                                        <button type="button" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= (int) ($item['stock_p'] ?? 0) ?>)">-</button>
                                         <span id="cart-qty-<?= (int) $item['id_producto'] ?>"><?= (int) $item['cantidad'] ?></span>
-                                        <button type="button" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1)">+</button>
+                                        <button type="button" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= (int) ($item['stock_p'] ?? 0) ?>)">+</button>
                                     </div>
                                     <button class="cart-update" type="button" onclick="updateCartItem(<?= (int) $item['id_producto'] ?>)">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
@@ -365,11 +365,12 @@
 </main>
 
 <script>
-function changeCartQty(id, delta) {
+function changeCartQty(id, delta, stock) {
     const el = document.getElementById('cart-qty-' + id);
     if (!el) return;
     let value = parseInt(el.textContent, 10) + delta;
     if (value < 1) value = 1;
+    if (stock && value > stock) value = stock;
     el.textContent = value;
 }
 
@@ -390,6 +391,11 @@ async function updateCartItem(id) {
 
     const data = await response.json();
     if (!response.ok || !data.ok) return;
+
+    const qtyEl = document.getElementById('cart-qty-' + id);
+    if (qtyEl && typeof data.cantidad !== 'undefined') {
+        qtyEl.textContent = data.cantidad;
+    }
 
     syncCartSummary(data);
     const lineTotal = document.getElementById('cart-line-total-' + id);
