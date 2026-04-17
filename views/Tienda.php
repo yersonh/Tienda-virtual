@@ -366,47 +366,6 @@
 </div>
 
 <?php foreach($categorias as $categoria => $productos): ?>
-<<<<<<< HEAD
-
-<div class="categoria-card categoria">
-<h3 style="color:white;"><?= $categoria ?></h3>
-
-<div class="slider-container">
-
-<button class="flecha izquierda">❮</button>
-
-<div class="contenedor-productos">
-
-<?php foreach($productos as $p): ?>
-
-<div class="card-producto producto"
-data-nombre="<?= strtolower($p['nombre']) ?>"
-data-precio="<?= $p['precio'] ?>"
-data-categoria="<?= $categoria ?>">
-
-<img src="<?= !empty($p['imagen']) 
-? 'image.php?folder=productos&path=' . basename($p['imagen']) 
-: 'default.png' ?>" class="img-producto">
-
-<div class="info-producto">
-
-    <div><?= $p['nombre'] ?></div>
-
-    <div><strong>Código:</strong> <?= $p['id_producto'] ?></div>
-
-    <!-- <div>
-        <strong>Estado:</strong> 
-        <span style="color:#38bdf8;">
-           <?= $p['estado'] ?? 'Activo' ?>
-        </span>
-    </div> -->
-
- 
-    <div><strong>Disponible:</strong> <?= $p['stock_p'] ?></div>
-
-    <div><strong>En carrito:</strong> 
-        <?= $_SESSION['carrito'][$p['codigo']] ?? 0 ?>
-=======
 <div id="section-<?= strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
         <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
@@ -450,7 +409,6 @@ data-categoria="<?= $categoria ?>">
             </div>
         </div>
         <?php endforeach; ?>
->>>>>>> b10f942 (Interfaz)
     </div>
 </div>
 <?php endforeach; ?>
