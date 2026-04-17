@@ -131,7 +131,9 @@ h2 {
     font-size: 12px;
     margin-bottom: 12px;
     display: grid;
-    gap: 4px;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    row-gap: 3px;
 }
 
 .rule {
@@ -293,9 +295,9 @@ button:hover {
 
         <div class="password-rules">
             <div class="rule" id="rule-length">• Mínimo 6 caracteres</div>
-            <div class="rule" id="rule-number">• Contiene número</div>
-            <div class="rule" id="rule-letter">• Contiene letra</div>
-            <div class="rule" id="rule-match">• Las contraseñas coinciden</div>
+            <div class="rule" id="rule-number">• Número</div>
+            <div class="rule" id="rule-letter">• Letra</div>
+            <div class="rule" id="rule-match">• Coinciden</div>
         </div>
 
         <!-- BOTÓN -->
@@ -369,17 +371,18 @@ button:hover {
 
         function validateEmail() {
             const email = correoInput.value.trim().toLowerCase();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const gmailRegex = /^[^\s@]+@gmail\.com$/;
 
             if (!email) {
                 correoMsg.textContent = '';
                 correoMsg.className = 'validation-msg';
                 correoValido = false;
+                checkFormValidity();
                 return;
             }
 
-            if (!emailRegex.test(email)) {
-                correoMsg.textContent = 'Correo inválido';
+            if (!gmailRegex.test(email)) {
+                correoMsg.textContent = 'Solo correos @gmail.com';
                 correoMsg.className = 'validation-msg error';
                 correoValido = false;
                 checkFormValidity();
