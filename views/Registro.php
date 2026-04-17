@@ -83,6 +83,23 @@ h2 {
     color:var(--muted);
 }
 
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: #ffffff;
+}
+
 .input-group input {
     width:100%;
     padding:10px 14px 10px 42px;
@@ -254,11 +271,13 @@ button:disabled {
         <div class="input-group">
             <i class="fas fa-lock"></i>
             <input id="password" type="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
+            <span class="password-toggle" data-target="password" title="Mostrar contraseña"><i class="fas fa-eye"></i></span>
         </div>
 
         <div class="input-group">
             <i class="fas fa-lock"></i>
             <input id="confirm-password" type="password" name="confirm_password" placeholder="Confirmar contraseña" required>
+            <span class="password-toggle" data-target="confirm-password" title="Mostrar contraseña"><i class="fas fa-eye"></i></span>
         </div>
 
         <div class="form-help" id="password-rules" style="margin-bottom: 12px; color: #aab0cc; font-size: 13px; display: grid; gap: 4px;">
@@ -350,7 +369,7 @@ button:disabled {
                     correoInput.classList.remove('input-invalid');
                     return;
                 }
-                emailStatus.textContent = isValid ? 'Correo válido para registrar' : 'El correo debe terminar en @gmail.com';
+                emailStatus.textContent = isValid ? 'El correo tiene formato válido' : 'El correo debe terminar en @gmail.com';
                 emailStatus.style.color = isValid ? '#22c55e' : '#f87171';
                 correoInput.classList.toggle('input-invalid', !isValid);
             }
@@ -377,6 +396,22 @@ button:disabled {
             confirmPasswordInput.addEventListener('input', function() {
                 updatePasswordRules();
                 updateFormState();
+            });
+
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const targetId = toggle.dataset.target;
+                    const targetInput = document.getElementById(targetId);
+                    if (!targetInput) return;
+                    const isPassword = targetInput.type === 'password';
+                    targetInput.type = isPassword ? 'text' : 'password';
+                    const icon = toggle.querySelector('i');
+                    if (icon) {
+                        icon.classList.toggle('fa-eye', !isPassword);
+                        icon.classList.toggle('fa-eye-slash', isPassword);
+                    }
+                });
             });
 
             updateEmailStatus();
