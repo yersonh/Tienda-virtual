@@ -1,216 +1,372 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 
 <style>
-body {
-    min-height:100vh;
-    background:
-        linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.95)),
-        url('../imagenes/Fondo.png') no-repeat center center fixed;
-    background-size:cover;
-    font-family: 'Poppins', sans-serif;
-}
-
-.main { padding: 40px; }
-
-.catalogo {
-    background: rgba(15,23,42,0.85);
-    backdrop-filter: blur(14px);
-    border-radius: 20px;
-    padding: 30px;
-}
-
-.titulo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 38px;
-    background: linear-gradient(90deg, #38bdf8, #60a5fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    text-shadow: 0 0 25px rgba(56,189,248,0.7);
-    margin-bottom: 25px;
-}
-
-/* FILTROS */
-.filtros {
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    justify-content:center;
-    margin-bottom:25px;
-}
-
-.filtros input, .filtros select {
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    background:#020617;
-    color:white;
-}
-
-.btn-limpiar {
-    background:#ef4444;
-    border:none;
-    border-radius:10px;
-    padding:10px 15px;
-    cursor:pointer;
-    color:white;
-}
-
-/* CATEGORIA */
-.categoria-card {
-    background:#1e293b;
-    border-radius:20px;
-    padding:20px;
-    margin-bottom:30px;
-}
-
-/* 🔥 CARRUSEL PRO */
-.slider-container {
+/* HERO SECTION */
+.hero {
+    padding: 48px 32px 32px;
     position: relative;
 }
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -100px;
+    width: 500px; height: 400px;
+    background: radial-gradient(ellipse, rgba(0,229,192,0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,192,0.08);
+    border: 1px solid rgba(0,229,192,0.2);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+}
+.hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+}
+.hero-title em { color: var(--accent); font-style: normal; }
+.hero-sub { color: var(--secondary); font-size: 14px; margin-bottom: 28px; }
 
-.contenedor-productos {
+/* FILTERS */
+.filters {
+    display: grid;
+    grid-template-columns: 1fr 140px 140px 200px auto;
+    gap: 10px;
+    align-items: center;
+    padding: 0 32px 28px;
+}
+.filter-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+[data-theme="light"] .filter-input {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+}
+.filter-input:focus { border-color: var(--accent); }
+.filter-input::placeholder { color: var(--secondary); }
+.filter-select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+}
+[data-theme="light"] .filter-select {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+}
+.btn-clear {
+    background: rgba(0,229,192,0.1);
+    border: 1px solid rgba(0,229,192,0.25);
+    color: var(--accent);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-clear:hover { background: rgba(0,229,192,0.2); }
+
+/* CATEGORY TABS */
+.cat-tabs {
     display: flex;
-    gap: 20px;
+    gap: 8px;
+    padding: 0 32px 24px;
     overflow-x: auto;
-    scroll-behavior: smooth;
-    flex-wrap: nowrap;
-    padding:10px 0;
-}
-
-/* ocultar scrollbar */
-.contenedor-productos::-webkit-scrollbar {
-    display: none;
-}
-.contenedor-productos {
-    -ms-overflow-style: none;
     scrollbar-width: none;
 }
-
-/* cards */
-.card-producto {
-    min-width:260px;
-    flex:0 0 auto;
-    background:#020617;
-    border-radius:15px;
-    padding:15px;
-    color:white;
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--secondary);
+    padding: 7px 18px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+}
+.cat-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+.cat-tab.active {
+    background: rgba(0,229,192,0.1);
+    border-color: rgba(0,229,192,0.35);
+    color: var(--accent);
 }
 
-.img-producto {
-    width:100%;
-    height:120px;
-    object-fit:contain;
-}
-
-/* botones */
-.carrito-box {
+/* SECTION HEADER */
+.section-header {
     display: flex;
     align-items: center;
-    margin-top: 10px;
-    background: #0f172a;
-    border-radius: 10px;
-    padding: 4px;
-    gap: 6px;
+    justify-content: space-between;
+    padding: 0 32px 20px;
 }
-
-/* input más integrado */
-.input-cantidad {
-    width: 55px;
-    height: 32px;
-    border: none;
-    border-radius: 6px;
-    text-align: center;
-    font-weight: bold;
-    background: #e5e7eb;
-    color: #020617;
-    outline: none;
+.section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-
-/* 🔥 BOTÓN PRO */
-.btn-carrito {
-    height: 32px;
-    width: 38px;
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    border: none;
-    border-radius: 6px;
+.section-title::before {
+    content: '';
+    width: 4px; height: 20px;
+    background: var(--accent);
+    border-radius: 4px;
+    display: inline-block;
+}
+.section-count {
+    font-size: 12px;
+    color: var(--secondary);
+    background: var(--card-bg);
+    padding: 3px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+}
+.see-all {
+    font-size: 13px;
+    color: var(--accent);
     cursor: pointer;
-    color: white;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.see-all:hover { opacity: 1; }
+
+/* PRODUCT GRID */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    padding: 0 32px 40px;
+}
+
+/* PRODUCT CARD */
+.product-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    cursor: pointer;
+    position: relative;
+}
+.product-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--hover);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+}
+.card-badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    z-index: 2;
+    background: rgba(0,229,192,0.15);
+    border: 1px solid rgba(0,229,192,0.3);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+.card-img-wrap {
+    background: #12162a;
+    height: 170px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.25s ease;
-    box-shadow: 0 3px 8px rgba(56,189,248,0.3);
+    overflow: hidden;
+    position: relative;
 }
-
-/* icono centrado perfecto */
-.btn-carrito i {
+[data-theme="light"] .card-img-wrap {
+    background: #f1f5f9;
+}
+.card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 16px;
+    transition: transform 0.3s;
+}
+.product-card:hover .card-img-wrap img { transform: scale(1.06); }
+.card-placeholder {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+}
+.card-body {
+    padding: 14px 16px 16px;
+}
+.card-name {
+    font-family: 'Syne', sans-serif;
     font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.3;
 }
-
-/* hover elegante */
-.btn-carrito:hover {
-    background: linear-gradient(135deg, #0ea5e9, #0284c7);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(56,189,248,0.5);
+.card-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
 }
-
-/* click */
-.btn-carrito:active {
-    transform: scale(0.92);
+.meta-pill {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-weight: 500;
 }
-
-/* flechas */
-.flecha {
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    background:rgba(56,189,248,0.9);
-    border:none;
-    color:white;
-    font-size:20px;
-    padding:12px;
-    cursor:pointer;
-    border-radius:50%;
-    z-index:10;
-    transition:0.3s;
+.meta-code {
+    background: var(--card-bg);
+    color: var(--secondary);
+    border: 1px solid var(--border);
 }
+.meta-stock {
+    background: rgba(0,229,192,0.08);
+    color: var(--accent);
+    border: 1px solid rgba(0,229,192,0.15);
+}
+.meta-stock.low {
+    background: rgba(250,199,117,0.1);
+    color: #fac775;
+    border-color: rgba(250,199,117,0.2);
+}
+.card-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+}
+.card-price span { font-size: 13px; font-weight: 400; color: var(--secondary); margin-left: 2px; }
+.card-footer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.qty-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.qty-btn {
+    width: 28px; height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--secondary);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s;
+}
+.qty-btn:hover { color: var(--accent); }
+.qty-val {
+    width: 28px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    pointer-events: none;
+}
+.add-btn {
+    flex: 1;
+    background: rgba(0,229,192,0.12);
+    border: 1px solid rgba(0,229,192,0.25);
+    color: var(--accent);
+    height: 32px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+}
+.add-btn:hover { background: rgba(0,229,192,0.22); border-color: rgba(0,229,192,0.5); }
+.add-btn.added { background: rgba(0,229,192,0.25); border-color: var(--accent); }
 
-.flecha:hover { background:#0ea5e9; }
-
-.flecha.izquierda { left:-15px; }
-.flecha.derecha { right:-15px; }
-
-.flecha.oculta {
-    opacity:0;
-    pointer-events:none;
+/* FOOTER */
+.footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--secondary);
+    font-size: 12px;
 }
 </style>
 
-<div class="main">
-<div class="catalogo">
-
-<h2 class="titulo">CATÁLOGO DE PRODUCTOS</h2>
-
-<!-- FILTROS -->
-<div class="filtros">
-<input type="text" id="buscador" placeholder="Buscar producto...">
-<input type="text" id="precio_min" placeholder="Precio min">
-<input type="text" id="precio_max" placeholder="Precio max">
-
-<select id="categoria">
-<option value="">Todas las categorías</option>
-<?php foreach(array_keys($categorias) as $cat): ?>
-<option value="<?= $cat ?>"><?= $cat ?></option>
-<?php endforeach; ?>
-</select>
-
-<button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar</button>
+<div class="hero">
+    <div class="hero-label">✦ Tienda de Repuestos</div>
+    <h1 class="hero-title">Catálogo de<br><em>Productos</em></h1>
+    <p class="hero-sub">Piezas originales para tu vehículo — calidad garantizada</p>
 </div>
 
-<!-- PRODUCTOS -->
+<div class="filters">
+    <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" oninput="filterProducts()">
+    <input class="filter-input" type="number" placeholder="Precio mín" id="price-min" oninput="filterProducts()">
+    <input class="filter-input" type="number" placeholder="Precio máx" id="price-max" oninput="filterProducts()">
+    <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
+        <option value="">Todas las categorías</option>
+        <?php foreach(array_keys($categorias) as $cat): ?>
+        <option value="<?= $cat ?>"><?= $cat ?></option>
+        <?php endforeach; ?>
+    </select>
+    <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
+</div>
+
+<div class="cat-tabs">
+    <button class="cat-tab active" onclick="setTab(this,'')">Todo</button>
+    <?php foreach(array_keys($categorias) as $cat): ?>
+    <button class="cat-tab" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
+    <?php endforeach; ?>
+</div>
+
 <?php foreach($categorias as $categoria => $productos): ?>
+<<<<<<< HEAD
 
 <div class="categoria-card categoria">
 <h3 style="color:white;"><?= $categoria ?></h3>
@@ -250,66 +406,115 @@ data-categoria="<?= $categoria ?>">
 
     <div><strong>En carrito:</strong> 
         <?= $_SESSION['carrito'][$p['codigo']] ?? 0 ?>
+=======
+<div id="section-<?= strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
+    <div class="section-header">
+        <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
+        <a class="see-all">Ver todos →</a>
     </div>
-
-    <div>$<?= number_format($p['precio']) ?></div>
-
+    <div class="product-grid" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
+        <?php foreach($productos as $p): ?>
+        <div class="product-card producto"
+             data-nombre="<?= strtolower($p['nombre']) ?>"
+             data-precio="<?= $p['precio'] ?>"
+             data-categoria="<?= $categoria ?>"
+             data-id="<?= $p['id_producto'] ?>">
+            <div class="card-img-wrap">
+                <?php if(!empty($p['imagen'])): ?>
+                <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= $p['nombre'] ?>" onerror="this.style.display='none'">
+                <?php else: ?>
+                <div class="card-placeholder">🔧</div>
+                <?php endif; ?>
+            </div>
+            <div class="card-body">
+                <div class="card-name"><?= $p['nombre'] ?></div>
+                <div class="card-meta">
+                    <span class="meta-pill meta-code">#<?= $p['id_producto'] ?></span>
+                    <span class="meta-pill meta-stock <?= $p['stock_p'] <= 4 ? 'low' : '' ?>">
+                        <?= $p['stock_p'] <= 4 ? '⚠ ' : '✓ ' ?><?= $p['stock_p'] ?> uds
+                    </span>
+                </div>
+                <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
+                <div class="card-footer">
+                    <div class="qty-wrap">
+                        <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, -1)">−</button>
+                        <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['codigo']]) ? $_SESSION['carrito'][$p['codigo']] : 1 ?></span>
+                        <button class="qty-btn" onclick="chgQty(<?= $p['id_producto'] ?>, 1)">+</button>
+                    </div>
+                    <button class="add-btn <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? 'added' : '' ?>" 
+                            id="abtn-<?= $p['id_producto'] ?>" 
+                            onclick="addCart(<?= $p['id_producto'] ?>, '<?= $p['codigo'] ?>')">
+                        <?= isset($_SESSION['carrito'][$p['codigo']]) && $_SESSION['carrito'][$p['codigo']] > 0 ? '✓ Agregado' : '🛒 Agregar' ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+>>>>>>> b10f942 (Interfaz)
+    </div>
 </div>
-
-<form method="POST" action="index.php?action=agregarCarrito">
-<input type="hidden" name="id_producto" value="<?= $p['id_producto'] ?>">
-<div class="carrito-box">
-
-    <input 
-        type="number" 
-        name="cantidad" 
-        value="1" 
-        min="1" 
-        max="<?= $p['stock_p'] ?>"
-        class="input-cantidad"
-    >
-
-    <button class="btn-carrito" title="Agregar al carrito">
-        <i class="fas fa-cart-plus"></i>
-    </button>
-
-</div>
-</form>
-
-</div>
-
 <?php endforeach; ?>
 
-</div>
-
-<button class="flecha derecha">❯</button>
-
-</div>
-</div>
-
-<?php endforeach; ?>
-
-</div>
+<div class="footer">
+    <span>🏪</span>
+    Tienda Virtual · Sistema de Inventario TechSolutions
 </div>
 
 <script>
+let cart = {};
+<?php if(isset($_SESSION['carrito'])): ?>
+cart = <?= json_encode($_SESSION['carrito']) ?>;
+<?php endif; ?>
+
+function chgQty(id, delta){
+    const el = document.getElementById('qty-'+id);
+    let v = parseInt(el.textContent) + delta;
+    if(v < 1) v = 1;
+    el.textContent = v;
+}
+
+function addCart(id, code){
+    const qty = parseInt(document.getElementById('qty-'+id).textContent);
+    cart[code] = qty;
+    const btn = document.getElementById('abtn-'+id);
+    btn.textContent = '✓ Agregado';
+    btn.classList.add('added');
+    // Update cart count
+    let total = 0;
+    for(let q of Object.values(cart)) total += q;
+    document.getElementById('cart-count').textContent = total;
+    // Submit form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'index.php?action=agregarCarrito';
+    form.innerHTML = `<input name="id_producto" value="${id}"><input name="cantidad" value="${qty}">`;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function setTab(el, val){
+    document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('cat-select').value = val;
+    filterProducts();
+}
 
 // ELEMENTOS
-const buscador = document.getElementById('buscador');
-const precioMin = document.getElementById('precio_min');
-const precioMax = document.getElementById('precio_max');
-const categoria = document.getElementById('categoria');
+const buscador = document.getElementById('search-input');
+const precioMin = document.getElementById('price-min');
+const precioMax = document.getElementById('price-max');
+const categoria = document.getElementById('cat-select');
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
 
 // 🔥 UN SOLO EVENTO PARA TODO
 [buscador, precioMin, precioMax, categoria].forEach(el=>{
-    el.addEventListener('input', actualizarFiltros);
+    el.addEventListener('input', filterProducts);
 });
 
 // 🔥 FUNCIÓN PRINCIPAL (TODO EN UNO)
-function actualizarFiltros(){
+function filterProducts(){
 
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g,'');
@@ -318,8 +523,8 @@ function actualizarFiltros(){
 
     let categoriasVisibles = new Set();
 
-    document.querySelectorAll('.categoria').forEach(categoriaDiv=>{
-        let productos = categoriaDiv.querySelectorAll('.producto');
+    document.querySelectorAll('.category-section').forEach(section=>{
+        const productos = section.querySelectorAll('.producto');
         let visibles = 0;
 
         productos.forEach(prod=>{
@@ -342,7 +547,8 @@ function actualizarFiltros(){
             }
         });
 
-        categoriaDiv.style.display = visibles>0?"block":"none";
+        section.style.display = visibles>0?"block":"none";
+        section.querySelector('.section-count').textContent = visibles + ' productos';
     });
 
     // 🔥 ACTUALIZAR SELECT SIN ROMPER
@@ -375,7 +581,7 @@ function actualizarFiltros(){
 }
 
 // LIMPIAR
-function limpiarFiltros(){
+function clearFilters(){
     buscador.value="";
     precioMin.value="";
     precioMax.value="";
@@ -386,7 +592,7 @@ function limpiarFiltros(){
         categoria.appendChild(op.cloneNode(true));
     });
 
-    actualizarFiltros();
+    filterProducts();
 }
 
 // FORMATO
@@ -399,47 +605,6 @@ function formatoMiles(input){
 }
 formatoMiles(precioMin);
 formatoMiles(precioMax);
-
-// 🔥 CARRUSEL (sin cambios)
-document.querySelectorAll('.slider-container').forEach(slider=>{
-
-    const contenedor = slider.querySelector('.contenedor-productos');
-    const btnIzq = slider.querySelector('.flecha.izquierda');
-    const btnDer = slider.querySelector('.flecha.derecha');
-
-    function actualizar(){
-        btnIzq.classList.toggle('oculta', contenedor.scrollLeft<=0);
-        btnDer.classList.toggle('oculta',
-            contenedor.scrollLeft + contenedor.clientWidth >= contenedor.scrollWidth-5
-        );
-    }
-
-    btnIzq.onclick = ()=>contenedor.scrollBy({left:-contenedor.clientWidth,behavior:'smooth'});
-    btnDer.onclick = ()=>contenedor.scrollBy({left:contenedor.clientWidth,behavior:'smooth'});
-
-    contenedor.addEventListener('scroll', actualizar);
-
-    let isDown=false,startX,scrollLeft;
-
-    contenedor.addEventListener('mousedown',e=>{
-        isDown=true;
-        startX=e.pageX-contenedor.offsetLeft;
-        scrollLeft=contenedor.scrollLeft;
-    });
-
-    contenedor.addEventListener('mouseleave',()=>isDown=false);
-    contenedor.addEventListener('mouseup',()=>isDown=false);
-
-    contenedor.addEventListener('mousemove',e=>{
-        if(!isDown) return;
-        e.preventDefault();
-        const x=e.pageX-contenedor.offsetLeft;
-        const walk=(x-startX)*1.5;
-        contenedor.scrollLeft=scrollLeft-walk;
-    });
-
-    actualizar();
-});
 
 </script>
 
