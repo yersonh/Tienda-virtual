@@ -89,35 +89,6 @@ body {
 }
 .nav-links a:hover { color: var(--text); }
 .nav-links a.active { color: var(--accent); }
-.provider-search-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.provider-search-wrap input {
-    width: 180px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.05);
-    color: var(--text);
-}
-.provider-search-wrap input::placeholder {
-    color: var(--secondary);
-}
-.provider-search-wrap button {
-    border: 1px solid rgba(255,255,255,0.12);
-    background: transparent;
-    color: var(--secondary);
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.provider-search-wrap button:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-}
 .nav-actions { display: flex; gap: 12px; align-items: center; }
 .btn-ghost {
     background: transparent;
@@ -222,10 +193,6 @@ body {
     <div class="nav-links">
       <a href="index.php?action=inicio" class="active">Inicio</a>
       <a href="index.php?action=tienda">Productos</a>
-      <div class="provider-search-wrap">
-          <input id="provider-search" type="search" placeholder="Proveedor del repuesto" aria-label="Buscar proveedor">
-          <button type="button" onclick="searchProveedor()">Buscar</button>
-      </div>
     </div>
     <div class="nav-actions">
       <?php if(isset($_SESSION['id_usuario'])): ?>
@@ -264,20 +231,6 @@ themeToggle.addEventListener('click', () => {
     renderThemeIcon(newTheme);
     localStorage.setItem('theme', newTheme);
 });
-
-function searchProveedor() {
-    const input = document.getElementById('provider-search');
-    if (!input) return;
-    const query = input.value.trim();
-    if (!query) {
-        window.location.href = 'index.php?action=tienda';
-        return;
-    }
-    const params = new URLSearchParams();
-    params.set('action', 'tienda');
-    params.set('proveedor', query);
-    window.location.href = `index.php?${params.toString()}`;
-}
 
 // Load saved theme
 const savedTheme = localStorage.getItem('theme') || 'dark';

@@ -632,7 +632,6 @@
     <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <input class="filter-input" type="number" placeholder="Precio min" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <input class="filter-input" type="number" placeholder="Precio max" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" placeholder="Proveedor del repuesto" id="provider-input" value="<?= htmlspecialchars($proveedor_filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
         <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>>Todas las categorias</option>
         <?php foreach($todasCategorias as $cat): ?>
@@ -692,7 +691,6 @@
                  data-nombre="<?= strtolower($p['nombre']) ?>"
                  data-precio="<?= $p['precio'] ?>"
                  data-categoria="<?= $categoria ?>"
-                 data-proveedor="<?= htmlspecialchars(strtolower($p['proveedor_nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
                  data-id="<?= $p['id_producto'] ?>"
                  data-stock="<?= (int) $p['stock_p'] ?>"
                  data-url="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>&categoria=<?= urlencode($categoria) ?>"
@@ -933,7 +931,6 @@ function showCategory(cat){
 const buscador = document.getElementById('search-input');
 const precioMin = document.getElementById('price-min');
 const precioMax = document.getElementById('price-max');
-const proveedorInput = document.getElementById('provider-input');
 const categoria = document.getElementById('cat-select');
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
@@ -942,7 +939,7 @@ const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
 const opcionesOriginales = Array.from(categoria.options);
 
 // UN SOLO EVENTO PARA TODO
-[buscador, precioMin, precioMax, proveedorInput, categoria].forEach(el=>{
+[buscador, precioMin, precioMax, categoria].forEach(el=>{
     el.addEventListener('input', filterProducts);
 });
 
@@ -952,7 +949,6 @@ function filterProducts(){
     let texto = buscador.value.toLowerCase();
     let min = precioMin.value.replace(/\./g,'');
     let max = precioMax.value.replace(/\./g,'');
-    let prov = proveedorInput.value.toLowerCase();
     let cat = categoria.value;
 
     if(detailMode){
@@ -977,14 +973,11 @@ function filterProducts(){
             let nombre = prod.dataset.nombre;
             let precio = parseInt(prod.dataset.precio);
             let categoriaProd = prod.dataset.categoria;
-            let proveedorProd = prod.dataset.proveedor || '';
-
             let ok = true;
 
             if(texto && !nombre.includes(texto)) ok = false;
             if(min && precio < parseInt(min)) ok = false;
             if(max && precio > parseInt(max)) ok = false;
-            if(prov && !proveedorProd.includes(prov)) ok = false;
             if(cat && categoriaProd !== cat) ok = false;
 
             prod.style.display = ok ? "block":"none";
@@ -1040,7 +1033,6 @@ function clearFilters(){
     buscador.value="";
     precioMin.value="";
     precioMax.value="";
-    proveedorInput.value="";
     categoria.value="";
 
     categoria.innerHTML = "";

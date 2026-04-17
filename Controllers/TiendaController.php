@@ -34,7 +34,6 @@ class TiendaController {
         $precio_min = $_GET['precio_min'] ?? '';
         $precio_max = $_GET['precio_max'] ?? '';
         $categoria_filtro = $_GET['categoria'] ?? '';
-        $proveedor_filtro = $_GET['proveedor'] ?? '';
 
         $productos = $this->model->obtenerCatalogo();
 
