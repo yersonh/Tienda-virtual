@@ -20,194 +20,191 @@ if (isset($_SESSION['carrito'])) {
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
+:root {
+  --bg: #0a0e1a;
+  --text: #e8eaf2;
+  --accent: #00e5c0;
+  --secondary: #5a6080;
+  --card-bg: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.06);
+  --hover: rgba(0,229,192,0.25);
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --text: #1e293b;
+  --accent: #00e5c0;
+  --secondary: #64748b;
+  --card-bg: rgba(0,0,0,0.03);
+  --border: rgba(0,0,0,0.06);
+  --hover: rgba(0,229,192,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-.sidebar {
+/* NAV */
+.nav {
     display: flex;
     align-items: center;
-    padding: 10px 30px;
-    background: rgba(30,41,59,0.9);
-    color: white;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background: rgba(10,14,26,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
-
-.sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #e2e8f0;
-    margin-right: 25px;
+[data-theme="light"] .nav {
+    background: rgba(248,250,252,0.9);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--accent); }
+.nav-logo sub { font-size: 10px; color: var(--secondary); font-weight: 400; letter-spacing: 2px; vertical-align: -4px; margin-left: 3px; }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a {
+    color: var(--secondary);
     text-decoration: none;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-.sidebar a i {
     font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+    cursor: pointer;
 }
-
-.sidebar a:hover {
-    color: #38bdf8;
-    transform: scale(1.05);
+.nav-links a:hover { color: var(--text); }
+.nav-links a.active { color: var(--accent); }
+.nav-actions { display: flex; gap: 12px; align-items: center; }
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #aab0cc;
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
 }
-
-.sidebar-space {
-    flex-grow: 1;
+[data-theme="light"] .btn-ghost {
+    border-color: rgba(0,0,0,0.12);
+    color: var(--secondary);
 }
-
-.carrito-link {
-    position: relative;
-    font-size: 20px;
-    color: #facc15;
-}
-
-.logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 28px;
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary {
+    background: var(--accent);
+    border: none;
+    color: var(--bg);
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
-    color: #38bdf8;
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(56,189,248,0.6);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
 }
-
-.logo span {
+.btn-primary:hover { background: #00ffcf; }
+.cart-btn {
+    position: relative;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #aab0cc;
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
     font-size: 16px;
-    letter-spacing: 4px;
-    opacity: 0.7;
+    transition: all 0.2s;
 }
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+[data-theme="light"] .cart-btn {
+    background: rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0.08);
+    color: var(--secondary);
 }
-
-.espacio-pequeno {
-    width: 50px;
+.cart-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cart-badge {
+    position: absolute;
+    top: -5px; right: -5px;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
 }
+.theme-toggle {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #aab0cc;
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+[data-theme="light"] .theme-toggle {
+    border-color: rgba(0,0,0,0.12);
+    color: var(--secondary);
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 
-<body>
+<body data-theme="dark">
 
 <!-- 🔥 NAVBAR -->
-<div class="sidebar">
-
-    <h2 class="logo">
-        NAYLEX
-        <span>STORE</span>
-    </h2>
-    
-    <div class="espacio-pequeno"></div>
-
-    <!-- 🔥 LINKS PRINCIPALES -->
-    <a href="index.php?action=inicio">
-        <i class="fas fa-house"></i> Inicio
-    </a>
-
-    <a href="index.php?action=tienda">
-        <i class="fas fa-box"></i> Productos
-    </a>
-
-    <div class="sidebar-space"></div>
-
-    <!-- 🔥 LOGIN / USUARIO -->
-    <?php if(isset($_SESSION['id_usuario'])): ?>
-
-        <!-- 👤 AVATAR + NOMBRE -->
-        <div style="display:flex; align-items:center; gap:10px; margin-right:15px;">
-
-            <div style="
-                width:35px;
-                height:35px;
-                background:#38bdf8;
-                color:#020617;
-                border-radius:50%;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-weight:bold;
-            ">
-                <?= strtoupper(substr($_SESSION['nickname'], 0, 1)) ?>
-            </div>
-
-            <span style="color:#38bdf8; font-weight:bold;">
-                <?= htmlspecialchars($_SESSION['nickname']) ?>
-            </span>
-
-        </div>
-
-        <a href="index.php?action=perfil">
-            <i class="fas fa-user"></i> Perfil
-        </a>
-
-        <a href="index.php?action=logout">
-            <i class="fas fa-right-from-bracket"></i> Salir
-        </a>
-
-    <?php else: ?>
-
-        <a href="index.php?action=login">
-            <i class="fas fa-key"></i> Login
-        </a>
-
-        <a href="index.php?action=registro">
-            <i class="fas fa-user-plus"></i> Registro
-        </a>
-
-    <?php endif; ?>
-
-    <!-- 🛒 CARRITO -->
-    <a href="index.php?action=verCarrito" class="carrito-link">
-
-        <i class="fas fa-shopping-cart"></i>
-
-        <?php if($carritoCount > 0): ?>
-            <span style="
-                position:absolute;
-                top:-8px;
-                right:-10px;
-                background:red;
-                color:white;
-                font-size:12px;
-                padding:3px 7px;
-                border-radius:50%;
-            ">
-                <?= $carritoCount ?>
-            </span>
-        <?php endif; ?>
-
-    </a>
-
-</div>
-
-<!-- 🔥 MENSAJE DE BIENVENIDA -->
-<?php if(isset($_SESSION['bienvenida'])): ?>
-    <div style="
-        background:#38bdf8;
-        color:#020617;
-        padding:12px;
-        text-align:center;
-        font-weight:bold;
-        box-shadow:0 4px 10px rgba(0,0,0,0.2);
-        border-radius:0 0 12px 12px;
-        animation: fadeIn 0.4s ease;
-    ">
-        <?= $_SESSION['bienvenida']; ?>
+<nav class="nav">
+    <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
+    <div class="nav-links">
+      <a href="index.php?action=inicio" class="active">Inicio</a>
+      <a href="index.php?action=tienda">Productos</a>
+      <a>Marcas</a>
+      <a>Ofertas</a>
     </div>
+    <div class="nav-actions">
+      <?php if(isset($_SESSION['id_usuario'])): ?>
+        <a href="index.php?action=perfil" class="btn-ghost">Perfil</a>
+        <a href="index.php?action=logout" class="btn-ghost">Salir</a>
+      <?php else: ?>
+        <a href="index.php?action=login" class="btn-ghost">Login</a>
+        <button class="btn-primary">Registro</button>
+      <?php endif; ?>
+      <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'">🛒<span class="cart-badge" id="cart-count"><?php echo $carritoCount; ?></span></button>
+      <button class="theme-toggle" id="theme-toggle" title="Cambiar tema">🌙</button>
+    </div>
+</nav>
 
-    <?php unset($_SESSION['bienvenida']); ?>
-<?php endif; ?>
+<script>
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    body.setAttribute('data-theme', newTheme);
+    themeToggle.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+    localStorage.setItem('theme', newTheme);
+});
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme') || 'dark';
+body.setAttribute('data-theme', savedTheme);
+themeToggle.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+</script>
