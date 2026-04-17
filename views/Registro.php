@@ -71,7 +71,7 @@ h2 {
 /* INPUTS CON ICONOS */
 .input-group {
     position: relative;
-    margin-bottom:12px;
+    margin-bottom:10px;
 }
 
 .input-group i {
@@ -113,10 +113,11 @@ h2 {
 }
 
 .validation-msg {
-    font-size: 12px;
-    margin-top: -8px;
-    margin-bottom: 8px;
-    min-height: 16px;
+    font-size: 11px;
+    margin-top: -6px;
+    margin-bottom: 5px;
+    min-height: 13px;
+    line-height: 1.2;
 }
 
 .validation-msg.error {
@@ -128,12 +129,13 @@ h2 {
 }
 
 .password-rules {
-    font-size: 12px;
-    margin-bottom: 12px;
+    font-size: 11px;
+    margin-bottom: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    row-gap: 3px;
+    gap: 4px;
+    row-gap: 2px;
+    line-height: 1.2;
 }
 
 .rule {
