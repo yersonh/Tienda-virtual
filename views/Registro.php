@@ -90,7 +90,9 @@ h2 {
     background:var(--input-bg);
     color:var(--input-text);
     box-sizing: border-box;
-    padding-right: 48px;
+    padding-right: 40px;
+    padding-left: 15px;   /* 🔥 quita espacio del icono izquierdo */
+   
 }
 
 .password-toggle {
