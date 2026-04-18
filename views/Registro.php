@@ -113,16 +113,16 @@ h2 {
 }
 
 .validation-msg {
-    font-size: 10px;
-    margin-top: -6px;
-    margin-bottom: 5px;
+    font-size: 9px;
+    margin-top: -3px;
+    margin-bottom: 2px;
 
-    min-height: 10px; /* un poco más para que respire */
+    Height: 10px; /* un poco más para que respire */
     
     display: flex;              /* 🔥 esto es lo que faltaba */
     align-items: center;        /* centra vertical */
     justify-content: center;    /* centra horizontal */
-
+    padding: 0;
     line-height: 1;             /* evita desajustes */
 }
 
