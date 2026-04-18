@@ -116,18 +116,24 @@ h2 {
     font-size: 11px;
     margin-top: -6px;
     margin-bottom: 5px;
-    min-height: 13px;
-    line-height: 1.2;
-}
 
-.validation-msg.error {
-    color: #f87171;
-    height: 2px;
+    min-height: 16px; /* un poco más para que respire */
+    
+    display: flex;              /* 🔥 esto es lo que faltaba */
+    align-items: center;        /* centra vertical */
+    justify-content: center;    /* centra horizontal */
+
+    line-height: 1;             /* evita desajustes */
 }
 
 .validation-msg.success {
+    background: rgba(34,197,94,0.25);
     color: #22c55e;
-    height: 2px;
+}
+
+.validation-msg.error {
+    background: rgba(220,38,38,0.25);
+    color: #f87171;
 }
 
 .password-rules {
@@ -142,8 +148,6 @@ h2 {
 
 .rule {
     color: #f87171;
-    align-items: center;      /* centra vertical */
-    justify-content: center;  /* centra horizontal */
 }
 
 .rule.valid {
