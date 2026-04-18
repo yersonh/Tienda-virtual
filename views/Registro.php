@@ -122,10 +122,12 @@ h2 {
 
 .validation-msg.error {
     color: #f87171;
+    height: 2px;
 }
 
 .validation-msg.success {
     color: #22c55e;
+    height: 2px;
 }
 
 .password-rules {
