@@ -71,51 +71,54 @@ h2 {
 /* INPUTS CON ICONOS */
 .input-group {
     position: relative;
-        margin-bottom:8px;
-    }
+    margin-bottom:10px;
+}
 
-    .input-group i {
-        position:absolute;
-        left:12px;
-        top:50%;
-        transform:translateY(-50%);
-        color:var(--muted);
-    }
+.input-group i {
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--muted);
+}
 
-    .input-group input {
-        width:100%;
-        padding:12px 15px 12px 45px;
-        border-radius:10px;
-        border:none;
-        background:var(--input-bg);
-        color:var(--input-text);
-        box-sizing: border-box;
-        padding-right: 48px;
-    }
+.input-group input {
+    width:100%;
+    padding:12px 15px 12px 45px;
+    border-radius:10px;
+    border:none;
+    background:var(--input-bg);
+    color:var(--input-text);
+    box-sizing: border-box;
+    padding-right: 48px;
+}
 
-    .password-toggle {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--muted);
-        cursor: pointer;
-        padding: 6px;
-        display: flex;
-        align-items: center;
-        z-index: 10;
-    }
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+}
 
-    .password-toggle:hover {
-        color: #38bdf8;
-    }
+.password-toggle:hover {
+    color: #38bdf8;
+}
 
-    .validation-msg {
-        font-size: 10px;
-        margin: 2px 0 4px;
-        min-height: 0;
+.validation-msg {
+    font-size: 11px;
+    margin-top: -6px;
+    margin-bottom: 5px;
+    min-height: 13px;
+    line-height: 1.2;
+}
 
 .validation-msg.error {
     color: #f87171;
@@ -126,18 +129,18 @@ h2 {
 }
 
 .password-rules {
-        font-size: 10px;
-        margin: 6px 0 8px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 3px;
-        row-gap: 2px;
-        line-height: 1.2;
-    }
+    font-size: 11px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    row-gap: 2px;
+    line-height: 1.2;
+}
 
-    .rule {
-        color: #f87171;
-        line-height: 1.3;
+.rule {
+    color: #f87171;
+}
 
 .rule.valid {
     color: #22c55e;
