@@ -142,6 +142,8 @@ h2 {
 
 .rule {
     color: #f87171;
+    align-items: center;      /* centra vertical */
+    justify-content: center;  /* centra horizontal */
 }
 
 .rule.valid {
@@ -245,8 +247,6 @@ button:hover {
             <input type="text" name="apellidos" placeholder="Apellidos" required
                 value="<?= $old['apellidos'] ?? '' ?>">
         </div>
-
-        <!-- ❌ CÉDULA ELIMINADA -->
 
         <!-- CORREO -->
         <div class="input-group">
