@@ -97,7 +97,7 @@ h2 {
 
 .password-toggle {
     position: absolute;
-    right: 30px;
+    right: -30px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
