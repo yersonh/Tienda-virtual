@@ -1,49 +1,40 @@
 <?php
+require_once __DIR__ . '/OCI8Wrapper.php';
+
 class Database {
     private static $instance = null;
 
-    public static function getConnection() {
+    public static function getConnection(): OCI8Connection {
         if (self::$instance === null) {
             try {
-                // Credenciales de Oracle Cloud
-                $user = getenv('ORACLE_USER') ?: 'ADMIN';
-                $pass = getenv('ORACLE_PASSWORD');
-                $tnsName = getenv('ORACLE_TNS') ?: 'bc27bncudfcgiclb_high';
-                $walletPath = getenv('TNS_ADMIN') ?: '/app/wallet';
-
-                if (!extension_loaded('pdo_oci')) {
-                    error_log("ERROR CRÍTICO: Extensión pdo_oci NO está cargada");
+                if (!extension_loaded('oci8')) {
+                    error_log("ERROR CRÍTICO: Extensión oci8 NO está cargada");
                     error_log("Extensiones cargadas: " . implode(', ', get_loaded_extensions()));
-                    throw new Exception("Extensión Oracle PDO no disponible");
+                    throw new Exception("Extensión Oracle OCI8 no disponible");
                 }
 
-                // Configurar TNS_ADMIN para que apunte al directorio del Wallet
+                $user     = getenv('ORACLE_USER')     ?: 'ADMIN';
+                $pass     = getenv('ORACLE_PASSWORD')  ?: '';
+                $tnsName  = getenv('ORACLE_TNS')       ?: 'bc27bncudfcgiclb_high';
+                $walletPath = getenv('TNS_ADMIN')      ?: '/app/wallet';
+
                 putenv("TNS_ADMIN={$walletPath}");
+                putenv("LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10");
 
-                // DSN para Oracle usando TNS (del Wallet)
-                $dsn = "oci:dbname={$tnsName}";
-                error_log("Intentando conectar a Oracle: {$tnsName}");
-                error_log("Wallet en: {$walletPath}");
+                error_log("Conectando a Oracle: {$tnsName} | Wallet: {$walletPath}");
 
-                self::$instance = new PDO($dsn, $user, $pass, [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_TIMEOUT => 5,
-                    PDO::ATTR_PERSISTENT => false
-                ]);
+                $conn = oci_connect($user, $pass, $tnsName, 'AL32UTF8');
 
-                $test = self::$instance->query("SELECT 1 as test FROM dual")->fetch();
-                error_log("Prueba de conexión exitosa: " . print_r($test, true));
+                if (!$conn) {
+                    $error = oci_error();
+                    throw new Exception("Error Oracle: " . ($error['message'] ?? 'No se pudo conectar'));
+                }
 
-                self::$instance->exec("ALTER SESSION SET NLS_CHARACTERSET='AL32UTF8'");
-                self::$instance->exec("ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'");
+                self::$instance = new OCI8Connection($conn);
+                error_log("Conectado a Oracle Cloud exitosamente: {$tnsName}");
 
-                error_log("Conectado a Oracle Cloud: {$tnsName}");
-
-            } catch (PDOException $e) {
-                error_log("Error Oracle: " . $e->getMessage());
-                error_log("Código de error: " . $e->getCode());
-                error_log("Archivo: " . $e->getFile() . " línea: " . $e->getLine());
+            } catch (Exception $e) {
+                error_log("Error de conexión Oracle: " . $e->getMessage());
                 throw new Exception("No se pudo conectar a la base de datos Oracle. Contacte al administrador.");
             }
         }
