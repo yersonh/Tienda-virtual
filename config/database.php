@@ -23,11 +23,16 @@ class Database {
 
                 error_log("Conectando a Oracle: {$tnsName} | Wallet: {$walletPath}");
 
+                error_log("TNS_ADMIN actual: " . getenv('TNS_ADMIN'));
+                error_log("Wallet files: " . implode(', ', glob($walletPath . '/*') ?: []));
+
                 $conn = oci_connect($user, $pass, $tnsName, 'AL32UTF8');
 
                 if (!$conn) {
                     $error = oci_error();
-                    throw new Exception("Error Oracle: " . ($error['message'] ?? 'No se pudo conectar'));
+                    $msg = $error['message'] ?? 'Sin mensaje de error';
+                    error_log("Error Oracle OCI: " . $msg);
+                    throw new Exception("Error Oracle: " . $msg);
                 }
 
                 self::$instance = new OCI8Connection($conn);
@@ -35,7 +40,7 @@ class Database {
 
             } catch (Exception $e) {
                 error_log("Error de conexión Oracle: " . $e->getMessage());
-                throw new Exception("No se pudo conectar a la base de datos Oracle. Contacte al administrador.");
+                throw new Exception("No se pudo conectar: " . $e->getMessage());
             }
         }
         return self::$instance;
