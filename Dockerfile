@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install gd zip curl xml
 
 # Oracle Instant Client: Basic Lite + SDK
-# cache-bust-v6
-RUN mkdir -p /opt/oracle && \
+ARG CACHEBUST=7
+RUN echo "cachebust ${CACHEBUST}" && mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" -O ic-sdk.zip && \
