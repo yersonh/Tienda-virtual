@@ -1,0 +1,6 @@
+# Oracle Wallet - solo excluir el archivo .p12 (certificado privado)
+wallet/ewallet.p12
+
+# Variables de entorno locales
+.env
+.env.local

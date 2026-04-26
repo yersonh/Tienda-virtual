@@ -1,30 +1,33 @@
-name = "mi-app-php"
+name = "tienda-virtual-oracle"
 
 [phases.setup]
 nixPkgs = [
-  "php81", 
-  "php81Extensions.mbstring", 
-  "php81Extensions.pdo", 
-  "php81Extensions.pdo_pgsql",
-  "php81Extensions.pgsql",
+  "php81",
+  "php81Extensions.mbstring",
+  "php81Extensions.pdo",
   "php81Extensions.gd",
   "php81Extensions.curl",
   "php81Extensions.xml",
   "php81Extensions.zip",
-  "postgresql"
+  "curl",
+  "unzip",
+  "libaio"
 ]
 
 [phases.install]
 cmds = [
-  "mkdir -p /app/public",
-  "echo 'Directorio public creado'"
+  "mkdir -p /app/public /app/wallet",
+  "echo 'Directorios creados'"
 ]
 
 [phases.build]
 cmds = [
-  "echo 'Construyendo aplicación PHP...'",
+  "echo 'Instalando Oracle PDO_OCI...'",
+  "echo 'Nota: Requiere Oracle Instant Client instalado'",
+  "pecl install oci8 || echo 'PDO_OCI puede requerir Instant Client manual'",
+  "echo 'extension=oci8.so' >> /etc/php/8.1/conf.d/30-oci8.ini || true",
   "php -v",
-  "php -m | grep pgsql",
+  "php -m | grep -i oci || echo 'Advertencia: oci8 no detectado, verifica la instalación'",
   "echo 'Build completado'"
 ]
 
@@ -34,3 +37,4 @@ cmd = "php -S 0.0.0.0:${PORT:-8080} -t public"
 [env]
 PHP_VERSION = "8.1"
 APP_ENV = "production"
+TNS_ADMIN = "/app/wallet"
