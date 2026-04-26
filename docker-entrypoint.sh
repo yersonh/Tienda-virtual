@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-# Asegurar que las librerías de Oracle sean visibles para PHP en runtime
-export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10:${LD_LIBRARY_PATH}
-ldconfig 2>/dev/null || true
+# Forzar carga de librerías Oracle antes de que PHP arranque
+export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10
+export LD_PRELOAD=/opt/oracle/instantclient_21_10/libclntsh.so.21.1
 
 WALLET_DIR="/app/wallet"
 mkdir -p "$WALLET_DIR"
@@ -28,6 +28,12 @@ chmod 600 "$WALLET_DIR"/* 2>/dev/null || true
 
 PORT=${PORT:-8080}
 echo "Arrancando PHP server en puerto $PORT..."
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+echo "TNS_ADMIN: $TNS_ADMIN"
 
-# Reemplazar el puerto en el CMD si viene como argumento
-exec php -S "0.0.0.0:$PORT" -t /app/public
+# -d extension fuerza la carga aunque el conf.d no esté disponible
+exec php \
+    -d "extension=oci8.so" \
+    -d "oci8.privileged_connect=Off" \
+    -S "0.0.0.0:$PORT" \
+    -t /app/public
