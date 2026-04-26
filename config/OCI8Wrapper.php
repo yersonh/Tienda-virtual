@@ -2,7 +2,6 @@
 
 class OCI8Statement {
     private $stmt;
-    private array $boundParams = [];
 
     public function __construct($stmt) {
         $this->stmt = $stmt;
@@ -23,13 +22,13 @@ class OCI8Statement {
         return true;
     }
 
-    public function fetch(int $mode = 0): array|false {
+    public function fetch(int $_ = 0): array|false {
         $row = oci_fetch_assoc($this->stmt);
         if ($row === false) return false;
         return array_change_key_case($row, CASE_LOWER);
     }
 
-    public function fetchAll(int $mode = 0): array {
+    public function fetchAll(int $_ = 0): array {
         $results = [];
         while ($row = oci_fetch_assoc($this->stmt)) {
             $results[] = array_change_key_case($row, CASE_LOWER);
@@ -83,7 +82,7 @@ class OCI8Connection {
         return (bool) oci_execute($stmt, OCI_COMMIT_ON_SUCCESS);
     }
 
-    public function lastInsertId(): false {
+    public function lastInsertId(): mixed {
         // Oracle usa RETURNING INTO, no lastInsertId
         return false;
     }
