@@ -12,9 +12,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install gd zip curl xml
 
-# ARG para forzar que Docker NO use cache en los pasos de Oracle
-ARG CACHEBUST=5
-
 # Oracle Instant Client: Basic Lite + SDK
 RUN mkdir -p /opt/oracle && \
     cd /opt/oracle && \
@@ -22,27 +19,21 @@ RUN mkdir -p /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" -O ic-sdk.zip && \
     unzip ic-basic.zip && \
     unzip ic-sdk.zip && \
-    rm ic-basic.zip ic-sdk.zip && \
-    # Copiar libs directamente a /usr/lib (más confiable que symlinks)
-    cp /opt/oracle/instantclient_21_10/libclntsh.so.21.1     /usr/lib/ && \
-    cp /opt/oracle/instantclient_21_10/libclntshcore.so.21.1 /usr/lib/ && \
-    cp /opt/oracle/instantclient_21_10/libnnz21.so            /usr/lib/ && \
-    cp /opt/oracle/instantclient_21_10/libocci.so.21.1        /usr/lib/ && \
-    ldconfig
+    rm ic-basic.zip ic-sdk.zip
 
-RUN docker-php-ext-configure pdo_oci \
-        --with-pdo-oci=instantclient,/opt/oracle/instantclient_21_10 && \
-    docker-php-ext-install pdo_oci && \
-    echo "extension=pdo_oci.so" > /usr/local/etc/php/conf.d/docker-php-ext-pdo_oci.ini && \
-    php -r "extension_loaded('pdo_oci') or die('ERROR: pdo_oci no carga\n');" && \
-    echo "=== pdo_oci verificado OK ==="
+# Instalar OCI8 via PECL (más confiable que docker-php-ext-install pdo_oci)
+RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
+    echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8 && \
+    docker-php-ext-enable oci8 && \
+    php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga\n');" && \
+    echo "=== oci8 verificado OK ==="
 
 COPY . /app/
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10:/usr/lib \
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 \
     TNS_ADMIN=/app/wallet
 
 WORKDIR /app
