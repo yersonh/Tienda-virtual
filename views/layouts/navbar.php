@@ -87,6 +87,16 @@ body {
     transition: color 0.2s;
     cursor: pointer;
 }
+
+.nav-logo img {
+    height: 45px;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.nav-logo img:hover {
+    transform: scale(1.08);
+}
 .nav-links a:hover { color: var(--text); }
 .nav-links a.active { color: var(--accent); }
 .nav-actions { display: flex; gap: 12px; align-items: center; }
@@ -191,7 +201,7 @@ body {
 <nav class="nav">
     <div class="nav-logo">
         <a href="index.php?action=tienda">
-            <img src="/public/img/logosinFondo.png" alt="NAYLEX Store" style="height:50px;">
+            <img src="<?php echo '/public/imagenes/logosinFondo.png'; ?>" style="height:50px;">
         </a>
     </div>
     <div class="nav-links">
