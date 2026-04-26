@@ -200,7 +200,7 @@ body {
         <a href="index.php?action=logout" class="btn-ghost">Salir</a>
       <?php else: ?>
         <a href="index.php?action=login" class="btn-ghost">Login</a>
-        <button class="btn-primary">Registro</button>
+        <button class="btn-primary" onclick="location.href='index.php?action=registro'">Registro</button>
       <?php endif; ?>
       <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="Ver carrito">
         <svg viewBox="0 0 24 24" aria-hidden="true">
