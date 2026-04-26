@@ -23,7 +23,7 @@ RUN mkdir -p /opt/oracle && \
 
 # Instalar OCI8 via PECL (más confiable que docker-php-ext-install pdo_oci)
 RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
-    echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.3.0 && \
+    echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.2.1 && \
     docker-php-ext-enable oci8 && \
     php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga\n');" && \
     echo "=== oci8 verificado OK ==="
