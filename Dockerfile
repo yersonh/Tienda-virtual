@@ -25,7 +25,9 @@ RUN mkdir -p /opt/oracle && \
 
 RUN docker-php-ext-configure pdo_oci \
         --with-pdo-oci=instantclient,/opt/oracle/instantclient_21_10 && \
-    docker-php-ext-install pdo_oci
+    docker-php-ext-install pdo_oci && \
+    php -r "extension_loaded('pdo_oci') or die('ERROR: pdo_oci no carga\n');" && \
+    echo "pdo_oci OK"
 
 COPY . /app/
 
