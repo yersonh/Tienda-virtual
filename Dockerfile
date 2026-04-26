@@ -8,12 +8,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libcurl4-openssl-dev \
     libxml2-dev \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 \
+    && ldconfig \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install gd zip curl xml
 
 # Oracle Instant Client: Basic Lite + SDK
-ARG CACHEBUST=8
+ARG CACHEBUST=9
 RUN echo "cachebust ${CACHEBUST}" && mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
