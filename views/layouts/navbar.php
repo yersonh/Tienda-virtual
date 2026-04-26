@@ -189,7 +189,11 @@ body {
 
 <!-- 🔥 NAVBAR -->
 <nav class="nav">
-    <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
+    <div class="nav-logo">
+        <a href="index.php?action=tienda">
+            <img src="/public/img/logosinFondo.png" alt="NAYLEX Store" style="height:50px;">
+        </a>
+    </div>
     <div class="nav-links">
       <a href="index.php?action=inicio" class="active">Inicio</a>
       <a href="index.php?action=tienda">Productos</a>
