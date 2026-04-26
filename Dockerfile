@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install gd zip curl xml
 
 # Oracle Instant Client: Basic Lite + SDK
-ARG CACHEBUST=7
+ARG CACHEBUST=8
 RUN echo "cachebust ${CACHEBUST}" && mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
@@ -28,8 +28,12 @@ RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
     export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
     echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.2.1 && \
     docker-php-ext-enable oci8 && \
+    # Registrar Oracle libs a nivel sistema (no puede ser bloqueado por el runtime)
+    echo "/opt/oracle/instantclient_21_10/libclntsh.so.21.1" >> /etc/ld.so.preload && \
+    echo "/opt/oracle/instantclient_21_10/libclntshcore.so.21.1" >> /etc/ld.so.preload && \
+    ldconfig && \
     php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga en build\n');" && \
-    echo "=== oci8 con RPATH verificado OK ==="
+    echo "=== oci8 verificado OK ==="
 
 COPY . /app/
 
