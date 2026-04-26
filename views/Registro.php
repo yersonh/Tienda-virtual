@@ -21,13 +21,13 @@ $old = $_SESSION['old'] ?? [];
     --muted: #94a3b8;
 }
 [data-theme="light"] {
-    --bg-overlay-1: rgba(255,255,255,0.82);
-    --bg-overlay-2: rgba(241,245,249,0.92);
-    --card-bg: rgba(255,255,255,0.84);
-    --card-border: rgba(56,189,248,0.18);
-    --input-bg: #eef2f7;
+    --bg-overlay-1: rgba(255,255,255,0.95);
+    --bg-overlay-2: rgba(248,250,252,0.98);
+    --card-bg: rgba(255,255,255,0.97);
+    --card-border: rgba(0,229,192,0.3);
+    --input-bg: #f1f5f9;
     --input-text: #0f172a;
-    --muted: #64748b;
+    --muted: #475569;
 }
 
 * {
@@ -57,15 +57,24 @@ body {
     width:100%;
     box-shadow:0 15px 40px rgba(0,0,0,0.6);
     border:1px solid var(--card-border);
-    max-width:420px; 
+    max-width:420px;
+}
+
+[data-theme="light"] .container {
+    box-shadow:0 10px 30px rgba(0,229,192,0.1), 0 0 0 1px rgba(0,229,192,0.1);
 }
 
 /* TÍTULO */
 h2 {
     text-align:center;
     margin-bottom:20px;
-    color:#38bdf8;
-    text-shadow:0 0 22px rgba(56,189,248,0.5);
+    color:#00e5c0;
+    text-shadow:0 0 22px rgba(0,229,192,0.3);
+}
+
+[data-theme="light"] h2 {
+    color:#00d4b4;
+    text-shadow:0 0 15px rgba(0,229,192,0.15);
 }
 
 /* INPUTS CON ICONOS */
@@ -86,13 +95,23 @@ h2 {
     width:100%;
     padding:12px 15px 12px 45px;
     border-radius:10px;
-    border:none;
+    border:1px solid rgba(0,229,192,0.2);
     background:var(--input-bg);
     color:var(--input-text);
     box-sizing: border-box;
     padding-right: 40px;
-    padding-left: 15px;   /* 🔥 quita espacio del icono izquierdo */
-   
+    padding-left: 15px;
+    transition:border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input:focus {
+    outline:none;
+    border-color:rgba(0,229,192,0.5);
+    box-shadow:0 0 0 3px rgba(0,229,192,0.1);
+}
+
+[data-theme="light"] .input-group input {
+    border-color:rgba(0,229,192,0.25);
 }
 
 .password-toggle {
@@ -168,16 +187,22 @@ h2 {
     cursor: pointer;
     font-size: 18px;
     backdrop-filter: blur(10px);
+    transition:all 0.2s;
+}
+
+.theme-toggle:hover {
+    border-color:rgba(0,229,192,0.5);
+    color:#00e5c0;
 }
 
 /* BOTÓN */
 button {
     width:100%;
     padding:12px;
-    background:linear-gradient(135deg,#38bdf8,#2563eb);
+    background:linear-gradient(135deg,#00e5c0,#00d4b4);
     border:none;
     border-radius:10px;
-    color:white;
+    color:#0a0e1a;
     font-weight:bold;
     cursor:pointer;
     transition:0.3s;
@@ -185,31 +210,57 @@ button {
 
 button:hover {
     transform:scale(1.03);
+    filter:brightness(1.1);
+}
+
+[data-theme="light"] button {
+    background:linear-gradient(135deg,#00e5c0,#00d4b4);
+    color:#0a0e1a;
 }
 
 /* MENSAJES */
 .error {
-    background:rgba(220,38,38,0.2);
-    color:#fca5a5;
+    background:rgba(220,38,38,0.15);
+    color:#dc2626;
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
+    border:1px solid rgba(220,38,38,0.3);
 }
 
 .success {
-    background:rgba(34,197,94,0.2);
-    color:#86efac;
+    background:rgba(34,197,94,0.15);
+    color:#16a34a;
     padding:10px;
     margin-bottom:10px;
     border-radius:8px;
     text-align:center;
+    border:1px solid rgba(34,197,94,0.3);
+}
+
+[data-theme="light"] .error {
+    background:rgba(220,38,38,0.1);
+    color:#991b1b;
+}
+
+[data-theme="light"] .success {
+    background:rgba(34,197,94,0.1);
+    color:#15803d;
 }
 
 @media (max-width: 480px) {
     .container {
         padding:25px 15px;
     }
+}
+
+[data-theme="light"] a {
+    color:#00d4b4 !important;
+}
+
+[data-theme="light"] a:hover {
+    color:#00e5c0 !important;
 }
 </style>
 </head>
@@ -319,14 +370,14 @@ button:hover {
 
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php?action=login" style="color:#38bdf8;">
+        <a href="index.php?action=login" style="color:#00e5c0; transition:color 0.2s; text-decoration:none;">
             <i class="fas fa-arrow-left"></i> Ir al login
         </a>
     </div>
 
-    <!-- VOLVER -->
+    <!-- VOLVER A TIENDA -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php?action=tienda" style="color:#38bdf8;">
+        <a href="index.php?action=tienda" style="color:#00e5c0; transition:color 0.2s; text-decoration:none;">
             <i class="fas fa-arrow-left"></i> Volver a la tienda
         </a>
     </div>
