@@ -12,13 +12,16 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client 21.x Basic Lite
+# Oracle Instant Client 21.x Basic Lite + SDK (headers needed to compile pdo_oci)
 RUN mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" \
         -O ic.zip && \
+    wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" \
+        -O sdk.zip && \
     unzip ic.zip && \
-    rm ic.zip && \
+    unzip sdk.zip && \
+    rm ic.zip sdk.zip && \
     echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
