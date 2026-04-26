@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Asegurar que las librerías de Oracle sean visibles para PHP en runtime
+export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10:${LD_LIBRARY_PATH}
+ldconfig 2>/dev/null || true
+
 WALLET_DIR="/app/wallet"
 mkdir -p "$WALLET_DIR"
 
