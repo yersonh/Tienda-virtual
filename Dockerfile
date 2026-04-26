@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install gd zip curl xml
 
 # Oracle Instant Client: Basic Lite + SDK
+# cache-bust-v6
 RUN mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
@@ -21,12 +22,14 @@ RUN mkdir -p /opt/oracle && \
     unzip ic-sdk.zip && \
     rm ic-basic.zip ic-sdk.zip
 
-# Instalar OCI8 via PECL (más confiable que docker-php-ext-install pdo_oci)
+# Instalar oci8 con RPATH embebido en el .so
+# RPATH hardcodea la ruta de Oracle en el binario, sin depender de LD_LIBRARY_PATH
 RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
+    export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
     echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.2.1 && \
     docker-php-ext-enable oci8 && \
-    php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga\n');" && \
-    echo "=== oci8 verificado OK ==="
+    php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga en build\n');" && \
+    echo "=== oci8 con RPATH verificado OK ==="
 
 COPY . /app/
 
