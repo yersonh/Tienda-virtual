@@ -12,13 +12,16 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client 21.x Basic Lite
+# Oracle Instant Client 21.x: Basic Lite + SDK (SDK contiene los headers .h necesarios)
 RUN mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" \
-        -O ic.zip && \
-    unzip ic.zip && \
-    rm ic.zip && \
+        -O ic-basic.zip && \
+    wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" \
+        -O ic-sdk.zip && \
+    unzip ic-basic.zip && \
+    unzip ic-sdk.zip && \
+    rm ic-basic.zip ic-sdk.zip && \
     echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
