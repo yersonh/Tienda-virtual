@@ -1,5 +1,6 @@
 FROM php:8.1-cli
 
+# cache-bust: v3-symlinks
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
@@ -20,14 +21,21 @@ RUN mkdir -p /opt/oracle && \
     unzip ic-basic.zip && \
     unzip ic-sdk.zip && \
     rm ic-basic.zip ic-sdk.zip && \
+    # Symlinks en /usr/lib para que el linker siempre los encuentre sin LD_LIBRARY_PATH
+    ln -s /opt/oracle/instantclient_21_10/libclntsh.so.21.1     /usr/lib/libclntsh.so.21.1 && \
+    ln -s /opt/oracle/instantclient_21_10/libclntshcore.so.21.1 /usr/lib/libclntshcore.so.21.1 && \
+    ln -s /opt/oracle/instantclient_21_10/libnnz21.so            /usr/lib/libnnz21.so && \
+    ln -s /opt/oracle/instantclient_21_10/libocci.so.21.1        /usr/lib/libocci.so.21.1 && \
     echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
 RUN docker-php-ext-configure pdo_oci \
         --with-pdo-oci=instantclient,/opt/oracle/instantclient_21_10 && \
     docker-php-ext-install pdo_oci && \
-    php -r "extension_loaded('pdo_oci') or die('ERROR: pdo_oci no carga\n');" && \
-    echo "pdo_oci OK"
+    # Forzar ini explícito por si docker-php-ext-install no lo generó
+    echo "extension=pdo_oci.so" > /usr/local/etc/php/conf.d/docker-php-ext-pdo_oci.ini && \
+    php -r "extension_loaded('pdo_oci') or die('ERROR: pdo_oci no carga en build\n');" && \
+    echo "pdo_oci cargado correctamente"
 
 COPY . /app/
 
