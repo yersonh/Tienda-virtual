@@ -50,7 +50,7 @@ RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
 ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 \
     TNS_ADMIN=/var/www/html/wallet
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
