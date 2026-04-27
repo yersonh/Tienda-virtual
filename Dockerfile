@@ -17,27 +17,26 @@ RUN apt-get install -y --no-install-recommends \
 # Extensiones PHP
 RUN docker-php-ext-install pdo curl xml mbstring
 
-# Crear directorio Oracle
-RUN mkdir -p /opt/oracle
-
 # Descargar Oracle Instant Client
-RUN cd /tmp && \
-    wget --timeout=30 -O instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip && \
-    wget --timeout=30 -O instantclient-sdk.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-sdk-linuxx64.zip && \
-    unzip -q instantclient-basiclite.zip && \
-    unzip -q instantclient-sdk.zip && \
-    mv instantclient_*/* /opt/oracle/ && \
-    rm -rf instantclient* && \
-    echo /opt/oracle > /etc/ld.so.conf.d/oracle.conf && \
+RUN mkdir -p /opt/oracle && \
+    cd /opt/oracle && \
+    wget --timeout=30 -q https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip -O ic-basic.zip && \
+    wget --timeout=30 -q https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip -O ic-sdk.zip && \
+    unzip -q ic-basic.zip && \
+    unzip -q ic-sdk.zip && \
+    rm ic-basic.zip ic-sdk.zip && \
+    echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle.conf && \
     ldconfig
 
 # Variables de entorno Oracle
-ENV LD_LIBRARY_PATH=/opt/oracle
-ENV ORACLE_HOME=/opt/oracle
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10
+ENV ORACLE_HOME=/opt/oracle/instantclient_21_10
 
 # Instalar OCI8
-RUN echo 'instantclient,/opt/oracle' | pecl install oci8-3.2.1 && \
-    docker-php-ext-enable oci8
+RUN export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
+    echo 'instantclient,/opt/oracle/instantclient_21_10' | pecl install oci8-3.2.1 && \
+    docker-php-ext-enable oci8 && \
+    php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga en build\n');"
 
 # App
 WORKDIR /app
