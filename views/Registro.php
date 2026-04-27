@@ -361,12 +361,6 @@ button:hover {
         const submitBtn = document.getElementById('registro-btn');
         let correoValido = false;
         let usernameValido = false;
-        let correoTimer = null;
-        let usernameTimer = null;
-        let lastCorreoChecked = '';
-        let lastUsernameChecked = '';
-        let lastCorreoDisponible = null;
-        let lastUsernameDisponible = null;
 
         function updatePasswordRules() {
             const pwd = passwordInput.value;
@@ -405,14 +399,6 @@ button:hover {
                 return;
             }
 
-            if (email === lastCorreoChecked && lastCorreoDisponible !== null) {
-                correoValido = lastCorreoDisponible;
-                checkFormValidity();
-                return;
-            }
-            lastCorreoChecked = email;
-            lastCorreoDisponible = null;
-
             // Verificar si el correo ya existe en la base de datos
             correoMsg.textContent = 'Verificando...';
             correoMsg.className = 'validation-msg';
@@ -426,20 +412,14 @@ button:hover {
             })
             .then(response => response.json())
             .then(data => {
-                if (correoInput.value.trim().toLowerCase() !== email) {
-                    return;
-                }
-
                 if (data.existe) {
                     correoMsg.textContent = 'El correo ya está registrado';
                     correoMsg.className = 'validation-msg error';
                     correoValido = false;
-                    lastCorreoDisponible = false;
                 } else {
                     correoMsg.textContent = 'Correo disponible';
                     correoMsg.className = 'validation-msg success';
                     correoValido = true;
-                    lastCorreoDisponible = true;
                 }
                 checkFormValidity();
             })
@@ -485,14 +465,6 @@ button:hover {
                 return;
             }
 
-            if (username === lastUsernameChecked && lastUsernameDisponible !== null) {
-                usernameValido = lastUsernameDisponible;
-                checkFormValidity();
-                return;
-            }
-            lastUsernameChecked = username;
-            lastUsernameDisponible = null;
-
             usernameMsg.textContent = 'Verificando...';
             usernameMsg.className = 'validation-msg';
 
@@ -505,20 +477,14 @@ button:hover {
             })
             .then(response => response.json())
             .then(data => {
-                if (usernameInput.value.trim() !== username) {
-                    return;
-                }
-
                 if (data.existe) {
                     usernameMsg.textContent = 'Este usuario ya está en uso';
                     usernameMsg.className = 'validation-msg error';
                     usernameValido = false;
-                    lastUsernameDisponible = false;
                 } else {
                     usernameMsg.textContent = 'Usuario disponible';
                     usernameMsg.className = 'validation-msg success';
                     usernameValido = true;
-                    lastUsernameDisponible = true;
                 }
                 checkFormValidity();
             })
@@ -545,19 +511,9 @@ button:hover {
             });
         });
 
-        function debounceEmailValidation() {
-            clearTimeout(correoTimer);
-            correoTimer = setTimeout(validateEmail, 600);
-        }
-
-        function debounceUsernameValidation() {
-            clearTimeout(usernameTimer);
-            usernameTimer = setTimeout(validateUsername, 600);
-        }
-
-        correoInput?.addEventListener('input', debounceEmailValidation);
+        correoInput?.addEventListener('input', validateEmail);
         correoInput?.addEventListener('blur', validateEmail);
-        usernameInput?.addEventListener('input', debounceUsernameValidation);
+        usernameInput?.addEventListener('input', validateUsername);
         usernameInput?.addEventListener('blur', validateUsername);
         passwordInput?.addEventListener('input', updatePasswordRules);
         confirmInput?.addEventListener('input', updatePasswordRules);
