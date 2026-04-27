@@ -74,6 +74,10 @@ class Database {
             );
         }
 
+        if ($fileName === 'tnsnames.ora') {
+            $decoded = preg_replace('/^\xEF\xBB\xBF/', '', $decoded);
+        }
+
         $path = "$walletPath/$fileName";
         file_put_contents($path, $decoded);
         chmod($path, 0600);
@@ -102,6 +106,7 @@ class Database {
 
     private static function getTnsAliases(string $tnsnamesPath): array {
         $contents = file_exists($tnsnamesPath) ? file_get_contents($tnsnamesPath) : '';
+        $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents);
         preg_match_all('/^\s*([A-Za-z0-9_.-]+)\s*=/m', $contents, $matches);
         return $matches[1] ?? [];
     }
