@@ -1,34 +1,17 @@
-FROM php:8.1-cli
+FROM oraclelinux:8-slim
 
-# Dependencias
-RUN apt-get update && apt-get install -y \
-    unzip \
-    curl \
-    libaio-dev \
-    libzip-dev \
-    libpng-dev \
-    libcurl4-openssl-dev \
-    libxml2-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Dependencias y Oracle Instant Client (preinstalado en esta imagen)
+RUN microdnf install -y \
+    php php-cli php-pdo php-gd php-zip php-curl php-xml \
+    unzip curl libaio libzip-dev \
+    && microdnf clean all
 
-# Extensiones PHP
-RUN docker-php-ext-install gd zip curl xml
-
-# 📦 Oracle Instant Client (mirror que sí descarga en Railway)
-RUN mkdir -p /opt/oracle && \
-    cd /opt/oracle && \
-    curl -L -o instantclient.zip https://github.com/gharriso/oracle-instantclient/raw/master/instantclient-basiclite-linux.x64-19.8.0.0.0dbru.zip && \
-    unzip instantclient.zip && \
-    rm instantclient.zip && \
-    echo /opt/oracle/instantclient_19_8 > /etc/ld.so.conf.d/oracle.conf && \
-    ldconfig
-
-# Variable necesaria
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_8
-
-# Instalar OCI8
-RUN echo "instantclient,/opt/oracle/instantclient_19_8" | pecl install oci8 \
+# Instalar extensión OCI8
+RUN echo "instantclient,/usr/lib/oracle/19.8/client64/lib" | pecl install oci8 \
     && docker-php-ext-enable oci8
+
+# Variable de entorno para Oracle
+ENV LD_LIBRARY_PATH=/usr/lib/oracle/19.8/client64/lib
 
 # App
 WORKDIR /app
