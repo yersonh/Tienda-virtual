@@ -35,8 +35,11 @@ class UsuarioModel {
             oci_bind_by_name($stmtPersona, ':direccion', $direccion);
             $id_persona = null;
             oci_bind_by_name($stmtPersona, ':id_persona', $id_persona, -1, SQLT_INT);
-            oci_execute($stmtPersona);
-            oci_fetch($stmtPersona);
+            if (!@oci_execute($stmtPersona, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmtPersona);
+                throw new Exception("Error al crear persona: " . ($error['message'] ?? 'desconocido'));
+            }
+
             oci_free_statement($stmtPersona);
 
             $queryUsuario = "INSERT INTO usuario (id_persona, id_tipo, username, password, estado)
@@ -56,8 +59,11 @@ class UsuarioModel {
             oci_bind_by_name($stmtUsuario, ':estado', $estado);
             $id_usuario = null;
             oci_bind_by_name($stmtUsuario, ':id_usuario', $id_usuario, -1, SQLT_INT);
-            oci_execute($stmtUsuario);
-            oci_fetch($stmtUsuario);
+            if (!@oci_execute($stmtUsuario, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmtUsuario);
+                throw new Exception("Error al crear usuario: " . ($error['message'] ?? 'desconocido'));
+            }
+
             oci_free_statement($stmtUsuario);
 
             oci_commit($this->conn);

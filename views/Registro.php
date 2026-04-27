@@ -254,6 +254,14 @@ button:hover {
                 value="<?= $old['apellidos'] ?? '' ?>">
         </div>
 
+        <!-- CEDULA -->
+        <div class="input-group">
+            <i class="fas fa-id-card"></i>
+            <input type="text" name="cc" placeholder="Cedula" maxlength="15" required
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,15)"
+                value="<?= $old['cc'] ?? '' ?>">
+        </div>
+
         <!-- CORREO -->
         <div class="input-group">
             <i class="fas fa-envelope"></i>
