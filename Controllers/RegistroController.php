@@ -18,7 +18,6 @@ class RegistroController {
         $data = [
             'nombres' => trim($_POST['nombres'] ?? ''),
             'apellidos' => trim($_POST['apellidos'] ?? ''),
-            'cc' => trim($_POST['cc'] ?? ''),
             'correo' => trim($_POST['correo'] ?? ''),
             'telefono' => trim($_POST['telefono'] ?? ''),
             'direccion' => trim($_POST['direccion'] ?? ''),
@@ -34,7 +33,6 @@ class RegistroController {
         if (
             empty($data['nombres']) ||
             empty($data['apellidos']) ||
-            empty($data['cc']) ||
             empty($data['correo']) ||
             empty($data['telefono']) ||
             empty($data['direccion']) ||
@@ -43,18 +41,6 @@ class RegistroController {
             empty($confirmPassword)
         ) {
             $_SESSION['error'] = "Todos los campos son obligatorios";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (!is_numeric($data['cc']) || strlen($data['cc']) < 6 || strlen($data['cc']) > 15) {
-            $_SESSION['error'] = "La cedula debe ser numerica y tener entre 6 y 15 digitos";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if ($model->ccExiste($data['cc'])) {
-            $_SESSION['error'] = "La cedula ya esta registrada";
             header("Location: index.php?action=registro");
             exit();
         }
@@ -113,6 +99,8 @@ class RegistroController {
             exit();
         }
 
+        $data['cc'] = $this->generarCcInterna($model);
+
         $resultado = $model->crearConPersona($data);
 
         if ($resultado['success']) {
@@ -138,6 +126,14 @@ class RegistroController {
         }
 
         exit();
+    }
+
+    private function generarCcInterna(UsuarioModel $model): string {
+        do {
+            $cc = '9' . random_int(10000000000000, 99999999999999);
+        } while ($model->ccExiste($cc));
+
+        return $cc;
     }
 
     public function verificarCorreo() {
