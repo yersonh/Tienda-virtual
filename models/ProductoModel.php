@@ -7,6 +7,25 @@ class ProductoModel {
         $this->conn = $conn;
     }
 
+    private function normalizeValue($value) {
+        if ($value instanceof OCILob) {
+            $contents = $value->load();
+            $value->free();
+            return $contents === false ? '' : $contents;
+        }
+
+        return $value;
+    }
+
+    private function normalizeRow(array $row): array {
+        $normalized = [];
+        foreach ($row as $key => $value) {
+            $normalized[strtolower($key)] = $this->normalizeValue($value);
+        }
+
+        return $normalized;
+    }
+
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
     public function obtenerCatalogo() {
     $query = "SELECT 
@@ -25,7 +44,7 @@ class ProductoModel {
 
     $results = [];
     while ($row = oci_fetch_assoc($stmt)) {
-        $results[] = array_change_key_case($row, CASE_LOWER);
+        $results[] = $this->normalizeRow($row);
     }
     oci_free_statement($stmt);
 
@@ -42,7 +61,7 @@ class ProductoModel {
 
         $results = [];
         while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = array_change_key_case($row, CASE_LOWER);
+            $results[] = $this->normalizeRow($row);
         }
         oci_free_statement($stmt);
 
@@ -61,7 +80,7 @@ class ProductoModel {
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+        return $row ? $this->normalizeRow($row) : null;
     }
 
     public function obtenerImagenes($id_producto) {
@@ -72,7 +91,7 @@ class ProductoModel {
 
         $results = [];
         while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = array_change_key_case($row, CASE_LOWER);
+            $results[] = $this->normalizeRow($row);
         }
         oci_free_statement($stmt);
 
@@ -116,7 +135,7 @@ class ProductoModel {
 
         $results = [];
         while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = array_change_key_case($row, CASE_LOWER);
+            $results[] = $this->normalizeRow($row);
         }
         oci_free_statement($stmt);
 
@@ -222,7 +241,7 @@ class ProductoModel {
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+        return $row ? $this->normalizeRow($row) : null;
     }
 
     public function obtenerCategorias() {
@@ -232,7 +251,7 @@ class ProductoModel {
 
         $results = [];
         while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = array_change_key_case($row, CASE_LOWER);
+            $results[] = $this->normalizeRow($row);
         }
         oci_free_statement($stmt);
 
