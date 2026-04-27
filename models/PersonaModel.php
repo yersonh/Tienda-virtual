@@ -11,23 +11,26 @@ class PersonaModel {
     public function crear($data) {
         $query = "INSERT INTO persona (nombres, apellidos, cc, correo, telefono, direccion)
                   VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)
-                  RETURNING id_persona";
+                  RETURNING id_persona INTO :id_persona";
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':nombres', $data['nombres']);
+        oci_bind_by_name($stmt, ':apellidos', $data['apellidos']);
+        oci_bind_by_name($stmt, ':cc', $data['cc']);
+        oci_bind_by_name($stmt, ':correo', $data['correo']);
+        oci_bind_by_name($stmt, ':telefono', $data['telefono']);
+        oci_bind_by_name($stmt, ':direccion', $data['direccion']);
+        $id_persona = null;
+        oci_bind_by_name($stmt, ':id_persona', $id_persona, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_fetch($stmt);
+        oci_free_statement($stmt);
 
-        $stmt->execute([
-            ':nombres' => $data['nombres'],
-            ':apellidos' => $data['apellidos'],
-            ':cc' => $data['cc'],
-            ':correo' => $data['correo'],
-            ':telefono' => $data['telefono'],
-            ':direccion' => $data['direccion']
-        ]);
-
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return ['id_persona' => (int)$id_persona];
     }
 
     public function obtenerUltimoId() {
-        return $this->conn->lastInsertId();
+        // OCI8 no soporta lastInsertId; usar RETURNING en las consultas
+        return null;
     }
 }

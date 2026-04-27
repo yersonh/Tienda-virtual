@@ -20,10 +20,16 @@ class ProductoModel {
                   ON pi.id_producto = p.id_producto AND pi.orden = 0
               ORDER BY c.nombre, p.nombre";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
+    $stmt = oci_parse($this->conn, $query);
+    oci_execute($stmt);
 
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $results = [];
+    while ($row = oci_fetch_assoc($stmt)) {
+        $results[] = array_change_key_case($row, CASE_LOWER);
+    }
+    oci_free_statement($stmt);
+
+    return $results;
 }
 
     public function obtenerTodos() {
@@ -31,9 +37,16 @@ class ProductoModel {
                   FROM producto p
                   INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
                   ORDER BY p.id_producto DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = oci_parse($this->conn, $query);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
 
     public function obtenerPorId($id) {
@@ -41,16 +54,29 @@ class ProductoModel {
                   FROM producto p
                   INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
                   WHERE p.id_producto = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id', $id);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
     public function obtenerImagenes($id_producto) {
         $query = "SELECT * FROM producto_imagen WHERE id_producto = :id_producto ORDER BY orden";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_producto' => $id_producto]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_producto', $id_producto);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
 
     public function obtenerPorIds($ids) {
@@ -63,7 +89,15 @@ class ProductoModel {
             return [];
         }
 
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $placeholders = [];
+        $params = [];
+        foreach ($ids as $index => $id) {
+            $param = ':id' . $index;
+            $placeholders[] = $param;
+            $params[$param] = $id;
+        }
+        $placeholdersStr = implode(',', $placeholders);
+
         $query = "SELECT 
                     p.*, 
                     c.nombre AS categoria_nombre,
@@ -71,13 +105,22 @@ class ProductoModel {
                   FROM producto p
                   INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
                   LEFT JOIN producto_imagen pi ON pi.id_producto = p.id_producto AND pi.orden = 0
-                  WHERE p.id_producto IN ($placeholders)
+                  WHERE p.id_producto IN ($placeholdersStr)
                   ORDER BY p.nombre";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute($ids);
+        $stmt = oci_parse($this->conn, $query);
+        foreach ($params as $param => $value) {
+            oci_bind_by_name($stmt, $param, $value);
+        }
+        oci_execute($stmt);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
 
     public function crear($datos) {
@@ -85,32 +128,35 @@ class ProductoModel {
 
         $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
                   VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)
-                  RETURNING id_producto";
+                  RETURNING id_producto INTO :id";
         
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':nombre' => $datos['nombre'],
-            ':codigo' => (int)$datos['codigo'],
-            ':descripcion' => $datos['descripcion'],
-            ':precio' => (float)$datos['precio'],
-            ':stock' => (int)$datos['stock'],
-            ':estado' => $estadoBool,
-            ':id_categoria' => (int)$datos['id_categoria']
-        ]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':nombre', $datos['nombre']);
+        oci_bind_by_name($stmt, ':codigo', $datos['codigo'], -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
+        oci_bind_by_name($stmt, ':precio', $datos['precio'], -1, SQLT_FLT);
+        oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':estado', $estadoBool ? 'Activo' : 'Inactivo'); // Assuming estado is VARCHAR
+        oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
+        $id = null;
+        oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
+        oci_execute($stmt);
 
-        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int) ($producto['id_producto'] ?? 0);
+        oci_fetch($stmt); // To populate the OUT parameter
+        oci_free_statement($stmt);
+
+        return (int) $id;
     }
 
     public function guardarImagen($id_producto, $url, $orden) {
         $query = "INSERT INTO producto_imagen (id_producto, url, orden) 
                   VALUES (:id_producto, :url, :orden)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':id_producto' => $id_producto,
-            ':url' => $url,
-            ':orden' => $orden
-        ]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_producto', $id_producto, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':url', $url);
+        oci_bind_by_name($stmt, ':orden', $orden, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function actualizar($id, $datos) {
@@ -126,48 +172,66 @@ class ProductoModel {
                   id_categoria = :id_categoria
                   WHERE id_producto = :id";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':id' => $id,
-            ':nombre' => $datos['nombre'],
-            ':codigo' => (int)$datos['codigo'],
-            ':descripcion' => $datos['descripcion'],
-            ':precio' => (float)$datos['precio'],
-            ':stock' => (int)$datos['stock'],
-            ':estado' => $estadoBool,
-            ':id_categoria' => (int)$datos['id_categoria']
-        ]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':nombre', $datos['nombre']);
+        oci_bind_by_name($stmt, ':codigo', $datos['codigo'], -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
+        oci_bind_by_name($stmt, ':precio', $datos['precio'], -1, SQLT_FLT);
+        oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':estado', $estadoBool ? 'Activo' : 'Inactivo');
+        oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function eliminar($id) {
         $query = "DELETE FROM producto WHERE id_producto = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id' => $id]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function eliminarImagenes($id_producto) {
         $query = "DELETE FROM producto_imagen WHERE id_producto = :id_producto";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_producto' => $id_producto]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_producto', $id_producto, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function eliminarImagen($id_imagen) {
         $query = "DELETE FROM producto_imagen WHERE id_imagen = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id' => $id_imagen]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id', $id_imagen, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function obtenerUrlImagen($id_imagen) {
         $query = "SELECT url FROM producto_imagen WHERE id_imagen = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id' => $id_imagen]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id', $id_imagen, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
     public function obtenerCategorias() {
         $query = "SELECT * FROM categoria_producto ORDER BY nombre";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = oci_parse($this->conn, $query);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
 }

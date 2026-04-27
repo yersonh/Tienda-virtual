@@ -7,43 +7,60 @@ class Database {
     public static function getConnection(): OCI8Connection {
         if (self::$instance === null) {
             try {
+                // 🔍 Verificar OCI8
                 if (!extension_loaded('oci8')) {
-                    error_log("ERROR CRÍTICO: Extensión oci8 NO está cargada");
-                    error_log("Extensiones cargadas: " . implode(', ', get_loaded_extensions()));
-                    throw new Exception("Extensión Oracle OCI8 no disponible");
+                    throw new Exception("Extensión OCI8 no cargada");
                 }
 
-                $user     = getenv('ORACLE_USER')     ?: 'ADMIN';
-                $pass     = getenv('ORACLE_PASSWORD')  ?: '';
-                $tnsName  = getenv('ORACLE_TNS')       ?: 'bc27bncudfcgiclb_high';
-                $walletPath = getenv('TNS_ADMIN')      ?: '/app/wallet';
+                // 🔍 Validar variables necesarias
+                $required = [
+                    'ORACLE_USER','ORACLE_PASSWORD','ORACLE_TNS',
+                    'WALLET_CWALLET_B64','WALLET_EWALLET_B64',
+                    'WALLET_SQLNET_B64','WALLET_TNSNAMES_B64'
+                ];
+                foreach ($required as $var) {
+                    if (!getenv($var)) {
+                        throw new Exception("Falta variable: $var");
+                    }
+                }
 
-                putenv("TNS_ADMIN={$walletPath}");
-                putenv("LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10");
+                // 📁 Carpeta temporal (Railway)
+                $walletPath = '/tmp/wallet';
+                if (!file_exists($walletPath)) {
+                    mkdir($walletPath, 0700, true);
+                }
 
-                error_log("Conectando a Oracle: {$tnsName} | Wallet: {$walletPath}");
+                // 🔐 Reconstruir wallet
+                file_put_contents("$walletPath/cwallet.sso", base64_decode(getenv('WALLET_CWALLET_B64')));
+                file_put_contents("$walletPath/ewallet.p12", base64_decode(getenv('WALLET_EWALLET_B64')));
+                file_put_contents("$walletPath/sqlnet.ora", base64_decode(getenv('WALLET_SQLNET_B64')));
+                file_put_contents("$walletPath/tnsnames.ora", base64_decode(getenv('WALLET_TNSNAMES_B64')));
 
-                error_log("TNS_ADMIN actual: " . getenv('TNS_ADMIN'));
-                error_log("Wallet files: " . implode(', ', glob($walletPath . '/*') ?: []));
+                // 🔗 Configurar Oracle
+                putenv("TNS_ADMIN=$walletPath");
 
-                $conn = oci_connect($user, $pass, $tnsName, 'AL32UTF8');
+                // 🔌 Conectar
+                $conn = oci_connect(
+                    getenv("ORACLE_USER"),
+                    getenv("ORACLE_PASSWORD"),
+                    getenv("ORACLE_TNS"),
+                    'AL32UTF8'
+                );
 
                 if (!$conn) {
-                    $error = oci_error();
-                    $msg = $error['message'] ?? 'Sin mensaje de error';
-                    error_log("Error Oracle OCI: " . $msg);
-                    throw new Exception("Error Oracle: " . $msg);
+                    $e = oci_error();
+                    throw new Exception("Oracle error: " . $e['message']);
                 }
 
+                // ✅ Envolver conexión
                 self::$instance = new OCI8Connection($conn);
-                error_log("Conectado a Oracle Cloud exitosamente: {$tnsName}");
 
             } catch (Exception $e) {
-                error_log("Error de conexión Oracle: " . $e->getMessage());
-                throw new Exception("No se pudo conectar: " . $e->getMessage());
+                error_log("❌ Error Oracle: " . $e->getMessage());
+                throw $e;
             }
         }
+
         return self::$instance;
     }
 }
-?>

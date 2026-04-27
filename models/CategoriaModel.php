@@ -9,7 +9,15 @@ class CategoriaModel {
     }
 
     public function obtenerTodas() {
-        return $this->conn->query("SELECT * FROM categoria_producto")
-                          ->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = oci_parse($this->conn, "SELECT * FROM categoria_producto");
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
 }
