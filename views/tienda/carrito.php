@@ -130,12 +130,15 @@
     font-size: 20px;
     cursor: pointer;
 }
+.cart-qty button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
 .cart-qty span {
     min-width: 40px;
     text-align: center;
     font-weight: 700;
 }
-.cart-update,
 .cart-remove,
 .cart-continue,
 .cart-checkout {
@@ -150,7 +153,6 @@
     cursor: pointer;
     font-weight: 600;
 }
-.cart-update,
 .cart-checkout {
     border: 1px solid rgba(0,229,192,0.28);
     background: rgba(0,229,192,0.12);
@@ -213,7 +215,6 @@
 }
 .cart-icon,
 .cart-clear svg,
-.cart-update svg,
 .cart-remove svg,
 .cart-checkout svg,
 .cart-continue svg {
@@ -315,14 +316,10 @@
                                 <div class="cart-item-price">Precio unitario: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
                                 <div class="cart-controls">
                                     <div class="cart-qty">
-                                        <button type="button" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= (int) ($item['stock_p'] ?? 0) ?>)">-</button>
+                                        <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= (int) ($item['stock_p'] ?? 0) ?>)" <?= (int) $item['cantidad'] <= 1 ? 'disabled' : '' ?>>-</button>
                                         <span id="cart-qty-<?= (int) $item['id_producto'] ?>"><?= (int) $item['cantidad'] ?></span>
-                                        <button type="button" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= (int) ($item['stock_p'] ?? 0) ?>)">+</button>
+                                        <button type="button" id="cart-plus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= (int) ($item['stock_p'] ?? 0) ?>)" <?= (int) $item['cantidad'] >= (int) ($item['stock_p'] ?? 0) ? 'disabled' : '' ?>>+</button>
                                     </div>
-                                    <button class="cart-update" type="button" onclick="updateCartItem(<?= (int) $item['id_producto'] ?>)">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 3v6h-6"></path></svg>
-                                        Actualizar
-                                    </button>
                                     <button class="cart-remove" type="button" onclick="removeCartItem(<?= (int) $item['id_producto'] ?>)">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
                                         Quitar
@@ -365,13 +362,27 @@
 </main>
 
 <script>
+function syncCartQtyButtons(id, stock) {
+    const qtyEl = document.getElementById('cart-qty-' + id);
+    const minus = document.getElementById('cart-minus-' + id);
+    const plus = document.getElementById('cart-plus-' + id);
+    if (!qtyEl) return;
+
+    const qty = parseInt(qtyEl.textContent, 10) || 0;
+    if (minus) minus.disabled = qty <= 1;
+    if (plus) plus.disabled = stock <= 0 || qty >= stock;
+}
+
 function changeCartQty(id, delta, stock) {
     const el = document.getElementById('cart-qty-' + id);
     if (!el) return;
     let value = parseInt(el.textContent, 10) + delta;
     if (value < 1) value = 1;
     if (stock && value > stock) value = stock;
+    if (value === parseInt(el.textContent, 10)) return;
     el.textContent = value;
+    syncCartQtyButtons(id, stock);
+    updateCartItem(id);
 }
 
 async function updateCartItem(id) {
@@ -398,6 +409,7 @@ async function updateCartItem(id) {
     }
 
     syncCartSummary(data);
+    syncCartQtyButtons(id, data.stock || 0);
     const lineTotal = document.getElementById('cart-line-total-' + id);
     if (lineTotal) {
         lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');

@@ -512,6 +512,16 @@
 }
 .add-btn:hover { background: rgba(0,229,192,0.22); border-color: rgba(0,229,192,0.5); }
 .add-btn.added { background: rgba(0,229,192,0.25); border-color: var(--accent); }
+.add-btn:disabled,
+.qty-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+.add-btn.limit {
+    background: rgba(148,163,184,0.1);
+    border-color: rgba(148,163,184,0.18);
+    color: var(--secondary);
+}
 [data-theme="light"] .add-btn {
     background: #ddfaf5;
     border-color: #8ce0d7;
@@ -687,6 +697,12 @@
     <div class="product-carousel">
         <div class="product-grid <?= !empty($categoria_filtro) ? 'detail-grid' : '' ?>" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
             <?php foreach($productos as $p): ?>
+            <?php
+                $cantidadEnCarrito = isset($_SESSION['carrito'][$p['id_producto']]) ? (int) $_SESSION['carrito'][$p['id_producto']] : 0;
+                $stockProducto = (int) $p['stock_p'];
+                $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
+                $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
+            ?>
             <div class="product-card producto"
                  data-nombre="<?= strtolower($p['nombre']) ?>"
                  data-precio="<?= $p['precio'] ?>"
@@ -738,13 +754,14 @@
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
                     <div class="card-footer">
                         <div class="qty-wrap">
-                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= (int) $p['stock_p'] ?>)">-</button>
-                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= isset($_SESSION['carrito'][$p['id_producto']]) ? min((int) $_SESSION['carrito'][$p['id_producto']], (int) $p['stock_p']) : 1 ?></span>
-                            <button class="qty-btn" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= (int) $p['stock_p'] ?>)">+</button>
+                            <button class="qty-btn" id="qty-minus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
+                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= $cantidadInicial ?></span>
+                            <button class="qty-btn" id="qty-plus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
                         </div>
-                        <button class="add-btn <?= isset($_SESSION['carrito'][$p['id_producto']]) && $_SESSION['carrito'][$p['id_producto']] > 0 ? 'added' : '' ?>" 
+                        <button class="add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
                                 id="abtn-<?= $p['id_producto'] ?>" 
-                                onclick="event.stopPropagation(); addCart(<?= $p['id_producto'] ?>)">
+                                onclick="event.stopPropagation(); addCart(<?= $p['id_producto'] ?>)"
+                                <?= $enLimite ? 'disabled' : '' ?>>
                             <span class="btn-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24">
                                     <circle cx="9" cy="20" r="1"></circle>
@@ -752,7 +769,7 @@
                                     <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                                 </svg>
                             </span>
-                            <?= isset($_SESSION['carrito'][$p['id_producto']]) && $_SESSION['carrito'][$p['id_producto']] > 0 ? 'Agregado' : 'Agregar' ?>
+                            <?= $enLimite ? 'Limite' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar') ?>
                         </button>
                     </div>
                 </div>
@@ -769,27 +786,85 @@ let cart = {};
 cart = <?= json_encode($_SESSION['carrito']) ?>;
 <?php endif; ?>
 
-function chgQty(id, delta, stock){
-    const el = document.getElementById('qty-'+id);
-    let v = parseInt(el.textContent) + delta;
-    if(v < 1) v = 1;
-    if(stock && v > stock) v = stock;
-    el.textContent = v;
+function cartQty(id) {
+    return parseInt(cart[id] || cart[String(id)] || 0, 10) || 0;
 }
 
-async function addCart(id){
-    const qty = parseInt(document.getElementById('qty-'+id).textContent);
+function setCartQty(id, qty) {
     cart[id] = qty;
-    const btn = document.getElementById('abtn-'+id);
-    btn.innerHTML = `
+    cart[String(id)] = qty;
+}
+
+function cartIconSvg() {
+    return `
+        <span class="btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="20" r="1"></circle>
+                <circle cx="18" cy="20" r="1"></circle>
+                <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
+            </svg>
+        </span>
+    `;
+}
+
+function checkIconSvg() {
+    return `
         <span class="btn-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
                 <path d="m5 12 5 5L20 7"></path>
             </svg>
         </span>
-        Agregado
     `;
+}
+
+function syncProductControls(id, stock) {
+    const current = cartQty(id);
+    const atLimit = stock <= 0 || current >= stock;
+    const qtyEl = document.getElementById('qty-' + id);
+    const minus = document.getElementById('qty-minus-' + id);
+    const plus = document.getElementById('qty-plus-' + id);
+    const btn = document.getElementById('abtn-' + id);
+    const nextQty = atLimit ? Math.max(0, stock) : 1;
+
+    if (qtyEl) qtyEl.textContent = nextQty;
+    if (minus) minus.disabled = atLimit;
+    if (plus) plus.disabled = atLimit;
+    if (!btn) return;
+
+    btn.disabled = atLimit;
+    btn.classList.toggle('limit', atLimit);
+    btn.classList.toggle('added', !atLimit && current > 0);
+    btn.innerHTML = atLimit
+        ? `${cartIconSvg()} Limite`
+        : `${cartIconSvg()} ${current > 0 ? 'Agregar mas' : 'Agregar'}`;
+}
+
+function chgQty(id, delta, stock){
+    const el = document.getElementById('qty-'+id);
+    const remaining = Math.max(0, stock - cartQty(id));
+    if (remaining <= 0) {
+        syncProductControls(id, stock);
+        return;
+    }
+    let v = parseInt(el.textContent, 10) + delta;
+    if(v < 1) v = 1;
+    if(v > remaining) v = remaining;
+    el.textContent = v;
+}
+
+async function addCart(id){
+    const card = document.querySelector(`.product-card[data-id="${id}"]`);
+    const stock = card ? parseInt(card.dataset.stock, 10) : 0;
+    if (stock <= 0 || cartQty(id) >= stock) {
+        syncProductControls(id, stock);
+        return;
+    }
+
+    const qty = parseInt(document.getElementById('qty-'+id).textContent, 10);
+    const btn = document.getElementById('abtn-'+id);
+    btn.innerHTML = `${checkIconSvg()} Agregando`;
     btn.classList.add('added');
+    btn.disabled = true;
 
     try {
         const response = await fetch('index.php?action=agregarCarrito', {
@@ -808,57 +883,21 @@ async function addCart(id){
         const data = await response.json();
         if(!response.ok || !data.ok){
             if(data && typeof data.cantidad !== 'undefined'){
-                document.getElementById('qty-'+id).textContent = data.cantidad || 1;
-                if((data.cantidad || 0) > 0){
-                    btn.classList.add('added');
-                    btn.innerHTML = `
-                        <span class="btn-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="m5 12 5 5L20 7"></path>
-                            </svg>
-                        </span>
-                        Agregado
-                    `;
-                    throw new Error((data && data.message) ? data.message : 'No se pudo agregar al carrito');
-                }
+                setCartQty(id, data.cantidad || 0);
+                syncProductControls(id, data.stock || stock);
             }
             throw new Error((data && data.message) ? data.message : 'No se pudo agregar al carrito');
         }
 
-        document.getElementById('cart-count').textContent = data.total;
-        const qtyEl = document.getElementById('qty-'+id);
-        if (qtyEl) {
-            qtyEl.textContent = '1';
+        setCartQty(id, data.cantidad || 0);
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+            cartCount.textContent = data.total;
         }
-
-        setTimeout(() => {
-            if (btn) {
-                btn.classList.remove('added');
-                btn.innerHTML = `
-                    <span class="btn-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="9" cy="20" r="1"></circle>
-                            <circle cx="18" cy="20" r="1"></circle>
-                            <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
-                        </svg>
-                    </span>
-                    Agregar
-                `;
-            }
-        }, 2000);
+        syncProductControls(id, data.stock || stock);
     } catch (error) {
         console.error(error);
-        btn.classList.remove('added');
-        btn.innerHTML = `
-            <span class="btn-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                    <circle cx="9" cy="20" r="1"></circle>
-                    <circle cx="18" cy="20" r="1"></circle>
-                    <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
-                </svg>
-            </span>
-            Agregar
-        `;
+        syncProductControls(id, stock);
     }
 }
 

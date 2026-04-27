@@ -10,6 +10,10 @@ $imagenPrincipal = null;
 if (!empty($imagenesProducto)) {
     $imagenPrincipal = basename($imagenesProducto[0]['url']);
 }
+$stockProducto = (int) ($producto['stock_p'] ?? 0);
+$cantidadEnCarrito = isset($_SESSION['carrito'][$producto['id_producto']]) ? (int) $_SESSION['carrito'][$producto['id_producto']] : 0;
+$enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
+$cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
 ?>
 
 <style>
@@ -308,6 +312,16 @@ if (!empty($imagenesProducto)) {
     border-color: rgba(16,185,129,0.3);
     color: #34d399;
 }
+.detail-add-btn:disabled,
+.detail-qty button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+.detail-add-btn.limit {
+    background: rgba(148,163,184,0.1);
+    border-color: rgba(148,163,184,0.18);
+    color: var(--secondary);
+}
 .detail-action {
     display: inline-flex;
     align-items: center;
@@ -491,22 +505,23 @@ if (!empty($imagenesProducto)) {
 
                 <div class="detail-cart-row">
                     <div class="detail-qty">
-                        <button type="button" onclick="changeDetailQty(-1, <?= (int) ($producto['stock_p'] ?? 0) ?>)">-</button>
-                        <span id="detail-qty-value"><?= isset($_SESSION['carrito'][$producto['id_producto']]) ? min((int) $_SESSION['carrito'][$producto['id_producto']], (int) ($producto['stock_p'] ?? 0)) : 1 ?></span>
-                        <button type="button" onclick="changeDetailQty(1, <?= (int) ($producto['stock_p'] ?? 0) ?>)">+</button>
+                        <button type="button" id="detail-qty-minus" onclick="changeDetailQty(-1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
+                        <span id="detail-qty-value"><?= $cantidadInicial ?></span>
+                        <button type="button" id="detail-qty-plus" onclick="changeDetailQty(1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
                     </div>
                     <button
-                        class="detail-add-btn <?= isset($_SESSION['carrito'][$producto['id_producto']]) && $_SESSION['carrito'][$producto['id_producto']] > 0 ? 'added' : '' ?>"
+                        class="detail-add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
                         id="detail-add-btn"
                         type="button"
                         onclick="addDetailToCart(<?= (int) $producto['id_producto'] ?>)"
+                        <?= $enLimite ? 'disabled' : '' ?>
                     >
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <circle cx="9" cy="20" r="1"></circle>
                             <circle cx="18" cy="20" r="1"></circle>
                             <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                         </svg>
-                        <span id="detail-add-label"><?= isset($_SESSION['carrito'][$producto['id_producto']]) && $_SESSION['carrito'][$producto['id_producto']] > 0 ? 'Agregado al carrito' : 'Agregar al carrito' ?></span>
+                        <span id="detail-add-label"><?= $enLimite ? 'Limite alcanzado' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar al carrito') ?></span>
                     </button>
                 </div>
 
@@ -546,6 +561,8 @@ const galleryImages = [
 <?php endforeach; ?>
 ];
 let galleryIndex = 0;
+const detailStock = <?= $stockProducto ?>;
+let detailCartQty = <?= $cantidadEnCarrito ?>;
 
 function setMainImage(button, src) {
     const mainImage = document.getElementById('detail-current-image');
@@ -576,16 +593,46 @@ function changeImage(direction) {
 
 function changeDetailQty(delta, stock) {
     const qtyEl = document.getElementById('detail-qty-value');
+    const remaining = Math.max(0, stock - detailCartQty);
+    if (remaining <= 0) {
+        syncDetailControls(stock);
+        return;
+    }
     let value = parseInt(qtyEl.textContent, 10) + delta;
     if (value < 1) value = 1;
-    if (stock && value > stock) value = stock;
+    if (value > remaining) value = remaining;
     qtyEl.textContent = value;
+}
+
+function syncDetailControls(stock) {
+    const qtyEl = document.getElementById('detail-qty-value');
+    const minus = document.getElementById('detail-qty-minus');
+    const plus = document.getElementById('detail-qty-plus');
+    const btn = document.getElementById('detail-add-btn');
+    const label = document.getElementById('detail-add-label');
+    const atLimit = stock <= 0 || detailCartQty >= stock;
+
+    if (qtyEl) qtyEl.textContent = atLimit ? Math.max(0, stock) : 1;
+    if (minus) minus.disabled = atLimit;
+    if (plus) plus.disabled = atLimit;
+    if (!btn || !label) return;
+
+    btn.disabled = atLimit;
+    btn.classList.toggle('limit', atLimit);
+    btn.classList.toggle('added', !atLimit && detailCartQty > 0);
+    label.textContent = atLimit ? 'Limite alcanzado' : (detailCartQty > 0 ? 'Agregar mas' : 'Agregar al carrito');
 }
 
 async function addDetailToCart(idProducto) {
     const qty = parseInt(document.getElementById('detail-qty-value').textContent, 10);
     const btn = document.getElementById('detail-add-btn');
     const label = document.getElementById('detail-add-label');
+    if (detailStock <= 0 || detailCartQty >= detailStock) {
+        syncDetailControls(detailStock);
+        return;
+    }
+    btn.disabled = true;
+    label.textContent = 'Agregando';
 
     try {
         const response = await fetch('index.php?action=agregarCarrito', {
@@ -604,18 +651,14 @@ async function addDetailToCart(idProducto) {
         const data = await response.json();
         if (!response.ok || !data.ok) {
             if (data && typeof data.cantidad !== 'undefined') {
-                document.getElementById('detail-qty-value').textContent = data.cantidad || 1;
-                if ((data.cantidad || 0) > 0) {
-                    btn.classList.add('added');
-                    label.textContent = 'Agregado al carrito';
-                }
+                detailCartQty = data.cantidad || 0;
+                syncDetailControls(data.stock || detailStock);
             }
             throw new Error('No se pudo agregar el producto');
         }
 
-        btn.classList.add('added');
-        label.textContent = 'Agregado al carrito';
-        document.getElementById('detail-qty-value').textContent = data.cantidad || qty;
+        detailCartQty = data.cantidad || 0;
+        syncDetailControls(data.stock || detailStock);
 
         const cartCount = document.getElementById('cart-count');
         if (cartCount) {
@@ -623,6 +666,7 @@ async function addDetailToCart(idProducto) {
         }
     } catch (error) {
         console.error(error);
+        syncDetailControls(detailStock);
     }
 }
 
