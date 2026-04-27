@@ -101,6 +101,11 @@ class Database {
             return $highAliases[0];
         }
 
+        $descriptor = self::buildDescriptorFromAvailableAlias($configuredIdentifier, $tnsnamesPath, $aliases);
+        if ($descriptor !== null) {
+            return $descriptor;
+        }
+
         return $configuredIdentifier;
     }
 
@@ -109,5 +114,52 @@ class Database {
         $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents);
         preg_match_all('/^\s*([A-Za-z0-9_.-]+)\s*=/m', $contents, $matches);
         return $matches[1] ?? [];
+    }
+
+    private static function buildDescriptorFromAvailableAlias(string $configuredIdentifier, string $tnsnamesPath, array $aliases): ?string {
+        $contents = file_exists($tnsnamesPath) ? file_get_contents($tnsnamesPath) : '';
+        $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents);
+
+        foreach (['medium', 'low', 'tp', 'tpurgent'] as $fallbackService) {
+            $fallbackAlias = preg_replace('/_(high|medium|low|tp|tpurgent)$/i', "_$fallbackService", $configuredIdentifier);
+            if (!in_array($fallbackAlias, $aliases, true)) {
+                continue;
+            }
+
+            $descriptor = self::getSingleLineDescriptor($contents, $fallbackAlias);
+            if ($descriptor === null) {
+                continue;
+            }
+
+            $targetService = self::getServiceSuffix($configuredIdentifier);
+            if ($targetService === null) {
+                return $descriptor;
+            }
+
+            return preg_replace(
+                '/_' . preg_quote($fallbackService, '/') . '(\.adb\.oraclecloud\.com)/i',
+                "_$targetService$1",
+                $descriptor
+            );
+        }
+
+        return null;
+    }
+
+    private static function getSingleLineDescriptor(string $contents, string $alias): ?string {
+        $pattern = '/^\s*' . preg_quote($alias, '/') . '\s*=\s*(.+)$/mi';
+        if (!preg_match($pattern, $contents, $matches)) {
+            return null;
+        }
+
+        return trim($matches[1]);
+    }
+
+    private static function getServiceSuffix(string $identifier): ?string {
+        if (!preg_match('/_(high|medium|low|tp|tpurgent)$/i', $identifier, $matches)) {
+            return null;
+        }
+
+        return strtolower($matches[1]);
     }
 }
