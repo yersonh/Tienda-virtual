@@ -54,7 +54,7 @@ class Database {
                 throw new Exception('Oracle error: ' . ($e['message'] ?? 'desconocido') . ". ORACLE_TNS usado: $connectIdentifier. Aliases disponibles: $aliases");
             }
 
-            self::$instance = new OCI8Connection($conn);
+            self::$instance = $conn;
         }
 
         return self::$instance;
