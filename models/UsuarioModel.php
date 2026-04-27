@@ -94,11 +94,20 @@ class UsuarioModel {
         $usuario = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        if ($usuario && password_verify($password, $usuario['PASSWORD'])) {
+        if ($usuario && $this->passwordMatches($password, (string) $usuario['PASSWORD'])) {
             return array_change_key_case($usuario, CASE_LOWER);
         }
 
         return false;
+    }
+
+    private function passwordMatches(string $password, string $storedPassword): bool {
+        $hashInfo = password_get_info($storedPassword);
+        if (($hashInfo['algo'] ?? 0) !== 0) {
+            return password_verify($password, $storedPassword);
+        }
+
+        return hash_equals($storedPassword, $password);
     }
 
     /**
