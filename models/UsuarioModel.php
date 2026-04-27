@@ -19,13 +19,20 @@ class UsuarioModel {
                              VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)
                              RETURNING id_persona INTO :id_persona";
 
+            $nombres = $data['nombres'];
+            $apellidos = $data['apellidos'];
+            $cc = $data['cc'];
+            $correo = $data['correo'] ?? null;
+            $telefono = $data['telefono'] ?? null;
+            $direccion = $data['direccion'] ?? null;
+
             $stmtPersona = oci_parse($this->conn, $queryPersona);
-            oci_bind_by_name($stmtPersona, ':nombres', $data['nombres']);
-            oci_bind_by_name($stmtPersona, ':apellidos', $data['apellidos']);
-            oci_bind_by_name($stmtPersona, ':cc', $data['cc']);
-            oci_bind_by_name($stmtPersona, ':correo', $data['correo'] ?? null);
-            oci_bind_by_name($stmtPersona, ':telefono', $data['telefono'] ?? null);
-            oci_bind_by_name($stmtPersona, ':direccion', $data['direccion'] ?? null);
+            oci_bind_by_name($stmtPersona, ':nombres', $nombres);
+            oci_bind_by_name($stmtPersona, ':apellidos', $apellidos);
+            oci_bind_by_name($stmtPersona, ':cc', $cc);
+            oci_bind_by_name($stmtPersona, ':correo', $correo);
+            oci_bind_by_name($stmtPersona, ':telefono', $telefono);
+            oci_bind_by_name($stmtPersona, ':direccion', $direccion);
             $id_persona = null;
             oci_bind_by_name($stmtPersona, ':id_persona', $id_persona, -1, SQLT_INT);
             oci_execute($stmtPersona);
@@ -36,12 +43,17 @@ class UsuarioModel {
                              VALUES (:id_persona, :id_tipo, :username, :password, :estado)
                              RETURNING id_usuario INTO :id_usuario";
 
+            $idTipo = $data['id_tipo'];
+            $username = $data['username'];
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+            $estado = 'Activo';
+
             $stmtUsuario = oci_parse($this->conn, $queryUsuario);
             oci_bind_by_name($stmtUsuario, ':id_persona', $id_persona, -1, SQLT_INT);
-            oci_bind_by_name($stmtUsuario, ':id_tipo', $data['id_tipo'], -1, SQLT_INT);
-            oci_bind_by_name($stmtUsuario, ':username', $data['username']);
-            oci_bind_by_name($stmtUsuario, ':password', password_hash($data['password'], PASSWORD_DEFAULT));
-            oci_bind_by_name($stmtUsuario, ':estado', 'Activo');
+            oci_bind_by_name($stmtUsuario, ':id_tipo', $idTipo, -1, SQLT_INT);
+            oci_bind_by_name($stmtUsuario, ':username', $username);
+            oci_bind_by_name($stmtUsuario, ':password', $hashedPassword);
+            oci_bind_by_name($stmtUsuario, ':estado', $estado);
             $id_usuario = null;
             oci_bind_by_name($stmtUsuario, ':id_usuario', $id_usuario, -1, SQLT_INT);
             oci_execute($stmtUsuario);

@@ -130,13 +130,15 @@ class ProductoModel {
                   VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)
                   RETURNING id_producto INTO :id";
         
+        $estado = $estadoBool ? 'Activo' : 'Inactivo';
+
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':nombre', $datos['nombre']);
         oci_bind_by_name($stmt, ':codigo', $datos['codigo'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
         oci_bind_by_name($stmt, ':precio', $datos['precio'], -1, SQLT_FLT);
         oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':estado', $estadoBool ? 'Activo' : 'Inactivo'); // Assuming estado is VARCHAR
+        oci_bind_by_name($stmt, ':estado', $estado);
         oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
         $id = null;
         oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
@@ -172,6 +174,8 @@ class ProductoModel {
                   id_categoria = :id_categoria
                   WHERE id_producto = :id";
 
+        $estado = $estadoBool ? 'Activo' : 'Inactivo';
+
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':nombre', $datos['nombre']);
@@ -179,7 +183,7 @@ class ProductoModel {
         oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
         oci_bind_by_name($stmt, ':precio', $datos['precio'], -1, SQLT_FLT);
         oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':estado', $estadoBool ? 'Activo' : 'Inactivo');
+        oci_bind_by_name($stmt, ':estado', $estado);
         oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
         oci_execute($stmt);
         oci_free_statement($stmt);
