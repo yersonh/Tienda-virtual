@@ -4,7 +4,7 @@ FROM php:8.1-cli
 RUN apt-get update && apt-get install -y \
     unzip \
     curl \
-    libaio1 \
+    libaio-dev \
     libzip-dev \
     libpng-dev \
     libcurl4-openssl-dev \
