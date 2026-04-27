@@ -23,6 +23,8 @@ RUN mkdir -p /opt/oracle && \
     # Copiar librerías a /usr/lib para que SIEMPRE se encuentren en runtime
     cp /opt/oracle/instantclient_21_10/*.so* /usr/lib/ && \
     echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    # Preload libclntsh para que se cargue antes que cualquier otra cosa
+    echo /usr/lib/libclntsh.so.21.1 > /etc/ld.so.preload && \
     ldconfig
 
 # Instalar oci8
