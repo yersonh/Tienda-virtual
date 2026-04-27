@@ -41,7 +41,7 @@ class Database {
                 "$walletPath/tnsnames.ora"
             );
 
-            $conn = oci_connect(
+            $conn = oci_pconnect(
                 getenv('ORACLE_USER'),
                 getenv('ORACLE_PASSWORD'),
                 $connectIdentifier,
