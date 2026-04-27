@@ -9,12 +9,14 @@ class CarritoModel {
     }
 
     public function obtenerIdCarritoUsuario($idUsuario) {
-        $query = "SELECT id_carrito FROM carrito WHERE id_usuario = :id_usuario LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_usuario' => $idUsuario]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $query = "SELECT id_carrito FROM carrito WHERE id_usuario = :id_usuario FETCH FIRST 1 ROWS ONLY";
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_execute($stmt);
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
 
-        return $row ? (int) $row['id_carrito'] : null;
+        return $row ? (int) $row['ID_CARRITO'] : null;
     }
 
     public function obtenerOCrearCarritoUsuario($idUsuario) {
@@ -23,12 +25,16 @@ class CarritoModel {
             return $idCarrito;
         }
 
-        $query = "INSERT INTO carrito (id_usuario) VALUES (:id_usuario) RETURNING id_carrito";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_usuario' => $idUsuario]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $query = "INSERT INTO carrito (id_usuario) VALUES (:id_usuario) RETURNING id_carrito INTO :id_carrito";
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        $id_carrito = null;
+        oci_bind_by_name($stmt, ':id_carrito', $id_carrito, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_fetch($stmt);
+        oci_free_statement($stmt);
 
-        return (int) ($row['id_carrito'] ?? 0);
+        return (int) $id_carrito;
     }
 
     public function agregarProducto($idUsuario, $idProducto, $cantidad) {
@@ -37,32 +43,32 @@ class CarritoModel {
         $query = "SELECT id_detalle, cantidad
                   FROM detalle_carrito
                   WHERE id_carrito = :id_carrito AND id_producto = :id_producto
-                  LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':id_carrito' => $idCarrito,
-            ':id_producto' => $idProducto
-        ]);
-        $detalle = $stmt->fetch(PDO::FETCH_ASSOC);
+                  FETCH FIRST 1 ROWS ONLY";
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+        oci_execute($stmt);
+        $detalle = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
 
         if ($detalle) {
             $query = "UPDATE detalle_carrito
                       SET cantidad = cantidad + :cantidad
                       WHERE id_detalle = :id_detalle";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':cantidad' => $cantidad,
-                ':id_detalle' => $detalle['id_detalle']
-            ]);
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_detalle', $detalle['ID_DETALLE'], -1, SQLT_INT);
+            oci_execute($stmt);
+            oci_free_statement($stmt);
         } else {
             $query = "INSERT INTO detalle_carrito (id_carrito, id_producto, cantidad)
                       VALUES (:id_carrito, :id_producto, :cantidad)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':id_carrito' => $idCarrito,
-                ':id_producto' => $idProducto,
-                ':cantidad' => $cantidad
-            ]);
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
+            oci_execute($stmt);
+            oci_free_statement($stmt);
         }
     }
 
@@ -90,12 +96,12 @@ class CarritoModel {
         $query = "UPDATE detalle_carrito
                   SET cantidad = :cantidad
                   WHERE id_carrito = :id_carrito AND id_producto = :id_producto";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':cantidad' => $cantidad,
-            ':id_carrito' => $idCarrito,
-            ':id_producto' => $idProducto
-        ]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function eliminarProducto($idUsuario, $idProducto) {
@@ -106,11 +112,11 @@ class CarritoModel {
 
         $query = "DELETE FROM detalle_carrito
                   WHERE id_carrito = :id_carrito AND id_producto = :id_producto";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([
-            ':id_carrito' => $idCarrito,
-            ':id_producto' => $idProducto
-        ]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function vaciarCarrito($idUsuario) {
@@ -120,8 +126,10 @@ class CarritoModel {
         }
 
         $query = "DELETE FROM detalle_carrito WHERE id_carrito = :id_carrito";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_carrito' => $idCarrito]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
     }
 
     public function obtenerMapaCarritoUsuario($idUsuario) {
@@ -133,13 +141,15 @@ class CarritoModel {
         $query = "SELECT id_producto, cantidad
                   FROM detalle_carrito
                   WHERE id_carrito = :id_carrito";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_carrito' => $idCarrito]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_execute($stmt);
 
         $mapa = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $item) {
-            $mapa[(int) $item['id_producto']] = (int) $item['cantidad'];
+        while ($item = oci_fetch_assoc($stmt)) {
+            $mapa[(int) $item['ID_PRODUCTO']] = (int) $item['CANTIDAD'];
         }
+        oci_free_statement($stmt);
 
         return $mapa;
     }
@@ -162,9 +172,16 @@ class CarritoModel {
                   WHERE dc.id_carrito = :id_carrito
                   ORDER BY p.nombre";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([':id_carrito' => $idCarrito]);
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_execute($stmt);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
 }
