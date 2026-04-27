@@ -284,12 +284,14 @@ button:hover {
         <!-- TELÉFONO -->
         <div class="input-group">
             <i class="fas fa-phone"></i>
-            <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required
+            <input type="text" id="telefono" name="telefono" placeholder="Teléfono" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required
             oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
             value="<?= $old['telefono'] ?? '' ?>">
         </div>
 
         <!-- DIRECCIÓN -->
+        <div class="validation-msg" id="telefono-msg"></div>
+
         <div class="input-group">
             <i class="fas fa-map-marker-alt"></i>
             <input type="text" name="direccion" placeholder="Dirección" required
@@ -374,11 +376,14 @@ button:hover {
         const passwordInput = document.getElementById('password');
         const confirmInput = document.getElementById('confirm_password');
         const correoInput = document.getElementById('correo');
+        const telefonoInput = document.getElementById('telefono');
         const usernameInput = document.getElementById('username');
         const correoMsg = document.getElementById('correo-msg');
+        const telefonoMsg = document.getElementById('telefono-msg');
         const usernameMsg = document.getElementById('username-msg');
         const submitBtn = document.getElementById('registro-btn');
         let correoValido = false;
+        let telefonoValido = false;
         let usernameValido = false;
 
         function updatePasswordRules() {
@@ -459,10 +464,34 @@ button:hover {
             const hasLetter = /[a-zA-Z]/.test(pwd);
             const match = pwd === confirm && pwd !== '';
 
-            const isValid = correoValido && usernameValido && hasLength && hasNumber && hasLetter && match;
+            const isValid = correoValido && telefonoValido && usernameValido && hasLength && hasNumber && hasLetter && match;
             submitBtn.disabled = !isValid;
             submitBtn.style.opacity = isValid ? '1' : '0.5';
             submitBtn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+        }
+
+        function validateTelefono() {
+            const telefono = telefonoInput.value.trim();
+
+            if (!telefono) {
+                telefonoMsg.textContent = '';
+                telefonoMsg.className = 'validation-msg';
+                telefonoValido = false;
+                checkFormValidity();
+                return;
+            }
+
+            if (/^[0-9]{10}$/.test(telefono)) {
+                telefonoMsg.textContent = 'Telefono valido';
+                telefonoMsg.className = 'validation-msg success';
+                telefonoValido = true;
+            } else {
+                telefonoMsg.textContent = 'Debe tener 10 digitos';
+                telefonoMsg.className = 'validation-msg error';
+                telefonoValido = false;
+            }
+
+            checkFormValidity();
         }
 
         function validateUsername() {
@@ -532,6 +561,8 @@ button:hover {
 
         correoInput?.addEventListener('input', validateEmail);
         correoInput?.addEventListener('blur', validateEmail);
+        telefonoInput?.addEventListener('input', validateTelefono);
+        telefonoInput?.addEventListener('blur', validateTelefono);
         usernameInput?.addEventListener('input', validateUsername);
         usernameInput?.addEventListener('blur', validateUsername);
         passwordInput?.addEventListener('input', updatePasswordRules);
