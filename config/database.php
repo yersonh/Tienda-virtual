@@ -27,8 +27,8 @@ class Database {
                 mkdir($walletPath, 0700, true);
             }
 
-            self::writeWalletFile($walletPath, 'cwallet.sso', getenv('WALLET_CWALLET_B64'));
-            self::writeWalletFile($walletPath, 'ewallet.p12', getenv('WALLET_EWALLET_B64'));
+            self::writeWalletFile($walletPath, 'cwallet.sso', getenv('WALLET_CWALLET_B64'), null, false);
+            self::writeEwalletFile($walletPath, getenv('WALLET_EWALLET_B64'));
             self::writeWalletFile($walletPath, 'sqlnet.ora', getenv('WALLET_SQLNET_B64'), $walletPath);
             self::writeWalletFile($walletPath, 'tnsnames.ora', getenv('WALLET_TNSNAMES_B64'));
 
@@ -60,10 +60,14 @@ class Database {
         return self::$instance;
     }
 
-    private static function writeWalletFile(string $walletPath, string $fileName, string $encodedContent, ?string $walletLocation = null): void {
+    private static function writeWalletFile(string $walletPath, string $fileName, string $encodedContent, ?string $walletLocation = null, bool $allowPem = true): void {
         $decoded = base64_decode($encodedContent, true);
         if ($decoded === false) {
             throw new Exception("Wallet invalida en Base64: $fileName");
+        }
+
+        if (!$allowPem && str_starts_with(ltrim($decoded), '-----BEGIN')) {
+            throw new Exception("Wallet invalida: $fileName no puede ser PEM. Verifica que WALLET_CWALLET_B64 sea el Base64 del archivo cwallet.sso original.");
         }
 
         if ($walletLocation !== null && $fileName === 'sqlnet.ora') {
@@ -78,6 +82,18 @@ class Database {
             $decoded = preg_replace('/^\xEF\xBB\xBF/', '', $decoded);
         }
 
+        $path = "$walletPath/$fileName";
+        file_put_contents($path, $decoded);
+        chmod($path, 0600);
+    }
+
+    private static function writeEwalletFile(string $walletPath, string $encodedContent): void {
+        $decoded = base64_decode($encodedContent, true);
+        if ($decoded === false) {
+            throw new Exception('Wallet invalida en Base64: ewallet');
+        }
+
+        $fileName = str_starts_with(ltrim($decoded), '-----BEGIN') ? 'ewallet.pem' : 'ewallet.p12';
         $path = "$walletPath/$fileName";
         file_put_contents($path, $decoded);
         chmod($path, 0600);
