@@ -22,11 +22,11 @@ RUN mkdir -p /opt/oracle
 
 # Descargar Oracle Instant Client
 RUN cd /tmp && \
-    wget --timeout=30 https://download.oracle.com/otn_software/linux/instantclient/198000/instantclient-basiclite-linux.x64-19.8.0.0.0dbru.zip && \
-    wget --timeout=30 https://download.oracle.com/otn_software/linux/instantclient/198000/instantclient-sdk-linux.x64-19.8.0.0.0dbru.zip && \
-    unzip -q instantclient-basiclite-linux.x64-19.8.0.0.0dbru.zip && \
-    unzip -q instantclient-sdk-linux.x64-19.8.0.0.0dbru.zip && \
-    mv instantclient_19_8/* /opt/oracle/ && \
+    wget --timeout=30 -O instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip && \
+    wget --timeout=30 -O instantclient-sdk.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-sdk-linuxx64.zip && \
+    unzip -q instantclient-basiclite.zip && \
+    unzip -q instantclient-sdk.zip && \
+    mv instantclient_*/* /opt/oracle/ && \
     rm -rf instantclient* && \
     echo /opt/oracle > /etc/ld.so.conf.d/oracle.conf && \
     ldconfig
