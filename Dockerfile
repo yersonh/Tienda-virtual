@@ -12,22 +12,42 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client 19c desde GitHub (público, sin autenticación)
+<<<<<<< HEAD
+# Oracle Instant Client 21.10 desde Oracle (el que funcionó antes)
 RUN mkdir -p /opt/oracle && cd /opt/oracle && \
-    wget -q https://github.com/bumpx/oracle-instantclient/raw/master/instantclient-basic-linux.x64-19.23.0.0.0dbru.zip && \
-    wget -q https://github.com/bumpx/oracle-instantclient/raw/master/instantclient-sdk-linux.x64-19.23.0.0.0dbru.zip && \
-    unzip -q instantclient-basic-linux.x64-19.23.0.0.0dbru.zip && \
-    unzip -q instantclient-sdk-linux.x64-19.23.0.0.0dbru.zip && \
+    wget https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basic-linux.x64-21.10.0.0.0dbru.zip && \
+    wget https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip && \
+    unzip instantclient-basic-linux.x64-21.10.0.0.0dbru.zip && \
+    unzip instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip && \
     rm *.zip && \
-    echo /opt/oracle/instantclient_19_23 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
-# OCI8 2.2.0 (compatible con PHP 8.0, versión estable)
-RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_19_23 && \
-    pecl install oci8-2.2.0 && \
+# OCI8 3.2.1 (compatible con PHP 8.1, el que funcionó antes)
+RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
+    pecl install oci8-3.2.1 && \
     docker-php-ext-enable oci8 && \
-    php -r "extension_loaded('oci8') or die('FAIL\n');" && \
-    echo "OCI8 2.2.0 OK"
+    echo "Verificando oci8..." && \
+    php -r "if (!extension_loaded('oci8')) { echo 'FAIL: oci8 no está cargado\n'; die(1); } echo 'SUCCESS: oci8 cargado\n';" && \
+    php -m | grep oci8
+=======
+# Oracle Instant Client: Basic Lite + SDK
+RUN mkdir -p /opt/oracle && \
+    cd /opt/oracle && \
+    wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
+    wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" -O ic-sdk.zip && \
+    unzip ic-basic.zip && \
+    unzip ic-sdk.zip && \
+    rm ic-basic.zip ic-sdk.zip
+
+# Instalar oci8 con RPATH embebido en el .so
+RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
+    export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
+    echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.2.1 && \
+    docker-php-ext-enable oci8 && \
+    php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga en build\n');" && \
+    echo "=== oci8 con RPATH verificado OK ==="
+>>>>>>> 4dead78ed27f62b20bb5e29c96735fc7864977d3
 
 COPY . /app/
 
