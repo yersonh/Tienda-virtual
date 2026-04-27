@@ -3,7 +3,7 @@ FROM php:8.1-cli
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
-    libaio1 \
+    libaio-dev \
     libzip-dev \
     libpng-dev \
     libcurl4-openssl-dev \
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client (CORREGIDO)
+# Oracle Instant Client
 RUN mkdir -p /opt/oracle && \
     cd /opt/oracle && \
     wget -q "https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
@@ -23,7 +23,10 @@ RUN mkdir -p /opt/oracle && \
     echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
-# Instalar OCI8 (VERSIÓN CORRECTA PARA PHP 8.1)
+# 🔥 IMPORTANTE: antes de instalar OCI8
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10
+
+# Instalar OCI8
 RUN echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8 \
     && docker-php-ext-enable oci8
 
@@ -31,11 +34,9 @@ RUN echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8 \
 WORKDIR /app
 COPY . .
 
-# Permisos entrypoint
+# EntryPoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10
 
 EXPOSE 8080
 
