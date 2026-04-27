@@ -19,7 +19,7 @@ class LoginController {
 
         if (empty($nickname) || empty($password)) {
             $_SESSION['error'] = "Complete todos los campos";
-            header("Location: index.php");
+            header("Location: index.php?action=login");
             exit();
         }
 
@@ -27,14 +27,14 @@ class LoginController {
 
         if (!$usuario) {
             $_SESSION['error'] = "Credenciales incorrectas";
-            header("Location: index.php");
+            header("Location: index.php?action=login");
             exit();
         }
 
         $estadoActivo = in_array($usuario['estado'], ['Activo', '1', 1, true, 't'], true);
         if (!$estadoActivo) {
             $_SESSION['error'] = "Usuario inactivo";
-            header("Location: index.php");
+            header("Location: index.php?action=login");
             exit();
         }
 
