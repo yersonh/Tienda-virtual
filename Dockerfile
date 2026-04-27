@@ -20,16 +20,17 @@ RUN mkdir -p /opt/oracle && \
     unzip ic-basic.zip && \
     unzip ic-sdk.zip && \
     rm ic-basic.zip ic-sdk.zip && \
+    # Copiar librerías a /usr/lib para que SIEMPRE se encuentren en runtime
+    cp /opt/oracle/instantclient_21_10/*.so* /usr/lib/ && \
     echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
-# Instalar oci8 con RPATH embebido en el .so
+# Instalar oci8
 RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
-    export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
     echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.2.1 && \
     docker-php-ext-enable oci8 && \
     php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga en build\n');" && \
-    echo "=== oci8 con RPATH verificado OK ==="
+    echo "=== oci8 verificado OK ==="
 
 COPY . /app/
 
