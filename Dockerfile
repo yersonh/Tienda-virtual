@@ -3,7 +3,7 @@ FROM oraclelinux:8-slim
 # Dependencias y Oracle Instant Client (preinstalado en esta imagen)
 RUN microdnf install -y \
     php php-cli php-pdo php-gd php-zip php-curl php-xml \
-    unzip curl libaio libzip-dev \
+    unzip curl libaio libzip-devel \
     && microdnf clean all
 
 # Instalar extensión OCI8
