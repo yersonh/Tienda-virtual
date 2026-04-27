@@ -99,7 +99,7 @@ class RegistroController {
             exit();
         }
 
-        $data['cc'] = $this->generarCcInterna($model);
+        $data['cc'] = null;
 
         $resultado = $model->crearConPersona($data);
 
@@ -126,14 +126,6 @@ class RegistroController {
         }
 
         exit();
-    }
-
-    private function generarCcInterna(UsuarioModel $model): string {
-        do {
-            $cc = '9' . random_int(10000000000000, 99999999999999);
-        } while ($model->ccExiste($cc));
-
-        return $cc;
     }
 
     public function verificarCorreo() {
