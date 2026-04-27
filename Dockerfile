@@ -3,7 +3,7 @@ FROM php:8.1-cli
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
-    libaio1 \
+    libaio1t64 \
     libzip-dev \
     libpng-dev \
     libcurl4-openssl-dev \
@@ -12,26 +12,25 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client 21.10 desde Oracle (el que funcionó antes)
+# Oracle Instant Client 19c desde GitHub (público, sin autenticación)
 RUN mkdir -p /opt/oracle && cd /opt/oracle && \
-    wget https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basic-linux.x64-21.10.0.0.0dbru.zip && \
-    wget https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip && \
-    unzip instantclient-basic-linux.x64-21.10.0.0.0dbru.zip && \
-    unzip instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip && \
+    wget -q https://github.com/bumpx/oracle-instantclient/raw/master/instantclient-basic-linux.x64-19.23.0.0.0dbru.zip && \
+    wget -q https://github.com/bumpx/oracle-instantclient/raw/master/instantclient-sdk-linux.x64-19.23.0.0.0dbru.zip && \
+    unzip -q instantclient-basic-linux.x64-19.23.0.0.0dbru.zip && \
+    unzip -q instantclient-sdk-linux.x64-19.23.0.0.0dbru.zip && \
     rm *.zip && \
-    echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    echo /opt/oracle/instantclient_19_23 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
-# OCI8 3.2.1 (compatible con PHP 8.1, el que funcionó antes)
-RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
-    pecl install oci8-3.2.1 && \
+# OCI8 2.2.0 (compatible con PHP 8.0, versión estable)
+RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_19_23 && \
+    pecl install oci8-2.2.0 && \
     docker-php-ext-enable oci8 && \
-    echo "Verificando oci8..." && \
-    php -r "if (!extension_loaded('oci8')) { echo 'FAIL: oci8 no está cargado\n'; die(1); } echo 'SUCCESS: oci8 cargado\n';" && \
-    php -m | grep oci8
+    php -r "extension_loaded('oci8') or die('FAIL\n');" && \
+    echo "OCI8 2.2.0 OK"
 
 COPY . /app/
-COPY php.ini /usr/local/etc/php/php.ini
+
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
@@ -39,7 +38,9 @@ ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 \
     TNS_ADMIN=/app/wallet
 
 WORKDIR /app
+
 EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php", "-S", "0.0.0.0:8080", "-t", "/app/public"]
+
