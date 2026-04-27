@@ -105,12 +105,12 @@ class CarritoController {
     }
 
     private function buildCartResponse($idProducto = null) {
-        $carrito = $this->syncSessionCartFromSource();
         $cantidad = 0;
         $lineaTotal = 0;
         $subtotal = 0;
         $stockDisponible = 0;
 
+        $this->syncSessionCartFromSource();
         foreach ($this->getDetailedItems() as $item) {
             $subtotal += $item['total_linea'];
 
@@ -120,6 +120,7 @@ class CarritoController {
                 $stockDisponible = (int) ($item['stock_p'] ?? 0);
             }
         }
+        $carrito = $this->syncSessionCartFromSource();
 
         return [
             'ok' => true,
