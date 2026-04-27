@@ -1,6 +1,15 @@
 <?php
 session_start();
 
+$action = $_GET['action'] ?? 'tienda';
+
+if ($action === 'health') {
+    http_response_code(200);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'ok';
+    exit();
+}
+
 require_once __DIR__ . '/../Controllers/LoginController.php';
 require_once __DIR__ . '/../Controllers/RegistroController.php';
 require_once __DIR__ . '/../Controllers/PerfilController.php';
@@ -8,8 +17,6 @@ require_once __DIR__ . '/../Controllers/ProductoController.php';
 require_once __DIR__ . '/../Controllers/TiendaController.php';
 require_once __DIR__ . '/../Controllers/CarritoController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
-
-$action = $_GET['action'] ?? 'tienda';
 
 $publicas = [
     'login',
