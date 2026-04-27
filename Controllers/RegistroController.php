@@ -104,22 +104,9 @@ class RegistroController {
         $resultado = $model->crearConPersona($data);
 
         if ($resultado['success']) {
-            $idUsuario = (int) ($resultado['id_usuario'] ?? 0);
-            $carritoInvitado = $_SESSION['carrito'] ?? [];
-
             unset($_SESSION['old']);
-
-            $_SESSION['id_usuario'] = $idUsuario;
-            $_SESSION['nickname'] = $data['username'];
-            $_SESSION['tipo_usuario'] = 3;
-            $_SESSION['bienvenida'] = "Bienvenido, " . $data['username'];
-
-            $carritoModel = new CarritoModel($pdo);
-            $carritoModel->fusionarCarritoInvitado($idUsuario, $carritoInvitado);
-            $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario($idUsuario);
-
             $_SESSION['success'] = "Registro exitoso";
-            header("Location: index.php?action=inicio");
+            header("Location: index.php?action=login");
         } else {
             $_SESSION['error'] = $resultado['message'] ?? "Error al registrar el usuario";
             header("Location: index.php?action=registro");
