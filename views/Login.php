@@ -181,6 +181,7 @@ a:hover {
     padding:10px;
     border-radius:8px;
     margin-bottom:15px;
+    text-align:center;
 }
 
 .success-message {
@@ -189,6 +190,7 @@ a:hover {
     padding:10px;
     border-radius:8px;
     margin-bottom:15px;
+    text-align:center;
 }
 </style>
 </head>
@@ -217,7 +219,7 @@ a:hover {
     <?php endif; ?>
 
     <?php if(isset($_SESSION['success'])): ?>
-        <div class="success-message">
+        <div class="success-message" id="success-message">
             <?= $_SESSION['success']; unset($_SESSION['success']); ?>
         </div>
     <?php endif; ?>
@@ -310,6 +312,18 @@ themeToggle.addEventListener('click', () => {
 });
 
 applyTheme(localStorage.getItem('theme') || 'dark');
+
+const successMessage = document.getElementById('success-message');
+if (successMessage) {
+    setTimeout(() => {
+        successMessage.style.opacity = '0';
+        successMessage.style.transition = 'opacity 0.4s ease';
+
+        setTimeout(() => {
+            successMessage.style.display = 'none';
+        }, 400);
+    }, 3000);
+}
 </script>
 
 </body>
