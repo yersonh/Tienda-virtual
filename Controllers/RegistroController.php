@@ -87,7 +87,7 @@ class RegistroController {
             exit();
         }
 
-        if (!is_numeric($data['telefono']) || strlen($data['telefono']) != 10) {
+        if (!preg_match('/^[0-9]{10}$/', $data['telefono'])) {
             $_SESSION['error'] = "El telefono debe tener 10 digitos";
             header("Location: index.php?action=registro");
             exit();

@@ -284,7 +284,7 @@ button:hover {
         <!-- TELÉFONO -->
         <div class="input-group">
             <i class="fas fa-phone"></i>
-            <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" required
+            <input type="text" name="telefono" placeholder="Teléfono" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required
             oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
             value="<?= $old['telefono'] ?? '' ?>">
         </div>
