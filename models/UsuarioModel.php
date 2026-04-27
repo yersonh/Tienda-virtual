@@ -73,7 +73,7 @@ class UsuarioModel {
         } catch (Exception $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
-            return ['success' => false];
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 

@@ -121,7 +121,7 @@ class RegistroController {
             $_SESSION['success'] = "Registro exitoso";
             header("Location: index.php?action=inicio");
         } else {
-            $_SESSION['error'] = "Error al registrar el usuario";
+            $_SESSION['error'] = $resultado['message'] ?? "Error al registrar el usuario";
             header("Location: index.php?action=registro");
         }
 
