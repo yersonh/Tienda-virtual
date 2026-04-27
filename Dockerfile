@@ -1,8 +1,9 @@
 FROM php:8.1-cli
 
+# Dependencias
 RUN apt-get update && apt-get install -y \
-    wget \
     unzip \
+    curl \
     libaio-dev \
     libzip-dev \
     libpng-dev \
@@ -10,20 +11,19 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Extensiones PHP
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client
+# 📦 Oracle Instant Client (SIN BLOQUEO)
 RUN mkdir -p /opt/oracle && \
     cd /opt/oracle && \
-    wget -q "https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
-    wget -q "https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" -O ic-sdk.zip && \
-    unzip ic-basic.zip && \
-    unzip ic-sdk.zip && \
-    rm ic-basic.zip ic-sdk.zip && \
-    echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    curl -L -o instantclient.zip https://github.com/rodrigogs/instantclient/releases/download/v21.10/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip && \
+    unzip instantclient.zip && \
+    rm instantclient.zip && \
+    echo /opt/oracle/instantclient_21_10 > /etc/ld.so.conf.d/oracle.conf && \
     ldconfig
 
-# 🔥 IMPORTANTE: antes de instalar OCI8
+# 🔥 IMPORTANTE
 ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10
 
 # Instalar OCI8
