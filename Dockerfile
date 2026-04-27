@@ -8,7 +8,8 @@ RUN apt-get update -o Acquire::http::No-Cache=True || \
 # Instalar dependencias mínimas
 RUN apt-get install -y --no-install-recommends \
     unzip curl wget ca-certificates \
-    libaio1 \
+    libaio1 libaio-dev \
+    libcurl4-openssl-dev libxml2-dev \
     git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
