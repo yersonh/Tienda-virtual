@@ -1,12 +1,12 @@
 FROM php:8.1-cli
 
 # Dependencias del sistema
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip curl wget \
     libaio1 libaio-dev \
     libzip-dev libpng-dev libcurl4-openssl-dev libxml2-dev \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Extensiones PHP
 RUN docker-php-ext-install gd zip curl xml mbstring pdo
@@ -21,8 +21,8 @@ RUN cd /tmp && \
     echo /opt/oracle/instantclient_19_8 > /etc/ld.so.conf.d/oracle.conf && \
     ldconfig
 
-# Variable de entorno para Oracle
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_8:$LD_LIBRARY_PATH
+# Variables de entorno para Oracle
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_8
 ENV ORACLE_HOME=/opt/oracle/instantclient_19_8
 
 # Instalar OCI8
