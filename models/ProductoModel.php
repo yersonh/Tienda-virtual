@@ -128,8 +128,10 @@ class ProductoModel {
                   ORDER BY p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
+        $bindValues = [];
         foreach ($params as $param => $value) {
-            oci_bind_by_name($stmt, $param, $value);
+            $bindValues[$param] = $value;
+            oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
         oci_execute($stmt);
 
