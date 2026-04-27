@@ -1,53 +1,41 @@
-FROM php:8.1-cli
+FROM oraclelinux:8-slim
 
-RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
-    libaio1t64 \
-    libzip-dev \
-    libpng-dev \
-    libcurl4-openssl-dev \
-    libxml2-dev \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 \
-    && ldconfig \
-    && rm -rf /var/lib/apt/lists/*
+# Instalar PHP 8.1 y extensiones
+RUN yum install -y \
+    php81-cli \
+    php81-common \
+    php81-pdo \
+    php81-gd \
+    php81-curl \
+    php81-xml \
+    php81-zip \
+    && yum clean all
 
-RUN docker-php-ext-install gd zip curl xml
+# Oracle Instant Client - en OracleLinux está optimizado
+RUN yum install -y \
+    oracle-instantclient-release-el8 \
+    && yum-config-manager --enable ol8_oracle_instantclient \
+    && yum install -y oracle-instantclient-basic oracle-instantclient-devel \
+    && yum clean all
 
-# Oracle Instant Client: Basic Lite + SDK
-ARG CACHEBUST=9
-RUN echo "cachebust ${CACHEBUST}" && mkdir -p /opt/oracle && \
-    cd /opt/oracle && \
-    wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-basiclite-linux.x64-21.10.0.0.0dbru.zip" -O ic-basic.zip && \
-    wget -q "https://download.oracle.com/otn_software/linux/instantclient/2110000/instantclient-sdk-linux.x64-21.10.0.0.0dbru.zip" -O ic-sdk.zip && \
-    unzip ic-basic.zip && \
-    unzip ic-sdk.zip && \
-    rm ic-basic.zip ic-sdk.zip
+# Instalar oci8 directo (Oracle Linux lo soporta nativamente)
+RUN /usr/bin/pecl install -f oci8 \
+    && echo "extension=oci8.so" > /etc/php.ini.d/20-oci8.ini
 
-# Instalar oci8 con RPATH embebido en el .so
-# RPATH hardcodea la ruta de Oracle en el binario, sin depender de LD_LIBRARY_PATH
-RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 && \
-    export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
-    echo "instantclient,/opt/oracle/instantclient_21_10" | pecl install oci8-3.2.1 && \
-    docker-php-ext-enable oci8 && \
-    # Registrar Oracle libs a nivel sistema (no puede ser bloqueado por el runtime)
-    echo "/opt/oracle/instantclient_21_10/libclntsh.so.21.1" >> /etc/ld.so.preload && \
-    echo "/opt/oracle/instantclient_21_10/libclntshcore.so.21.1" >> /etc/ld.so.preload && \
-    ldconfig && \
-    php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga en build\n');" && \
-    echo "=== oci8 verificado OK ==="
+# Verificar que oci8 carga
+RUN /usr/bin/php -r "extension_loaded('oci8') or die('ERROR: oci8 no carga\n');" && echo "=== oci8 OK ==="
 
 COPY . /app/
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_21_10 \
-    TNS_ADMIN=/app/wallet
+ENV TNS_ADMIN=/app/wallet \
+    LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib:$LD_LIBRARY_PATH
 
 WORKDIR /app
 
 EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "/app/public"]
+CMD ["/usr/bin/php", "-S", "0.0.0.0:8080", "-t", "/app/public"]
