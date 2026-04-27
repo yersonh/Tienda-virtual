@@ -1,4 +1,4 @@
-FROM oraclelinux:8-slim
+FROM oraclelinux:8
 
 # Instalar PHP 8.1 y extensiones
 RUN yum install -y \
@@ -31,7 +31,7 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV TNS_ADMIN=/app/wallet \
-    LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib:$LD_LIBRARY_PATH
+    LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib
 
 WORKDIR /app
 
