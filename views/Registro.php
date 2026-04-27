@@ -76,15 +76,18 @@ h2 {
 
 .input-group i {
     position:absolute;
-    left:12px;
+    left:16px;
     top:50%;
     transform:translateY(-50%);
     color:var(--muted);
+    width:18px;
+    text-align:center;
+    pointer-events:none;
 }
 
 .input-group input {
     width:100%;
-    padding:12px 15px 12px 45px;
+    padding:12px 44px 12px 48px;
     border-radius:10px;
     border:none;
     background:var(--input-bg);
@@ -95,23 +98,39 @@ h2 {
    
 }
 
+.input-group input {
+    padding-left:48px;
+    padding-right:44px;
+}
+
 .password-toggle {
     position: absolute;
-    right: -30px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     color: var(--muted);
     cursor: pointer;
-    padding: 6px;
+    padding: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     z-index: 10;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
 }
 
 .password-toggle:hover {
     color: #38bdf8;
+    transform: translateY(-50%);
+}
+
+.password-toggle i {
+    position: static;
+    transform: none;
+    pointer-events: none;
 }
 
 .validation-msg {
