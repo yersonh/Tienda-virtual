@@ -14,17 +14,18 @@ RUN apt-get update && apt-get install -y \
 # Extensiones PHP estándar
 RUN docker-php-ext-install gd zip curl xml
 
-# Oracle Instant Client 21c (mirror público más confiable)
+# Oracle Instant Client 19c desde GitHub (público, sin autenticación)
 RUN mkdir -p /opt/oracle && cd /opt/oracle && \
-    wget -q https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient21/x86_64/getPackage/oracle-instantclient21.11-basic-21.11.0.0.0-1.el7.x86_64.rpm && \
-    wget -q https://yum.oracle.com/repo/OracleLinux/OL7/oracle/instantclient21/x86_64/getPackage/oracle-instantclient21.11-devel-21.11.0.0.0-1.el7.x86_64.rpm && \
-    apt-get install -y ./oracle-instantclient21.11-basic-*.rpm ./oracle-instantclient21.11-devel-*.rpm && \
-    rm *.rpm && \
-    echo /usr/lib/oracle/21/client64/lib > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    wget -q https://github.com/bumpx/oracle-instantclient/raw/master/instantclient-basic-linux.x64-19.23.0.0.0dbru.zip && \
+    wget -q https://github.com/bumpx/oracle-instantclient/raw/master/instantclient-sdk-linux.x64-19.23.0.0.0dbru.zip && \
+    unzip -q instantclient-basic-linux.x64-19.23.0.0.0dbru.zip && \
+    unzip -q instantclient-sdk-linux.x64-19.23.0.0.0dbru.zip && \
+    rm *.zip && \
+    echo /opt/oracle/instantclient_19_23 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
 # OCI8 2.2.0 (compatible con PHP 8.0, versión estable)
-RUN export LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib && \
+RUN export LD_LIBRARY_PATH=/opt/oracle/instantclient_19_23 && \
     pecl install oci8-2.2.0 && \
     docker-php-ext-enable oci8 && \
     php -r "extension_loaded('oci8') or die('FAIL\n');" && \
@@ -36,7 +37,7 @@ COPY php.ini /usr/local/etc/php/php.ini
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENV LD_LIBRARY_PATH=/usr/lib/oracle/21/client64/lib \
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_23 \
     TNS_ADMIN=/app/wallet
 
 WORKDIR /app
