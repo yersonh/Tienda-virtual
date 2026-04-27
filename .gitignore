@@ -8,3 +8,6 @@ wallet/ojdbc.properties
 # Variables de entorno locales
 .env
 .env.local
+
+# ❌ NO bloquear zips (lo necesitas para Oracle)
+# *.zip
