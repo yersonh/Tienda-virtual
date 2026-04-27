@@ -1,0 +1,10 @@
+# Oracle Wallet - ningún archivo del wallet va al repo
+wallet/cwallet.sso
+wallet/ewallet.p12
+wallet/keystore.jks
+wallet/truststore.jks
+wallet/ojdbc.properties
+
+# Variables de entorno locales
+.env
+.env.local
