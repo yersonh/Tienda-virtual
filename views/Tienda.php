@@ -48,6 +48,7 @@
     gap: 10px;
     align-items: center;
     padding: 0 32px 28px;
+    overflow: visible;
 }
 .filter-input {
     background: rgba(255,255,255,0.04);
@@ -693,7 +694,7 @@
                  aria-label="Ver detalle de <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
-                    <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" onerror="this.style.display='none'">
+                    <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
                     <?php else: ?>
                     <div class="card-placeholder">
                         <span class="placeholder-icon" aria-hidden="true">
@@ -779,7 +780,7 @@
                  aria-label="Ver detalle de <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
-                    <img src="image.php?folder=productos&path=<?= basename($p['imagen']) ?>" alt="<?= $p['nombre'] ?>" onerror="this.style.display='none'">
+                    <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
                     <?php else: ?>
                     <div class="card-placeholder">
                         <span class="placeholder-icon" aria-hidden="true">
@@ -1175,6 +1176,7 @@ function filterProducts(){
             categoria.appendChild(op.cloneNode(true));
         });
     }
+
 }
 
 // LIMPIAR

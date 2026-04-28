@@ -29,6 +29,22 @@ if (!file_exists($rutaArchivo)) {
     die('Archivo no encontrado: ' . $rutaArchivo);
 }
 
+$modifiedTime = filemtime($rutaArchivo);
+$etag = '"' . md5($rutaArchivo . '|' . $modifiedTime . '|' . filesize($rutaArchivo)) . '"';
+
+header('ETag: ' . $etag);
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $modifiedTime) . ' GMT');
+header('Cache-Control: public, max-age=604800, immutable');
+header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 604800) . ' GMT');
+
+if (
+    (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
+    (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $modifiedTime)
+) {
+    http_response_code(304);
+    exit;
+}
+
 // Obtener la extensión del archivo
 $extension = strtolower(pathinfo($rutaArchivo, PATHINFO_EXTENSION));
 
@@ -51,10 +67,6 @@ switch ($extension) {
         header('Content-Type: application/octet-stream');
         break;
 }
-
-// Cachear la imagen por 1 hora
-header('Cache-Control: public, max-age=3600');
-header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 3600) . ' GMT');
 
 // Leer y enviar el archivo
 readfile($rutaArchivo);

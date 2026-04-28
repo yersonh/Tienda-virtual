@@ -16,9 +16,11 @@ class ProductoController {
     public function index() {
         Auth::soloAdmin();
         $productos = $this->model->obtenerTodos();
-        
+
         foreach ($productos as $key => $producto) {
-            $productos[$key]['imagenes'] = $this->model->obtenerImagenes($producto['id_producto']);
+            $productos[$key]['imagenes'] = !empty($producto['imagen'])
+                ? [['url' => $producto['imagen']]]
+                : [];
         }
         
         ob_start();

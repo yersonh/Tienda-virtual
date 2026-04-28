@@ -48,7 +48,7 @@ class LoginController {
             exit();
         }
 
-        unset($_SESSION['carrito'], $_SESSION['carrito_count']);
+        unset($_SESSION['carrito'], $_SESSION['carrito_count'], $_SESSION['carrito_mapa_cache']);
         $_SESSION['id_usuario'] = $usuario['id_usuario'];
         $_SESSION['username'] = $usuario['username'];
         $_SESSION['nickname'] = $usuario['username'];

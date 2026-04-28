@@ -60,6 +60,10 @@ class CarritoController {
             unset($_SESSION['carrito']);
             $carrito = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
             $_SESSION['carrito_count'] = array_sum($carrito);
+            $_SESSION['carrito_mapa_cache'] = [
+                'expires' => time() + 30,
+                'data' => $carrito
+            ];
             return $carrito;
         }
 
@@ -290,6 +294,11 @@ class CarritoController {
         }
 
         $_SESSION['carrito_count'] = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
+        $carritoActual[$id] = $cantidadFinal;
+        $_SESSION['carrito_mapa_cache'] = [
+            'expires' => time() + 30,
+            'data' => $carritoActual
+        ];
 
         echo json_encode([
             'success' => true,
@@ -417,6 +426,10 @@ class CarritoController {
             $_SESSION['carrito'] = [];
         }
         $_SESSION['carrito_count'] = 0;
+        $_SESSION['carrito_mapa_cache'] = [
+            'expires' => time() + 30,
+            'data' => []
+        ];
 
         if ($this->isAjaxRequest()) {
             header('Content-Type: application/json');

@@ -61,6 +61,11 @@ class Database {
     }
 
     private static function writeWalletFile(string $walletPath, string $fileName, string $encodedContent, ?string $walletLocation = null, bool $allowPem = true): void {
+        $path = "$walletPath/$fileName";
+        if (is_file($path) && filesize($path) > 0) {
+            return;
+        }
+
         $decoded = base64_decode($encodedContent, true);
         if ($decoded === false) {
             throw new Exception("Wallet invalida en Base64: $fileName");
@@ -82,12 +87,18 @@ class Database {
             $decoded = preg_replace('/^\xEF\xBB\xBF/', '', $decoded);
         }
 
-        $path = "$walletPath/$fileName";
         file_put_contents($path, $decoded);
         chmod($path, 0600);
     }
 
     private static function writeEwalletFile(string $walletPath, string $encodedContent): void {
+        if (
+            (is_file("$walletPath/ewallet.pem") && filesize("$walletPath/ewallet.pem") > 0) ||
+            (is_file("$walletPath/ewallet.p12") && filesize("$walletPath/ewallet.p12") > 0)
+        ) {
+            return;
+        }
+
         $decoded = base64_decode($encodedContent, true);
         if ($decoded === false) {
             throw new Exception('Wallet invalida en Base64: ewallet');
