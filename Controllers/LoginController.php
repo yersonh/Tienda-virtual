@@ -33,7 +33,7 @@ class LoginController {
         }
 
         // 🔥 VALIDACIÓN DE ESTADO LIMPIA
-        if ($usuario['estado'] !== 'ACTIVO') {
+        if ($usuario['estado'] !== 'Activo') {
             $_SESSION['error'] = "Usuario inactivo";
             header("Location: index.php?action=login");
             exit();
