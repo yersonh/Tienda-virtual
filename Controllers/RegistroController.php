@@ -1,163 +1,180 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
-require_once __DIR__ . '/../models/CarritoModel.php';
 
 class RegistroController {
 
-    public function registrar() {
+    private function jsonResponse(array $data, int $status = 200): void {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        $pdo = Database::getConnection();
-        $model = new UsuarioModel($pdo);
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data);
+        exit();
+    }
 
-        $confirmPassword = trim($_POST['confirm_password'] ?? '');
+    private function getUsuarioModel(): UsuarioModel {
+        return new UsuarioModel(Database::getConnection());
+    }
 
-        $data = [
-            'nombres' => trim($_POST['nombres'] ?? ''),
-            'apellidos' => trim($_POST['apellidos'] ?? ''),
-            'correo' => trim($_POST['correo'] ?? ''),
-            'telefono' => trim($_POST['telefono'] ?? ''),
-            'direccion' => trim($_POST['direccion'] ?? ''),
-            'username' => trim($_POST['username'] ?? ''),
-            'password' => trim($_POST['password'] ?? ''),
-            'id_tipo' => 3
-        ];
-
-        // Normalizar correo a minúsculas para consistencia
-        $data['correo'] = strtolower($data['correo']);
-        $_SESSION['old'] = $data;
-
+    private function validarRegistro(array $data, string $confirmPassword, UsuarioModel $model): ?array {
         if (
-            empty($data['nombres']) ||
-            empty($data['apellidos']) ||
-            empty($data['correo']) ||
-            empty($data['telefono']) ||
-            empty($data['direccion']) ||
-            empty($data['username']) ||
-            empty($data['password']) ||
-            empty($confirmPassword)
+            $data['nombres'] === '' ||
+            $data['apellidos'] === '' ||
+            $data['correo'] === '' ||
+            $data['telefono'] === '' ||
+            $data['direccion'] === '' ||
+            $data['username'] === '' ||
+            $data['password'] === '' ||
+            $confirmPassword === ''
         ) {
-            $_SESSION['error'] = "Todos los campos son obligatorios";
-            header("Location: index.php?action=registro");
-            exit();
+            return ['success' => false, 'error' => 'Todos los campos son obligatorios'];
         }
 
-        if ($data['password'] !== $confirmPassword) {
-            $_SESSION['error'] = "Las contraseñas no coinciden";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (strlen($data['password']) < 6) {
-            $_SESSION['error'] = "La contraseña debe tener mínimo 6 caracteres";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (!preg_match('/[0-9]/', $data['password'])) {
-            $_SESSION['error'] = "La contraseña debe contener al menos un número";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (!preg_match('/[a-zA-Z]/', $data['password'])) {
-            $_SESSION['error'] = "La contraseña debe contener al menos una letra";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['error'] = "Correo invalido";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if (!preg_match('/^[^@]+@gmail\.com$/', $data['correo'])) {
-            $_SESSION['error'] = "El correo debe ser @gmail.com";
-            header("Location: index.php?action=registro");
-            exit();
-        }
-
-        if ($model->correoExisteEmail($data['correo'])) {
-            $_SESSION['error'] = "El correo ya esta en uso";
-            header("Location: index.php?action=registro");
-            exit();
+        if (!preg_match('/^[A-Za-z0-9._%+-]+@gmail\.com$/', $data['correo'])) {
+            return ['success' => false, 'error' => 'Solo se permiten correos @gmail.com'];
         }
 
         if (!preg_match('/^[0-9]{10}$/', $data['telefono'])) {
-            $_SESSION['error'] = "El telefono debe tener 10 digitos";
-            header("Location: index.php?action=registro");
-            exit();
+            return ['success' => false, 'error' => 'El telefono debe tener exactamente 10 digitos'];
+        }
+
+        if (strlen($data['username']) < 3) {
+            return ['success' => false, 'error' => 'El usuario debe tener minimo 3 caracteres'];
+        }
+
+        if (strlen($data['password']) < 6) {
+            return ['success' => false, 'error' => 'La contrasena debe tener minimo 6 caracteres'];
+        }
+
+        if ($data['password'] !== $confirmPassword) {
+            return ['success' => false, 'error' => 'Las contrasenas no coinciden'];
+        }
+
+        if ($model->correoExisteEmail($data['correo'])) {
+            return ['success' => false, 'error' => 'El correo ya esta registrado'];
+        }
+
+        if ($model->telefonoExiste($data['telefono'])) {
+            return ['success' => false, 'error' => 'El telefono ya esta registrado'];
         }
 
         if ($model->usernameExiste($data['username'])) {
-            $_SESSION['error'] = "El usuario ya esta en uso";
-            header("Location: index.php?action=registro");
-            exit();
+            return ['success' => false, 'error' => 'El usuario ya esta registrado'];
         }
 
-        $data['cc'] = null;
+        return null;
+    }
 
-        $resultado = $model->crearConPersona($data);
+    public function registrar(): void {
+        try {
+            $model = $this->getUsuarioModel();
+            $confirmPassword = trim($_POST['confirm_password'] ?? '');
 
-        if ($resultado['success']) {
+            $data = [
+                'nombres' => trim($_POST['nombres'] ?? ''),
+                'apellidos' => trim($_POST['apellidos'] ?? ''),
+                'cc' => null,
+                'correo' => strtolower(trim($_POST['correo'] ?? '')),
+                'telefono' => trim($_POST['telefono'] ?? ''),
+                'direccion' => trim($_POST['direccion'] ?? ''),
+                'username' => strtolower(trim($_POST['username'] ?? '')),
+                'password' => trim($_POST['password'] ?? ''),
+                'id_tipo' => 3
+            ];
+
+            $error = $this->validarRegistro($data, $confirmPassword, $model);
+            if ($error !== null) {
+                $this->jsonResponse($error, 422);
+            }
+
+            $resultado = $model->crearConPersona($data);
+            if (!($resultado['success'] ?? false)) {
+                $this->jsonResponse([
+                    'success' => false,
+                    'error' => $resultado['error'] ?? $resultado['message'] ?? 'Error al registrar el usuario'
+                ], 422);
+            }
+
             unset($_SESSION['old']);
-            $_SESSION['success'] = "Registro exitoso";
-            header("Location: index.php?action=login");
-        } else {
-            $_SESSION['error'] = $resultado['message'] ?? "Error al registrar el usuario";
-            header("Location: index.php?action=registro");
-        }
 
-        exit();
+            $this->jsonResponse([
+                'success' => true,
+                'id_usuario' => (int) $resultado['id_usuario'],
+                'redirect' => 'index.php?action=login',
+                'message' => 'Registro exitoso'
+            ]);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $this->jsonResponse(['success' => false, 'error' => 'No se pudo registrar el usuario'], 500);
+        }
     }
 
-    public function verificarCorreo() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+    public function verificarCorreo(): void {
+        try {
+            $correo = strtolower(trim($_POST['correo'] ?? ''));
+
+            if ($correo === '') {
+                $this->jsonResponse(['success' => true, 'existe' => false]);
+            }
+
+            if (!preg_match('/^[A-Za-z0-9._%+-]+@gmail\.com$/', $correo)) {
+                $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Solo se permiten correos @gmail.com'], 422);
+            }
+
+            $this->jsonResponse([
+                'success' => true,
+                'existe' => $this->getUsuarioModel()->correoExisteEmail($correo)
+            ]);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar correo'], 500);
         }
-
-        header('Content-Type: application/json');
-
-        $correo = trim($_POST['correo'] ?? '');
-        
-        if (empty($correo)) {
-            echo json_encode(['existe' => false]);
-            exit();
-        }
-
-        $pdo = Database::getConnection();
-        $model = new UsuarioModel($pdo);
-
-        $existe = $model->correoExisteEmail($correo);
-
-        echo json_encode(['existe' => $existe]);
-        exit();
     }
 
-    public function verificarUsername() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+    public function verificarUsername(): void {
+        try {
+            $username = strtolower(trim($_POST['username'] ?? ''));
+
+            if ($username === '') {
+                $this->jsonResponse(['success' => true, 'existe' => false]);
+            }
+
+            if (strlen($username) < 3) {
+                $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'El usuario debe tener minimo 3 caracteres'], 422);
+            }
+
+            $this->jsonResponse([
+                'success' => true,
+                'existe' => $this->getUsuarioModel()->usernameExiste($username)
+            ]);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar usuario'], 500);
         }
+    }
 
-        header('Content-Type: application/json');
+    public function verificarTelefono(): void {
+        try {
+            $telefono = trim($_POST['telefono'] ?? '');
 
-        $username = trim($_POST['username'] ?? '');
-        
-        if (empty($username)) {
-            echo json_encode(['existe' => false]);
-            exit();
+            if ($telefono === '') {
+                $this->jsonResponse(['success' => true, 'existe' => false]);
+            }
+
+            if (!preg_match('/^[0-9]{10}$/', $telefono)) {
+                $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'El telefono debe tener exactamente 10 digitos'], 422);
+            }
+
+            $this->jsonResponse([
+                'success' => true,
+                'existe' => $this->getUsuarioModel()->telefonoExiste($telefono)
+            ]);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar telefono'], 500);
         }
-
-        $pdo = Database::getConnection();
-        $model = new UsuarioModel($pdo);
-
-        $existe = $model->usernameExiste($username);
-
-        echo json_encode(['existe' => $existe]);
-        exit();
     }
 }

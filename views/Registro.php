@@ -259,7 +259,7 @@ button:hover {
     <?php endif; ?>
 
     <!-- FORMULARIO -->
-   <form method="POST" action="index.php?action=guardarRegistro">
+   <form method="POST" action="index.php?action=guardarRegistro" id="registro-form">
 
         <!-- NOMBRES -->
         <div class="input-group">
@@ -384,6 +384,7 @@ button:hover {
         const telefonoMsg = document.getElementById('telefono-msg');
         const usernameMsg = document.getElementById('username-msg');
         const submitBtn = document.getElementById('registro-btn');
+        const registroForm = document.getElementById('registro-form');
         let correoValido = false;
         let telefonoValido = false;
         let usernameValido = false;
@@ -438,6 +439,14 @@ button:hover {
             })
             .then(response => response.json())
             .then(data => {
+                if (!data.success && data.error) {
+                    correoMsg.textContent = data.error;
+                    correoMsg.className = 'validation-msg error';
+                    correoValido = false;
+                    checkFormValidity();
+                    return;
+                }
+
                 if (data.existe) {
                     correoMsg.textContent = 'El correo ya está registrado';
                     correoMsg.className = 'validation-msg error';
@@ -484,20 +493,56 @@ button:hover {
             }
 
             if (/^[0-9]{10}$/.test(telefono)) {
-                telefonoMsg.textContent = 'Telefono valido';
-                telefonoMsg.className = 'validation-msg success';
-                telefonoValido = true;
+                telefonoMsg.textContent = 'Verificando...';
+                telefonoMsg.className = 'validation-msg';
+
+                fetch('index.php?action=verificarTelefono', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'telefono=' + encodeURIComponent(telefono)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success && data.error) {
+                        telefonoMsg.textContent = data.error;
+                        telefonoMsg.className = 'validation-msg error';
+                        telefonoValido = false;
+                        checkFormValidity();
+                        return;
+                    }
+
+                    if (data.existe) {
+                        telefonoMsg.textContent = 'El telefono ya está registrado';
+                        telefonoMsg.className = 'validation-msg error';
+                        telefonoValido = false;
+                    } else {
+                        telefonoMsg.textContent = 'Telefono valido';
+                        telefonoMsg.className = 'validation-msg success';
+                        telefonoValido = true;
+                    }
+
+                    checkFormValidity();
+                })
+                .catch(error => {
+                    console.error('Error verificando telefono:', error);
+                    telefonoMsg.textContent = 'Error al verificar telefono';
+                    telefonoMsg.className = 'validation-msg error';
+                    telefonoValido = false;
+                    checkFormValidity();
+                });
             } else {
                 telefonoMsg.textContent = 'Debe tener 10 digitos';
                 telefonoMsg.className = 'validation-msg error';
                 telefonoValido = false;
+                checkFormValidity();
             }
-
-            checkFormValidity();
         }
 
         function validateUsername() {
-            const username = usernameInput.value.trim();
+            const username = usernameInput.value.trim().toLowerCase();
+            usernameInput.value = username;
 
             if (!username) {
                 usernameMsg.textContent = '';
@@ -527,6 +572,14 @@ button:hover {
             })
             .then(response => response.json())
             .then(data => {
+                if (!data.success && data.error) {
+                    usernameMsg.textContent = data.error;
+                    usernameMsg.className = 'validation-msg error';
+                    usernameValido = false;
+                    checkFormValidity();
+                    return;
+                }
+
                 if (data.existe) {
                     usernameMsg.textContent = 'Este usuario ya está en uso';
                     usernameMsg.className = 'validation-msg error';
@@ -569,6 +622,59 @@ button:hover {
         usernameInput?.addEventListener('blur', validateUsername);
         passwordInput?.addEventListener('input', updatePasswordRules);
         confirmInput?.addEventListener('input', updatePasswordRules);
+
+        registroForm?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+
+            try {
+                const response = await fetch(registroForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(registroForm)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    let errorBox = document.getElementById('mensajeError');
+
+                    if (!errorBox) {
+                        errorBox = document.createElement('div');
+                        errorBox.className = 'error';
+                        errorBox.id = 'mensajeError';
+                        document.querySelector('.container').insertBefore(errorBox, registroForm);
+                    }
+
+                    errorBox.textContent = data.error || 'No se pudo registrar el usuario';
+                    errorBox.style.display = 'block';
+                    errorBox.style.opacity = '1';
+                    checkFormValidity();
+                    return;
+                }
+
+                window.location.href = data.redirect || 'index.php?action=login';
+            } catch (error) {
+                console.error('Error registrando usuario:', error);
+                let errorBox = document.getElementById('mensajeError');
+
+                if (!errorBox) {
+                    errorBox = document.createElement('div');
+                    errorBox.className = 'error';
+                    errorBox.id = 'mensajeError';
+                    document.querySelector('.container').insertBefore(errorBox, registroForm);
+                }
+
+                errorBox.textContent = 'No se pudo registrar el usuario';
+                errorBox.style.display = 'block';
+                errorBox.style.opacity = '1';
+                checkFormValidity();
+            }
+        });
 
         checkFormValidity();
 
