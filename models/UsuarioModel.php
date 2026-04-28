@@ -111,8 +111,8 @@ public function validarCredenciales($username, $password) {
         $username = strtolower(trim($username));
 
         $query = "SELECT COUNT(*) AS total
-                  FROM usuario
-                  WHERE username = :username";
+                FROM usuario
+                WHERE LOWER(username) = :username";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ":username", $username);

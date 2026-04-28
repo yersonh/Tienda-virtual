@@ -133,29 +133,29 @@ class RegistroController {
             $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar correo'], 500);
         }
     }
+    
+    public function verificarUsername() {
 
-    public function verificarUsername(): void {
-        try {
-            $username = strtolower(trim($_POST['username'] ?? ''));
+        header('Content-Type: application/json');
 
-            if ($username === '') {
-                $this->jsonResponse(['success' => true, 'existe' => false]);
-            }
+        $username = strtolower(trim($_POST['username'] ?? ''));
 
-            if (strlen($username) < 3) {
-                $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'El usuario debe tener minimo 3 caracteres'], 422);
-            }
-
-            $this->jsonResponse([
-                'success' => true,
-                'existe' => $this->getUsuarioModel()->usernameExiste($username)
-            ]);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar usuario'], 500);
+        if (empty($username)) {
+            echo json_encode(['disponible' => false]);
+            exit();
         }
-    }
 
+        $conn = Database::getConnection();
+        $model = new UsuarioModel($conn);
+
+        $existe = $model->usernameExiste($username);
+
+        echo json_encode([
+            'disponible' => !$existe
+        ]);
+
+        exit();
+    }
     public function verificarTelefono(): void {
         try {
             $telefono = trim($_POST['telefono'] ?? '');

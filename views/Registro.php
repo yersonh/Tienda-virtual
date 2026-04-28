@@ -439,15 +439,8 @@ button:hover {
             })
             .then(response => response.json())
             .then(data => {
-                if (!data.success && data.error) {
-                    correoMsg.textContent = data.error;
-                    correoMsg.className = 'validation-msg error';
-                    correoValido = false;
-                    checkFormValidity();
-                    return;
-                }
-
-                if (data.existe) {
+               
+               if (!data.disponible) {
                     correoMsg.textContent = 'El correo ya está registrado';
                     correoMsg.className = 'validation-msg error';
                     correoValido = false;
@@ -505,20 +498,13 @@ button:hover {
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (!data.success && data.error) {
-                        telefonoMsg.textContent = data.error;
-                        telefonoMsg.className = 'validation-msg error';
-                        telefonoValido = false;
-                        checkFormValidity();
-                        return;
-                    }
-
-                    if (data.existe) {
-                        telefonoMsg.textContent = 'El telefono ya está registrado';
+                  
+                    if (!data.disponible) {
+                        telefonoMsg.textContent = 'El teléfono ya está registrado';
                         telefonoMsg.className = 'validation-msg error';
                         telefonoValido = false;
                     } else {
-                        telefonoMsg.textContent = 'Telefono valido';
+                        telefonoMsg.textContent = 'Teléfono válido';
                         telefonoMsg.className = 'validation-msg success';
                         telefonoValido = true;
                     }
@@ -542,8 +528,7 @@ button:hover {
 
         function validateUsername() {
             const username = usernameInput.value.trim().toLowerCase();
-            usernameInput.value = username;
-
+            
             if (!username) {
                 usernameMsg.textContent = '';
                 usernameMsg.className = 'validation-msg';
@@ -572,15 +557,8 @@ button:hover {
             })
             .then(response => response.json())
             .then(data => {
-                if (!data.success && data.error) {
-                    usernameMsg.textContent = data.error;
-                    usernameMsg.className = 'validation-msg error';
-                    usernameValido = false;
-                    checkFormValidity();
-                    return;
-                }
 
-                if (data.existe) {
+                if (!data.disponible) {
                     usernameMsg.textContent = 'Este usuario ya está en uso';
                     usernameMsg.className = 'validation-msg error';
                     usernameValido = false;
@@ -589,6 +567,7 @@ button:hover {
                     usernameMsg.className = 'validation-msg success';
                     usernameValido = true;
                 }
+
                 checkFormValidity();
             })
             .catch(error => {
@@ -694,6 +673,8 @@ button:hover {
             });
 
         }, 2500);
+
+
     </script>
 
 </div>
