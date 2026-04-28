@@ -82,10 +82,20 @@ class UsuarioModel {
      */
     public function validarCredenciales($username, $password) {
 
-        $query = "SELECT u.*, p.nombres, p.apellidos, p.cc, p.correo, p.telefono, p.direccion
-                  FROM usuario u
-                  INNER JOIN persona p ON u.id_persona = p.id_persona
-                  WHERE u.username = :username";
+        $query = "SELECT id_usuario,
+                         id_persona,
+                         id_tipo,
+                         username,
+                         password,
+                         estado,
+                         nombres,
+                         apellidos,
+                         cc,
+                         correo,
+                         telefono,
+                         direccion
+                  FROM v_usuario_completo
+                  WHERE username = :username";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':username', $username);
@@ -191,10 +201,19 @@ class UsuarioModel {
      * OBTENER PERFIL
      */
     public function obtenerPorId($id_usuario) {
-        $query = "SELECT u.*, p.nombres, p.apellidos, p.cc, p.correo, p.telefono, p.direccion, p.id_persona
-                  FROM usuario u
-                  INNER JOIN persona p ON u.id_persona = p.id_persona
-                  WHERE u.id_usuario = :id_usuario";
+        $query = "SELECT id_usuario,
+                         id_persona,
+                         id_tipo,
+                         username,
+                         estado,
+                         nombres,
+                         apellidos,
+                         cc,
+                         correo,
+                         telefono,
+                         direccion
+                  FROM v_usuario_completo
+                  WHERE id_usuario = :id_usuario";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_usuario', $id_usuario, -1, SQLT_INT);

@@ -9,7 +9,7 @@ class ProveedorModel {
     }
 
     public function obtenerTodos() {
-        $stmt = oci_parse($this->conn, "SELECT * FROM proveedor");
+        $stmt = oci_parse($this->conn, "SELECT id_proveedor, nombre, telefono, correo FROM proveedor ORDER BY nombre");
         oci_execute($stmt);
 
         $results = [];

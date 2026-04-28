@@ -9,7 +9,7 @@ class TipoUsuarioModel {
     }
 
     public function obtenerTodos() {
-        $stmt = oci_parse($this->conn, "SELECT * FROM tipo_usuario");
+        $stmt = oci_parse($this->conn, "SELECT id_tipo, nombre FROM tipo_usuario ORDER BY nombre");
         oci_execute($stmt);
 
         $results = [];

@@ -28,16 +28,10 @@ class ProductoModel {
 
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
     public function obtenerCatalogo() {
-    $query = "SELECT 
-                p.*, 
-                c.nombre AS categoria_nombre,
-                pi.url AS imagen
-              FROM producto p
-              INNER JOIN categoria_producto c 
-                  ON p.id_categoria = c.id_categoria
-              LEFT JOIN producto_imagen pi 
-                  ON pi.id_producto = p.id_producto AND pi.orden = 0
-              ORDER BY c.nombre, p.nombre";
+    $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+    $query = "SELECT $columns
+              FROM v_productos_completo
+              ORDER BY categoria_nombre, nombre";
 
     $stmt = oci_parse($this->conn, $query);
     oci_execute($stmt);
@@ -52,10 +46,10 @@ class ProductoModel {
 }
 
     public function obtenerTodos() {
-        $query = "SELECT p.*, c.nombre as categoria_nombre 
-                  FROM producto p
-                  INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
-                  ORDER BY p.id_producto DESC";
+        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+        $query = "SELECT $columns
+                  FROM v_productos_completo
+                  ORDER BY id_producto DESC";
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
 
@@ -69,10 +63,10 @@ class ProductoModel {
     }
 
     public function obtenerPorId($id) {
-        $query = "SELECT p.*, c.nombre as categoria_nombre 
-                  FROM producto p
-                  INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
-                  WHERE p.id_producto = :id";
+        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+        $query = "SELECT $columns
+                  FROM v_productos_completo
+                  WHERE id_producto = :id";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id);
         oci_execute($stmt);
@@ -84,7 +78,10 @@ class ProductoModel {
     }
 
     public function obtenerImagenes($id_producto) {
-        $query = "SELECT * FROM producto_imagen WHERE id_producto = :id_producto ORDER BY orden";
+        $query = "SELECT id_imagen, id_producto, url, orden
+                  FROM producto_imagen
+                  WHERE id_producto = :id_producto
+                  ORDER BY orden";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_producto', $id_producto);
         oci_execute($stmt);
@@ -117,15 +114,11 @@ class ProductoModel {
         }
         $placeholdersStr = implode(',', $placeholders);
 
-        $query = "SELECT 
-                    p.*, 
-                    c.nombre AS categoria_nombre,
-                    pi.url AS imagen
-                  FROM producto p
-                  INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
-                  LEFT JOIN producto_imagen pi ON pi.id_producto = p.id_producto AND pi.orden = 0
-                  WHERE p.id_producto IN ($placeholdersStr)
-                  ORDER BY p.nombre";
+        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+        $query = "SELECT $columns
+                  FROM v_productos_completo
+                  WHERE id_producto IN ($placeholdersStr)
+                  ORDER BY nombre";
 
         $stmt = oci_parse($this->conn, $query);
         $bindValues = [];
@@ -133,6 +126,28 @@ class ProductoModel {
             $bindValues[$param] = $value;
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
+    public function obtenerMasVendidos($limite = 5) {
+        $limite = max(1, min(10, (int) $limite));
+        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen, total_vendido";
+
+        $query = "SELECT $columns
+                  FROM v_productos_mas_vendidos
+                  ORDER BY total_vendido DESC
+                  FETCH FIRST :limite ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':limite', $limite, -1, SQLT_INT);
         oci_execute($stmt);
 
         $results = [];
@@ -247,7 +262,9 @@ class ProductoModel {
     }
 
     public function obtenerCategorias() {
-        $query = "SELECT * FROM categoria_producto ORDER BY nombre";
+        $query = "SELECT id_categoria, nombre
+                  FROM categoria_producto
+                  ORDER BY nombre";
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
 

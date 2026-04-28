@@ -31,6 +31,29 @@ class CarritoController {
         return isset($_SESSION['id_usuario']) ? (int) $_SESSION['id_usuario'] : 0;
     }
 
+    private function failCartOperation($resultado) {
+        return is_array($resultado)
+            && isset($resultado['success'])
+            && $resultado['success'] === false;
+    }
+
+    private function respondCartError($resultado, $fallback = 'No se pudo actualizar el carrito') {
+        $message = is_array($resultado) && !empty($resultado['message'])
+            ? $resultado['message']
+            : $fallback;
+
+        if ($this->isAjaxRequest()) {
+            header('Content-Type: application/json');
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'message' => $message]);
+            exit();
+        }
+
+        $_SESSION['error'] = $message;
+        header("Location: index.php?action=verCarrito");
+        exit();
+    }
+
     private function syncSessionCartFromSource() {
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario > 0) {
@@ -121,10 +144,18 @@ class CarritoController {
             }
         }
         $carrito = $this->syncSessionCartFromSource();
+        $idUsuario = $this->getUsuarioId();
+
+        if ($idUsuario > 0) {
+            $subtotal = $this->carritoModel->obtenerTotalCarrito($idUsuario);
+            $total = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
+        } else {
+            $total = array_sum($carrito);
+        }
 
         return [
             'ok' => true,
-            'total' => array_sum($carrito),
+            'total' => $total,
             'subtotal' => $subtotal,
             'cantidad' => $cantidad,
             'linea_total' => $lineaTotal,
@@ -177,7 +208,10 @@ class CarritoController {
         }
 
         if ($idUsuario > 0) {
-            $this->carritoModel->agregarProducto($idUsuario, $id, $cantidadAgregar);
+            $resultado = $this->carritoModel->agregarProducto($idUsuario, $id, $cantidadAgregar);
+            if ($this->failCartOperation($resultado)) {
+                $this->respondCartError($resultado, 'No se pudo agregar el producto al carrito');
+            }
             $this->syncSessionCartFromSource();
         } else {
             if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
@@ -202,7 +236,10 @@ class CarritoController {
         $this->syncSessionCartFromSource();
 
         $items = $this->getDetailedItems();
-        $subtotal = array_reduce($items, function($carry, $item) {
+        $resumenCarrito = $this->getUsuarioId() > 0
+            ? $this->carritoModel->obtenerResumenCarrito($this->getUsuarioId())
+            : null;
+        $subtotal = $resumenCarrito['total_pagar'] ?? array_reduce($items, function($carry, $item) {
             return $carry + (float) $item['total_linea'];
         }, 0);
 
@@ -254,7 +291,10 @@ class CarritoController {
         }
 
         if ($idUsuario > 0) {
-            $this->carritoModel->actualizarCantidad($idUsuario, $id, $cantidad);
+            $resultado = $this->carritoModel->actualizarCantidad($idUsuario, $id, $cantidad);
+            if ($this->failCartOperation($resultado)) {
+                $this->respondCartError($resultado, 'No se pudo actualizar la cantidad');
+            }
             $this->syncSessionCartFromSource();
         } else {
             if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
@@ -280,7 +320,10 @@ class CarritoController {
         $idUsuario = $this->getUsuarioId();
 
         if ($idUsuario > 0) {
-            $this->carritoModel->eliminarProducto($idUsuario, $id);
+            $resultado = $this->carritoModel->eliminarProducto($idUsuario, $id);
+            if ($this->failCartOperation($resultado)) {
+                $this->respondCartError($resultado, 'No se pudo eliminar el producto del carrito');
+            }
             $this->syncSessionCartFromSource();
         } else {
             if (isset($_SESSION['carrito'][$id])) {
@@ -303,7 +346,10 @@ class CarritoController {
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario > 0) {
-            $this->carritoModel->vaciarCarrito($idUsuario);
+            $resultado = $this->carritoModel->vaciarCarrito($idUsuario);
+            if ($this->failCartOperation($resultado)) {
+                $this->respondCartError($resultado, 'No se pudo vaciar el carrito');
+            }
         }
         $_SESSION['carrito'] = [];
 

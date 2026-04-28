@@ -204,6 +204,14 @@
     padding: 42px;
     text-align: center;
 }
+.cart-alert {
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 14px;
+    background: rgba(239,68,68,0.08);
+    color: #fca5a5;
+}
 .cart-empty h2 {
     font-family: 'Syne', sans-serif;
     font-size: 30px;
@@ -267,6 +275,12 @@
                 </button>
             <?php endif; ?>
         </div>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="cart-alert">
+                <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error']); ?>
+            </div>
+        <?php endif; ?>
 
         <?php if (empty($items)): ?>
             <section class="cart-empty">
@@ -335,15 +349,19 @@
                 </section>
 
                 <aside class="cart-side">
+                    <?php
+                    $totalItemsResumen = $resumenCarrito['total_items'] ?? array_sum($_SESSION['carrito'] ?? []);
+                    $totalPagarResumen = $resumenCarrito['total_pagar'] ?? $subtotal;
+                    ?>
                     <section class="cart-summary">
                         <h2>Resumen</h2>
                         <div class="cart-row">
                             <span>Productos</span>
-                            <strong id="cart-total-items"><?= array_sum($_SESSION['carrito'] ?? []) ?></strong>
+                            <strong id="cart-total-items"><?= (int) $totalItemsResumen ?></strong>
                         </div>
                         <div class="cart-row cart-total">
                             <span>Subtotal</span>
-                            <strong id="cart-subtotal">$<?= number_format((float) $subtotal) ?></strong>
+                            <strong id="cart-subtotal">$<?= number_format((float) $totalPagarResumen) ?></strong>
                         </div>
                     </section>
 

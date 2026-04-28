@@ -44,8 +44,10 @@ class LoginController {
         $_SESSION['bienvenida'] = "👋 Bienvenido, " . $usuario['username'];
 
         $carritoModel = new CarritoModel($pdo);
+        $carritoModel->obtenerOCrearCarritoUsuario((int) $usuario['id_usuario']);
         $carritoInvitado = $_SESSION['carrito'] ?? [];
         $carritoModel->fusionarCarritoInvitado((int) $usuario['id_usuario'], $carritoInvitado);
+        unset($_SESSION['carrito']);
         $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario((int) $usuario['id_usuario']);
 
         if ($usuario['id_tipo'] == 1) {

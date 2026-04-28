@@ -9,7 +9,7 @@ class CategoriaModel {
     }
 
     public function obtenerTodas() {
-        $stmt = oci_parse($this->conn, "SELECT * FROM categoria_producto");
+        $stmt = oci_parse($this->conn, "SELECT id_categoria, nombre FROM categoria_producto ORDER BY nombre");
         oci_execute($stmt);
 
         $results = [];
