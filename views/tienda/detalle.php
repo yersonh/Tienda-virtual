@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 <?php
-$usuarioLogueado = isset($_SESSION['id_usuario']);
+$usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 $categoriaActual = $_GET['categoria'] ?? ($producto['categoria_nombre'] ?? '');
 $volverUrl = 'index.php?action=tienda';
 if (!empty($categoriaActual)) {
@@ -505,8 +505,8 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                     <p><?= !empty($producto['descripcion']) ? nl2br(htmlspecialchars($producto['descripcion'], ENT_QUOTES, 'UTF-8')) : 'Este producto no tiene una descripcion registrada todavia.' ?></p>
                 </div>
 
-                <?php if($usuarioLogueado): ?>
-                    <div class="detail-cart-row">
+                <div class="detail-cart-row">
+                    <?php if($usuarioLogueado): ?>
                         <div class="detail-qty">
                             <button type="button" id="detail-qty-minus" onclick="changeDetailQty(-1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
                             <span id="detail-qty-value"><?= $cantidadInicial ?></span>
@@ -526,8 +526,12 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                             </svg>
                             <span id="detail-add-label"><?= $enLimite ? 'Limite alcanzado' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar al carrito') ?></span>
                         </button>
-                    </div>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <button class="detail-add-btn" type="button" onclick="location.href='index.php?action=login'">
+                            Inicia sesion para comprar
+                        </button>
+                    <?php endif; ?>
+                </div>
 
                 <div class="detail-actions">
                     <a class="detail-action primary" href="<?= htmlspecialchars($volverUrl, ENT_QUOTES, 'UTF-8') ?>">
@@ -535,7 +539,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                             <path d="M19 12H5"></path>
                             <path d="m11 18-6-6 6-6"></path>
                         </svg>
-                        Seguir comprando
+                        <?= $usuarioLogueado ? 'Seguir comprando' : 'Seguir viendo' ?>
                     </a>
                     <?php if($usuarioLogueado): ?>
                         <a class="detail-action secondary" href="index.php?action=verCarrito">

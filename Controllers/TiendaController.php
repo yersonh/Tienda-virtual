@@ -54,7 +54,7 @@ class TiendaController {
             session_start();
         }
 
-        if (isset($_SESSION['id_usuario'])) {
+        if (!empty($_SESSION['logueado']) && isset($_SESSION['id_usuario'])) {
             unset($_SESSION['carrito']);
             $carrito = $this->getCachedCart();
             if ($carrito === null) {
@@ -65,12 +65,8 @@ class TiendaController {
             return $carrito;
         }
 
-        if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
-            $_SESSION['carrito'] = [];
-        }
-
-        $_SESSION['carrito_count'] = array_sum($_SESSION['carrito']);
-        return $_SESSION['carrito'];
+        $_SESSION['carrito_count'] = 0;
+        return [];
     }
 
     private function getCache(string $key) {

@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 <?php $carritoVista = isset($carritoVista) && is_array($carritoVista) ? $carritoVista : ($_SESSION['carrito'] ?? []); ?>
-<?php $usuarioLogueado = isset($_SESSION['id_usuario']); ?>
+<?php $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']); ?>
 
 <style>
 /* HERO SECTION */
@@ -816,8 +816,8 @@
                         </span>
                     </div>
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
-                    <?php if($usuarioLogueado): ?>
-                        <div class="card-footer">
+                    <div class="card-footer">
+                        <?php if($usuarioLogueado): ?>
                             <div class="qty-wrap">
                                 <button class="qty-btn" id="qty-minus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
                                 <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= $cantidadInicial ?></span>
@@ -836,8 +836,12 @@
                                 </span>
                                 <?= $enLimite ? 'Limite' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar') ?>
                             </button>
-                        </div>
-                    <?php endif; ?>
+                        <?php else: ?>
+                            <button class="add-btn" type="button" onclick="event.stopPropagation(); location.href='index.php?action=login'">
+                                Inicia sesion para comprar
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
             <?php endforeach; ?>

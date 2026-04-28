@@ -293,8 +293,8 @@ class CarritoController {
             exit();
         }
 
-        $_SESSION['carrito_count'] = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
         $carritoActual[$id] = $cantidadFinal;
+        $_SESSION['carrito_count'] = array_sum($carritoActual);
         $_SESSION['carrito_mapa_cache'] = [
             'expires' => time() + 30,
             'data' => $carritoActual

@@ -377,7 +377,7 @@
 
                     <a class="cart-checkout" href="index.php?action=tienda">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
-                        Seguir comprando
+                        <?= !empty($_SESSION['logueado']) ? 'Seguir comprando' : 'Seguir viendo' ?>
                     </a>
                     <a class="cart-continue" href="index.php?action=inicio">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
@@ -413,6 +413,15 @@ function changeCartQty(id, delta, stock) {
     updateCartItem(id);
 }
 
+function handleCartAuthError(response) {
+    if (response.status === 401) {
+        window.location.href = 'index.php?action=login';
+        return true;
+    }
+
+    return false;
+}
+
 async function updateCartItem(id) {
     const qty = parseInt(document.getElementById('cart-qty-' + id).textContent, 10);
     const response = await fetch('index.php?action=actualizarCarrito', {
@@ -429,6 +438,7 @@ async function updateCartItem(id) {
     });
 
     const data = await response.json();
+    if (handleCartAuthError(response)) return;
     if (!response.ok || !data.ok) return;
 
     const qtyEl = document.getElementById('cart-qty-' + id);
@@ -456,6 +466,7 @@ async function removeCartItem(id) {
     });
 
     const data = await response.json();
+    if (handleCartAuthError(response)) return;
     if (!response.ok || !data.ok) return;
 
     syncCartSummary(data);
@@ -494,6 +505,7 @@ async function vaciarCarrito() {
     });
 
     const data = await response.json();
+    if (handleCartAuthError(response)) return;
     if (!response.ok || !data.ok) return;
 
     window.location.reload();

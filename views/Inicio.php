@@ -14,15 +14,19 @@ body {
     min-height:100vh;
     background:
         linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
-        url('../imagenes/Fondo.png') no-repeat center center fixed;
+        url('imagenes/Fondo.png') no-repeat center center fixed;
     background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
     font-family: 'Poppins', sans-serif;
 }
-[data-theme="light"] body {
+body[data-theme="light"] {
     background:
         linear-gradient(rgba(255,255,255,0.82), rgba(241,245,249,0.92)),
-        url('../imagenes/Fondo.png') no-repeat center center fixed;
+        url('imagenes/Fondoclaro.png') no-repeat center center fixed;
     background-size: cover;
+    background-position:center;
+    background-repeat:no-repeat;
 }
 
 /* CONTENEDOR TRANSPARENTE */

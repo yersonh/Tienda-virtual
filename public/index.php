@@ -2,6 +2,7 @@
 session_start();
 
 $action = $_GET['action'] ?? 'tienda';
+$_SESSION['logueado'] = isset($_SESSION['id_usuario']);
 
 if ($action === 'health') {
     http_response_code(200);
@@ -30,7 +31,7 @@ $publicas = [
     'productoDetalle'
 ];
 
-if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas, true)) {
+if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
     if (in_array($action, ['agregarCarrito', 'agregarAjax', 'verCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
         if (
             (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
@@ -38,7 +39,11 @@ if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas, true)) {
         ) {
             http_response_code(401);
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['ok' => false, 'message' => 'Debes iniciar sesion para usar el carrito']);
+            echo json_encode([
+                'ok' => false,
+                'success' => false,
+                'message' => 'Debes iniciar sesion para usar el carrito'
+            ]);
             exit();
         }
 

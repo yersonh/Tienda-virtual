@@ -4,31 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 🔥 CONTADOR DEL CARRITO
+$logueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 $carritoCountProvided = isset($carritoCount);
-$carritoCount = $carritoCountProvided ? (int) $carritoCount : 0;
+$carritoCount = $logueado
+    ? ($carritoCountProvided ? (int) $carritoCount : (int) ($_SESSION['carrito_count'] ?? 0))
+    : 0;
 
-if (!$carritoCountProvided) {
-    if (isset($_SESSION['carrito_count'])) {
-        $carritoCount = (int) $_SESSION['carrito_count'];
-    } elseif (isset($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
-        $carritoCount = array_sum($_SESSION['carrito']);
-        $_SESSION['carrito_count'] = $carritoCount;
-    }
-}
-
-if (!$carritoCountProvided && !isset($_SESSION['carrito_count'])) {
-    if (isset($_SESSION['id_usuario'])) {
-        try {
-            require_once __DIR__ . '/../../config/database.php';
-            require_once __DIR__ . '/../../models/CarritoModel.php';
-            $carritoNavbar = (new CarritoModel(Database::getConnection()))->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
-            $carritoCount = array_sum($carritoNavbar);
-            $_SESSION['carrito_count'] = $carritoCount;
-        } catch (Throwable $e) {
-            error_log('Error obteniendo contador del carrito: ' . $e->getMessage());
-        }
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -36,7 +17,8 @@ if (!$carritoCountProvided && !isset($_SESSION['carrito_count'])) {
 <head>
 <meta charset="UTF-8">
 <title>NAYLEX Store</title>
-<link rel="icon" href="public/imagenes/logosinfondo.ico" type="image/png">
+<link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -216,14 +198,14 @@ body {
       <a href="index.php?action=tienda">Productos</a>
     </div>
     <div class="nav-actions">
-      <?php if(isset($_SESSION['id_usuario'])): ?>
+      <?php if($logueado): ?>
         <a href="index.php?action=perfil" class="btn-ghost">Perfil</a>
         <a href="index.php?action=logout" class="btn-ghost">Salir</a>
       <?php else: ?>
         <a href="index.php?action=login" class="btn-ghost">Login</a>
         <button class="btn-primary" onclick="location.href='index.php?action=registro'">Registro</button>
       <?php endif; ?>
-      <?php if(isset($_SESSION['id_usuario'])): ?>
+      <?php if($logueado): ?>
         <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="Ver carrito">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="9" cy="20" r="1"></circle>

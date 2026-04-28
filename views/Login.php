@@ -10,6 +10,8 @@ if (session_status() === PHP_SESSION_NONE) {
 <head>
 <meta charset="UTF-8">
 <title>NAYLEX Store</title>
+<link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -23,7 +25,7 @@ if (session_status() === PHP_SESSION_NONE) {
     --input-text: #ffffff;
     --muted: #94a3b8;
     --body-text: #e5e7eb;
-    --page-bg-image: url('../imagenes/Fondo.png');
+    --page-bg-image: url('imagenes/Fondo.png');
 }
 [data-theme="light"] {
     --bg-overlay-1: rgba(255,255,255,0.82);
@@ -34,7 +36,7 @@ if (session_status() === PHP_SESSION_NONE) {
     --input-text: #0f172a;
     --muted: #64748b;
     --body-text: #334155;
-    --page-bg-image: url('../imagenes/Fondoclaro.png');
+    --page-bg-image: url('imagenes/Fondoclaro.png');
 }
 * {
     margin:0;

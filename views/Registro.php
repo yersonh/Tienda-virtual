@@ -7,6 +7,8 @@ $old = $_SESSION['old'] ?? [];
 <head>
 <meta charset="UTF-8">
 <title>Registro</title>
+<link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -19,7 +21,7 @@ $old = $_SESSION['old'] ?? [];
     --input-bg: #334155;
     --input-text: #ffffff;
     --muted: #94a3b8;
-    --page-bg-image: url('../imagenes/Fondo.png');
+    --page-bg-image: url('imagenes/Fondo.png');
 }
 [data-theme="light"] {
     --bg-overlay-1: rgba(255,255,255,0.82);
@@ -29,7 +31,7 @@ $old = $_SESSION['old'] ?? [];
     --input-bg: #eef2f7;
     --input-text: #0f172a;
     --muted: #64748b;
-    --page-bg-image: url('../imagenes/Fondoclaro.png');
+    --page-bg-image: url('imagenes/Fondoclaro.png');
 }
 
 * {
