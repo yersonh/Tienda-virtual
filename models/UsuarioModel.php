@@ -247,4 +247,71 @@ class UsuarioModel {
             ];
         }
     }
+
+    public function actualizarPerfil($id_usuario, $data) {
+
+        try {
+
+            // 🔎 Obtener id_persona
+            $sql = "SELECT id_persona FROM usuario WHERE id_usuario = :id_usuario";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([':id_usuario' => $id_usuario]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$usuario) {
+                return [
+                    'success' => false,
+                    'message' => 'Usuario no encontrado'
+                ];
+            }
+
+            $id_persona = $usuario['id_persona'];
+
+            // 🔎 Validar correo único (excepto el mismo usuario)
+            $sqlCorreo = "SELECT COUNT(*) FROM persona 
+                        WHERE correo = :correo AND id_persona != :id_persona";
+            $stmtCorreo = $this->conn->prepare($sqlCorreo);
+            $stmtCorreo->execute([
+                ':correo' => $data['correo'],
+                ':id_persona' => $id_persona
+            ]);
+
+            if ($stmtCorreo->fetchColumn() > 0) {
+                return [
+                    'success' => false,
+                    'message' => 'El correo ya está en uso'
+                ];
+            }
+
+            // 🔄 Actualizar datos
+            $sqlUpdate = "UPDATE persona SET
+                            nombres = :nombres,
+                            apellidos = :apellidos,
+                            correo = :correo,
+                            telefono = :telefono,
+                            direccion = :direccion
+                        WHERE id_persona = :id_persona";
+
+            $stmtUpdate = $this->conn->prepare($sqlUpdate);
+
+            $stmtUpdate->execute([
+                ':nombres' => $data['nombres'],
+                ':apellidos' => $data['apellidos'],
+                ':correo' => $data['correo'],
+                ':telefono' => $data['telefono'],
+                ':direccion' => $data['direccion'],
+                ':id_persona' => $id_persona
+            ]);
+
+            return [
+                'success' => true
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error al actualizar el perfil'
+            ];
+        }
+    }
 }
