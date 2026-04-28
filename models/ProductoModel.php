@@ -26,12 +26,36 @@ class ProductoModel {
         return $normalized;
     }
 
+    private function productoColumns(string $alias = 'p', bool $includeTotalVendido = false): string {
+        $prefix = $alias !== '' ? $alias . '.' : '';
+        $columns = [
+            "{$prefix}id_producto",
+            "{$prefix}nombre",
+            "{$prefix}codigo",
+            "{$prefix}descripcion",
+            "{$prefix}precio",
+            "{$prefix}stock_p",
+            "{$prefix}estado",
+            "{$prefix}id_categoria",
+            "{$prefix}categoria_nombre",
+            "(SELECT MIN(pi.url) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.orden, 999999), pi.id_imagen)
+              FROM producto_imagen pi
+              WHERE pi.id_producto = {$prefix}id_producto) AS imagen"
+        ];
+
+        if ($includeTotalVendido) {
+            $columns[] = "{$prefix}total_vendido";
+        }
+
+        return implode(",\n                         ", $columns);
+    }
+
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
     public function obtenerCatalogo() {
-    $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+    $columns = $this->productoColumns('p');
     $query = "SELECT $columns
-              FROM v_productos_completo
-              ORDER BY categoria_nombre, nombre";
+              FROM v_productos_completo p
+              ORDER BY p.categoria_nombre, p.nombre";
 
     $stmt = oci_parse($this->conn, $query);
     oci_execute($stmt);
@@ -46,10 +70,10 @@ class ProductoModel {
 }
 
     public function obtenerTodos() {
-        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+        $columns = $this->productoColumns('p');
         $query = "SELECT $columns
-                  FROM v_productos_completo
-                  ORDER BY id_producto DESC";
+                  FROM v_productos_completo p
+                  ORDER BY p.id_producto DESC";
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
 
@@ -63,10 +87,10 @@ class ProductoModel {
     }
 
     public function obtenerPorId($id) {
-        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+        $columns = $this->productoColumns('p');
         $query = "SELECT $columns
-                  FROM v_productos_completo
-                  WHERE id_producto = :id";
+                  FROM v_productos_completo p
+                  WHERE p.id_producto = :id";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id);
         oci_execute($stmt);
@@ -114,11 +138,11 @@ class ProductoModel {
         }
         $placeholdersStr = implode(',', $placeholders);
 
-        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen";
+        $columns = $this->productoColumns('p');
         $query = "SELECT $columns
-                  FROM v_productos_completo
-                  WHERE id_producto IN ($placeholdersStr)
-                  ORDER BY nombre";
+                  FROM v_productos_completo p
+                  WHERE p.id_producto IN ($placeholdersStr)
+                  ORDER BY p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
         $bindValues = [];
@@ -139,11 +163,11 @@ class ProductoModel {
 
     public function obtenerMasVendidos($limite = 5) {
         $limite = max(1, min(10, (int) $limite));
-        $columns = "id_producto, nombre, codigo, descripcion, precio, stock_p, estado, id_categoria, categoria_nombre, imagen, total_vendido";
+        $columns = $this->productoColumns('p', true);
 
         $query = "SELECT $columns
-                  FROM v_productos_mas_vendidos
-                  ORDER BY total_vendido DESC
+                  FROM v_productos_mas_vendidos p
+                  ORDER BY p.total_vendido DESC
                   FETCH FIRST :limite ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
