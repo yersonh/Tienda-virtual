@@ -20,6 +20,7 @@ class RegistroController {
     }
 
     private function validarRegistro(array $data, string $confirmPassword, UsuarioModel $model): ?array {
+
         if (
             $data['nombres'] === '' ||
             $data['apellidos'] === '' ||
@@ -38,31 +39,31 @@ class RegistroController {
         }
 
         if (!preg_match('/^[0-9]{10}$/', $data['telefono'])) {
-            return ['success' => false, 'error' => 'El telefono debe tener exactamente 10 digitos'];
+            return ['success' => false, 'error' => 'El teléfono debe tener exactamente 10 dígitos'];
         }
 
         if (strlen($data['username']) < 3) {
-            return ['success' => false, 'error' => 'El usuario debe tener minimo 3 caracteres'];
+            return ['success' => false, 'error' => 'El usuario debe tener mínimo 3 caracteres'];
         }
 
         if (strlen($data['password']) < 6) {
-            return ['success' => false, 'error' => 'La contrasena debe tener minimo 6 caracteres'];
+            return ['success' => false, 'error' => 'La contraseña debe tener mínimo 6 caracteres'];
         }
 
         if ($data['password'] !== $confirmPassword) {
-            return ['success' => false, 'error' => 'Las contrasenas no coinciden'];
+            return ['success' => false, 'error' => 'Las contraseñas no coinciden'];
         }
 
         if ($model->correoExisteEmail($data['correo'])) {
-            return ['success' => false, 'error' => 'El correo ya esta registrado'];
+            return ['success' => false, 'error' => 'El correo ya está registrado'];
         }
 
         if ($model->telefonoExiste($data['telefono'])) {
-            return ['success' => false, 'error' => 'El telefono ya esta registrado'];
+            return ['success' => false, 'error' => 'El teléfono ya está registrado'];
         }
 
         if ($model->usernameExiste($data['username'])) {
-            return ['success' => false, 'error' => 'El usuario ya esta registrado'];
+            return ['success' => false, 'error' => 'El usuario ya está registrado'];
         }
 
         return null;
@@ -88,14 +89,17 @@ class RegistroController {
             $error = $this->validarRegistro($data, $confirmPassword, $model);
             if ($error !== null) {
                 $this->jsonResponse($error, 422);
+                return;
             }
 
             $resultado = $model->crearConPersona($data);
+
             if (!($resultado['success'] ?? false)) {
                 $this->jsonResponse([
                     'success' => false,
-                    'error' => $resultado['error'] ?? $resultado['message'] ?? 'Error al registrar el usuario'
+                    'error' => $resultado['error'] ?? 'Error al registrar el usuario'
                 ], 422);
+                return;
             }
 
             unset($_SESSION['old']);
@@ -106,75 +110,120 @@ class RegistroController {
                 'redirect' => 'index.php?action=login',
                 'message' => 'Registro exitoso'
             ]);
+            return;
+
         } catch (Exception $e) {
             error_log($e->getMessage());
-            $this->jsonResponse(['success' => false, 'error' => 'No se pudo registrar el usuario'], 500);
+            $this->jsonResponse([
+                'success' => false,
+                'error' => 'No se pudo registrar el usuario'
+            ], 500);
+            return;
         }
     }
 
+    // 🔥 CORREO
     public function verificarCorreo(): void {
         try {
             $correo = strtolower(trim($_POST['correo'] ?? ''));
 
             if ($correo === '') {
-                $this->jsonResponse(['success' => true, 'existe' => false]);
+                $this->jsonResponse(['success' => true, 'disponible' => false]);
+                return;
             }
 
             if (!preg_match('/^[A-Za-z0-9._%+-]+@gmail\.com$/', $correo)) {
-                $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Solo se permiten correos @gmail.com'], 422);
+                $this->jsonResponse([
+                    'success' => false,
+                    'disponible' => false,
+                    'error' => 'Solo se permiten correos @gmail.com'
+                ], 422);
+                return;
             }
+
+            $existe = $this->getUsuarioModel()->correoExisteEmail($correo);
 
             $this->jsonResponse([
                 'success' => true,
-                'existe' => $this->getUsuarioModel()->correoExisteEmail($correo)
+                'disponible' => !$existe
             ]);
+            return;
+
         } catch (Exception $e) {
             error_log($e->getMessage());
-            $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar correo'], 500);
+            $this->jsonResponse([
+                'success' => false,
+                'disponible' => false,
+                'error' => 'Error al verificar correo'
+            ], 500);
+            return;
         }
     }
-    
-    public function verificarUsername() {
 
-        header('Content-Type: application/json');
+    // 🔥 USERNAME
+    public function verificarUsername(): void {
+        try {
+            $username = strtolower(trim($_POST['username'] ?? ''));
 
-        $username = strtolower(trim($_POST['username'] ?? ''));
+            if ($username === '') {
+                $this->jsonResponse(['success' => true, 'disponible' => false]);
+                return;
+            }
 
-        if (empty($username)) {
-            echo json_encode(['disponible' => false]);
-            exit();
+            $existe = $this->getUsuarioModel()->usernameExiste($username);
+
+            $this->jsonResponse([
+                'success' => true,
+                'disponible' => !$existe
+            ]);
+            return;
+
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $this->jsonResponse([
+                'success' => false,
+                'disponible' => false,
+                'error' => 'Error al verificar usuario'
+            ], 500);
+            return;
         }
-
-        $conn = Database::getConnection();
-        $model = new UsuarioModel($conn);
-
-        $existe = $model->usernameExiste($username);
-
-        echo json_encode([
-            'disponible' => !$existe
-        ]);
-
-        exit();
     }
+
+    // 🔥 TELÉFONO
     public function verificarTelefono(): void {
         try {
             $telefono = trim($_POST['telefono'] ?? '');
 
             if ($telefono === '') {
-                $this->jsonResponse(['success' => true, 'existe' => false]);
+                $this->jsonResponse(['success' => true, 'disponible' => false]);
+                return;
             }
 
             if (!preg_match('/^[0-9]{10}$/', $telefono)) {
-                $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'El telefono debe tener exactamente 10 digitos'], 422);
+                $this->jsonResponse([
+                    'success' => false,
+                    'disponible' => false,
+                    'error' => 'El teléfono debe tener exactamente 10 dígitos'
+                ], 422);
+                return;
             }
+
+            $existe = $this->getUsuarioModel()->telefonoExiste($telefono);
 
             $this->jsonResponse([
                 'success' => true,
-                'existe' => $this->getUsuarioModel()->telefonoExiste($telefono)
+                'disponible' => !$existe
             ]);
+            return;
+
         } catch (Exception $e) {
             error_log($e->getMessage());
-            $this->jsonResponse(['success' => false, 'existe' => false, 'error' => 'Error al verificar telefono'], 500);
+            $this->jsonResponse([
+                'success' => false,
+                'disponible' => false,
+                'error' => 'Error al verificar teléfono'
+            ], 500);
+            return;
         }
     }
 }
