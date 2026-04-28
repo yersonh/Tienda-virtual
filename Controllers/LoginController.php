@@ -42,18 +42,27 @@ class LoginController {
         // 🔐 SESIÓN
         $_SESSION['id_usuario'] = $usuario['id_usuario'];
         $_SESSION['username'] = $usuario['username'];
+        $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
         $_SESSION['bienvenida'] = "👋 Bienvenido, " . $usuario['username'];
 
         // 🛒 CARRITO
         $carritoModel = new CarritoModel($conn);
-        $carritoModel->obtenerOCrearCarritoUsuario((int) $usuario['id_usuario']);
-
         $carritoInvitado = $_SESSION['carrito'] ?? [];
-        $carritoModel->fusionarCarritoInvitado((int) $usuario['id_usuario'], $carritoInvitado);
 
-        unset($_SESSION['carrito']);
-        $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario((int) $usuario['id_usuario']);
+        try {
+            $resultadoFusion = $carritoModel->fusionarCarritoSesion((int) $usuario['id_usuario'], $carritoInvitado);
+
+            if (($resultadoFusion['success'] ?? false) === false) {
+                throw new Exception($resultadoFusion['message'] ?? 'No se pudo fusionar el carrito');
+            }
+
+            unset($_SESSION['carrito']);
+            $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario((int) $usuario['id_usuario']);
+        } catch (Exception $e) {
+            error_log('Error sincronizando carrito al iniciar sesion: ' . $e->getMessage());
+            $_SESSION['carrito'] = is_array($carritoInvitado) ? $carritoInvitado : [];
+        }
 
         // 🚀 REDIRECCIÓN
         if ($usuario['id_tipo'] == 1) {

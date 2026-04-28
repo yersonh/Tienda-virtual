@@ -31,8 +31,8 @@ class TiendaController {
         $this->syncCartSession();
 
         $filtro = $_GET['filtro'] ?? '';
-        $precio_min = $_GET['precio_min'] ?? '';
-        $precio_max = $_GET['precio_max'] ?? '';
+        $precio_min = preg_replace('/\D/', '', $_GET['precio_min'] ?? '');
+        $precio_max = preg_replace('/\D/', '', $_GET['precio_max'] ?? '');
         $categoria_filtro = $_GET['categoria'] ?? '';
 
         $productos = $this->model->obtenerCatalogo();
@@ -54,11 +54,11 @@ class TiendaController {
             $match_precio = true;
 
            if ($precio_min !== '') {
-                $match_precio = $p['precio'] >= str_replace('.', '', $precio_min);
+                $match_precio = $p['precio'] >= (int) $precio_min;
             }
 
             if ($precio_max !== '') {
-                $match_precio = $match_precio && $p['precio'] <= str_replace('.', '', $precio_max);
+                $match_precio = $match_precio && $p['precio'] <= (int) $precio_max;
             }
 
             // Ã°Å¸â€œÂ¦ CATEGORIA

@@ -333,7 +333,7 @@ class CarritoController {
 
         if ($this->isAjaxRequest()) {
             header('Content-Type: application/json');
-            echo json_encode($this->buildCartResponse());
+            echo json_encode($this->buildCartResponse($id));
             exit();
         }
 

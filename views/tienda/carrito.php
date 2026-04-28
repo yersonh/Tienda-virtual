@@ -448,11 +448,26 @@ async function removeCartItem(id) {
     const data = await response.json();
     if (!response.ok || !data.ok) return;
 
+    syncCartSummary(data);
+
+    if (typeof data.cantidad !== 'undefined' && data.cantidad > 0) {
+        const qtyEl = document.getElementById('cart-qty-' + id);
+        if (qtyEl) {
+            qtyEl.textContent = data.cantidad;
+        }
+
+        syncCartQtyButtons(id, data.stock || 0);
+        const lineTotal = document.getElementById('cart-line-total-' + id);
+        if (lineTotal) {
+            lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');
+        }
+        return;
+    }
+
     const row = document.getElementById('cart-item-' + id);
     if (row) {
         row.remove();
     }
-    syncCartSummary(data);
 
     if (!document.querySelector('.cart-item')) {
         window.location.reload();

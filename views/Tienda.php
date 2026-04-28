@@ -640,8 +640,8 @@
 
 <div class="filters">
     <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="number" placeholder="Precio min" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="number" placeholder="Precio max" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="Precio min" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="Precio max" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
         <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>>Todas las categorias</option>
         <?php foreach($todasCategorias as $cat): ?>
@@ -902,10 +902,11 @@ async function addCart(id){
 }
 
 function setTab(el, val){
+    categoriaActiva = val || '';
     if(detailMode){
         const texto = buscador.value.trim();
-        const min = precioMin.value.replace(/\./g,'').trim();
-        const max = precioMax.value.replace(/\./g,'').trim();
+        const min = precioMin.value.replace(/\D/g,'').trim();
+        const max = precioMax.value.replace(/\D/g,'').trim();
         const params = new URLSearchParams();
         params.set('action', 'tienda');
         if(texto) params.set('filtro', texto);
@@ -955,8 +956,8 @@ function syncCategoryTabs(cat){
 
 function showCategory(cat){
     const texto = buscador.value.trim();
-    const min = precioMin.value.replace(/\./g,'').trim();
-    const max = precioMax.value.replace(/\./g,'').trim();
+    const min = precioMin.value.replace(/\D/g,'').trim();
+    const max = precioMax.value.replace(/\D/g,'').trim();
     const params = new URLSearchParams();
     params.set('action', 'tienda');
     if(texto) params.set('filtro', texto);
@@ -973,22 +974,27 @@ const precioMax = document.getElementById('price-max');
 const categoria = document.getElementById('cat-select');
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
+let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
 
 // UN SOLO EVENTO PARA TODO
-[buscador, precioMin, precioMax, categoria].forEach(el=>{
+[buscador, precioMin, precioMax].forEach(el=>{
     el.addEventListener('input', filterProducts);
+});
+categoria.addEventListener('change', () => {
+    categoriaActiva = categoria.value;
+    filterProducts();
 });
 
 // FUNCION PRINCIPAL (TODO EN UNO)
 function filterProducts(){
 
     let texto = buscador.value.toLowerCase();
-    let min = precioMin.value.replace(/\./g,'');
-    let max = precioMax.value.replace(/\./g,'');
-    let cat = categoria.value;
+    let min = precioMin.value.replace(/\D/g,'');
+    let max = precioMax.value.replace(/\D/g,'');
+    let cat = categoria.value || categoriaActiva;
 
     if(detailMode){
         const params = new URLSearchParams();
@@ -1032,6 +1038,7 @@ function filterProducts(){
     });
 
     syncCategoryTabs(cat);
+    categoriaActiva = cat;
 
     // ACTUALIZAR SELECT SIN ROMPER
     let valorActual = categoria.value;
@@ -1083,6 +1090,9 @@ function clearFilters(){
 }
 
 syncCategoryTabs(categoria.value);
+if (categoriaActiva && !categoria.value) {
+    categoria.value = categoriaActiva;
+}
 
 // FORMATO
 function formatoMiles(input){
@@ -1095,7 +1105,11 @@ function formatoMiles(input){
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-filterProducts();
+if (!detailMode) {
+    filterProducts();
+} else {
+    syncCategoryTabs(categoria.value || categoriaActiva);
+}
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
