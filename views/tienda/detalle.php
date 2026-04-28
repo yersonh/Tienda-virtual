@@ -636,7 +636,7 @@ async function addDetailToCart(idProducto) {
     label.textContent = 'Agregando';
 
     try {
-        const response = await fetch('index.php?action=agregarCarrito', {
+        const response = await fetch('index.php?action=agregarAjax', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
@@ -650,20 +650,24 @@ async function addDetailToCart(idProducto) {
         });
 
         const data = await response.json();
-        if (!response.ok || !data.ok) {
+        if (!response.ok || !data.success) {
             if (data && typeof data.cantidad !== 'undefined') {
                 detailCartQty = data.cantidad || 0;
                 syncDetailControls(data.stock || detailStock);
             }
-            throw new Error('No se pudo agregar el producto');
+            if (response.status === 401) {
+                window.location.href = 'index.php?action=login';
+                return;
+            }
+            throw new Error(data.message || 'No se pudo agregar el producto');
         }
 
         detailCartQty = data.cantidad || 0;
         syncDetailControls(data.stock || detailStock);
 
-        const cartCount = document.getElementById('cart-count');
+        const cartCount = document.getElementById('carrito-count');
         if (cartCount) {
-            cartCount.textContent = data.total;
+            cartCount.textContent = data.carrito_count;
         }
     } catch (error) {
         console.error(error);

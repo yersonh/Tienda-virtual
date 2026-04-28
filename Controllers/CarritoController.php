@@ -58,13 +58,16 @@ class CarritoController {
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario > 0) {
             unset($_SESSION['carrito']);
-            return $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
+            $carrito = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
+            $_SESSION['carrito_count'] = array_sum($carrito);
+            return $carrito;
         }
 
         if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
             $_SESSION['carrito'] = [];
         }
 
+        $_SESSION['carrito_count'] = array_sum($_SESSION['carrito']);
         return $_SESSION['carrito'];
     }
 
@@ -73,7 +76,11 @@ class CarritoController {
         $ajustoCantidades = false;
 
         if ($idUsuario > 0) {
-            return $this->carritoModel->obtenerItemsVisualizacion($idUsuario);
+            $items = $this->carritoModel->obtenerItemsVisualizacion($idUsuario);
+            $_SESSION['carrito_count'] = array_sum(array_map(function($item) {
+                return (int) ($item['cantidad'] ?? 0);
+            }, $items));
+            return $items;
         }
 
         $carrito = $this->syncSessionCartFromSource();
@@ -119,6 +126,9 @@ class CarritoController {
         $items = array_values(array_filter($items, function($item) {
             return (int) ($item['cantidad'] ?? 0) > 0;
         }));
+        $_SESSION['carrito_count'] = array_sum(array_map(function($item) {
+            return (int) ($item['cantidad'] ?? 0);
+        }, $items));
 
         return $items;
     }
@@ -145,6 +155,7 @@ class CarritoController {
                 $stockDisponible = $stockDisponible ?: (int) ($item['stock_p'] ?? 0);
             }
         }
+        $_SESSION['carrito_count'] = $total;
 
         return [
             'ok' => true,
@@ -222,10 +233,79 @@ class CarritoController {
         exit();
     }
 
+    public function agregarAjax() {
+        $this->ensureSession();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Debes iniciar sesion para agregar productos al carrito'
+            ]);
+            exit();
+        }
+
+        $id = (int) ($_POST['id_producto'] ?? 0);
+        $cantidad = max(1, (int) ($_POST['cantidad'] ?? 1));
+        $producto = $this->productoModel->obtenerPorId($id);
+
+        if ($id <= 0 || !$producto) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Producto invalido'
+            ]);
+            exit();
+        }
+
+        $stockDisponible = max(0, (int) ($producto['stock_p'] ?? 0));
+        $carritoActual = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
+        $cantidadActual = (int) ($carritoActual[$id] ?? 0);
+        $cantidadFinal = min($stockDisponible, $cantidadActual + $cantidad);
+        $cantidadAgregar = max(0, $cantidadFinal - $cantidadActual);
+
+        if ($cantidadAgregar <= 0) {
+            $_SESSION['carrito_count'] = array_sum($carritoActual);
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No hay stock disponible suficiente',
+                'carrito_count' => (int) $_SESSION['carrito_count'],
+                'cantidad' => $cantidadActual,
+                'stock' => $stockDisponible
+            ]);
+            exit();
+        }
+
+        $resultado = $this->carritoModel->agregarProducto($idUsuario, $id, $cantidadAgregar);
+        if ($this->failCartOperation($resultado)) {
+            http_response_code(422);
+            echo json_encode([
+                'success' => false,
+                'message' => $resultado['message'] ?? 'No se pudo agregar el producto al carrito'
+            ]);
+            exit();
+        }
+
+        $_SESSION['carrito_count'] = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
+
+        echo json_encode([
+            'success' => true,
+            'carrito_count' => (int) $_SESSION['carrito_count'],
+            'cantidad' => $cantidadFinal,
+            'stock' => $stockDisponible,
+            'message' => 'Producto agregado'
+        ]);
+        exit();
+    }
+
     public function ver() {
         $this->ensureSession();
 
         $items = $this->getDetailedItems();
+        $carritoCount = (int) ($_SESSION['carrito_count'] ?? 0);
         $resumenCarrito = null;
         $subtotal = $resumenCarrito['total_pagar'] ?? array_reduce($items, function($carry, $item) {
             return $carry + (float) $item['total_linea'];
@@ -336,6 +416,7 @@ class CarritoController {
         } else {
             $_SESSION['carrito'] = [];
         }
+        $_SESSION['carrito_count'] = 0;
 
         if ($this->isAjaxRequest()) {
             header('Content-Type: application/json');

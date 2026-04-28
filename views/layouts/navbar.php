@@ -4,19 +4,29 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 🔥 CONTADOR DEL CARRITO
-$carritoCount = isset($carritoCount) ? (int) $carritoCount : 0;
-if ($carritoCount === 0) {
+$carritoCountProvided = isset($carritoCount);
+$carritoCount = $carritoCountProvided ? (int) $carritoCount : 0;
+
+if (!$carritoCountProvided) {
+    if (isset($_SESSION['carrito_count'])) {
+        $carritoCount = (int) $_SESSION['carrito_count'];
+    } elseif (isset($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
+        $carritoCount = array_sum($_SESSION['carrito']);
+        $_SESSION['carrito_count'] = $carritoCount;
+    }
+}
+
+if (!$carritoCountProvided && !isset($_SESSION['carrito_count'])) {
     if (isset($_SESSION['id_usuario'])) {
         try {
             require_once __DIR__ . '/../../config/database.php';
             require_once __DIR__ . '/../../models/CarritoModel.php';
             $carritoNavbar = (new CarritoModel(Database::getConnection()))->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
             $carritoCount = array_sum($carritoNavbar);
+            $_SESSION['carrito_count'] = $carritoCount;
         } catch (Throwable $e) {
             error_log('Error obteniendo contador del carrito: ' . $e->getMessage());
         }
-    } elseif (isset($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
-        $carritoCount = array_sum($_SESSION['carrito']);
     }
 }
 ?>
@@ -219,7 +229,7 @@ body {
           <circle cx="18" cy="20" r="1"></circle>
           <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
         </svg>
-        <span class="cart-badge" id="cart-count"><?php echo $carritoCount; ?></span>
+        <span class="cart-badge" id="carrito-count"><?php echo $carritoCount; ?></span>
       </button>
       <button class="theme-toggle" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema"></button>
     </div>

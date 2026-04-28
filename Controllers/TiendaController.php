@@ -21,13 +21,16 @@ class TiendaController {
 
         if (isset($_SESSION['id_usuario'])) {
             unset($_SESSION['carrito']);
-            return $this->carritoModel->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
+            $carrito = $this->carritoModel->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
+            $_SESSION['carrito_count'] = array_sum($carrito);
+            return $carrito;
         }
 
         if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
             $_SESSION['carrito'] = [];
         }
 
+        $_SESSION['carrito_count'] = array_sum($_SESSION['carrito']);
         return $_SESSION['carrito'];
     }
 

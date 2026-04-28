@@ -29,6 +29,7 @@ $publicas = [
     'tienda',
     'productoDetalle',
     'agregarCarrito',
+    'agregarAjax',
     'verCarrito',
     'actualizarCarrito',
     'eliminarCarrito',
@@ -103,6 +104,10 @@ switch ($action) {
 
     case 'agregarCarrito':
         (new CarritoController())->agregar();
+        break;
+
+    case 'agregarAjax':
+        (new CarritoController())->agregarAjax();
         break;
 
     case 'verCarrito':

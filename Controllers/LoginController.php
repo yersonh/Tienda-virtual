@@ -48,12 +48,13 @@ class LoginController {
             exit();
         }
 
-        unset($_SESSION['carrito']);
+        unset($_SESSION['carrito'], $_SESSION['carrito_count']);
         $_SESSION['id_usuario'] = $usuario['id_usuario'];
         $_SESSION['username'] = $usuario['username'];
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
         $_SESSION['bienvenida'] = "Bienvenido, " . $usuario['username'];
+        $_SESSION['carrito_count'] = $carritoModel->obtenerTotalItemsCarrito((int) $usuario['id_usuario']);
 
         if ($usuario['id_tipo'] == 1) {
             header("Location: index.php?action=admin_panel");

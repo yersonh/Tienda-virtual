@@ -822,7 +822,7 @@
                         </div>
                         <button class="add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
                                 id="abtn-<?= $p['id_producto'] ?>"
-                                onclick="event.stopPropagation(); addCart(<?= $p['id_producto'] ?>)"
+                                onclick="event.stopPropagation(); agregarAlCarrito(<?= $p['id_producto'] ?>)"
                                 <?= $enLimite ? 'disabled' : '' ?>>
                             <span class="btn-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24">
@@ -912,7 +912,42 @@ function chgQty(id, delta, stock){
     el.textContent = v;
 }
 
-async function addCart(id){
+function mostrarMensajeCarrito(message, isError = false) {
+    let notice = document.getElementById('cart-toast');
+    if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'cart-toast';
+        notice.style.position = 'fixed';
+        notice.style.right = '18px';
+        notice.style.bottom = '18px';
+        notice.style.zIndex = '9999';
+        notice.style.padding = '12px 16px';
+        notice.style.borderRadius = '8px';
+        notice.style.fontWeight = '700';
+        notice.style.boxShadow = '0 12px 30px rgba(0,0,0,.25)';
+        document.body.appendChild(notice);
+    }
+
+    notice.textContent = message;
+    notice.style.background = isError ? '#ef4444' : '#00e5c0';
+    notice.style.color = isError ? '#fff' : '#06211d';
+    notice.style.opacity = '1';
+
+    clearTimeout(window.cartToastTimer);
+    window.cartToastTimer = setTimeout(() => {
+        notice.style.opacity = '0';
+    }, 2200);
+}
+
+function actualizarContadorCarrito(total) {
+    const cartCount = document.getElementById('carrito-count');
+    if (cartCount) {
+        cartCount.textContent = total;
+    }
+}
+
+async function agregarAlCarrito(id_producto, cantidad = null){
+    const id = parseInt(id_producto, 10);
     const card = document.querySelector(`.product-card[data-id="${id}"]`);
     const stock = card ? parseInt(card.dataset.stock, 10) : 0;
     if (stock <= 0 || cartQty(id) >= stock) {
@@ -920,14 +955,17 @@ async function addCart(id){
         return;
     }
 
-    const qty = parseInt(document.getElementById('qty-'+id).textContent, 10);
+    const qtyEl = document.getElementById('qty-'+id);
+    const qty = cantidad !== null ? parseInt(cantidad, 10) : parseInt(qtyEl ? qtyEl.textContent : '1', 10);
     const btn = document.getElementById('abtn-'+id);
-    btn.innerHTML = `${checkIconSvg()} Agregando`;
-    btn.classList.add('added');
-    btn.disabled = true;
+    if (btn) {
+        btn.innerHTML = `${checkIconSvg()} Agregando`;
+        btn.classList.add('added');
+        btn.disabled = true;
+    }
 
     try {
-        const response = await fetch('index.php?action=agregarCarrito', {
+        const response = await fetch('index.php?action=agregarAjax', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
@@ -941,24 +979,34 @@ async function addCart(id){
         });
 
         const data = await response.json();
-        if(!response.ok || !data.ok){
+        if(!response.ok || !data.success){
             if(data && typeof data.cantidad !== 'undefined'){
                 setCartQty(id, data.cantidad || 0);
                 syncProductControls(id, data.stock || stock);
+            }
+            if (response.status === 401) {
+                mostrarMensajeCarrito(data.message || 'Debes iniciar sesion', true);
+                setTimeout(() => {
+                    window.location.href = 'index.php?action=login';
+                }, 900);
+                return;
             }
             throw new Error((data && data.message) ? data.message : 'No se pudo agregar al carrito');
         }
 
         setCartQty(id, data.cantidad || 0);
-        const cartCount = document.getElementById('cart-count');
-        if (cartCount) {
-            cartCount.textContent = data.total;
-        }
+        actualizarContadorCarrito(data.carrito_count || 0);
         syncProductControls(id, data.stock || stock);
+        mostrarMensajeCarrito(data.message || 'Producto agregado');
     } catch (error) {
         console.error(error);
         syncProductControls(id, stock);
+        mostrarMensajeCarrito(error.message || 'No se pudo agregar al carrito', true);
     }
+}
+
+function addCart(id) {
+    agregarAlCarrito(id);
 }
 
 function setTab(el, val){

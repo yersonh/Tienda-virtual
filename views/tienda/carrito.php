@@ -500,7 +500,7 @@ async function vaciarCarrito() {
 }
 
 function syncCartSummary(data) {
-    const count = document.getElementById('cart-count');
+    const count = document.getElementById('carrito-count');
     if (count) {
         count.textContent = data.total;
     }
