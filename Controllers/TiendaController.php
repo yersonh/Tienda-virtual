@@ -14,21 +14,27 @@ class TiendaController {
         $this->carritoModel = new CarritoModel($pdo);
     }
 
-    private function syncCartSession() {
+    private function obtenerCarritoVista() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
         if (isset($_SESSION['id_usuario'])) {
-            $_SESSION['carrito'] = $this->carritoModel->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
-        } elseif (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
+            unset($_SESSION['carrito']);
+            return $this->carritoModel->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
+        }
+
+        if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
             $_SESSION['carrito'] = [];
         }
+
+        return $_SESSION['carrito'];
     }
 
     // Ã°Å¸â€ºÂÃ¯Â¸Â CATÃƒÂLOGO
     public function index() {
-        $this->syncCartSession();
+        $carritoVista = $this->obtenerCarritoVista();
+        $carritoCount = array_sum($carritoVista);
 
         $filtro = $_GET['filtro'] ?? '';
         $precio_min = preg_replace('/\D/', '', $_GET['precio_min'] ?? '');
@@ -89,7 +95,8 @@ class TiendaController {
 
     // Ã°Å¸â€Â DETALLE
     public function detalle() {
-        $this->syncCartSession();
+        $carritoVista = $this->obtenerCarritoVista();
+        $carritoCount = array_sum($carritoVista);
 
         $id = $_GET['id'] ?? 0;
 

@@ -1,4 +1,5 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
+<?php $carritoVista = isset($carritoVista) && is_array($carritoVista) ? $carritoVista : ($_SESSION['carrito'] ?? []); ?>
 
 <style>
 /* HERO SECTION */
@@ -759,7 +760,7 @@
         <div class="product-grid <?= !empty($categoria_filtro) ? 'detail-grid' : '' ?>" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
             <?php foreach($productos as $p): ?>
             <?php
-                $cantidadEnCarrito = isset($_SESSION['carrito'][$p['id_producto']]) ? (int) $_SESSION['carrito'][$p['id_producto']] : 0;
+                $cantidadEnCarrito = isset($carritoVista[$p['id_producto']]) ? (int) $carritoVista[$p['id_producto']] : 0;
                 $stockProducto = (int) $p['stock_p'];
                 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
                 $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
@@ -820,7 +821,7 @@
                             <button class="qty-btn" id="qty-plus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
                         </div>
                         <button class="add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
-                                id="abtn-<?= $p['id_producto'] ?>" 
+                                id="abtn-<?= $p['id_producto'] ?>"
                                 onclick="event.stopPropagation(); addCart(<?= $p['id_producto'] ?>)"
                                 <?= $enLimite ? 'disabled' : '' ?>>
                             <span class="btn-icon" aria-hidden="true">
@@ -843,9 +844,7 @@
 
 <script>
 let cart = {};
-<?php if(isset($_SESSION['carrito'])): ?>
-cart = <?= json_encode($_SESSION['carrito']) ?>;
-<?php endif; ?>
+cart = <?= json_encode($carritoVista) ?>;
 
 function cartQty(id) {
     return parseInt(cart[id] || cart[String(id)] || 0, 10) || 0;

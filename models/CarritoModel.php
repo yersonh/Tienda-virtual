@@ -380,20 +380,25 @@ class CarritoModel {
             return [];
         }
 
-        $query = "SELECT ID_CARRITO,
-                         ID_PRODUCTO,
-                         NOMBRE,
-                         CODIGO,
-                         DESCRIPCION,
-                         PRECIO,
-                         STOCK_P,
-                         ID_CATEGORIA,
-                         CATEGORIA_NOMBRE,
-                         IMAGEN,
-                         CANTIDAD
-                  FROM V_CARRITO_COMPLETO
-                  WHERE ID_CARRITO = :ID_CARRITO
-                  ORDER BY NOMBRE";
+        $query = "SELECT c.ID_CARRITO,
+                         p.ID_PRODUCTO,
+                         p.NOMBRE,
+                         p.CODIGO,
+                         p.DESCRIPCION,
+                         p.PRECIO,
+                         p.STOCK_P,
+                         p.ID_CATEGORIA,
+                         cp.NOMBRE AS CATEGORIA_NOMBRE,
+                         (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
+                          FROM PRODUCTO_IMAGEN pi
+                          WHERE pi.ID_PRODUCTO = p.ID_PRODUCTO) AS IMAGEN,
+                         dc.CANTIDAD
+                  FROM CARRITO c
+                  INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                  INNER JOIN CATEGORIA_PRODUCTO cp ON cp.ID_CATEGORIA = p.ID_CATEGORIA
+                  WHERE c.ID_CARRITO = :ID_CARRITO
+                  ORDER BY p.NOMBRE";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
@@ -408,14 +413,53 @@ class CarritoModel {
         return $results;
     }
 
+    public function obtenerItemsVisualizacion($idUsuario) {
+        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return [];
+        }
+
+        $query = "SELECT
+                    dc.ID_DETALLE,
+                    p.ID_PRODUCTO,
+                    p.NOMBRE,
+                    p.PRECIO,
+                    dc.CANTIDAD,
+                    (p.PRECIO * dc.CANTIDAD) AS SUBTOTAL
+                  FROM DETALLE_CARRITO dc
+                  JOIN PRODUCTO p ON dc.ID_PRODUCTO = p.ID_PRODUCTO
+                  WHERE dc.ID_CARRITO = :id_carrito";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = [
+                'id_detalle' => (int) $row['ID_DETALLE'],
+                'id_producto' => (int) $row['ID_PRODUCTO'],
+                'nombre' => $row['NOMBRE'],
+                'precio' => (float) $row['PRECIO'],
+                'cantidad' => (int) $row['CANTIDAD'],
+                'subtotal' => (float) $row['SUBTOTAL'],
+                'total_linea' => (float) $row['SUBTOTAL']
+            ];
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
     public function obtenerResumenCarrito($idUsuario) {
-        $query = "SELECT ID_USUARIO,
-                         NOMBRES,
-                         APELLIDOS,
-                         FN_TOTAL_ITEMS_CARRITO(ID_USUARIO) AS TOTAL_ITEMS,
-                         FN_TOTAL_CARRITO(ID_USUARIO) AS TOTAL_PAGAR
-                  FROM V_USUARIO_COMPLETO
-                  WHERE ID_USUARIO = :ID_USUARIO";
+        $query = "SELECT c.ID_USUARIO,
+                         NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS,
+                         NVL(SUM(dc.CANTIDAD * p.PRECIO), 0) AS TOTAL_PAGAR
+                  FROM CARRITO c
+                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  LEFT JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                  WHERE c.ID_USUARIO = :ID_USUARIO
+                  GROUP BY c.ID_USUARIO";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
@@ -428,7 +472,11 @@ class CarritoModel {
     }
 
     public function obtenerTotalCarrito($idUsuario): float {
-        $query = "SELECT FN_TOTAL_CARRITO(:ID_USUARIO) AS TOTAL_PAGAR FROM DUAL";
+        $query = "SELECT NVL(SUM(dc.CANTIDAD * p.PRECIO), 0) AS TOTAL_PAGAR
+                  FROM CARRITO c
+                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  LEFT JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                  WHERE c.ID_USUARIO = :ID_USUARIO";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
         oci_execute($stmt);
@@ -439,7 +487,10 @@ class CarritoModel {
     }
 
     public function obtenerTotalItemsCarrito($idUsuario): int {
-        $query = "SELECT FN_TOTAL_ITEMS_CARRITO(:ID_USUARIO) AS TOTAL_ITEMS FROM DUAL";
+        $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS
+                  FROM CARRITO c
+                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  WHERE c.ID_USUARIO = :ID_USUARIO";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
         oci_execute($stmt);

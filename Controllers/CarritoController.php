@@ -57,8 +57,8 @@ class CarritoController {
     private function syncSessionCartFromSource() {
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario > 0) {
-            $_SESSION['carrito'] = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
-            return $_SESSION['carrito'];
+            unset($_SESSION['carrito']);
+            return $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
         }
 
         if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
@@ -71,13 +71,12 @@ class CarritoController {
     private function getDetailedItems() {
         $idUsuario = $this->getUsuarioId();
         $ajustoCantidades = false;
-        $carrito = $idUsuario > 0
-            ? $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario)
-            : ($_SESSION['carrito'] ?? []);
 
         if ($idUsuario > 0) {
-            $_SESSION['carrito'] = $carrito;
+            return $this->carritoModel->obtenerItemsVisualizacion($idUsuario);
         }
+
+        $carrito = $this->syncSessionCartFromSource();
 
         $items = [];
         if (!empty($carrito)) {
@@ -121,10 +120,6 @@ class CarritoController {
             return (int) ($item['cantidad'] ?? 0) > 0;
         }));
 
-        if ($ajustoCantidades && $idUsuario > 0) {
-            $_SESSION['carrito'] = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
-        }
-
         return $items;
     }
 
@@ -134,6 +129,10 @@ class CarritoController {
         $subtotal = 0;
         $stockDisponible = 0;
         $total = 0;
+        $productoRespuesta = $idProducto !== null ? $this->productoModel->obtenerPorId((int) $idProducto) : null;
+        if ($productoRespuesta) {
+            $stockDisponible = (int) ($productoRespuesta['stock_p'] ?? 0);
+        }
 
         $this->syncSessionCartFromSource();
         foreach ($this->getDetailedItems() as $item) {
@@ -143,7 +142,7 @@ class CarritoController {
             if ($idProducto !== null && (int) $item['id_producto'] === (int) $idProducto) {
                 $cantidad = (int) $item['cantidad'];
                 $lineaTotal = (float) $item['total_linea'];
-                $stockDisponible = (int) ($item['stock_p'] ?? 0);
+                $stockDisponible = $stockDisponible ?: (int) ($item['stock_p'] ?? 0);
             }
         }
 
@@ -206,12 +205,10 @@ class CarritoController {
             if ($this->failCartOperation($resultado)) {
                 $this->respondCartError($resultado, 'No se pudo agregar el producto al carrito');
             }
-            $this->syncSessionCartFromSource();
         } else {
             if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
                 $_SESSION['carrito'] = [];
             }
-
             $_SESSION['carrito'][$id] = $cantidadFinal;
         }
 
@@ -227,7 +224,6 @@ class CarritoController {
 
     public function ver() {
         $this->ensureSession();
-        $this->syncSessionCartFromSource();
 
         $items = $this->getDetailedItems();
         $resumenCarrito = null;
@@ -262,7 +258,6 @@ class CarritoController {
         if ($stockDisponible <= 0) {
             if ($idUsuario > 0) {
                 $this->carritoModel->eliminarProducto($idUsuario, $id);
-                $this->syncSessionCartFromSource();
             } else {
                 unset($_SESSION['carrito'][$id]);
             }
@@ -287,7 +282,6 @@ class CarritoController {
             if ($this->failCartOperation($resultado)) {
                 $this->respondCartError($resultado, 'No se pudo actualizar la cantidad');
             }
-            $this->syncSessionCartFromSource();
         } else {
             if (!isset($_SESSION['carrito']) || !is_array($_SESSION['carrito'])) {
                 $_SESSION['carrito'] = [];
@@ -316,11 +310,8 @@ class CarritoController {
             if ($this->failCartOperation($resultado)) {
                 $this->respondCartError($resultado, 'No se pudo eliminar el producto del carrito');
             }
-            $this->syncSessionCartFromSource();
-        } else {
-            if (isset($_SESSION['carrito'][$id])) {
-                unset($_SESSION['carrito'][$id]);
-            }
+        } elseif (isset($_SESSION['carrito'][$id])) {
+            unset($_SESSION['carrito'][$id]);
         }
 
         if ($this->isAjaxRequest()) {
@@ -342,8 +333,9 @@ class CarritoController {
             if ($this->failCartOperation($resultado)) {
                 $this->respondCartError($resultado, 'No se pudo vaciar el carrito');
             }
+        } else {
+            $_SESSION['carrito'] = [];
         }
-        $_SESSION['carrito'] = [];
 
         if ($this->isAjaxRequest()) {
             header('Content-Type: application/json');

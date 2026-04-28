@@ -36,8 +36,19 @@ $publicas = [
 ];
 
 if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas, true)) {
-    if (in_array($action, ['agregarCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
-        echo "no_auth";
+    if (in_array($action, ['agregarCarrito', 'verCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
+        if (
+            (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+            (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch')
+        ) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'message' => 'Debes iniciar sesion para usar el carrito']);
+            exit();
+        }
+
+        $_SESSION['error'] = 'Debes iniciar sesion para usar el carrito';
+        header("Location: index.php?action=login");
         exit();
     }
 

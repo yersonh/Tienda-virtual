@@ -4,10 +4,19 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // 🔥 CONTADOR DEL CARRITO
-$carritoCount = 0;
-if (isset($_SESSION['carrito'])) {
-    foreach ($_SESSION['carrito'] as $cantidad) {
-        $carritoCount += $cantidad;
+$carritoCount = isset($carritoCount) ? (int) $carritoCount : 0;
+if ($carritoCount === 0) {
+    if (isset($_SESSION['id_usuario'])) {
+        try {
+            require_once __DIR__ . '/../../config/database.php';
+            require_once __DIR__ . '/../../models/CarritoModel.php';
+            $carritoNavbar = (new CarritoModel(Database::getConnection()))->obtenerMapaCarritoUsuario((int) $_SESSION['id_usuario']);
+            $carritoCount = array_sum($carritoNavbar);
+        } catch (Throwable $e) {
+            error_log('Error obteniendo contador del carrito: ' . $e->getMessage());
+        }
+    } elseif (isset($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
+        $carritoCount = array_sum($_SESSION['carrito']);
     }
 }
 ?>

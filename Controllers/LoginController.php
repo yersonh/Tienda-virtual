@@ -6,15 +6,16 @@ require_once __DIR__ . '/../models/CarritoModel.php';
 class LoginController {
 
     public function iniciarSesion() {
-
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
         $conn = Database::getConnection();
         $model = new UsuarioModel($conn);
+        $carritoInvitado = (isset($_SESSION['carrito']) && is_array($_SESSION['carrito']))
+            ? $_SESSION['carrito']
+            : [];
 
-        // 🔥 NORMALIZACIÓN CORRECTA
         $username = strtolower(trim($_POST['nickname'] ?? ''));
         $password = trim($_POST['password'] ?? '');
 
@@ -32,39 +33,28 @@ class LoginController {
             exit();
         }
 
-        // VALIDACIÓN DE ESTADO
         if (strtoupper(trim($usuario['estado'])) !== 'ACTIVO') {
             $_SESSION['error'] = "Usuario inactivo";
             header("Location: index.php?action=login");
             exit();
         }
 
-        // 🔐 SESIÓN
+        $carritoModel = new CarritoModel($conn);
+        $resultadoFusion = $carritoModel->fusionarCarritoSesion((int) $usuario['id_usuario'], $carritoInvitado);
+
+        if (($resultadoFusion['success'] ?? false) === false) {
+            $_SESSION['error'] = $resultadoFusion['message'] ?? 'No se pudo sincronizar el carrito';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        unset($_SESSION['carrito']);
         $_SESSION['id_usuario'] = $usuario['id_usuario'];
         $_SESSION['username'] = $usuario['username'];
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
-        $_SESSION['bienvenida'] = "👋 Bienvenido, " . $usuario['username'];
+        $_SESSION['bienvenida'] = "Bienvenido, " . $usuario['username'];
 
-        // 🛒 CARRITO
-        $carritoModel = new CarritoModel($conn);
-        $carritoInvitado = $_SESSION['carrito'] ?? [];
-
-        try {
-            $resultadoFusion = $carritoModel->fusionarCarritoSesion((int) $usuario['id_usuario'], $carritoInvitado);
-
-            if (($resultadoFusion['success'] ?? false) === false) {
-                throw new Exception($resultadoFusion['message'] ?? 'No se pudo fusionar el carrito');
-            }
-
-            unset($_SESSION['carrito']);
-            $_SESSION['carrito'] = $carritoModel->obtenerMapaCarritoUsuario((int) $usuario['id_usuario']);
-        } catch (Exception $e) {
-            error_log('Error sincronizando carrito al iniciar sesion: ' . $e->getMessage());
-            $_SESSION['carrito'] = is_array($carritoInvitado) ? $carritoInvitado : [];
-        }
-
-        // 🚀 REDIRECCIÓN
         if ($usuario['id_tipo'] == 1) {
             header("Location: index.php?action=admin_panel");
             exit();
@@ -77,7 +67,6 @@ class LoginController {
     }
 
     public function logout() {
-
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }

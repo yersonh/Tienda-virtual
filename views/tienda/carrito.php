@@ -305,6 +305,10 @@
                         <?php
                         $imagen = !empty($item['imagen']) ? 'image.php?folder=productos&path=' . urlencode(basename($item['imagen'])) : null;
                         $categoriaLink = 'index.php?action=productoDetalle&id=' . (int) $item['id_producto'] . '&categoria=' . urlencode($item['categoria_nombre'] ?? '');
+                        $stockDisponible = array_key_exists('stock_p', $item) ? (int) $item['stock_p'] : null;
+                        $stockParam = $stockDisponible ?? 0;
+                        $deshabilitarMas = $stockDisponible !== null && (int) $item['cantidad'] >= $stockDisponible;
+                        $subtotalLinea = $item['subtotal'] ?? $item['total_linea'] ?? 0;
                         ?>
                         <article class="cart-item" id="cart-item-<?= (int) $item['id_producto'] ?>">
                             <div class="cart-item-media">
@@ -324,15 +328,19 @@
                                 </div>
                                 <div class="cart-item-meta">
                                     <span>#<?= (int) $item['id_producto'] ?></span>
-                                    <span><?= htmlspecialchars($item['categoria_nombre'] ?? 'Sin categoria', ENT_QUOTES, 'UTF-8') ?></span>
-                                    <span>Stock <?= (int) ($item['stock_p'] ?? 0) ?></span>
+                                    <?php if (!empty($item['categoria_nombre'])): ?>
+                                        <span><?= htmlspecialchars($item['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <?php endif; ?>
+                                    <?php if ($stockDisponible !== null): ?>
+                                        <span>Stock <?= $stockDisponible ?></span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="cart-item-price">Precio unitario: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
                                 <div class="cart-controls">
                                     <div class="cart-qty">
-                                        <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= (int) ($item['stock_p'] ?? 0) ?>)" <?= (int) $item['cantidad'] <= 1 ? 'disabled' : '' ?>>-</button>
+                                        <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= $stockParam ?>)" <?= (int) $item['cantidad'] <= 1 ? 'disabled' : '' ?>>-</button>
                                         <span id="cart-qty-<?= (int) $item['id_producto'] ?>"><?= (int) $item['cantidad'] ?></span>
-                                        <button type="button" id="cart-plus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= (int) ($item['stock_p'] ?? 0) ?>)" <?= (int) $item['cantidad'] >= (int) ($item['stock_p'] ?? 0) ? 'disabled' : '' ?>>+</button>
+                                        <button type="button" id="cart-plus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= $stockParam ?>)" <?= $deshabilitarMas ? 'disabled' : '' ?>>+</button>
                                     </div>
                                     <button class="cart-remove" type="button" onclick="removeCartItem(<?= (int) $item['id_producto'] ?>)">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
@@ -342,7 +350,7 @@
                             </div>
                             <div class="cart-line-total">
                                 <span>Total</span>
-                                <strong id="cart-line-total-<?= (int) $item['id_producto'] ?>">$<?= number_format((float) $item['total_linea']) ?></strong>
+                                <strong id="cart-line-total-<?= (int) $item['id_producto'] ?>">$<?= number_format((float) $subtotalLinea) ?></strong>
                             </div>
                         </article>
                     <?php endforeach; ?>
@@ -350,7 +358,9 @@
 
                 <aside class="cart-side">
                     <?php
-                    $totalItemsResumen = $resumenCarrito['total_items'] ?? array_sum($_SESSION['carrito'] ?? []);
+                    $totalItemsResumen = $resumenCarrito['total_items'] ?? array_reduce($items, function($carry, $item) {
+                        return $carry + (int) ($item['cantidad'] ?? 0);
+                    }, 0);
                     $totalPagarResumen = $resumenCarrito['total_pagar'] ?? $subtotal;
                     ?>
                     <section class="cart-summary">

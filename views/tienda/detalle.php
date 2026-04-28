@@ -10,8 +10,9 @@ $imagenPrincipal = null;
 if (!empty($imagenesProducto)) {
     $imagenPrincipal = basename($imagenesProducto[0]['url']);
 }
+$carritoVista = isset($carritoVista) && is_array($carritoVista) ? $carritoVista : ($_SESSION['carrito'] ?? []);
 $stockProducto = (int) ($producto['stock_p'] ?? 0);
-$cantidadEnCarrito = isset($_SESSION['carrito'][$producto['id_producto']]) ? (int) $_SESSION['carrito'][$producto['id_producto']] : 0;
+$cantidadEnCarrito = isset($carritoVista[$producto['id_producto']]) ? (int) $carritoVista[$producto['id_producto']] : 0;
 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
 $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
 ?>
@@ -467,7 +468,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
             <aside class="detail-info">
                 <div class="detail-category"><?= htmlspecialchars($producto['categoria_nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') ?></div>
                 <h1 class="detail-title"><?= htmlspecialchars($producto['nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="detail-subline">Explora todas las imagenes, revisa disponibilidad y consulta los detalles antes de agregarlo al carrito.</p>
+                <p class="detail-subline">Explora todas las imagenes, revisa disponibilidad y consulta los detalles del producto.</p>
 
                 <div class="detail-meta">
                     <span class="detail-chip">
