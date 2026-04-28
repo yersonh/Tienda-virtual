@@ -233,14 +233,8 @@ class CarritoModel {
                 return $this->success();
             }
 
-            if ((int) $detalle['CANTIDAD'] > 1) {
-                $query = "UPDATE DETALLE_CARRITO
-                          SET CANTIDAD = CANTIDAD - 1
-                          WHERE ID_DETALLE = :ID_DETALLE";
-            } else {
-                $query = "DELETE FROM DETALLE_CARRITO
-                          WHERE ID_DETALLE = :ID_DETALLE";
-            }
+            $query = "DELETE FROM DETALLE_CARRITO
+                      WHERE ID_DETALLE = :ID_DETALLE";
 
             $stmt = oci_parse($this->conn, $query);
             oci_bind_by_name($stmt, ':ID_DETALLE', $detalle['ID_DETALLE'], -1, SQLT_INT);
@@ -250,6 +244,7 @@ class CarritoModel {
             }
 
             oci_free_statement($stmt);
+
             oci_commit($this->conn);
             return $this->success();
         } catch (Exception $e) {
@@ -317,7 +312,13 @@ class CarritoModel {
                 throw new Exception($this->oracleErrorMessage($stmt));
             }
 
+            $filasActualizadas = oci_num_rows($stmt);
             oci_free_statement($stmt);
+
+            if ($filasActualizadas === 0) {
+                $this->agregarDetalleEnCarritoTx($idCarrito, $idProducto, $cantidad);
+            }
+
             oci_commit($this->conn);
             return $this->success();
         } catch (Exception $e) {

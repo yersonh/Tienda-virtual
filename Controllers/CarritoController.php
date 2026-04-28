@@ -71,19 +71,20 @@ class CarritoController {
     private function getDetailedItems() {
         $idUsuario = $this->getUsuarioId();
         $ajustoCantidades = false;
+        $carrito = $idUsuario > 0
+            ? $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario)
+            : ($_SESSION['carrito'] ?? []);
 
         if ($idUsuario > 0) {
-            $items = $this->carritoModel->obtenerItemsDetallados($idUsuario);
-        } else {
-            $carrito = $_SESSION['carrito'] ?? [];
-            $items = [];
+            $_SESSION['carrito'] = $carrito;
+        }
 
-            if (!empty($carrito)) {
-                $productos = $this->productoModel->obtenerPorIds(array_keys($carrito));
-                foreach ($productos as $producto) {
-                    $producto['cantidad'] = (int) ($carrito[(int) $producto['id_producto']] ?? 1);
-                    $items[] = $producto;
-                }
+        $items = [];
+        if (!empty($carrito)) {
+            $productos = $this->productoModel->obtenerPorIds(array_keys($carrito));
+            foreach ($productos as $producto) {
+                $producto['cantidad'] = (int) ($carrito[(int) $producto['id_producto']] ?? 1);
+                $items[] = $producto;
             }
         }
 
@@ -132,25 +133,18 @@ class CarritoController {
         $lineaTotal = 0;
         $subtotal = 0;
         $stockDisponible = 0;
+        $total = 0;
 
         $this->syncSessionCartFromSource();
         foreach ($this->getDetailedItems() as $item) {
             $subtotal += $item['total_linea'];
+            $total += (int) $item['cantidad'];
 
             if ($idProducto !== null && (int) $item['id_producto'] === (int) $idProducto) {
                 $cantidad = (int) $item['cantidad'];
                 $lineaTotal = (float) $item['total_linea'];
                 $stockDisponible = (int) ($item['stock_p'] ?? 0);
             }
-        }
-        $carrito = $this->syncSessionCartFromSource();
-        $idUsuario = $this->getUsuarioId();
-
-        if ($idUsuario > 0) {
-            $subtotal = $this->carritoModel->obtenerTotalCarrito($idUsuario);
-            $total = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
-        } else {
-            $total = array_sum($carrito);
         }
 
         return [
@@ -236,9 +230,7 @@ class CarritoController {
         $this->syncSessionCartFromSource();
 
         $items = $this->getDetailedItems();
-        $resumenCarrito = $this->getUsuarioId() > 0
-            ? $this->carritoModel->obtenerResumenCarrito($this->getUsuarioId())
-            : null;
+        $resumenCarrito = null;
         $subtotal = $resumenCarrito['total_pagar'] ?? array_reduce($items, function($carry, $item) {
             return $carry + (float) $item['total_linea'];
         }, 0);

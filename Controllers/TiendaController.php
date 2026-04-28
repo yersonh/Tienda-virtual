@@ -36,6 +36,9 @@ class TiendaController {
         $categoria_filtro = $_GET['categoria'] ?? '';
 
         $productos = $this->model->obtenerCatalogo();
+        $masVendidos = empty($filtro) && empty($precio_min) && empty($precio_max) && empty($categoria_filtro)
+            ? $this->model->obtenerMasVendidos(5)
+            : [];
 
         $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
 
