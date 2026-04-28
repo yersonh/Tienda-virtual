@@ -425,7 +425,10 @@ class CarritoModel {
                     p.NOMBRE,
                     p.PRECIO,
                     dc.CANTIDAD,
-                    (p.PRECIO * dc.CANTIDAD) AS SUBTOTAL
+                    (p.PRECIO * dc.CANTIDAD) AS SUBTOTAL,
+                    (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
+                     FROM PRODUCTO_IMAGEN pi
+                     WHERE pi.ID_PRODUCTO = p.ID_PRODUCTO) AS IMAGEN
                   FROM DETALLE_CARRITO dc
                   JOIN PRODUCTO p ON dc.ID_PRODUCTO = p.ID_PRODUCTO
                   WHERE dc.ID_CARRITO = :id_carrito";
@@ -443,7 +446,8 @@ class CarritoModel {
                 'precio' => (float) $row['PRECIO'],
                 'cantidad' => (int) $row['CANTIDAD'],
                 'subtotal' => (float) $row['SUBTOTAL'],
-                'total_linea' => (float) $row['SUBTOTAL']
+                'total_linea' => (float) $row['SUBTOTAL'],
+                'imagen' => $row['IMAGEN'] ?? null
             ];
         }
         oci_free_statement($stmt);
