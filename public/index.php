@@ -27,17 +27,11 @@ $publicas = [
     'verificarTelefono',
     'iniciarSesion',
     'tienda',
-    'productoDetalle',
-    'agregarCarrito',
-    'agregarAjax',
-    'verCarrito',
-    'actualizarCarrito',
-    'eliminarCarrito',
-    'vaciarCarrito'
+    'productoDetalle'
 ];
 
 if (!isset($_SESSION['id_usuario']) && !in_array($action, $publicas, true)) {
-    if (in_array($action, ['agregarCarrito', 'verCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
+    if (in_array($action, ['agregarCarrito', 'agregarAjax', 'verCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
         if (
             (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
             (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch')

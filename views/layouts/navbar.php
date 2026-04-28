@@ -223,14 +223,16 @@ body {
         <a href="index.php?action=login" class="btn-ghost">Login</a>
         <button class="btn-primary" onclick="location.href='index.php?action=registro'">Registro</button>
       <?php endif; ?>
-      <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="Ver carrito">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="9" cy="20" r="1"></circle>
-          <circle cx="18" cy="20" r="1"></circle>
-          <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
-        </svg>
-        <span class="cart-badge" id="carrito-count"><?php echo $carritoCount; ?></span>
-      </button>
+      <?php if(isset($_SESSION['id_usuario'])): ?>
+        <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="Ver carrito">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="9" cy="20" r="1"></circle>
+            <circle cx="18" cy="20" r="1"></circle>
+            <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
+          </svg>
+          <span class="cart-badge" id="carrito-count"><?php echo $carritoCount; ?></span>
+        </button>
+      <?php endif; ?>
       <button class="theme-toggle" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema"></button>
     </div>
 </nav>

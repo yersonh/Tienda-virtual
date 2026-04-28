@@ -1,5 +1,6 @@
 <?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 <?php $carritoVista = isset($carritoVista) && is_array($carritoVista) ? $carritoVista : ($_SESSION['carrito'] ?? []); ?>
+<?php $usuarioLogueado = isset($_SESSION['id_usuario']); ?>
 
 <style>
 /* HERO SECTION */
@@ -815,26 +816,28 @@
                         </span>
                     </div>
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
-                    <div class="card-footer">
-                        <div class="qty-wrap">
-                            <button class="qty-btn" id="qty-minus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
-                            <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= $cantidadInicial ?></span>
-                            <button class="qty-btn" id="qty-plus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
+                    <?php if($usuarioLogueado): ?>
+                        <div class="card-footer">
+                            <div class="qty-wrap">
+                                <button class="qty-btn" id="qty-minus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
+                                <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= $cantidadInicial ?></span>
+                                <button class="qty-btn" id="qty-plus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
+                            </div>
+                            <button class="add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
+                                    id="abtn-<?= $p['id_producto'] ?>"
+                                    onclick="event.stopPropagation(); agregarAlCarrito(<?= $p['id_producto'] ?>)"
+                                    <?= $enLimite ? 'disabled' : '' ?>>
+                                <span class="btn-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <circle cx="9" cy="20" r="1"></circle>
+                                        <circle cx="18" cy="20" r="1"></circle>
+                                        <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
+                                    </svg>
+                                </span>
+                                <?= $enLimite ? 'Limite' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar') ?>
+                            </button>
                         </div>
-                        <button class="add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
-                                id="abtn-<?= $p['id_producto'] ?>"
-                                onclick="event.stopPropagation(); agregarAlCarrito(<?= $p['id_producto'] ?>)"
-                                <?= $enLimite ? 'disabled' : '' ?>>
-                            <span class="btn-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
-                                    <circle cx="9" cy="20" r="1"></circle>
-                                    <circle cx="18" cy="20" r="1"></circle>
-                                    <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
-                                </svg>
-                            </span>
-                            <?= $enLimite ? 'Limite' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar') ?>
-                        </button>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
