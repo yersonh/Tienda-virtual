@@ -26,8 +26,9 @@ class ProductoModel {
         return $normalized;
     }
 
-    private function productoColumns(string $alias = 'p', bool $includeTotalVendido = false): string {
+    private function productoColumns(string $alias = 'p', bool $includeTotalVendido = false, string $categoriaAlias = 'c'): string {
         $prefix = $alias !== '' ? $alias . '.' : '';
+        $categoriaPrefix = $categoriaAlias !== '' ? $categoriaAlias . '.' : '';
         $columns = [
             "{$prefix}id_producto",
             "{$prefix}nombre",
@@ -37,14 +38,14 @@ class ProductoModel {
             "{$prefix}stock_p",
             "{$prefix}estado",
             "{$prefix}id_categoria",
-            "{$prefix}categoria_nombre",
+            "{$categoriaPrefix}nombre AS categoria_nombre",
             "(SELECT MIN(pi.url) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.orden, 999999), pi.id_imagen)
               FROM producto_imagen pi
               WHERE pi.id_producto = {$prefix}id_producto) AS imagen"
         ];
 
         if ($includeTotalVendido) {
-            $columns[] = "{$prefix}total_vendido";
+            $columns[] = "0 AS total_vendido";
         }
 
         return implode(",\n                         ", $columns);
@@ -54,8 +55,9 @@ class ProductoModel {
     public function obtenerCatalogo() {
     $columns = $this->productoColumns('p');
     $query = "SELECT $columns
-              FROM v_productos_completo p
-              ORDER BY p.categoria_nombre, p.nombre";
+              FROM producto p
+              INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+              ORDER BY c.nombre, p.nombre";
 
     $stmt = oci_parse($this->conn, $query);
     oci_execute($stmt);
@@ -72,7 +74,8 @@ class ProductoModel {
     public function obtenerTodos() {
         $columns = $this->productoColumns('p');
         $query = "SELECT $columns
-                  FROM v_productos_completo p
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
                   ORDER BY p.id_producto DESC";
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
@@ -89,7 +92,8 @@ class ProductoModel {
     public function obtenerPorId($id) {
         $columns = $this->productoColumns('p');
         $query = "SELECT $columns
-                  FROM v_productos_completo p
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
                   WHERE p.id_producto = :id";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id);
@@ -140,7 +144,8 @@ class ProductoModel {
 
         $columns = $this->productoColumns('p');
         $query = "SELECT $columns
-                  FROM v_productos_completo p
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
                   WHERE p.id_producto IN ($placeholdersStr)
                   ORDER BY p.nombre";
 
@@ -166,8 +171,9 @@ class ProductoModel {
         $columns = $this->productoColumns('p', true);
 
         $query = "SELECT $columns
-                  FROM v_productos_mas_vendidos p
-                  ORDER BY p.total_vendido DESC
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  ORDER BY p.id_producto DESC
                   FETCH FIRST :limite ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
