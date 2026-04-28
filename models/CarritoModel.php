@@ -157,12 +157,12 @@ class CarritoModel {
         }
 
         $query = "INSERT INTO DETALLE_CARRITO (ID_CARRITO, ID_PRODUCTO, CANTIDAD)
-                  VALUES (:ID_CARRITO, :ID_PRODUCTO, :CANTIDAD)";
+                  VALUES (:id_carrito, :id_producto, :cantidad)";
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':CANTIDAD', $cantidad, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
