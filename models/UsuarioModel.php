@@ -1,283 +1,158 @@
 <?php
+
+require_once __DIR__ . '/../config/database.php';
+
 class UsuarioModel {
 
     private $conn;
-    private $table = 'usuario';
 
-    public function __construct($db) {
-        $this->conn = $db;
+    public function __construct($pdo = null) {
+        $this->conn = $pdo ?? Database::getConnection();
     }
 
-    /**
-     * Crear usuario + persona
-     */
-    public function crearConPersona($data) {
-        try {
-            // Transacción automática en OCI8
-
-            $queryPersona = "INSERT INTO persona (nombres, apellidos, cc, correo, telefono, direccion)
-                             VALUES (:nombres, :apellidos, :cc, :correo, :telefono, :direccion)
-                             RETURNING id_persona INTO :id_persona";
-
-            $nombres = $data['nombres'];
-            $apellidos = $data['apellidos'];
-            $cc = $data['cc'];
-            $correo = $data['correo'] ?? null;
-            $telefono = $data['telefono'] ?? null;
-            $direccion = $data['direccion'] ?? null;
-
-            $stmtPersona = oci_parse($this->conn, $queryPersona);
-            oci_bind_by_name($stmtPersona, ':nombres', $nombres);
-            oci_bind_by_name($stmtPersona, ':apellidos', $apellidos);
-            oci_bind_by_name($stmtPersona, ':cc', $cc);
-            oci_bind_by_name($stmtPersona, ':correo', $correo);
-            oci_bind_by_name($stmtPersona, ':telefono', $telefono);
-            oci_bind_by_name($stmtPersona, ':direccion', $direccion);
-            $id_persona = null;
-            oci_bind_by_name($stmtPersona, ':id_persona', $id_persona, -1, SQLT_INT);
-            if (!@oci_execute($stmtPersona, OCI_NO_AUTO_COMMIT)) {
-                $error = oci_error($stmtPersona);
-                throw new Exception("Error al crear persona: " . ($error['message'] ?? 'desconocido'));
-            }
-
-            oci_free_statement($stmtPersona);
-
-            $queryUsuario = "INSERT INTO usuario (id_persona, id_tipo, username, password, estado)
-                             VALUES (:id_persona, :id_tipo, :username, :password, :estado)
-                             RETURNING id_usuario INTO :id_usuario";
-
-            $idTipo = $data['id_tipo'];
-            $username = $data['username'];
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-            $estado = 'Activo';
-
-            $stmtUsuario = oci_parse($this->conn, $queryUsuario);
-            oci_bind_by_name($stmtUsuario, ':id_persona', $id_persona, -1, SQLT_INT);
-            oci_bind_by_name($stmtUsuario, ':id_tipo', $idTipo, -1, SQLT_INT);
-            oci_bind_by_name($stmtUsuario, ':username', $username);
-            oci_bind_by_name($stmtUsuario, ':password', $hashedPassword);
-            oci_bind_by_name($stmtUsuario, ':estado', $estado);
-            $id_usuario = null;
-            oci_bind_by_name($stmtUsuario, ':id_usuario', $id_usuario, -1, SQLT_INT);
-            if (!@oci_execute($stmtUsuario, OCI_NO_AUTO_COMMIT)) {
-                $error = oci_error($stmtUsuario);
-                throw new Exception("Error al crear usuario: " . ($error['message'] ?? 'desconocido'));
-            }
-
-            oci_free_statement($stmtUsuario);
-
-            oci_commit($this->conn);
-
-            return ['success' => true, 'id_usuario' => (int)$id_usuario];
-
-        } catch (Exception $e) {
-            oci_rollback($this->conn);
-            error_log($e->getMessage());
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * LOGIN
-     */
+    // 🔐 LOGIN
     public function validarCredenciales($username, $password) {
 
-        $query = "SELECT id_usuario,
-                         id_persona,
-                         id_tipo,
-                         username,
-                         password,
-                         estado,
-                         nombres,
-                         apellidos,
-                         cc,
-                         correo,
-                         telefono,
-                         direccion
+        $query = "SELECT 
+                    id_usuario,
+                    id_persona,
+                    id_tipo,
+                    username,
+                    password,
+                    estado,
+                    nombres,
+                    apellidos,
+                    correo,
+                    telefono,
+                    direccion
                   FROM v_usuario_completo
                   WHERE username = :username";
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':username', $username);
-        oci_execute($stmt);
+        oci_bind_by_name($stmt, ":username", $username);
 
-        $usuario = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        if ($usuario && $this->passwordMatches($password, (string) $usuario['PASSWORD'])) {
-            return array_change_key_case($usuario, CASE_LOWER);
+        if (!oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            throw new Exception("Error en login: " . $error['message']);
         }
 
-        return false;
-    }
+        $row = oci_fetch_assoc($stmt);
 
-    private function passwordMatches(string $password, string $storedPassword): bool {
-        $hashInfo = password_get_info($storedPassword);
-        if (($hashInfo['algo'] ?? 0) !== 0) {
-            return password_verify($password, $storedPassword);
+        if ($row && password_verify($password, $row['PASSWORD'])) {
+            return array_change_key_case($row, CASE_LOWER);
         }
 
-        return hash_equals($storedPassword, $password);
+        return null;
     }
 
-    /**
-     * VALIDACIONES
-     */
-
-    public function usernameExiste($username) {
-        $query = "SELECT COUNT(*) as count FROM usuario WHERE username = :username";
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':username', $username);
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-        return (int)$row['COUNT'] > 0;
-    }
-
-    public function correoExisteEmail($correo) {
-        $query = "SELECT COUNT(*) as count FROM persona WHERE LOWER(TRIM(correo)) = LOWER(TRIM(:correo))";
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':correo', $correo);
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-        return (int)$row['COUNT'] > 0;
-    }
-
-    public function ccExiste($cc, $id_persona = null) {
-        $query = "SELECT COUNT(*) as count FROM persona WHERE cc = :cc";
-
-        if ($id_persona) {
-            $query .= " AND id_persona != :id_persona";
-        }
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':cc', $cc);
-
-        if ($id_persona) {
-            oci_bind_by_name($stmt, ':id_persona', $id_persona, -1, SQLT_INT);
-        }
-
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return (int)$row['COUNT'] > 0;
-    }
-
-    public function correoExiste($correo, $id_persona) {
-        $query = "SELECT COUNT(*) as count
-                  FROM persona 
-                  WHERE correo = :correo 
-                  AND id_persona != :id_persona";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':correo', $correo);
-        oci_bind_by_name($stmt, ':id_persona', $id_persona, -1, SQLT_INT);
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return (int)$row['COUNT'] > 0;
-    }
-
-    public function telefonoExiste($telefono, $id_persona) {
-        $query = "SELECT COUNT(*) as count
-                  FROM persona 
-                  WHERE telefono = :telefono 
-                  AND id_persona != :id_persona";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':telefono', $telefono);
-        oci_bind_by_name($stmt, ':id_persona', $id_persona, -1, SQLT_INT);
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return (int)$row['COUNT'] > 0;
-    }
-
-    /**
-     * OBTENER PERFIL
-     */
+    // 👤 OBTENER PERFIL
     public function obtenerPorId($id_usuario) {
-        $query = "SELECT id_usuario,
-                         id_persona,
-                         id_tipo,
-                         username,
-                         estado,
-                         nombres,
-                         apellidos,
-                         cc,
-                         correo,
-                         telefono,
-                         direccion
+
+        $query = "SELECT 
+                    id_usuario,
+                    id_persona,
+                    id_tipo,
+                    username,
+                    estado,
+                    nombres,
+                    apellidos,
+                    correo,
+                    telefono,
+                    direccion
                   FROM v_usuario_completo
                   WHERE id_usuario = :id_usuario";
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_usuario', $id_usuario, -1, SQLT_INT);
-        oci_execute($stmt);
+        oci_bind_by_name($stmt, ":id_usuario", $id_usuario);
+
+        if (!oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            throw new Exception("Error obteniendo usuario: " . $error['message']);
+        }
 
         $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
 
         return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
-    /**
-     * ACTUALIZAR PERFIL INTELIGENTE
-     */
-  public function actualizarPerfil($id_usuario, $data) {
+    // 📝 REGISTRO (AQUÍ SÍ SE USA CC)
+    public function crearConPersona($data) {
 
         try {
 
-            $usuario = $this->obtenerPorId($id_usuario);
+            // Insertar persona
+            $sqlPersona = "INSERT INTO persona (
+                                id_persona,
+                                nombres,
+                                apellidos,
+                                cc,
+                                correo,
+                                telefono,
+                                direccion
+                           ) VALUES (
+                                SEQ_PERSONA.NEXTVAL,
+                                :nombres,
+                                :apellidos,
+                                :cc,
+                                :correo,
+                                :telefono,
+                                :direccion
+                           ) RETURNING id_persona INTO :id_persona";
 
-            if (!$usuario) {
-                return ['success' => false, 'message' => 'Usuario no encontrado'];
+            $stmtPersona = oci_parse($this->conn, $sqlPersona);
+
+            oci_bind_by_name($stmtPersona, ":nombres", $data['nombres']);
+            oci_bind_by_name($stmtPersona, ":apellidos", $data['apellidos']);
+            oci_bind_by_name($stmtPersona, ":cc", $data['cc']);
+            oci_bind_by_name($stmtPersona, ":correo", $data['correo']);
+            oci_bind_by_name($stmtPersona, ":telefono", $data['telefono']);
+            oci_bind_by_name($stmtPersona, ":direccion", $data['direccion']);
+            oci_bind_by_name($stmtPersona, ":id_persona", $idPersona, 32);
+
+            if (!oci_execute($stmtPersona, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmtPersona);
+                throw new Exception($error['message']);
             }
 
-            $id_persona = $usuario['id_persona'];
+            // Insertar usuario
+            $sqlUsuario = "INSERT INTO usuario (
+                                id_usuario,
+                                id_persona,
+                                id_tipo,
+                                username,
+                                password,
+                                estado
+                           ) VALUES (
+                                SEQ_USUARIO.NEXTVAL,
+                                :id_persona,
+                                :id_tipo,
+                                :username,
+                                :password,
+                                'ACTIVO'
+                           )";
 
-            // 🔥 Validar solo si cambian
+            $stmtUsuario = oci_parse($this->conn, $sqlUsuario);
 
-            if ($data['correo'] !== $usuario['correo']) {
-                if ($this->correoExiste($data['correo'], $id_persona)) {
-                    return ['success' => false, 'message' => 'El correo ya está en uso'];
-                }
+            $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
+
+            oci_bind_by_name($stmtUsuario, ":id_persona", $idPersona);
+            oci_bind_by_name($stmtUsuario, ":id_tipo", $data['id_tipo']);
+            oci_bind_by_name($stmtUsuario, ":username", $data['username']);
+            oci_bind_by_name($stmtUsuario, ":password", $passwordHash);
+
+            if (!oci_execute($stmtUsuario, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmtUsuario);
+                throw new Exception($error['message']);
             }
 
-            if ($data['telefono'] !== $usuario['telefono']) {
-                if ($this->telefonoExiste($data['telefono'], $id_persona)) {
-                    return ['success' => false, 'message' => 'El teléfono ya está en uso'];
-                }
-            }
+            oci_commit($this->conn);
 
-            // 🔥 UPDATE SIN CC
-            $query = "UPDATE persona 
-                    SET nombres = :nombres,
-                        apellidos = :apellidos,
-                        correo = :correo,
-                        telefono = :telefono,
-                        direccion = :direccion
-                    WHERE id_persona = :id_persona";
-
-            $stmt = oci_parse($this->conn, $query);
-            oci_bind_by_name($stmt, ':nombres', $data['nombres']);
-            oci_bind_by_name($stmt, ':apellidos', $data['apellidos']);
-            oci_bind_by_name($stmt, ':correo', $data['correo']);
-            oci_bind_by_name($stmt, ':telefono', $data['telefono']);
-            oci_bind_by_name($stmt, ':direccion', $data['direccion']);
-            oci_bind_by_name($stmt, ':id_persona', $id_persona, -1, SQLT_INT);
-            oci_execute($stmt);
-            oci_free_statement($stmt);
-
-            return ['success' => true];
+            return true;
 
         } catch (Exception $e) {
-            error_log($e->getMessage());
-            return ['success' => false, 'message' => 'Error al actualizar'];
+
+            oci_rollback($this->conn);
+            throw $e;
         }
     }
 }
