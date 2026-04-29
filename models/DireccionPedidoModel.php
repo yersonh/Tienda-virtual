@@ -39,6 +39,7 @@ class DireccionPedidoModel {
                          BARRIO,
                          TELEFONO_RECEPTOR,
                          TELEFONO_ALTERNO,
+                         INFORMACION_ADICIONAL,
                          NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA
                   FROM DIRECCION_PEDIDO
                   WHERE ID_USUARIO = :id_usuario
@@ -69,11 +70,14 @@ class DireccionPedidoModel {
         $barrio = trim($data['barrio'] ?? '');
         $telefono = preg_replace('/\D/', '', (string) ($data['telefono_receptor'] ?? $data['telefono'] ?? ''));
         $telefonoAlterno = preg_replace('/\D/', '', (string) ($data['telefono_alterno'] ?? ''));
-        $esPredeterminada = !empty($data['es_predeterminada']) ? 1 : 0;
+        $informacionAdicional = trim($data['informacion_adicional'] ?? '');
+        $quierePredeterminada = !empty($data['es_predeterminada']);
 
         if ($idUsuario <= 0 || $nombre === '' || $apellido === '' || $direccion === '' || $ciudad === '' || $barrio === '' || $telefono === '') {
             return ['success' => false, 'message' => 'Todos los campos de direccion son obligatorios'];
         }
+
+        $esPredeterminada = ($quierePredeterminada || !$this->usuarioTieneDirecciones($idUsuario)) ? 1 : 0;
 
         try {
             if ($esPredeterminada === 1) {
@@ -81,9 +85,9 @@ class DireccionPedidoModel {
             }
 
             $query = "INSERT INTO DIRECCION_PEDIDO
-                        (ID_USUARIO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, ES_PREDETERMINADA)
+                        (ID_USUARIO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, INFORMACION_ADICIONAL, ES_PREDETERMINADA)
                       VALUES
-                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alterno, :es_predeterminada)
+                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alterno, :informacion_adicional, :es_predeterminada)
                       RETURNING ID_DIRECCION_PEDIDO INTO :id_direccion";
 
             $stmt = oci_parse($this->conn, $query);
@@ -97,18 +101,17 @@ class DireccionPedidoModel {
             oci_bind_by_name($stmt, ':barrio', $barrio);
             oci_bind_by_name($stmt, ':telefono', $telefono);
             oci_bind_by_name($stmt, ':telefono_alterno', $telefonoAlterno);
+            oci_bind_by_name($stmt, ':informacion_adicional', $informacionAdicional);
             oci_bind_by_name($stmt, ':es_predeterminada', $esPredeterminada, -1, SQLT_INT);
             oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
 
-            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            if (!@oci_execute($stmt)) {
                 $error = oci_error($stmt);
                 oci_free_statement($stmt);
-                oci_rollback($this->conn);
                 return ['success' => false, 'message' => $error['message'] ?? 'No se pudo guardar la direccion'];
             }
 
             oci_free_statement($stmt);
-            oci_commit($this->conn);
             $direccionGuardada = [
                 'id_direccion_pedido' => (int) $idDireccion,
                 'id_usuario' => $idUsuario,
@@ -119,9 +122,10 @@ class DireccionPedidoModel {
                 'barrio' => $barrio,
                 'telefono_receptor' => $telefono,
                 'telefono_alterno' => $telefonoAlterno,
+                'informacion_adicional' => $informacionAdicional,
                 'es_predeterminada' => $esPredeterminada
             ];
-            $this->agregarDireccionACache($idUsuario, $direccionGuardada);
+            unset($_SESSION['direcciones']);
 
             return [
                 'success' => true,
@@ -129,7 +133,6 @@ class DireccionPedidoModel {
                 'direccion' => $direccionGuardada
             ];
         } catch (Exception $e) {
-            oci_rollback($this->conn);
             error_log($e->getMessage());
 
             return ['success' => false, 'message' => 'No se pudo guardar la direccion'];
@@ -163,6 +166,7 @@ class DireccionPedidoModel {
                          BARRIO,
                          TELEFONO_RECEPTOR,
                          TELEFONO_ALTERNO,
+                         INFORMACION_ADICIONAL,
                          NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA
                   FROM DIRECCION_PEDIDO
                   WHERE ID_DIRECCION_PEDIDO = :id";
@@ -192,7 +196,7 @@ class DireccionPedidoModel {
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
             throw new Exception($error['message'] ?? 'No se pudo actualizar la direccion predeterminada');
@@ -220,5 +224,27 @@ class DireccionPedidoModel {
         }
 
         $_SESSION['direcciones'][$key][] = $direccion;
+    }
+
+    private function usuarioTieneDirecciones(int $idUsuario): bool {
+        $this->ensureSession();
+        $key = $this->cacheKey($idUsuario);
+
+        if (isset($_SESSION['direcciones'][$key]) && is_array($_SESSION['direcciones'][$key])) {
+            return count($_SESSION['direcciones'][$key]) > 0;
+        }
+
+        $query = "SELECT COUNT(*) AS TOTAL
+                  FROM DIRECCION_PEDIDO
+                  WHERE ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return (int) ($row['TOTAL'] ?? 0) > 0;
     }
 }

@@ -205,7 +205,7 @@ class PedidoController {
 
         oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
             throw new Exception($error['message'] ?? 'No se pudo crear la venta');
@@ -229,7 +229,7 @@ class PedidoController {
         oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
             throw new Exception($error['message'] ?? 'No se pudo crear el pedido');
@@ -340,6 +340,7 @@ class PedidoController {
             'barrio' => $_POST['barrio'] ?? '',
             'telefono_receptor' => $_POST['telefono_receptor'] ?? '',
             'telefono_alterno' => $_POST['telefono_alterno'] ?? '',
+            'informacion_adicional' => $_POST['informacion_adicional'] ?? '',
             'es_predeterminada' => $_POST['es_predeterminada'] ?? 0
         ];
 
@@ -409,11 +410,9 @@ class PedidoController {
                 'total' => $total
             ];
 
-            oci_commit($this->conn);
             header("Location: index.php?action=checkout");
             exit();
         } catch (Exception $e) {
-            oci_rollback($this->conn);
             error_log($e->getMessage());
             $_SESSION['error'] = 'No se pudo procesar el pedido. Verifica la informacion e intenta de nuevo.';
             header("Location: index.php?action=checkout");

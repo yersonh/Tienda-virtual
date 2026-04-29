@@ -2,10 +2,13 @@
 
 <style>
 .checkout-page {
-    padding: 36px 32px 88px;
+    padding: 38px 32px 92px;
+    background:
+        radial-gradient(circle at top left, rgba(0,229,192,0.08), transparent 32rem),
+        radial-gradient(circle at bottom right, rgba(120,119,255,0.08), transparent 30rem);
 }
 .checkout-shell {
-    max-width: 1180px;
+    max-width: 1220px;
     margin: 0 auto;
 }
 .checkout-head {
@@ -13,7 +16,7 @@
     justify-content: space-between;
     align-items: end;
     gap: 18px;
-    margin-bottom: 28px;
+    margin-bottom: 26px;
 }
 .checkout-title {
     font-family: 'Syne', sans-serif;
@@ -25,17 +28,46 @@
     color: var(--secondary);
     margin: 0;
 }
+.checkout-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+.checkout-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--secondary);
+    background: rgba(255,255,255,0.03);
+    font-size: 13px;
+}
+.checkout-step.active {
+    color: var(--accent);
+    border-color: rgba(0,229,192,0.28);
+    background: rgba(0,229,192,0.08);
+}
 .checkout-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 24px;
+    align-items: start;
 }
 .checkout-panel,
 .checkout-summary {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 8px;
     padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    backdrop-filter: blur(18px);
+}
+.checkout-summary {
+    position: sticky;
+    top: 92px;
 }
 .checkout-panel h2,
 .checkout-summary h2 {
@@ -64,28 +96,38 @@
 }
 .address-option {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: 22px minmax(0, 1fr);
     gap: 14px;
-    padding: 16px;
-    border: 1px solid var(--border);
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 8px;
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.035);
     cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 .address-option:hover {
-    border-color: rgba(0,229,192,0.3);
+    border-color: rgba(0,229,192,0.34);
+    transform: translateY(-1px);
 }
 .address-option.active {
-    border-color: rgba(0,229,192,0.7);
-    background: rgba(0,229,192,0.08);
+    border-color: rgba(0,229,192,0.74);
+    background: linear-gradient(135deg, rgba(0,229,192,0.13), rgba(255,255,255,0.035));
+    box-shadow: 0 16px 38px rgba(0,229,192,0.08);
 }
 .address-option input {
     margin-top: 6px;
+    accent-color: var(--accent);
+}
+.address-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
 }
 .address-name {
     font-weight: 800;
     color: var(--text);
-    margin-bottom: 6px;
 }
 .address-text {
     color: var(--secondary);
@@ -93,14 +135,25 @@
 }
 .address-badge {
     display: inline-flex;
+    align-items: center;
+    gap: 6px;
     width: fit-content;
-    margin-top: 8px;
     padding: 4px 9px;
     border-radius: 999px;
     background: rgba(0,229,192,0.12);
     color: var(--accent);
     font-size: 12px;
     font-weight: 700;
+}
+.address-info {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    color: var(--secondary);
+    font-size: 13px;
 }
 .checkout-actions {
     display: flex;
@@ -120,6 +173,10 @@
     gap: 8px;
     text-decoration: none;
     cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.checkout-btn:hover {
+    transform: translateY(-1px);
 }
 .checkout-btn.primary {
     background: var(--accent);
@@ -133,11 +190,24 @@
 .address-form {
     display: none;
     margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
 }
 .address-form.is-visible {
     display: block;
+    animation: checkoutSlide 0.22s ease;
+}
+@keyframes checkoutSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 .form-label {
     color: var(--secondary);
@@ -148,6 +218,9 @@
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
+}
+.form-control::placeholder {
+    color: rgba(232,234,242,0.36);
 }
 .form-control:focus {
     background: rgba(255,255,255,0.05);
@@ -176,9 +249,18 @@
     border-radius: 8px;
     color: var(--secondary);
 }
+.summary-note {
+    color: var(--secondary);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 18px;
+}
 @media (max-width: 900px) {
     .checkout-grid {
         grid-template-columns: 1fr;
+    }
+    .checkout-summary {
+        position: static;
     }
 }
 @media (max-width: 640px) {
@@ -219,6 +301,11 @@
             <div>
                 <h1 class="checkout-title">Checkout</h1>
                 <p class="checkout-sub">Elige donde recibir tu pedido y confirma la compra.</p>
+                <div class="checkout-steps" aria-label="Progreso de compra">
+                    <span class="checkout-step">Carrito</span>
+                    <span class="checkout-step active">Direccion</span>
+                    <span class="checkout-step">Confirmacion</span>
+                </div>
             </div>
             <a class="checkout-btn secondary" href="index.php?action=resumenCompra">Volver al resumen</a>
         </div>
@@ -254,8 +341,13 @@
                                         required
                                     >
                                     <span>
-                                        <span class="address-name">
-                                            <?= htmlspecialchars($direccion['nombre_receptor'] . ' ' . $direccion['apellido_receptor'], ENT_QUOTES, 'UTF-8') ?>
+                                        <span class="address-topline">
+                                            <span class="address-name">
+                                                <?= htmlspecialchars($direccion['nombre_receptor'] . ' ' . $direccion['apellido_receptor'], ENT_QUOTES, 'UTF-8') ?>
+                                            </span>
+                                            <?php if ((int) $direccion['es_predeterminada'] === 1): ?>
+                                                <span class="address-badge">Predeterminada</span>
+                                            <?php endif; ?>
                                         </span>
                                         <p class="address-text"><?= htmlspecialchars($direccion['direccion_envio'], ENT_QUOTES, 'UTF-8') ?></p>
                                         <p class="address-text">
@@ -268,8 +360,11 @@
                                         <?php if (!empty($direccion['telefono_alterno'])): ?>
                                             <p class="address-text">Alterno: <?= htmlspecialchars($direccion['telefono_alterno'], ENT_QUOTES, 'UTF-8') ?></p>
                                         <?php endif; ?>
-                                        <?php if ((int) $direccion['es_predeterminada'] === 1): ?>
-                                            <span class="address-badge">Predeterminada</span>
+                                        <?php if (!empty($direccion['informacion_adicional'])): ?>
+                                            <div class="address-info">
+                                                <span aria-hidden="true">ℹ</span>
+                                                <span><?= htmlspecialchars($direccion['informacion_adicional'], ENT_QUOTES, 'UTF-8') ?></span>
+                                            </div>
                                         <?php endif; ?>
                                     </span>
                                 </label>
@@ -316,6 +411,10 @@
                             <label class="form-label" for="telefono_alterno">Telefono alterno</label>
                             <input class="form-control" type="tel" id="telefono_alterno" name="telefono_alterno">
                         </div>
+                        <div class="col-12">
+                            <label class="form-label" for="informacion_adicional">Informacion adicional</label>
+                            <textarea class="form-control" id="informacion_adicional" name="informacion_adicional" rows="3" placeholder="Apartamento, torre, referencias o instrucciones de entrega"></textarea>
+                        </div>
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="1" id="es_predeterminada" name="es_predeterminada">
@@ -340,6 +439,7 @@
                     <span>Total productos</span>
                     <strong>$<?= number_format((float) $total) ?> COP</strong>
                 </div>
+                <p class="summary-note">La direccion seleccionada se usara para crear el pedido. El costo de envio se puede confirmar en la siguiente etapa del flujo.</p>
             </aside>
         </div>
         <?php endif; ?>
@@ -445,6 +545,14 @@ function addAddressOption(address) {
 
     if (address.telefono_alterno) {
         body.appendChild(makeElement('p', 'address-text', `Alterno: ${address.telefono_alterno}`));
+    }
+
+    if (address.informacion_adicional) {
+        const info = document.createElement('div');
+        info.className = 'address-info';
+        info.appendChild(makeElement('span', '', 'ℹ'));
+        info.appendChild(makeElement('span', '', address.informacion_adicional));
+        body.appendChild(info);
     }
 
     if (Number(address.es_predeterminada) === 1) {
