@@ -39,7 +39,7 @@
     </div>
 
     <div class="d-flex justify-content-end mt-4">
-        <a href="index.php?action=direccion" class="btn btn-success btn-lg">Continuar</a>
+        <a href="index.php?action=checkout" class="btn btn-success btn-lg">Continuar</a>
     </div>
 </main>
 
