@@ -385,6 +385,10 @@
                     </a>
                 </aside>
             </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a class="btn btn-success btn-lg" href="index.php?action=resumenCompra">Continuar compra</a>
+            </div>
         <?php endif; ?>
     </div>
 </main>

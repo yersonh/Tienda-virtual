@@ -17,6 +17,7 @@ require_once __DIR__ . '/../Controllers/PerfilController.php';
 require_once __DIR__ . '/../Controllers/ProductoController.php';
 require_once __DIR__ . '/../Controllers/TiendaController.php';
 require_once __DIR__ . '/../Controllers/CarritoController.php';
+require_once __DIR__ . '/../Controllers/PedidoController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
 $publicas = [
@@ -123,6 +124,10 @@ switch ($action) {
 
     case 'vaciarCarrito':
         (new CarritoController())->vaciar();
+        break;
+
+    case 'resumenCompra':
+        (new PedidoController())->resumen();
         break;
 
     case 'perfil':
