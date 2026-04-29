@@ -58,16 +58,53 @@ class PedidoController {
         return isset($_SESSION['id_usuario']) ? (int) $_SESSION['id_usuario'] : 0;
     }
 
-    private function calcularTotalCarrito(array $carrito): float {
-        $total = 0;
+    private function isAjaxRequest(): bool {
+        return (
+            (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch') ||
+            (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+        );
+    }
 
+    private function calcularTotalCarrito(array $carrito): float {
+        $ids = array_values(array_filter(array_map('intval', array_keys($carrito)), fn($id) => $id > 0));
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $placeholders = [];
+        $binds = [];
+        foreach ($ids as $index => $idProducto) {
+            $placeholder = ':id' . $index;
+            $placeholders[] = $placeholder;
+            $binds[$placeholder] = $idProducto;
+        }
+
+        $query = "SELECT ID_PRODUCTO, PRECIO
+                  FROM PRODUCTO
+                  WHERE ID_PRODUCTO IN (" . implode(', ', $placeholders) . ")";
+
+        $stmt = oci_parse($this->conn, $query);
+        foreach ($binds as $placeholder => &$value) {
+            oci_bind_by_name($stmt, $placeholder, $value, -1, SQLT_INT);
+        }
+        unset($value);
+
+        oci_execute($stmt);
+
+        $precios = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $precios[(int) $row['ID_PRODUCTO']] = (float) $row['PRECIO'];
+        }
+        oci_free_statement($stmt);
+
+        $total = 0;
         foreach ($carrito as $idProducto => $cantidad) {
-            $producto = $this->obtenerProductoResumen((int) $idProducto);
-            if (!$producto) {
+            $idProducto = (int) $idProducto;
+            if (!isset($precios[$idProducto])) {
                 continue;
             }
 
-            $total += (float) $producto['precio'] * (int) $cantidad;
+            $total += $precios[$idProducto] * (int) $cantidad;
         }
 
         return $total;
@@ -248,6 +285,15 @@ class PedidoController {
     public function checkout() {
         $this->ensureSession();
 
+        $pedidoConfirmado = $_SESSION['pedido_confirmado'] ?? null;
+        if ($pedidoConfirmado) {
+            unset($_SESSION['pedido_confirmado']);
+            $direcciones = [];
+            $total = (float) ($pedidoConfirmado['total'] ?? 0);
+            require_once __DIR__ . '/../views/checkout.php';
+            return;
+        }
+
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
             $_SESSION['error'] = 'Debes iniciar sesion para continuar la compra';
@@ -273,6 +319,13 @@ class PedidoController {
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
+            if ($this->isAjaxRequest()) {
+                http_response_code(401);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => 'Debes iniciar sesion para guardar una direccion']);
+                exit();
+            }
+
             $_SESSION['error'] = 'Debes iniciar sesion para guardar una direccion';
             header("Location: index.php?action=login");
             exit();
@@ -280,16 +333,27 @@ class PedidoController {
 
         $data = [
             'id_usuario' => $idUsuario,
-            'nombre' => $_POST['nombre'] ?? '',
-            'apellido' => $_POST['apellido'] ?? '',
-            'direccion' => $_POST['direccion'] ?? '',
+            'nombre_receptor' => $_POST['nombre_receptor'] ?? '',
+            'apellido_receptor' => $_POST['apellido_receptor'] ?? '',
+            'direccion_envio' => $_POST['direccion_envio'] ?? '',
             'ciudad' => $_POST['ciudad'] ?? '',
             'barrio' => $_POST['barrio'] ?? '',
-            'telefono' => $_POST['telefono'] ?? '',
+            'telefono_receptor' => $_POST['telefono_receptor'] ?? '',
+            'telefono_alterno' => $_POST['telefono_alterno'] ?? '',
             'es_predeterminada' => $_POST['es_predeterminada'] ?? 0
         ];
 
         $resultado = $this->direccionPedidoModel->guardarDireccion($data);
+        if ($this->isAjaxRequest()) {
+            header('Content-Type: application/json; charset=utf-8');
+            if (!$resultado['success']) {
+                http_response_code(422);
+            }
+
+            echo json_encode($resultado);
+            exit();
+        }
+
         if (!$resultado['success']) {
             $_SESSION['error'] = $resultado['message'] ?? 'No se pudo guardar la direccion';
         } else {
@@ -346,7 +410,7 @@ class PedidoController {
             ];
 
             oci_commit($this->conn);
-            header("Location: index.php?action=confirmacionPedido");
+            header("Location: index.php?action=checkout");
             exit();
         } catch (Exception $e) {
             oci_rollback($this->conn);

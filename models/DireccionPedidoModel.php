@@ -12,17 +12,33 @@ class DireccionPedidoModel {
         return array_change_key_case($row, CASE_LOWER);
     }
 
+    private function ensureSession(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
+    private function cacheKey(int $idUsuario): string {
+        return (string) $idUsuario;
+    }
+
     public function obtenerDirecciones($idUsuario): array {
         $idUsuario = (int) $idUsuario;
+        $this->ensureSession();
+
+        if (isset($_SESSION['direcciones'][$this->cacheKey($idUsuario)]) && is_array($_SESSION['direcciones'][$this->cacheKey($idUsuario)])) {
+            return $_SESSION['direcciones'][$this->cacheKey($idUsuario)];
+        }
 
         $query = "SELECT ID_DIRECCION_PEDIDO,
                          ID_USUARIO,
-                         NOMBRE,
-                         APELLIDO,
-                         DIRECCION,
+                         NOMBRE_RECEPTOR,
+                         APELLIDO_RECEPTOR,
+                         DIRECCION_ENVIO,
                          CIUDAD,
                          BARRIO,
-                         TELEFONO,
+                         TELEFONO_RECEPTOR,
+                         TELEFONO_ALTERNO,
                          NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA
                   FROM DIRECCION_PEDIDO
                   WHERE ID_USUARIO = :id_usuario
@@ -39,17 +55,20 @@ class DireccionPedidoModel {
 
         oci_free_statement($stmt);
 
+        $_SESSION['direcciones'][$this->cacheKey($idUsuario)] = $direcciones;
+
         return $direcciones;
     }
 
     public function guardarDireccion($data): array {
         $idUsuario = (int) ($data['id_usuario'] ?? 0);
-        $nombre = trim($data['nombre'] ?? '');
-        $apellido = trim($data['apellido'] ?? '');
-        $direccion = trim($data['direccion'] ?? '');
+        $nombre = trim($data['nombre_receptor'] ?? $data['nombre'] ?? '');
+        $apellido = trim($data['apellido_receptor'] ?? $data['apellido'] ?? '');
+        $direccion = trim($data['direccion_envio'] ?? $data['direccion'] ?? '');
         $ciudad = trim($data['ciudad'] ?? '');
         $barrio = trim($data['barrio'] ?? '');
-        $telefono = preg_replace('/\D/', '', (string) ($data['telefono'] ?? ''));
+        $telefono = preg_replace('/\D/', '', (string) ($data['telefono_receptor'] ?? $data['telefono'] ?? ''));
+        $telefonoAlterno = preg_replace('/\D/', '', (string) ($data['telefono_alterno'] ?? ''));
         $esPredeterminada = !empty($data['es_predeterminada']) ? 1 : 0;
 
         if ($idUsuario <= 0 || $nombre === '' || $apellido === '' || $direccion === '' || $ciudad === '' || $barrio === '' || $telefono === '') {
@@ -62,9 +81,9 @@ class DireccionPedidoModel {
             }
 
             $query = "INSERT INTO DIRECCION_PEDIDO
-                        (ID_USUARIO, NOMBRE, APELLIDO, DIRECCION, CIUDAD, BARRIO, TELEFONO, ES_PREDETERMINADA)
+                        (ID_USUARIO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, ES_PREDETERMINADA)
                       VALUES
-                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :es_predeterminada)
+                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alterno, :es_predeterminada)
                       RETURNING ID_DIRECCION_PEDIDO INTO :id_direccion";
 
             $stmt = oci_parse($this->conn, $query);
@@ -77,6 +96,7 @@ class DireccionPedidoModel {
             oci_bind_by_name($stmt, ':ciudad', $ciudad);
             oci_bind_by_name($stmt, ':barrio', $barrio);
             oci_bind_by_name($stmt, ':telefono', $telefono);
+            oci_bind_by_name($stmt, ':telefono_alterno', $telefonoAlterno);
             oci_bind_by_name($stmt, ':es_predeterminada', $esPredeterminada, -1, SQLT_INT);
             oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
 
@@ -89,10 +109,24 @@ class DireccionPedidoModel {
 
             oci_free_statement($stmt);
             oci_commit($this->conn);
+            $direccionGuardada = [
+                'id_direccion_pedido' => (int) $idDireccion,
+                'id_usuario' => $idUsuario,
+                'nombre_receptor' => $nombre,
+                'apellido_receptor' => $apellido,
+                'direccion_envio' => $direccion,
+                'ciudad' => $ciudad,
+                'barrio' => $barrio,
+                'telefono_receptor' => $telefono,
+                'telefono_alterno' => $telefonoAlterno,
+                'es_predeterminada' => $esPredeterminada
+            ];
+            $this->agregarDireccionACache($idUsuario, $direccionGuardada);
 
             return [
                 'success' => true,
-                'id_direccion' => (int) $idDireccion
+                'id_direccion' => (int) $idDireccion,
+                'direccion' => $direccionGuardada
             ];
         } catch (Exception $e) {
             oci_rollback($this->conn);
@@ -104,15 +138,31 @@ class DireccionPedidoModel {
 
     public function obtenerDireccionPorId($id): ?array {
         $id = (int) $id;
+        $this->ensureSession();
+
+        if (!empty($_SESSION['direcciones']) && is_array($_SESSION['direcciones'])) {
+            foreach ($_SESSION['direcciones'] as $direccionesUsuario) {
+                if (!is_array($direccionesUsuario)) {
+                    continue;
+                }
+
+                foreach ($direccionesUsuario as $direccion) {
+                    if ((int) ($direccion['id_direccion_pedido'] ?? 0) === $id) {
+                        return $direccion;
+                    }
+                }
+            }
+        }
 
         $query = "SELECT ID_DIRECCION_PEDIDO,
                          ID_USUARIO,
-                         NOMBRE,
-                         APELLIDO,
-                         DIRECCION,
+                         NOMBRE_RECEPTOR,
+                         APELLIDO_RECEPTOR,
+                         DIRECCION_ENVIO,
                          CIUDAD,
                          BARRIO,
-                         TELEFONO,
+                         TELEFONO_RECEPTOR,
+                         TELEFONO_ALTERNO,
                          NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA
                   FROM DIRECCION_PEDIDO
                   WHERE ID_DIRECCION_PEDIDO = :id";
@@ -124,7 +174,14 @@ class DireccionPedidoModel {
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        return $row ? $this->normalizarFila($row) : null;
+        if (!$row) {
+            return null;
+        }
+
+        $direccion = $this->normalizarFila($row);
+        $this->agregarDireccionACache((int) $direccion['id_usuario'], $direccion);
+
+        return $direccion;
     }
 
     private function quitarPredeterminada($idUsuario): void {
@@ -142,5 +199,26 @@ class DireccionPedidoModel {
         }
 
         oci_free_statement($stmt);
+    }
+
+    private function agregarDireccionACache(int $idUsuario, array $direccion): void {
+        $this->ensureSession();
+        $key = $this->cacheKey($idUsuario);
+
+        if (!isset($_SESSION['direcciones'][$key]) || !is_array($_SESSION['direcciones'][$key])) {
+            $_SESSION['direcciones'][$key] = [];
+        }
+
+        if ((int) ($direccion['es_predeterminada'] ?? 0) === 1) {
+            foreach ($_SESSION['direcciones'][$key] as &$item) {
+                $item['es_predeterminada'] = 0;
+            }
+            unset($item);
+
+            array_unshift($_SESSION['direcciones'][$key], $direccion);
+            return;
+        }
+
+        $_SESSION['direcciones'][$key][] = $direccion;
     }
 }

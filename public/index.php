@@ -134,6 +134,10 @@ switch ($action) {
         (new PedidoController())->checkout();
         break;
 
+    case 'direccion':
+        (new PedidoController())->checkout();
+        break;
+
     case 'guardarDireccionPedido':
         (new PedidoController())->guardarDireccion();
         break;
