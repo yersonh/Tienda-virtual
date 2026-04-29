@@ -130,12 +130,12 @@ switch ($action) {
         (new PedidoController())->resumen();
         break;
 
-    case 'checkout':
-        (new PedidoController())->checkout();
+    case 'ConfirmarPedido':
+        (new PedidoController())->ConfirmarPedido();
         break;
 
     case 'direccion':
-        (new PedidoController())->checkout();
+        (new PedidoController())->ConfirmarPedido();
         break;
 
     case 'guardarDireccionPedido':

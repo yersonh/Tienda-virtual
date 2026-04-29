@@ -282,7 +282,7 @@ class PedidoController {
         require_once __DIR__ . '/../views/pedidos/resumen.php';
     }
 
-    public function checkout() {
+    public function ConfirmarPedido() {
         $this->ensureSession();
 
         $pedidoConfirmado = $_SESSION['pedido_confirmado'] ?? null;
@@ -290,7 +290,7 @@ class PedidoController {
             unset($_SESSION['pedido_confirmado']);
             $direcciones = [];
             $total = (float) ($pedidoConfirmado['total'] ?? 0);
-            require_once __DIR__ . '/../views/checkout.php';
+            require_once __DIR__ . '/../views/ConfirmarPedido.php';
             return;
         }
 
@@ -311,7 +311,7 @@ class PedidoController {
         $direcciones = $this->direccionPedidoModel->obtenerDirecciones($idUsuario);
         $total = $this->calcularTotalCarrito($carrito);
 
-        require_once __DIR__ . '/../views/checkout.php';
+        require_once __DIR__ . '/../views/ConfirmarPedido.php';
     }
 
     public function guardarDireccion() {
@@ -361,7 +361,7 @@ class PedidoController {
             $_SESSION['success'] = 'Direccion guardada correctamente';
         }
 
-        header("Location: index.php?action=checkout");
+        header("Location: index.php?action=ConfirmarPedido");
         exit();
     }
 
@@ -378,14 +378,14 @@ class PedidoController {
         $idDireccion = (int) ($_POST['id_direccion'] ?? 0);
         if ($idDireccion <= 0) {
             $_SESSION['error'] = 'Selecciona una direccion de envio';
-            header("Location: index.php?action=checkout");
+            header("Location: index.php?action=ConfirmarPedido");
             exit();
         }
 
         $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion);
         if (!$direccion || (int) $direccion['id_usuario'] !== $idUsuario) {
             $_SESSION['error'] = 'La direccion seleccionada no es valida';
-            header("Location: index.php?action=checkout");
+            header("Location: index.php?action=ConfirmarPedido");
             exit();
         }
 
@@ -410,12 +410,12 @@ class PedidoController {
                 'total' => $total
             ];
 
-            header("Location: index.php?action=checkout");
+            header("Location: index.php?action=ConfirmarPedido");
             exit();
         } catch (Exception $e) {
             error_log($e->getMessage());
             $_SESSION['error'] = 'No se pudo procesar el pedido. Verifica la informacion e intenta de nuevo.';
-            header("Location: index.php?action=checkout");
+            header("Location: index.php?action=ConfirmarPedido");
             exit();
         }
     }

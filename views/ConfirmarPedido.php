@@ -299,7 +299,7 @@
         <?php else: ?>
         <div class="checkout-head">
             <div>
-                <h1 class="checkout-title">Checkout</h1>
+                <h1 class="checkout-title">Confirmar pedido</h1>
                 <p class="checkout-sub">Elige donde recibir tu pedido y confirma la compra.</p>
                 <div class="checkout-steps" aria-label="Progreso de compra">
                     <span class="checkout-step">Carrito</span>

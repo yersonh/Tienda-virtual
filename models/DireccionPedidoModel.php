@@ -87,11 +87,9 @@ class DireccionPedidoModel {
             $query = "INSERT INTO DIRECCION_PEDIDO
                         (ID_USUARIO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, INFORMACION_ADICIONAL, ES_PREDETERMINADA)
                       VALUES
-                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alterno, :informacion_adicional, :es_predeterminada)
-                      RETURNING ID_DIRECCION_PEDIDO INTO :id_direccion";
+                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono_alt, :telefono_alterno, :info, :predeterminada)";
 
             $stmt = oci_parse($this->conn, $query);
-            $idDireccion = null;
 
             oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
             oci_bind_by_name($stmt, ':nombre', $nombre);
@@ -99,11 +97,10 @@ class DireccionPedidoModel {
             oci_bind_by_name($stmt, ':direccion', $direccion);
             oci_bind_by_name($stmt, ':ciudad', $ciudad);
             oci_bind_by_name($stmt, ':barrio', $barrio);
-            oci_bind_by_name($stmt, ':telefono', $telefono);
+            oci_bind_by_name($stmt, ':telefono_alt', $telefono);
             oci_bind_by_name($stmt, ':telefono_alterno', $telefonoAlterno);
-            oci_bind_by_name($stmt, ':informacion_adicional', $informacionAdicional);
-            oci_bind_by_name($stmt, ':es_predeterminada', $esPredeterminada, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':info', $informacionAdicional);
+            oci_bind_by_name($stmt, ':predeterminada', $esPredeterminada, -1, SQLT_INT);
 
             if (!@oci_execute($stmt)) {
                 $error = oci_error($stmt);
@@ -113,7 +110,7 @@ class DireccionPedidoModel {
 
             oci_free_statement($stmt);
             $direccionGuardada = [
-                'id_direccion_pedido' => (int) $idDireccion,
+                'id_direccion_pedido' => null,
                 'id_usuario' => $idUsuario,
                 'nombre_receptor' => $nombre,
                 'apellido_receptor' => $apellido,
@@ -129,7 +126,7 @@ class DireccionPedidoModel {
 
             return [
                 'success' => true,
-                'id_direccion' => (int) $idDireccion,
+                'id_direccion' => null,
                 'direccion' => $direccionGuardada
             ];
         } catch (Exception $e) {
