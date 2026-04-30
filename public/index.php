@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . '/../config/lang.php';
 
 $action = $_GET['action'] ?? 'tienda';
 $_SESSION['logueado'] = isset($_SESSION['id_usuario']);
@@ -18,6 +19,7 @@ require_once __DIR__ . '/../Controllers/ProductoController.php';
 require_once __DIR__ . '/../Controllers/TiendaController.php';
 require_once __DIR__ . '/../Controllers/CarritoController.php';
 require_once __DIR__ . '/../Controllers/PedidoController.php';
+require_once __DIR__ . '/../Controllers/IdiomaController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
 $publicas = [
@@ -29,7 +31,8 @@ $publicas = [
     'verificarTelefono',
     'iniciarSesion',
     'tienda',
-    'productoDetalle'
+    'productoDetalle',
+    'cambiarIdioma'
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
@@ -92,6 +95,10 @@ switch ($action) {
 
     case 'inicio':
         require_once __DIR__ . '/../views/Inicio.php';
+        break;
+
+    case 'cambiarIdioma':
+        (new IdiomaController())->cambiarIdioma();
         break;
 
     case 'tienda':

@@ -49,6 +49,34 @@ class DireccionPedidoModel {
         unset($_SESSION['direcciones'], $_SESSION['direcciones_usuario_id']);
     }
 
+    private function tablaTieneColumna(string $tabla, string $columna): bool {
+        $this->ensureSession();
+        $tabla = strtoupper($tabla);
+        $columna = strtoupper($columna);
+        $cacheKey = $tabla . '.' . $columna;
+
+        if (isset($_SESSION['schema_column_cache'][$cacheKey])) {
+            return (bool) $_SESSION['schema_column_cache'][$cacheKey];
+        }
+
+        $query = "SELECT 1
+                  FROM USER_TAB_COLUMNS
+                  WHERE TABLE_NAME = :tabla
+                  AND COLUMN_NAME = :columna
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':tabla', $tabla);
+        oci_bind_by_name($stmt, ':columna', $columna);
+        oci_execute($stmt);
+
+        $existe = (bool) oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        $_SESSION['schema_column_cache'][$cacheKey] = $existe;
+        return $existe;
+    }
+
     private function validarDireccion(array $data): array {
         $idUsuario = (int) ($data['id_usuario'] ?? 0);
         $nombre = trim($data['nombre_receptor'] ?? $data['nombre'] ?? '');
@@ -388,11 +416,21 @@ class DireccionPedidoModel {
         $telefono = (string) ($direccion['telefono_receptor'] ?? '');
         $telefonoAlt = (string) ($direccion['telefono_alterno'] ?? '');
         $info = (string) ($direccion['informacion_adicional'] ?? '');
+        $esPredeterminada = (int) ($direccion['es_predeterminada'] ?? 0) === 1 ? 1 : 0;
+        $guardarPredeterminadaPedido = $this->tablaTieneColumna('DIRECCION_PEDIDO', 'ES_PREDETERMINADA');
+
+        $columnas = "ID_PEDIDO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, INFORMACION_ADICIONAL, CREATED_AT, UPDATED_AT";
+        $valores = ":id_pedido, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alt, :info, SYSDATE, SYSDATE";
+
+        if ($guardarPredeterminadaPedido) {
+            $columnas .= ", ES_PREDETERMINADA";
+            $valores .= ", :es_predeterminada";
+        }
 
         $queryInsert = "INSERT INTO DIRECCION_PEDIDO
-                            (ID_PEDIDO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, INFORMACION_ADICIONAL, CREATED_AT, UPDATED_AT)
+                            ($columnas)
                         VALUES
-                            (:id_pedido, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alt, :info, SYSDATE, SYSDATE)
+                            ($valores)
                         RETURNING ID_DIRECCION_PEDIDO INTO :id_direccion_pedido";
 
         $stmtInsert = oci_parse($this->conn, $queryInsert);
@@ -407,6 +445,9 @@ class DireccionPedidoModel {
         oci_bind_by_name($stmtInsert, ':telefono', $telefono);
         oci_bind_by_name($stmtInsert, ':telefono_alt', $telefonoAlt);
         oci_bind_by_name($stmtInsert, ':info', $info);
+        if ($guardarPredeterminadaPedido) {
+            oci_bind_by_name($stmtInsert, ':es_predeterminada', $esPredeterminada, -1, SQLT_INT);
+        }
         oci_bind_by_name($stmtInsert, ':id_direccion_pedido', $idDireccionPedido, -1, SQLT_INT);
 
         if (!@oci_execute($stmtInsert, OCI_NO_AUTO_COMMIT)) {
@@ -416,6 +457,7 @@ class DireccionPedidoModel {
             throw new Exception('No se pudo copiar la direccion del pedido');
         }
         oci_free_statement($stmtInsert);
+        oci_commit($this->conn);
         if ((int) $idDireccionPedido <= 0) {
             throw new Exception('No se pudo obtener la direccion del pedido');
         }

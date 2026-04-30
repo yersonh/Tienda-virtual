@@ -114,6 +114,67 @@ class PedidoController {
         return $total;
     }
 
+    private function normalizarCiudadEnvio(string $ciudad): string {
+        $ciudad = trim(function_exists('mb_strtolower') ? mb_strtolower($ciudad, 'UTF-8') : strtolower($ciudad));
+        $ciudad = strtr($ciudad, [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'ü' => 'u',
+            'ñ' => 'n'
+        ]);
+
+        return $ciudad;
+    }
+
+    private function calcularEnvio(string $ciudad): float {
+        $ciudadNormalizada = $this->normalizarCiudadEnvio($ciudad);
+
+        if ($ciudadNormalizada === 'bogota') {
+            return 10000;
+        }
+
+        if ($ciudadNormalizada === 'medellin') {
+            return 12000;
+        }
+
+        return 15000;
+    }
+
+    private function obtenerDireccionInicial(array $direcciones): ?array {
+        $primera = null;
+        foreach ($direcciones as $direccion) {
+            if ($primera === null) {
+                $primera = $direccion;
+            }
+
+            if ((int) ($direccion['es_predeterminada'] ?? 0) === 1) {
+                return $direccion;
+            }
+        }
+
+        return $primera;
+    }
+
+    private function calcularResumenCompra(float $subtotal, float $envio = 0): array {
+        $subtotal = max(0, $subtotal);
+        $envio = max(0, $envio);
+        $iva = round($subtotal * 0.19, 2);
+        $total = round($subtotal + $iva + $envio, 2);
+
+        $resumen = [
+            'subtotal' => $subtotal,
+            'iva' => $iva,
+            'envio' => $envio,
+            'total' => $total
+        ];
+
+        $_SESSION['checkout_resumen'] = $resumen;
+        return $resumen;
+    }
+
     private function obtenerColumnasTabla(string $tabla): array {
         if ($tabla === 'VENTA' && isset($_SESSION['venta_columnas_cache']) && is_array($_SESSION['venta_columnas_cache'])) {
             return $_SESSION['venta_columnas_cache'];
@@ -369,6 +430,7 @@ class PedidoController {
             exit();
         }
 
+        $resumenCompra = $this->calcularResumenCompra($total);
         require_once __DIR__ . '/../views/pedidos/resumen.php';
     }
 
@@ -400,7 +462,10 @@ class PedidoController {
 
         $this->direccionPedidoModel->obtenerDirecciones($idUsuario);
         $direcciones = $_SESSION['direcciones'] ?? [];
-        $total = $this->calcularTotalCarrito($carrito);
+        $direccionInicial = $this->obtenerDireccionInicial($direcciones);
+        $envioInicial = $direccionInicial ? $this->calcularEnvio((string) ($direccionInicial['ciudad'] ?? '')) : 0;
+        $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envioInicial);
+        $total = $resumenCompra['total'];
 
         require_once __DIR__ . '/../views/ConfirmarPedido.php';
     }
@@ -550,7 +615,9 @@ class PedidoController {
         }
 
         try {
-            $total = $this->calcularTotalCarrito($carrito);
+            $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
+            $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
+            $total = $resumenCompra['total'];
             $idVenta = $this->crearVenta($idUsuario, $total);
             $idPedido = $this->crearPedido($idVenta, 1);
             $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion);
@@ -565,6 +632,9 @@ class PedidoController {
                 'id_pedido' => $idPedido,
                 'id_venta' => $idVenta,
                 'total' => $total,
+                'subtotal' => $resumenCompra['subtotal'],
+                'iva' => $resumenCompra['iva'],
+                'envio' => $resumenCompra['envio'],
                 'fecha_estimada_entrega' => $fechaEstimadaEntrega
             ];
 

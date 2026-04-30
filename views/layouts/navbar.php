@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once __DIR__ . '/../../config/lang.php';
 
 // 🔥 CONTADOR DEL CARRITO
 $logueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
@@ -13,7 +14,7 @@ $carritoCount = $logueado
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>">
 <head>
 <meta charset="UTF-8">
 <title>NAYLEX Store</title>
@@ -36,6 +37,16 @@ $carritoCount = $logueado
 }
 
 [data-theme="light"] {
+  --bg: #f8fafc;
+  --text: #1e293b;
+  --accent: #00e5c0;
+  --secondary: #64748b;
+  --card-bg: rgba(0,0,0,0.03);
+  --border: rgba(0,0,0,0.06);
+  --hover: rgba(0,229,192,0.1);
+}
+
+.light-mode {
   --bg: #f8fafc;
   --text: #1e293b;
   --accent: #00e5c0;
@@ -185,6 +196,22 @@ body {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+.lang-select {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #aab0cc;
+    height: 38px;
+    border-radius: 10px;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+[data-theme="light"] .lang-select,
+.light-mode .lang-select {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.12);
+    color: var(--secondary);
+}
 </style>
 </head>
 
@@ -195,15 +222,15 @@ body {
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
       <a href="index.php?action=inicio" class="active">Inicio</a>
-      <a href="index.php?action=tienda">Productos</a>
+      <a href="index.php?action=tienda"><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></a>
     </div>
     <div class="nav-actions">
       <?php if($logueado): ?>
-        <a href="index.php?action=perfil" class="btn-ghost">Perfil</a>
-        <a href="index.php?action=logout" class="btn-ghost">Salir</a>
+        <a href="index.php?action=perfil" class="btn-ghost"><?= htmlspecialchars(t('profile'), ENT_QUOTES, 'UTF-8') ?></a>
+        <a href="index.php?action=logout" class="btn-ghost"><?= htmlspecialchars(t('logout'), ENT_QUOTES, 'UTF-8') ?></a>
       <?php else: ?>
-        <a href="index.php?action=login" class="btn-ghost">Login</a>
-        <button class="btn-primary" onclick="location.href='index.php?action=registro'">Registro</button>
+        <a href="index.php?action=login" class="btn-ghost"><?= htmlspecialchars(t('login'), ENT_QUOTES, 'UTF-8') ?></a>
+        <button class="btn-primary" onclick="location.href='index.php?action=registro'"><?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?></button>
       <?php endif; ?>
       <?php if($logueado): ?>
         <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="Ver carrito">
@@ -215,6 +242,13 @@ body {
           <span class="cart-badge" id="carrito-count"><?php echo $carritoCount; ?></span>
         </button>
       <?php endif; ?>
+      <form action="index.php" method="GET" class="m-0">
+        <input type="hidden" name="action" value="cambiarIdioma">
+        <select class="lang-select" name="lang" onchange="localStorage.setItem('langDetected', 'manual'); this.form.submit()" aria-label="Idioma">
+          <option value="es" <?= ($_SESSION['lang'] ?? 'es') === 'es' ? 'selected' : '' ?>>ES</option>
+          <option value="en" <?= ($_SESSION['lang'] ?? 'es') === 'en' ? 'selected' : '' ?>>EN</option>
+        </select>
+      </form>
       <button class="theme-toggle" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema"></button>
     </div>
 </nav>
@@ -233,6 +267,7 @@ themeToggle.addEventListener('click', () => {
     const currentTheme = body.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     body.setAttribute('data-theme', newTheme);
+    body.classList.toggle('light-mode', newTheme === 'light');
     renderThemeIcon(newTheme);
     localStorage.setItem('theme', newTheme);
 });
@@ -240,5 +275,16 @@ themeToggle.addEventListener('click', () => {
 // Load saved theme
 const savedTheme = localStorage.getItem('theme') || 'dark';
 body.setAttribute('data-theme', savedTheme);
+body.classList.toggle('light-mode', savedTheme === 'light');
 renderThemeIcon(savedTheme);
+
+const currentLang = '<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>';
+const detectedLang = (navigator.language || navigator.userLanguage || 'es').slice(0, 2).toLowerCase();
+const supportedLang = ['es', 'en'].includes(detectedLang) ? detectedLang : 'es';
+if (!localStorage.getItem('langDetected')) {
+    localStorage.setItem('langDetected', supportedLang);
+    if (supportedLang !== currentLang) {
+        window.location.href = 'index.php?action=cambiarIdioma&lang=' + encodeURIComponent(supportedLang);
+    }
+}
 </script>

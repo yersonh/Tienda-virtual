@@ -3,6 +3,12 @@ $direcciones = $_SESSION['direcciones'] ?? [];
 require_once __DIR__ . '/helpers/entrega.php';
 require_once __DIR__ . '/layouts/navbar.php';
 
+$resumenCompra = $resumenCompra ?? ($_SESSION['checkout_resumen'] ?? [
+    'subtotal' => (float) ($pedidoConfirmado['subtotal'] ?? $total ?? 0),
+    'iva' => (float) ($pedidoConfirmado['iva'] ?? 0),
+    'envio' => (float) ($pedidoConfirmado['envio'] ?? 0),
+    'total' => (float) ($pedidoConfirmado['total'] ?? $total ?? 0)
+]);
 $direccionSeleccionada = null;
 foreach ($direcciones as $index => $direccion) {
     if ((int) ($direccion['es_predeterminada'] ?? 0) === 1) {
@@ -16,14 +22,33 @@ foreach ($direcciones as $index => $direccion) {
 ?>
 
 <style>
+:root {
+    --checkout-bg: linear-gradient(145deg, #090d18 0%, #111827 48%, #080b12 100%);
+    --checkout-text: #e2e8f0;
+    --checkout-muted: #94a3b8;
+    --checkout-strong: #f8fafc;
+    --checkout-panel: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.44));
+    --checkout-border: rgba(148, 163, 184, 0.14);
+    --checkout-soft: rgba(15, 23, 42, 0.62);
+}
+body[data-theme="light"],
+.light-mode {
+    --checkout-bg: linear-gradient(145deg, #eef6ff 0%, #f8fafc 46%, #eaf2ff 100%);
+    --checkout-text: #1e293b;
+    --checkout-muted: #64748b;
+    --checkout-strong: #0f172a;
+    --checkout-panel: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.74));
+    --checkout-border: rgba(15, 23, 42, 0.10);
+    --checkout-soft: rgba(255, 255, 255, 0.76);
+}
 .checkout-page {
     min-height: calc(100vh - 80px);
     padding: 42px 22px 96px;
-    color: #e2e8f0;
+    color: var(--checkout-text);
     background:
         radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.16), transparent 34rem),
         radial-gradient(circle at 92% 14%, rgba(34, 197, 94, 0.10), transparent 28rem),
-        linear-gradient(145deg, #090d18 0%, #111827 48%, #080b12 100%);
+        var(--checkout-bg);
 }
 .checkout-shell {
     max-width: 1240px;
@@ -39,7 +64,7 @@ foreach ($direcciones as $index => $direccion) {
 }
 .checkout-title {
     margin: 0 0 10px;
-    color: #f8fafc;
+    color: var(--checkout-strong);
     font-size: clamp(2rem, 4vw, 3.5rem);
     line-height: 1;
     font-weight: 800;
@@ -48,7 +73,7 @@ foreach ($direcciones as $index => $direccion) {
 .checkout-sub {
     max-width: 680px;
     margin: 0;
-    color: #94a3b8;
+    color: var(--checkout-muted);
     font-size: 1rem;
 }
 .checkout-steps {
@@ -83,9 +108,9 @@ foreach ($direcciones as $index => $direccion) {
     align-items: start;
 }
 .glass-panel {
-    border: 1px solid rgba(148, 163, 184, 0.14);
+    border: 1px solid var(--checkout-border);
     border-radius: 20px;
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.44));
+    background: var(--checkout-panel);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
     backdrop-filter: blur(22px);
 }
@@ -107,13 +132,13 @@ foreach ($direcciones as $index => $direccion) {
 .section-title h2,
 .checkout-summary h2 {
     margin: 0;
-    color: #f8fafc;
+    color: var(--checkout-strong);
     font-size: 1.45rem;
     font-weight: 800;
 }
 .section-kicker {
     margin: 4px 0 0;
-    color: #94a3b8;
+    color: var(--checkout-muted);
     font-size: 0.92rem;
 }
 .alert {
@@ -208,7 +233,7 @@ foreach ($direcciones as $index => $direccion) {
     margin-bottom: 10px;
 }
 .address-name {
-    color: #f8fafc;
+    color: var(--checkout-strong);
     font-size: 1.04rem;
     font-weight: 800;
 }
@@ -217,7 +242,7 @@ foreach ($direcciones as $index => $direccion) {
     align-items: center;
     gap: 8px;
     margin: 0 0 7px;
-    color: #cbd5e1;
+    color: var(--checkout-text);
     line-height: 1.45;
 }
 .address-text i {
@@ -254,7 +279,7 @@ foreach ($direcciones as $index => $direccion) {
     padding: 12px 14px;
     border-radius: 16px;
     background: rgba(148, 163, 184, 0.08);
-    color: #94a3b8;
+    color: var(--checkout-muted);
     font-size: 0.9rem;
 }
 .address-actions {
@@ -286,6 +311,12 @@ foreach ($direcciones as $index => $direccion) {
     border-color: rgba(59, 130, 246, 0.75);
     background: linear-gradient(135deg, #2563eb, #0ea5e9);
     box-shadow: 0 18px 36px rgba(37, 99, 235, 0.22);
+}
+.checkout-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
 }
 .checkout-btn.secondary {
     background: rgba(148, 163, 184, 0.08);
@@ -328,7 +359,7 @@ foreach ($direcciones as $index => $direccion) {
     animation: formReveal 0.26s ease both;
 }
 .form-label {
-    color: #cbd5e1;
+    color: var(--checkout-text);
     font-weight: 800;
 }
 .form-control {
@@ -336,7 +367,7 @@ foreach ($direcciones as $index => $direccion) {
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 14px;
     background: rgba(2, 6, 23, 0.34);
-    color: #f8fafc;
+    color: var(--checkout-strong);
 }
 .form-control::placeholder {
     color: rgba(148, 163, 184, 0.66);
@@ -347,6 +378,22 @@ foreach ($direcciones as $index => $direccion) {
     color: #fff;
     box-shadow: 0 0 0 0.22rem rgba(59, 130, 246, 0.16);
 }
+body[data-theme="light"] .address-option,
+.light-mode .address-option,
+body[data-theme="light"] .address-form,
+.light-mode .address-form {
+    background: rgba(255, 255, 255, 0.78);
+}
+body[data-theme="light"] .form-control,
+.light-mode .form-control {
+    background: rgba(255, 255, 255, 0.88);
+    color: #0f172a;
+}
+body[data-theme="light"] .form-control:focus,
+.light-mode .form-control:focus {
+    background: #fff;
+    color: #0f172a;
+}
 .form-check-input {
     background-color: rgba(2, 6, 23, 0.5);
     border-color: rgba(148, 163, 184, 0.35);
@@ -356,7 +403,7 @@ foreach ($direcciones as $index => $direccion) {
     border-color: #22c55e;
 }
 .form-check-label {
-    color: #cbd5e1;
+    color: var(--checkout-text);
     font-weight: 700;
 }
 .empty-address {
@@ -366,6 +413,25 @@ foreach ($direcciones as $index => $direccion) {
     background: rgba(59, 130, 246, 0.08);
     color: #bfdbfe;
 }
+.checkout-inline-error {
+    display: none;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(248, 113, 113, 0.34);
+    border-radius: 14px;
+    background: rgba(239, 68, 68, 0.10);
+    color: #fecaca;
+    font-weight: 700;
+}
+.checkout-inline-error.is-visible {
+    display: flex;
+}
+.form-control.is-invalid-lite {
+    border-color: rgba(248, 113, 113, 0.72);
+    box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.12);
+}
 .summary-row {
     display: flex;
     justify-content: space-between;
@@ -374,7 +440,7 @@ foreach ($direcciones as $index => $direccion) {
     color: #94a3b8;
 }
 .summary-row strong {
-    color: #f8fafc;
+    color: var(--checkout-strong);
 }
 .summary-total {
     margin-top: 18px;
@@ -466,36 +532,50 @@ foreach ($direcciones as $index => $direccion) {
         <?php if (!empty($pedidoConfirmado)): ?>
             <section class="checkout-panel glass-panel text-center">
                 <div class="mb-3 text-success fs-1"><i class="fas fa-circle-check"></i></div>
-                <h1 class="checkout-title">Pedido confirmado</h1>
-                <p class="checkout-sub mx-auto mb-4">Tu compra fue registrada correctamente.</p>
+                <h1 class="checkout-title"><?= htmlspecialchars(t('order_confirmed'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="checkout-sub mx-auto mb-4"><?= htmlspecialchars(t('purchase_registered'), ENT_QUOTES, 'UTF-8') ?></p>
                 <div class="summary-row summary-total">
                     <span>Pedido</span>
                     <strong>#<?= (int) $pedidoConfirmado['id_pedido'] ?></strong>
                 </div>
+                <?php if (isset($pedidoConfirmado['subtotal'], $pedidoConfirmado['iva'])): ?>
+                    <div class="summary-row">
+                        <span><?= htmlspecialchars(t('subtotal'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong>$<?= number_format((float) $pedidoConfirmado['subtotal']) ?> COP</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span><?= htmlspecialchars(t('vat'), ENT_QUOTES, 'UTF-8') ?> 19%</span>
+                        <strong>$<?= number_format((float) $pedidoConfirmado['iva']) ?> COP</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span><?= htmlspecialchars(t('shipping'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong>$<?= number_format((float) ($pedidoConfirmado['envio'] ?? 0)) ?> COP</strong>
+                    </div>
+                <?php endif; ?>
                 <div class="summary-row">
-                    <span>Total</span>
+                    <span><?= htmlspecialchars(t('total'), ENT_QUOTES, 'UTF-8') ?></span>
                     <strong>$<?= number_format((float) $pedidoConfirmado['total']) ?> COP</strong>
                 </div>
                 <?php renderEntregaBox($pedidoConfirmado['fecha_estimada_entrega'] ?? null); ?>
                 <a class="checkout-btn primary mt-3" href="index.php?action=tienda">
                     <i class="fas fa-store"></i>
-                    Volver a la tienda
+                    <?= htmlspecialchars(t('back_to_store'), ENT_QUOTES, 'UTF-8') ?>
                 </a>
             </section>
         <?php else: ?>
             <div class="checkout-head">
                 <div>
-                    <h1 class="checkout-title">Confirmar pedido</h1>
+                    <h1 class="checkout-title"><?= htmlspecialchars(t('confirm_order'), ENT_QUOTES, 'UTF-8') ?></h1>
                     <p class="checkout-sub">Elige donde recibir tu compra y revisa el resumen antes de finalizar.</p>
                     <div class="checkout-steps" aria-label="Progreso de compra">
-                        <span class="checkout-step"><i class="fas fa-cart-shopping"></i> Carrito</span>
-                        <span class="checkout-step active"><i class="fas fa-location-dot"></i> Direccion</span>
-                        <span class="checkout-step"><i class="fas fa-circle-check"></i> Confirmacion</span>
+                        <span class="checkout-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars(t('cart_step'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="checkout-step active"><i class="fas fa-location-dot"></i> <?= htmlspecialchars(t('address_step'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="checkout-step"><i class="fas fa-circle-check"></i> <?= htmlspecialchars(t('confirmation_step'), ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 </div>
                 <a class="checkout-btn secondary" href="index.php?action=resumenCompra">
                     <i class="fas fa-arrow-left"></i>
-                    Volver al resumen
+                    <?= htmlspecialchars(t('back_to_summary'), ENT_QUOTES, 'UTF-8') ?>
                 </a>
             </div>
 
@@ -524,7 +604,7 @@ foreach ($direcciones as $index => $direccion) {
                 <section class="checkout-panel glass-panel">
                     <div class="section-title">
                         <div>
-                            <h2>Direccion de envio</h2>
+                            <h2><?= htmlspecialchars(t('shipping_address'), ENT_QUOTES, 'UTF-8') ?></h2>
                             <p class="section-kicker">Selecciona una direccion guardada o agrega una nueva.</p>
                         </div>
                     </div>
@@ -547,8 +627,9 @@ foreach ($direcciones as $index => $direccion) {
                                     $esPredeterminada = (int) ($direccion['es_predeterminada'] ?? 0) === 1;
                                     $estaSeleccionada = $direccionSeleccionada === $idDireccion;
                                     $direccionJson = htmlspecialchars(json_encode($direccion), ENT_QUOTES, 'UTF-8');
+                                    $ciudadDireccion = htmlspecialchars((string) ($direccion['ciudad'] ?? ''), ENT_QUOTES, 'UTF-8');
                                     ?>
-                                    <label class="address-option <?= $estaSeleccionada ? 'active' : '' ?>" id="address-card-<?= $idDireccion ?>">
+                                    <label class="address-option <?= $estaSeleccionada ? 'active' : '' ?>" id="address-card-<?= $idDireccion ?>" data-city="<?= $ciudadDireccion ?>">
                                         <input
                                             type="radio"
                                             name="direccion"
@@ -562,13 +643,13 @@ foreach ($direcciones as $index => $direccion) {
                                                     <?= htmlspecialchars($direccion['nombre_receptor'] . ' ' . $direccion['apellido_receptor'], ENT_QUOTES, 'UTF-8') ?>
                                                 </span>
                                                 <?php if ($esPredeterminada): ?>
-                                                    <span class="address-badge"><i class="fas fa-star"></i> Predeterminada</span>
+                                                    <span class="address-badge"><i class="fas fa-star"></i> <?= htmlspecialchars(t('default_address'), ENT_QUOTES, 'UTF-8') ?></span>
                                                 <?php endif; ?>
                                             </span>
                                             <?php if ($esPredeterminada): ?>
                                                 <span class="address-default-note">
                                                     <i class="fas fa-check-circle"></i>
-                                                    Esta es tu direccion predeterminada
+                                                    <?= htmlspecialchars(t('this_is_default_address'), ENT_QUOTES, 'UTF-8') ?>
                                                 </span>
                                             <?php endif; ?>
                                             <p class="address-text">
@@ -603,15 +684,15 @@ foreach ($direcciones as $index => $direccion) {
                                             <span class="address-actions">
                                                 <button class="checkout-btn primary" type="button" data-use-address>
                                                     <i class="fas fa-check"></i>
-                                                    Usar esta direccion
+                                                    <?= htmlspecialchars(t('use_address'), ENT_QUOTES, 'UTF-8') ?>
                                                 </button>
                                                 <button class="checkout-btn secondary" type="button" data-edit-address="<?= $direccionJson ?>">
                                                     <i class="fas fa-pen"></i>
-                                                    Editar
+                                                    <?= htmlspecialchars(t('edit'), ENT_QUOTES, 'UTF-8') ?>
                                                 </button>
                                                 <button class="checkout-btn danger" type="button" data-delete-address="<?= $idDireccion ?>">
                                                     <i class="fas fa-trash"></i>
-                                                    Eliminar
+                                                    <?= htmlspecialchars(t('delete'), ENT_QUOTES, 'UTF-8') ?>
                                                 </button>
                                             </span>
                                         </span>
@@ -621,15 +702,19 @@ foreach ($direcciones as $index => $direccion) {
                         <?php endif; ?>
 
                         <div class="checkout-actions">
-                            <button class="checkout-btn primary" type="submit" id="confirm-order-btn">
+                            <button class="checkout-btn primary" type="submit" id="confirm-order-btn" <?= empty($direcciones) ? 'disabled' : '' ?>>
                                 <span class="spinner-border spinner-border-sm submit-spinner" aria-hidden="true"></span>
                                 <i class="fas fa-lock"></i>
-                                Continuar compra
+                                <?= htmlspecialchars(t('continue_purchase'), ENT_QUOTES, 'UTF-8') ?>
                             </button>
                             <button class="checkout-btn outline-add" type="button" id="toggle-address-form">
                                 <i class="fas fa-plus"></i>
-                                Agregar nueva direccion
+                                <?= htmlspecialchars(t('add_address'), ENT_QUOTES, 'UTF-8') ?>
                             </button>
+                        </div>
+                        <div class="checkout-inline-error" id="checkout-error" role="status" aria-live="polite">
+                            <i class="fas fa-circle-exclamation"></i>
+                            <span><?= htmlspecialchars(t('select_shipping_address_error'), ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                     </form>
 
@@ -695,17 +780,25 @@ foreach ($direcciones as $index => $direccion) {
                     </form>
                 </section>
 
-                <aside class="checkout-summary glass-panel">
-                    <h2>Resumen</h2>
+                <aside class="checkout-summary glass-panel" id="checkout-summary" data-subtotal="<?= htmlspecialchars((string) ($resumenCompra['subtotal'] ?? 0), ENT_QUOTES, 'UTF-8') ?>" data-iva="<?= htmlspecialchars((string) ($resumenCompra['iva'] ?? 0), ENT_QUOTES, 'UTF-8') ?>">
+                    <h2><?= htmlspecialchars(t('summary'), ENT_QUOTES, 'UTF-8') ?></h2>
                     <div class="summary-row">
-                        <span>Envio</span>
-                        <strong>Por confirmar</strong>
+                        <span><?= htmlspecialchars(t('subtotal'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong id="summary-subtotal">$<?= number_format((float) ($resumenCompra['subtotal'] ?? 0)) ?> COP</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span><?= htmlspecialchars(t('vat'), ENT_QUOTES, 'UTF-8') ?> 19%</span>
+                        <strong id="summary-iva">$<?= number_format((float) ($resumenCompra['iva'] ?? 0)) ?> COP</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span><?= htmlspecialchars(t('shipping'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong id="summary-envio">$<?= number_format((float) ($resumenCompra['envio'] ?? 0)) ?> COP</strong>
                     </div>
                     <div class="summary-row summary-total">
-                        <span>Total productos</span>
-                        <strong>$<?= number_format((float) $total) ?> COP</strong>
+                        <span><?= htmlspecialchars(t('total'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong id="summary-total">$<?= number_format((float) ($resumenCompra['total'] ?? $total)) ?> COP</strong>
                     </div>
-                    <p class="summary-note">La direccion seleccionada se usara para crear el pedido. El costo de envio se puede confirmar en la siguiente etapa del flujo.</p>
+                    <p class="summary-note">La direccion seleccionada se usara para crear el pedido. El total se actualiza automaticamente con el envio.</p>
                 </aside>
             </div>
         <?php endif; ?>
@@ -721,6 +814,90 @@ const addressSkeleton = document.getElementById('address-skeleton');
 const addressSubmitLabel = document.getElementById('address-submit-label');
 const addressFormTitle = document.getElementById('address-form-title');
 const cancelAddressEdit = document.getElementById('cancel-address-edit');
+const confirmOrderBtn = document.getElementById('confirm-order-btn');
+const checkoutError = document.getElementById('checkout-error');
+const checkoutSummary = document.getElementById('checkout-summary');
+const summarySubtotal = document.getElementById('summary-subtotal');
+const summaryIva = document.getElementById('summary-iva');
+const summaryEnvio = document.getElementById('summary-envio');
+const summaryTotal = document.getElementById('summary-total');
+const checkoutMessages = {
+    selectAddress: <?= json_encode(t('select_shipping_address_error')) ?>
+};
+
+function normalizeCity(city) {
+    return String(city || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+function calcularEnvio(ciudad) {
+    const normalized = normalizeCity(ciudad);
+    if (normalized === 'bogota') return 10000;
+    if (normalized === 'medellin') return 12000;
+    return normalized ? 15000 : 0;
+}
+
+function formatCOP(value) {
+    return '$' + Number(value || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 }) + ' COP';
+}
+
+function updateCheckoutSummary(ciudad) {
+    if (!checkoutSummary) return;
+
+    const subtotal = Number(checkoutSummary.dataset.subtotal || 0);
+    const iva = Number(checkoutSummary.dataset.iva || 0);
+    const envio = calcularEnvio(ciudad);
+    const total = subtotal + iva + envio;
+
+    if (summarySubtotal) summarySubtotal.textContent = formatCOP(subtotal);
+    if (summaryIva) summaryIva.textContent = formatCOP(iva);
+    if (summaryEnvio) summaryEnvio.textContent = formatCOP(envio);
+    if (summaryTotal) summaryTotal.textContent = formatCOP(total);
+}
+
+function hideCheckoutError() {
+    checkoutError?.classList.remove('is-visible');
+}
+
+function showCheckoutError(message) {
+    if (!checkoutError) return;
+
+    const text = checkoutError.querySelector('span');
+    if (text && message) {
+        text.textContent = message;
+    }
+    checkoutError.classList.add('is-visible');
+}
+
+function validateCheckout() {
+    if (!checkoutForm || !confirmOrderBtn) return true;
+
+    const selected = checkoutForm.querySelector('input[name="direccion"]:checked');
+    const valid = Boolean(selected);
+    confirmOrderBtn.disabled = !valid;
+
+    if (valid) {
+        hideCheckoutError();
+    }
+
+    return valid;
+}
+
+function validateAddressForm() {
+    if (!addressForm) return true;
+
+    let valid = true;
+    addressForm.querySelectorAll('[required]').forEach((field) => {
+        const hasValue = String(field.value || '').trim() !== '';
+        field.classList.toggle('is-invalid-lite', !hasValue);
+        valid = valid && hasValue;
+    });
+
+    return valid;
+}
 
 function setActiveAddress(radio) {
     document.querySelectorAll('.address-option').forEach((option) => {
@@ -728,8 +905,12 @@ function setActiveAddress(radio) {
     });
 
     if (radio) {
-        radio.closest('.address-option')?.classList.add('active');
+        const card = radio.closest('.address-option');
+        card?.classList.add('active');
+        updateCheckoutSummary(card?.dataset.city || '');
     }
+
+    validateCheckout();
 }
 
 function showLoading() {
@@ -813,10 +994,20 @@ document.addEventListener('DOMContentLoaded', () => {
             addressList.classList.remove('d-none');
         }
     }, 180);
+
+    const selected = document.querySelector('input[name="direccion"]:checked');
+    if (selected) {
+        setActiveAddress(selected);
+    } else {
+        validateCheckout();
+    }
 });
 
 document.querySelectorAll('input[name="direccion"]').forEach((radio) => {
-    radio.addEventListener('change', () => setActiveAddress(radio));
+    radio.addEventListener('change', () => {
+        setActiveAddress(radio);
+        hideCheckoutError();
+    });
 });
 
 document.querySelectorAll('[data-use-address]').forEach((button) => {
@@ -860,10 +1051,9 @@ if (toggleAddressForm && addressForm) {
 
 if (checkoutForm) {
     checkoutForm.addEventListener('submit', (event) => {
-        const selected = checkoutForm.querySelector('input[name="direccion"]:checked');
-        if (!selected) {
+        if (!validateCheckout()) {
             event.preventDefault();
-            alert('Selecciona una direccion de envio o agrega una nueva.');
+            showCheckoutError(checkoutMessages.selectAddress);
             return;
         }
         showLoading();
@@ -872,7 +1062,21 @@ if (checkoutForm) {
 }
 
 if (addressForm) {
-    addressForm.addEventListener('submit', showLoading);
+    addressForm.querySelectorAll('[required]').forEach((field) => {
+        field.addEventListener('input', () => {
+            if (field.classList.contains('is-invalid-lite')) {
+                field.classList.toggle('is-invalid-lite', String(field.value || '').trim() === '');
+            }
+        });
+    });
+
+    addressForm.addEventListener('submit', (event) => {
+        if (!validateAddressForm()) {
+            event.preventDefault();
+            return;
+        }
+        showLoading();
+    });
 }
 
 if (cancelAddressEdit) {
