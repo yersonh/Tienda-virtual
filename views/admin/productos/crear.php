@@ -357,7 +357,7 @@
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                const div = document.createElemen'div';
+                const div = document.createElement('div');
                 div.className = 'preview-item';
                 div.innerHTML = `
                     <img src="${event.target.result}" alt="Vista previa">
@@ -372,7 +372,7 @@
     // Eliminar vista previa y el archivo del array
     preview.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-img')) {
-            const item = e.target.closes'.preview-item';
+            const item = e.target.closest('.preview-item');
             const index = Array.from(preview.children).indexOf(item);
             
             // Eliminar del array acumulador

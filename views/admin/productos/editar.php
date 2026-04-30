@@ -489,7 +489,7 @@
         Array.from(e.target.files).forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = function(event) {
-                const div = document.createElemen'div';
+                const div = document.createElement('div');
                 div.className = 'preview-item';
                 div.innerHTML = `
                     <img src="${event.target.result}" alt="Vista previa">
@@ -503,7 +503,7 @@
 
     document.getElementById('previewImages').addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-img')) {
-            e.target.closes'.preview-item'.remove();
+            e.target.closest('.preview-item').remove();
         }
     });
 

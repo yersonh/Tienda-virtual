@@ -910,7 +910,7 @@ function setActiveAddress(radio) {
     });
 
     if (radio) {
-        const card = radio.closes'.address-option';
+        const card = radio.closest('.address-option');
         card?.classList.add('active');
         updateCheckoutSummary(card?.dataset.city || '');
     }
@@ -976,11 +976,11 @@ async function deleteAddress(id) {
     if (!id || !confirm(checkoutMessages.confirmDeleteAddress)) return;
 
     showLoading();
-    const form = document.createElemen'form';
+    const form = document.createElement('form');
     form.method = 'POST';
     form.action = 'index.php?action=eliminarDireccionPedido';
 
-    const input = document.createElemen'input';
+    const input = document.createElement('input');
     input.type = 'hidden';
     input.name = 'id_direccion';
     input.value = id;
@@ -1019,7 +1019,7 @@ document.querySelectorAll('[data-use-address]').forEach((button) => {
     button.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        const radio = button.closes'.address-option'?.querySelector('input[name="direccion"]');
+        const radio = button.closest('.address-option')?.querySelector('input[name="direccion"]');
         if (radio) {
             radio.checked = true;
             setActiveAddress(radio);

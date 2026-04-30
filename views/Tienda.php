@@ -934,7 +934,7 @@ function chgQty(id, delta, stock){
 function mostrarMensajeCarrito(message, isError = false) {
     let notice = document.getElementById('cart-toast');
     if (!notice) {
-        notice = document.createElemen'div';
+        notice = document.createElement('div');
         notice.id = 'cart-toast';
         notice.style.position = 'fixed';
         notice.style.right = '18px';
@@ -1060,7 +1060,7 @@ function scrollProducts(gridId, direction){
 }
 
 function openProductDetail(card, event){
-    if(event.target.closes'.qty-wrap, .add-btn') return;
+    if(event.target.closest('.qty-wrap, .add-btn')) return;
     const id = card.dataset.id;
     const url = id ? `index.php?action=productoDetalle&id=${id}` : card.dataset.url;
     if(url){
@@ -1176,7 +1176,7 @@ function filterProducts(){
 
     categoria.innerHTML = "";
 
-    let optionTodas = document.createElemen'option';
+    let optionTodas = document.createElement('option');
     optionTodas.value = "";
     optionTodas.textContent = i18n.allCategories;
     categoria.appendChild(optionTodas);

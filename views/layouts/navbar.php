@@ -187,22 +187,6 @@ body {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-.lang-select {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: #aab0cc;
-    height: 38px;
-    border-radius: 10px;
-    padding: 0 8px;
-    font-size: 12px;
-    font-weight: 700;
-}
-[data-theme="light"] .lang-select,
-.light-mode .lang-select {
-    background: rgba(0,0,0,0.04);
-    border-color: rgba(0,0,0,0.12);
-    color: var(--secondary);
-}
 </style>
 </head>
 

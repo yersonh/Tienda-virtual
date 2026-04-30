@@ -641,7 +641,7 @@ button:hover {
                     let errorBox = document.getElementById('mensajeError');
 
                     if (!errorBox) {
-                        errorBox = document.createElemen'div';
+                        errorBox = document.createElement('div');
                         errorBox.className = 'error';
                         errorBox.id = 'mensajeError';
                         document.querySelector('.container').insertBefore(errorBox, registroForm);
@@ -660,7 +660,7 @@ button:hover {
                 let errorBox = document.getElementById('mensajeError');
 
                 if (!errorBox) {
-                    errorBox = document.createElemen'div';
+                    errorBox = document.createElement('div');
                     errorBox.className = 'error';
                     errorBox.id = 'mensajeError';
                     document.querySelector('.container').insertBefore(errorBox, registroForm);
