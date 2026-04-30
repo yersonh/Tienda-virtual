@@ -19,7 +19,6 @@ require_once __DIR__ . '/../Controllers/ProductoController.php';
 require_once __DIR__ . '/../Controllers/TiendaController.php';
 require_once __DIR__ . '/../Controllers/CarritoController.php';
 require_once __DIR__ . '/../Controllers/PedidoController.php';
-require_once __DIR__ . '/../Controllers/IdiomaController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
 $publicas = [
@@ -32,7 +31,7 @@ $publicas = [
     'iniciarSesion',
     'tienda',
     'productoDetalle',
-    'cambiarIdioma'
+  
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {

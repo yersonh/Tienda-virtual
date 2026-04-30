@@ -1,6 +1,5 @@
 <?php
 
-// 🔥 Sistema simplificado SIN idiomas
 
 if (!function_exists('t')) {
     function t(string $text): string {

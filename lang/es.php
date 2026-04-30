@@ -30,8 +30,7 @@ return [
     'update' => 'Actualizar',
     'loading' => 'Procesando...',
     'confirm_theme' => 'Cambiar tema',
-    'language' => 'Idioma',
-
+  
     'catalog_title' => 'Catalogo de',
     'catalog_title_highlight' => 'Productos',
     'catalog_label' => 'Tienda de Repuestos',
