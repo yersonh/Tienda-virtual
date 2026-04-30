@@ -7,9 +7,34 @@ require_once __DIR__ . '/layouts/navbar.php';
 $masVendidos = isset($masVendidos) && is_array($masVendidos) ? $masVendidos : [];
 ?>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
+:root {
+    --inicio-surface: rgba(17, 24, 39, 0.72);
+    --inicio-surface-strong: rgba(15, 23, 42, 0.84);
+    --inicio-border: rgba(125, 211, 252, 0.2);
+    --inicio-text: #e5eefb;
+    --inicio-muted: #a8b5ca;
+    --inicio-accent: #38bdf8;
+    --inicio-accent-strong: #2563eb;
+    --inicio-success: #22c55e;
+    --inicio-shadow: 0 18px 48px rgba(2, 8, 23, 0.42);
+}
+
+[data-theme="light"] {
+    --inicio-surface: rgba(255, 255, 255, 0.9);
+    --inicio-surface-strong: rgba(248, 250, 252, 0.94);
+    --inicio-border: rgba(14, 165, 233, 0.18);
+    --inicio-text: #122033;
+    --inicio-muted: #64748b;
+    --inicio-accent: #0284c7;
+    --inicio-accent-strong: #2563eb;
+    --inicio-success: #16a34a;
+    --inicio-shadow: 0 18px 42px rgba(100, 116, 139, 0.18);
+}
 
 /* 🌄 FONDO GLOBAL */
 body {
@@ -20,7 +45,7 @@ body {
     background-size:cover;
     background-position:center;
     background-repeat:no-repeat;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Manrope', sans-serif;
 }
 body[data-theme="light"] {
     background:
@@ -42,25 +67,25 @@ body[data-theme="light"] {
 .card-inicio {
     max-width:600px;
     margin:80px auto 42px;
-    background:rgba(30,41,59,0.65);
+    background:var(--inicio-surface);
     padding:40px;
     border-radius:18px;
     backdrop-filter: blur(14px);
     text-align:center;
-    color:#e2e8f0;
-    box-shadow:0 10px 40px rgba(0,0,0,0.5);
-    border:1px solid rgba(56,189,248,0.2);
+    color:var(--inicio-text);
+    box-shadow:var(--inicio-shadow);
+    border:1px solid var(--inicio-border);
 }
 [data-theme="light"] .card-inicio {
-    background: rgba(255,255,255,0.84);
-    color: #334155;
-    box-shadow: 0 18px 40px rgba(148,163,184,0.18);
-    border-color: rgba(56,189,248,0.18);
+    background: var(--inicio-surface);
+    color: var(--inicio-text);
+    box-shadow: var(--inicio-shadow);
+    border-color: var(--inicio-border);
 }
 
 /* TITULO */
 .card-inicio h1 {
-    color:#38bdf8;
+    color:var(--inicio-accent);
     margin-bottom:10px;
     font-family: 'Playfair Display', serif;
     font-size: 34px;
@@ -71,10 +96,10 @@ body[data-theme="light"] {
 /* TEXTO */
 .card-inicio p {
     font-size:15px;
-    opacity:0.9;
+    color: var(--inicio-muted);
 }
 [data-theme="light"] .card-inicio p {
-    color: #64748b;
+    color: var(--inicio-muted);
 }
 
 /* BOTONES */
@@ -94,12 +119,12 @@ body[data-theme="light"] {
 }
 
 .btn-azul {
-    background:linear-gradient(135deg,#38bdf8,#2563eb);
+    background:linear-gradient(135deg,var(--inicio-accent),var(--inicio-accent-strong));
     box-shadow:0 5px 15px rgba(37,99,235,0.5);
 }
 
 .btn-verde {
-    background:linear-gradient(135deg,#22c55e,#16a34a);
+    background:linear-gradient(135deg,#34d399,var(--inicio-success));
     box-shadow:0 5px 15px rgba(34,197,94,0.5);
 }
 
@@ -117,11 +142,11 @@ body[data-theme="light"] {
     margin: 0 auto 46px;
     padding: 26px;
     border-radius: 18px;
-    background: rgba(15, 23, 42, 0.68);
-    border: 1px solid rgba(56,189,248,0.18);
-    box-shadow: 0 18px 44px rgba(0,0,0,0.38);
+    background: var(--inicio-surface);
+    border: 1px solid var(--inicio-border);
+    box-shadow: var(--inicio-shadow);
     backdrop-filter: blur(14px);
-    color: #e2e8f0;
+    color: var(--inicio-text);
 }
 
 [data-theme="light"] .best-panel {
@@ -312,18 +337,22 @@ body[data-theme="light"] {
     margin: 0 auto 46px;
     padding: 28px;
     border-radius: 18px;
-    background: rgba(15, 23, 42, 0.68);
-    border: 1px solid rgba(56,189,248,0.18);
-    box-shadow: 0 18px 44px rgba(0,0,0,0.38);
+    background:
+        linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 36%),
+        var(--inicio-surface);
+    border: 1px solid var(--inicio-border);
+    box-shadow: var(--inicio-shadow);
     backdrop-filter: blur(14px);
-    color: #e2e8f0;
+    color: var(--inicio-text);
 }
 
 [data-theme="light"] .models-3d {
-    background: rgba(255,255,255,0.88);
-    color: #1e293b;
-    border-color: rgba(14,165,233,0.2);
-    box-shadow: 0 18px 40px rgba(148,163,184,0.18);
+    background:
+        linear-gradient(135deg, rgba(14, 165, 233, 0.08), transparent 36%),
+        var(--inicio-surface);
+    color: var(--inicio-text);
+    border-color: var(--inicio-border);
+    box-shadow: var(--inicio-shadow);
 }
 
 .models-intro {
@@ -335,7 +364,7 @@ body[data-theme="light"] {
 }
 
 .models-kicker {
-    color: #38bdf8;
+    color: var(--inicio-accent);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.3px;
@@ -347,7 +376,7 @@ body[data-theme="light"] {
     margin: 0;
     font-family: 'Playfair Display', serif;
     font-size: 30px;
-    color: #e0f2fe;
+    color: var(--inicio-text);
 }
 
 [data-theme="light"] .models-title {
@@ -356,7 +385,7 @@ body[data-theme="light"] {
 
 .models-sub {
     margin: 6px 0 0;
-    color: #94a3b8;
+    color: var(--inicio-muted);
     font-size: 14px;
 }
 
@@ -384,11 +413,11 @@ body[data-theme="light"] {
 
 .model-card {
     height: 100%;
-    padding: 14px;
+    padding: 12px;
     border-radius: 16px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.2);
     transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -405,7 +434,7 @@ body[data-theme="light"] {
 
 .model-card h5 {
     margin: 0 0 12px;
-    color: #f8fafc;
+    color: var(--inicio-text);
     font-size: 16px;
     font-weight: 800;
 }
@@ -421,6 +450,44 @@ body[data-theme="light"] {
     border: none;
     background: #0f172a;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 25px rgba(0,0,0,0.26);
+}
+
+.model-preview {
+    display: grid;
+    place-items: center;
+    min-height: 340px;
+    border-radius: 14px;
+    background:
+        radial-gradient(circle at 24% 20%, rgba(56,189,248,0.22), transparent 28%),
+        linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.72));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07), 0 10px 25px rgba(0,0,0,0.22);
+    overflow: hidden;
+}
+
+[data-theme="light"] .model-preview {
+    background:
+        radial-gradient(circle at 24% 20%, rgba(14,165,233,0.18), transparent 28%),
+        linear-gradient(135deg, #e0f2fe, #f8fafc);
+}
+
+.model-load {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--inicio-accent), var(--inicio-accent-strong));
+    color: #ffffff;
+    font-weight: 800;
+    box-shadow: 0 12px 28px rgba(37,99,235,0.28);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.model-load:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(37,99,235,0.36);
 }
 
 @media (max-width: 980px) {
@@ -520,36 +587,36 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Car Engine</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>V8 Engine</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>V8 Twin Turbo</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Brake Disc</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
@@ -562,18 +629,18 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Tractor Wheel</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Full Tractor Wheel</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
@@ -586,18 +653,18 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Ford Mustang 1965</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Old Farm Tractor</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
-              allowfullscreen></iframe>
+            <div class="model-preview" data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed">
+              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
+            </div>
           </div>
         </div>
 
@@ -655,5 +722,34 @@ body[data-theme="light"] {
     </section>
 
 </div>
+
+<script>
+document.querySelectorAll('.model-preview').forEach((preview) => {
+    const button = preview.querySelector('.model-load');
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener('click', () => {
+        const src = preview.dataset.src;
+        if (!src) {
+            return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+
+        const iframe = document.createElement('iframe');
+        iframe.className = 'sketchfab-frame';
+        iframe.loading = 'lazy';
+        iframe.src = src;
+        iframe.title = preview.closest('.model-card')?.querySelector('h5')?.textContent || 'Modelo 3D';
+        iframe.allow = 'autoplay; fullscreen; xr-spatial-tracking';
+        iframe.allowFullscreen = true;
+
+        preview.replaceWith(iframe);
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
