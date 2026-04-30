@@ -97,10 +97,6 @@ switch ($action) {
         require_once __DIR__ . '/../views/Inicio.php';
         break;
 
-    case 'cambiarIdioma':
-        (new IdiomaController())->cambiarIdioma();
-        break;
-
     case 'tienda':
         (new TiendaController())->index();
         break;
