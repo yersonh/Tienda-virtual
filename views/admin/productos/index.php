@@ -1,9 +1,9 @@
 <!-- views/admin/productos/index.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">Productos</h1>
+        <h1 style="color: white; margin: 0;"><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></h1>
         <a href="index.php?action=productos_crear" class="btn-nuevo">
-            <i class="fas fa-plus"></i> Nuevo Producto
+            <i class="fas fa-plus"></i> <?= htmlspecialchars(t('new_product'), ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
@@ -15,14 +15,14 @@
         <table class="productos-table">
             <thead>
                 <tr>
-                    <th>Imagen</th>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Categoría</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th><?= htmlspecialchars(t('image'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('code'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('product_name'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('category'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('price'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('stock'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('status'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars(t('actions'), ENT_QUOTES, 'UTF-8') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -43,23 +43,23 @@
                     </td>
                     <td style="vertical-align: middle;"><?= htmlspecialchars($producto['codigo']) ?></td>
                     <td style="vertical-align: middle;"><?= htmlspecialchars($producto['nombre']) ?></td>
-                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['categoria_nombre']) ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars(t_category((string) $producto['categoria_nombre']), ENT_QUOTES, 'UTF-8') ?></td>
                     <td style="vertical-align: middle;">$<?= number_format($producto['precio'], 2) ?></td>
                     <td style="vertical-align: middle;"><?= $producto['stock_p'] ?></td>
                     <td style="vertical-align: middle;">
                         <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
-                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'Activo' : 'Inactivo' ?>
+                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? htmlspecialchars(t('active'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('inactive'), ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </td>
                     <td style="vertical-align: middle;">
                         <div class="acciones">
-                            <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="Ver">
+                            <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="<?= htmlspecialchars(t('view'), ENT_QUOTES, 'UTF-8') ?>">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="Editar">
+                            <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="<?= htmlspecialchars(t('edit'), ENT_QUOTES, 'UTF-8') ?>">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="Eliminar" onclick="return confirm('¿Eliminar este producto?')">
+                            <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="<?= htmlspecialchars(t('delete'), ENT_QUOTES, 'UTF-8') ?>" onclick="return confirm(<?= json_encode(t('delete_product_confirm')) ?>)">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>

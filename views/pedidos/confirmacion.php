@@ -11,7 +11,7 @@ renderEntregaStyles();
             <p class="text-secondary mb-4"><?= htmlspecialchars(t('purchase_registered'), ENT_QUOTES, 'UTF-8') ?></p>
 
             <div class="d-flex justify-content-between border-top pt-3 mb-2" style="border-color: var(--border) !important;">
-                <span class="text-secondary">Pedido</span>
+                <span class="text-secondary"><?= htmlspecialchars(t('order'), ENT_QUOTES, 'UTF-8') ?></span>
                 <strong>#<?= (int) $pedido['id_pedido'] ?></strong>
             </div>
             <div class="d-flex justify-content-between mb-4">

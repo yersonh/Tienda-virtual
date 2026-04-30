@@ -1,12 +1,13 @@
 <?php
+require_once __DIR__ . '/../config/lang.php';
 $old = $_SESSION['old'] ?? [];
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>">
 <head>
 <meta charset="UTF-8">
-<title>Registro</title>
+<title><?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?></title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
@@ -239,13 +240,13 @@ button:hover {
 
 <body data-theme="dark">
 
-<button type="button" class="theme-toggle" id="theme-toggle" title="Cambiar tema">
+<button type="button" class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>">
     <i class="fas fa-moon"></i>
 </button>
 
 <div class="container">
 
-    <h2>Registro</h2>
+    <h2><?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?></h2>
 
     <!-- MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
@@ -266,21 +267,21 @@ button:hover {
         <!-- NOMBRES -->
         <div class="input-group">
             <i class="fas fa-user"></i>
-            <input type="text" name="nombres" placeholder="Nombres" required
+            <input type="text" name="nombres" placeholder="<?= htmlspecialchars(t('names'), ENT_QUOTES, 'UTF-8') ?>" required
                 value="<?= $old['nombres'] ?? '' ?>">
         </div>
 
         <!-- APELLIDOS -->
         <div class="input-group">
             <i class="fas fa-user"></i>
-            <input type="text" name="apellidos" placeholder="Apellidos" required
+            <input type="text" name="apellidos" placeholder="<?= htmlspecialchars(t('surnames'), ENT_QUOTES, 'UTF-8') ?>" required
                 value="<?= $old['apellidos'] ?? '' ?>">
         </div>
 
         <!-- CORREO -->
         <div class="input-group">
             <i class="fas fa-envelope"></i>
-            <input type="email" id="correo" name="correo" placeholder="Correo electrónico" required
+            <input type="email" id="correo" name="correo" placeholder="<?= htmlspecialchars(t('email'), ENT_QUOTES, 'UTF-8') ?>" required
                 value="<?= $old['correo'] ?? '' ?>">
         </div>
         <div class="validation-msg" id="correo-msg"></div>
@@ -288,8 +289,8 @@ button:hover {
         <!-- TELÉFONO -->
         <div class="input-group">
             <i class="fas fa-phone"></i>
-            <input type="text" id="telefono" name="telefono" placeholder="Teléfono" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required
-            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+            <input type="text" id="telefono" name="telefono" placeholder="<?= htmlspecialchars(t('phone'), ENT_QUOTES, 'UTF-8') ?>" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required
+            oninput="this.value = this.value.replace(/[^0-9]/g, ').slice(0,10)"
             value="<?= $old['telefono'] ?? '' ?>">
         </div>
 
@@ -298,14 +299,14 @@ button:hover {
 
         <div class="input-group">
             <i class="fas fa-map-marker-alt"></i>
-            <input type="text" name="direccion" placeholder="Dirección" required
+            <input type="text" name="direccion" placeholder="<?= htmlspecialchars(t('address'), ENT_QUOTES, 'UTF-8') ?>" required
                 value="<?= $old['direccion'] ?? '' ?>">
         </div>
 
         <!-- USUARIO -->
         <div class="input-group">
             <i class="fas fa-user-circle"></i>
-            <input type="text" id="username" name="username" placeholder="Usuario" required
+            <input type="text" id="username" name="username" placeholder="<?= htmlspecialchars(t('username'), ENT_QUOTES, 'UTF-8') ?>" required
                 value="<?= $old['username'] ?? '' ?>">
         </div>
         <div class="validation-msg" id="username-msg"></div>
@@ -313,8 +314,8 @@ button:hover {
         <!-- PASSWORD -->
         <div class="input-group">
             <i class="fas fa-lock"></i>
-            <input type="password" id="password" name="password" placeholder="Contraseña (mínimo 6 caracteres)" required>
-            <button type="button" class="password-toggle" data-target="password" title="Mostrar contraseña">
+            <input type="password" id="password" name="password" placeholder="<?= htmlspecialchars(t('password_min_placeholder'), ENT_QUOTES, 'UTF-8') ?>" required>
+            <button type="button" class="password-toggle" data-target="password" title="<?= htmlspecialchars(t('show_password'), ENT_QUOTES, 'UTF-8') ?>">
                 <i class="fas fa-eye"></i>
             </button>
         </div>
@@ -322,22 +323,22 @@ button:hover {
         <!-- CONFIRMAR PASSWORD -->
         <div class="input-group">
             <i class="fas fa-lock"></i>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmar contraseña" required>
-            <button type="button" class="password-toggle" data-target="confirm_password" title="Mostrar contraseña">
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="<?= htmlspecialchars(t('confirm_password'), ENT_QUOTES, 'UTF-8') ?>" required>
+            <button type="button" class="password-toggle" data-target="confirm_password" title="<?= htmlspecialchars(t('show_password'), ENT_QUOTES, 'UTF-8') ?>">
                 <i class="fas fa-eye"></i>
             </button>
         </div>
 
         <div class="password-rules">
-            <div class="rule" id="rule-length">• Mínimo 6 caracteres</div>
-            <div class="rule" id="rule-number">• Número</div>
-            <div class="rule" id="rule-letter">• Letra</div>
-            <div class="rule" id="rule-match">• Coinciden</div>
+            <div class="rule" id="rule-length">&bull; <?= htmlspecialchars(t('min_6_chars'), ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="rule" id="rule-number">&bull; <?= htmlspecialchars(t('number'), ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="rule" id="rule-letter">&bull; <?= htmlspecialchars(t('letter'), ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="rule" id="rule-match">&bull; <?= htmlspecialchars(t('match'), ENT_QUOTES, 'UTF-8') ?></div>
         </div>
 
         <!-- BOTÓN -->
         <button type="submit" id="registro-btn" disabled style="margin-top:8px;">
-            <i class="fas fa-user-plus"></i> Registrarse
+            <i class="fas fa-user-plus"></i> <?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?>
         </button>
 
     </form>
@@ -345,19 +346,35 @@ button:hover {
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
         <a href="index.php?action=login" style="color:#38bdf8;">
-            <i class="fas fa-arrow-left"></i> Ir al login
+            <i class="fas fa-arrow-left"></i> <?= htmlspecialchars(t('go_to_login'), ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
         <a href="index.php?action=tienda" style="color:#38bdf8;">
-            <i class="fas fa-arrow-left"></i> Volver a la tienda
+            <i class="fas fa-arrow-left"></i> <?= htmlspecialchars(t('back_to_store'), ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
 
     <script>
+        const i18n = {
+            onlyGmail: <?= json_encode(t('only_gmail')) ?>,
+            checking: <?= json_encode(t('checking')) ?>,
+            emailRegistered: <?= json_encode(t('email_registered')) ?>,
+            emailAvailable: <?= json_encode(t('email_available')) ?>,
+            emailCheckError: <?= json_encode(t('email_check_error')) ?>,
+            phoneRegistered: <?= json_encode(t('phone_registered')) ?>,
+            phoneValid: <?= json_encode(t('phone_valid')) ?>,
+            phoneCheckError: <?= json_encode(t('phone_check_error')) ?>,
+            phone10Digits: <?= json_encode(t('phone_10_digits')) ?>,
+            usernameMin: <?= json_encode(t('username_min')) ?>,
+            usernameTaken: <?= json_encode(t('username_taken')) ?>,
+            usernameAvailable: <?= json_encode(t('username_available')) ?>,
+            usernameCheckError: <?= json_encode(t('username_check_error')) ?>,
+            registerError: <?= json_encode(t('register_error')) ?>
+        };
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
 
@@ -421,7 +438,7 @@ button:hover {
             }
 
             if (!gmailRegex.test(email)) {
-                correoMsg.textContent = 'Solo correos @gmail.com';
+                correoMsg.textContent = i18n.onlyGmail;
                 correoMsg.className = 'validation-msg error';
                 correoValido = false;
                 checkFormValidity();
@@ -429,7 +446,7 @@ button:hover {
             }
 
             // Verificar si el correo ya existe en la base de datos
-            correoMsg.textContent = 'Verificando...';
+            correoMsg.textContent = i18n.checking;
             correoMsg.className = 'validation-msg';
 
             fetch('index.php?action=verificarCorreo', {
@@ -443,11 +460,11 @@ button:hover {
             .then(data => {
                
                if (!data.disponible) {
-                    correoMsg.textContent = 'El correo ya está registrado';
+                    correoMsg.textContent = i18n.emailRegistered;
                     correoMsg.className = 'validation-msg error';
                     correoValido = false;
                 } else {
-                    correoMsg.textContent = 'Correo disponible';
+                    correoMsg.textContent = i18n.emailAvailable;
                     correoMsg.className = 'validation-msg success';
                     correoValido = true;
                 }
@@ -455,7 +472,7 @@ button:hover {
             })
             .catch(error => {
                 console.error('Error verificando correo:', error);
-                correoMsg.textContent = 'Error al verificar correo';
+                correoMsg.textContent = i18n.emailCheckError;
                 correoMsg.className = 'validation-msg error';
                 correoValido = false;
                 checkFormValidity();
@@ -488,7 +505,7 @@ button:hover {
             }
 
             if (/^[0-9]{10}$/.test(telefono)) {
-                telefonoMsg.textContent = 'Verificando...';
+                telefonoMsg.textContent = i18n.checking;
                 telefonoMsg.className = 'validation-msg';
 
                 fetch('index.php?action=verificarTelefono', {
@@ -502,11 +519,11 @@ button:hover {
                 .then(data => {
                   
                     if (!data.disponible) {
-                        telefonoMsg.textContent = 'El teléfono ya está registrado';
+                        telefonoMsg.textContent = i18n.phoneRegistered;
                         telefonoMsg.className = 'validation-msg error';
                         telefonoValido = false;
                     } else {
-                        telefonoMsg.textContent = 'Teléfono válido';
+                        telefonoMsg.textContent = i18n.phoneValid;
                         telefonoMsg.className = 'validation-msg success';
                         telefonoValido = true;
                     }
@@ -515,13 +532,13 @@ button:hover {
                 })
                 .catch(error => {
                     console.error('Error verificando telefono:', error);
-                    telefonoMsg.textContent = 'Error al verificar telefono';
+                    telefonoMsg.textContent = i18n.phoneCheckError;
                     telefonoMsg.className = 'validation-msg error';
                     telefonoValido = false;
                     checkFormValidity();
                 });
             } else {
-                telefonoMsg.textContent = 'Debe tener 10 digitos';
+                telefonoMsg.textContent = i18n.phone10Digits;
                 telefonoMsg.className = 'validation-msg error';
                 telefonoValido = false;
                 checkFormValidity();
@@ -540,14 +557,14 @@ button:hover {
             }
 
             if (username.length < 3) {
-                usernameMsg.textContent = 'El usuario debe tener mínimo 3 caracteres';
+                usernameMsg.textContent = i18n.usernameMin;
                 usernameMsg.className = 'validation-msg error';
                 usernameValido = false;
                 checkFormValidity();
                 return;
             }
 
-            usernameMsg.textContent = 'Verificando...';
+            usernameMsg.textContent = i18n.checking;
             usernameMsg.className = 'validation-msg';
 
             fetch('index.php?action=verificarUsername', {
@@ -561,11 +578,11 @@ button:hover {
             .then(data => {
 
                 if (!data.disponible) {
-                    usernameMsg.textContent = 'Este usuario ya está en uso';
+                    usernameMsg.textContent = i18n.usernameTaken;
                     usernameMsg.className = 'validation-msg error';
                     usernameValido = false;
                 } else {
-                    usernameMsg.textContent = 'Usuario disponible';
+                    usernameMsg.textContent = i18n.usernameAvailable;
                     usernameMsg.className = 'validation-msg success';
                     usernameValido = true;
                 }
@@ -574,7 +591,7 @@ button:hover {
             })
             .catch(error => {
                 console.error('Error verificando usuario:', error);
-                usernameMsg.textContent = 'Error al verificar usuario';
+                usernameMsg.textContent = i18n.usernameCheckError;
                 usernameMsg.className = 'validation-msg error';
                 usernameValido = false;
                 checkFormValidity();
@@ -631,7 +648,7 @@ button:hover {
                         document.querySelector('.container').insertBefore(errorBox, registroForm);
                     }
 
-                    errorBox.textContent = data.error || 'No se pudo registrar el usuario';
+                    errorBox.textContent = data.error || i18n.registerError;
                     errorBox.style.display = 'block';
                     errorBox.style.opacity = '1';
                     checkFormValidity();
@@ -650,7 +667,7 @@ button:hover {
                     document.querySelector('.container').insertBefore(errorBox, registroForm);
                 }
 
-                errorBox.textContent = 'No se pudo registrar el usuario';
+                errorBox.textContent = i18n.registerError;
                 errorBox.style.display = 'block';
                 errorBox.style.opacity = '1';
                 checkFormValidity();
@@ -682,4 +699,3 @@ button:hover {
 </div>
 
 </body>
-</html>

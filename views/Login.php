@@ -3,10 +3,11 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once __DIR__ . '/../config/lang.php';
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>">
 <head>
 <meta charset="UTF-8">
 <title>NAYLEX Store</title>
@@ -201,7 +202,7 @@ a:hover {
 
 <body data-theme="dark">
 
-<button type="button" class="theme-toggle" id="theme-toggle" title="Cambiar tema">
+<button type="button" class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>">
     <i class="fas fa-moon"></i>
 </button>
 
@@ -210,8 +211,7 @@ a:hover {
     <div class="logo-section">
         <img src="../imagenes/logosinfondo.png" class="logo-img">
         <p style="color:#ccc; font-size:14px;">
-            Tienda virtual para la comercialización de maquinaria agrícola,
-            repuestos automotrices y productos de iluminación.
+            <?= htmlspecialchars(t('login_description'), ENT_QUOTES, 'UTF-8') ?>
         </p>
     </div>
 
@@ -234,27 +234,27 @@ a:hover {
         <div class="form-group">
             <div class="input-with-icon">
                 <i class="fas fa-user"></i>
-                <input type="text" name="nickname" placeholder="Usuario" required>
+                <input type="text" name="nickname" placeholder="<?= htmlspecialchars(t('username'), ENT_QUOTES, 'UTF-8') ?>" required>
             </div>
         </div>
         
         <div class="form-group">
             <div class="input-with-icon">
                 <i class="fas fa-lock"></i>
-                <input type="password" name="password" id="password" placeholder="Contraseña" required>
+                <input type="password" name="password" id="password" placeholder="<?= htmlspecialchars(t('password'), ENT_QUOTES, 'UTF-8') ?>" required>
 
-                <button type="button" class="toggle-password" id="togglePassword">
+                <button type="button" class="toggle-password" id="togglePassword" title="<?= htmlspecialchars(t('show_password'), ENT_QUOTES, 'UTF-8') ?>">
                     <i class="fas fa-eye" id="iconEye"></i>
                 </button>
             </div>
         </div>
 
         <button type="submit" class="login-btn">
-            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            <i class="fas fa-sign-in-alt"></i> <?= htmlspecialchars(t('login_action'), ENT_QUOTES, 'UTF-8') ?>
         </button>
 
         <a href="index.php?action=registro" class="register-btn">
-            <i class="fas fa-user-plus"></i> Registrarse
+            <i class="fas fa-user-plus"></i> <?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?>
         </a>
 
     </form>
@@ -262,20 +262,20 @@ a:hover {
     <!-- LINKS -->
     <div style="text-align:center; margin-top:15px;">
         <a href="index.php?action=recuperar" style="color:#38bdf8; font-size:13px;">
-            ¿Olvidó su contraseña?
+            <?= htmlspecialchars(t('forgot_password'), ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
     <div style="text-align:center; margin-top:5px;">
         <a href="#" style="color:#facc15; font-size:13px;">
-            ¿Quieres reactivar tu cuenta?
+            <?= htmlspecialchars(t('reactivate_account'), ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
      <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
         <a href="index.php?action=tienda" style="color:#38bdf8;">
-            <i class="fas fa-arrow-left"></i> Volver a la tienda
+            <i class="fas fa-arrow-left"></i> <?= htmlspecialchars(t('back_to_store'), ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 

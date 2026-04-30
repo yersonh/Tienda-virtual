@@ -36,8 +36,8 @@ $iniciales = $inicialNombre . $inicialApellido;
             <?= $iniciales ?>
         </div>
         <div>
-            <h2>Perfil</h2>
-            <p>Gestiona tu información personal</p>
+            <h2><?= htmlspecialchars(t('profile'), ENT_QUOTES, 'UTF-8') ?></h2>
+            <p><?= htmlspecialchars(t('manage_personal_info'), ENT_QUOTES, 'UTF-8') ?></p>
         </div>
     </div>
 
@@ -45,48 +45,48 @@ $iniciales = $inicialNombre . $inicialApellido;
 
         <!-- NOMBRES -->
         <div class="input-group-perfil">
-            <label>Nombres</label>
+            <label><?= htmlspecialchars(t('names'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="input-icon">
                 <i class="fas fa-user"></i>
                 <input type="text" name="nombres"
                     value="<?= htmlspecialchars($usuario['nombres'] ?? '') ?>"
-                    placeholder="Ingrese sus nombres"
+                    placeholder="<?= htmlspecialchars(t('enter_names'), ENT_QUOTES, 'UTF-8') ?>"
                     required>
             </div>
         </div>
 
         <!-- APELLIDOS -->
         <div class="input-group-perfil">
-            <label>Apellidos</label>
+            <label><?= htmlspecialchars(t('surnames'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="input-icon">
                 <i class="fas fa-user"></i>
                 <input type="text" name="apellidos"
                     value="<?= htmlspecialchars($usuario['apellidos'] ?? '') ?>"
-                    placeholder="Ingrese sus apellidos"
+                    placeholder="<?= htmlspecialchars(t('enter_surnames'), ENT_QUOTES, 'UTF-8') ?>"
                     required>
             </div>
         </div>
 
         <!-- CORREO -->
         <div class="input-group-perfil">
-            <label>Correo electrónico</label>
+            <label><?= htmlspecialchars(t('email'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="input-icon">
                 <i class="fas fa-envelope"></i>
                 <input type="email" name="correo"
                     value="<?= htmlspecialchars($usuario['correo'] ?? '') ?>"
-                    placeholder="Ingrese su correo"
+                    placeholder="<?= htmlspecialchars(t('enter_email'), ENT_QUOTES, 'UTF-8') ?>"
                     required>
             </div>
         </div>
 
         <!-- TELÉFONO -->
         <div class="input-group-perfil">
-            <label>Teléfono</label>
+            <label><?= htmlspecialchars(t('phone'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="input-icon">
                 <i class="fas fa-phone"></i>
                 <input type="text" name="telefono"
                     value="<?= htmlspecialchars($usuario['telefono'] ?? '') ?>"
-                    placeholder="Ingrese su teléfono"
+                    placeholder="<?= htmlspecialchars(t('enter_phone'), ENT_QUOTES, 'UTF-8') ?>"
                     maxlength="10"
                     required
                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)">
@@ -95,18 +95,18 @@ $iniciales = $inicialNombre . $inicialApellido;
 
         <!-- DIRECCIÓN -->
         <div class="input-group-perfil">
-            <label>Dirección</label>
+            <label><?= htmlspecialchars(t('address'), ENT_QUOTES, 'UTF-8') ?></label>
             <div class="input-icon">
                 <i class="fas fa-map-marker-alt"></i>
                 <input type="text" name="direccion"
                     value="<?= htmlspecialchars($usuario['direccion'] ?? '') ?>"
-                    placeholder="Ingrese su dirección"
+                    placeholder="<?= htmlspecialchars(t('enter_address'), ENT_QUOTES, 'UTF-8') ?>"
                     required>
             </div>
         </div>
 
         <button type="submit">
-            <i class="fas fa-save"></i> Actualizar datos
+            <i class="fas fa-save"></i> <?= htmlspecialchars(t('update_data'), ENT_QUOTES, 'UTF-8') ?>
         </button>
 
     </form>

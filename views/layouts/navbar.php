@@ -221,7 +221,7 @@ body {
 <nav class="nav">
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
-      <a href="index.php?action=inicio" class="active">Inicio</a>
+      <a href="index.php?action=inicio" class="active"><?= htmlspecialchars(t('home'), ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=tienda"><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></a>
     </div>
     <div class="nav-actions">
@@ -233,7 +233,7 @@ body {
         <button class="btn-primary" onclick="location.href='index.php?action=registro'"><?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?></button>
       <?php endif; ?>
       <?php if($logueado): ?>
-        <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="Ver carrito">
+        <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="<?= htmlspecialchars(t('cart'), ENT_QUOTES, 'UTF-8') ?>">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="9" cy="20" r="1"></circle>
             <circle cx="18" cy="20" r="1"></circle>
@@ -244,12 +244,12 @@ body {
       <?php endif; ?>
       <form action="index.php" method="GET" class="m-0">
         <input type="hidden" name="action" value="cambiarIdioma">
-        <select class="lang-select" name="lang" onchange="localStorage.setItem('langDetected', 'manual'); this.form.submit()" aria-label="Idioma">
+        <select class="lang-select" name="lang" onchange="localStorage.setItem('langDetected', 'manual'); this.form.submit()" aria-label="<?= htmlspecialchars(t('language'), ENT_QUOTES, 'UTF-8') ?>">
           <option value="es" <?= ($_SESSION['lang'] ?? 'es') === 'es' ? 'selected' : '' ?>>ES</option>
           <option value="en" <?= ($_SESSION['lang'] ?? 'es') === 'en' ? 'selected' : '' ?>>EN</option>
         </select>
       </form>
-      <button class="theme-toggle" id="theme-toggle" title="Cambiar tema" aria-label="Cambiar tema"></button>
+      <button class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>"></button>
     </div>
 </nav>
 

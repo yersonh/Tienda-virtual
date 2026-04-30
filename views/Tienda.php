@@ -636,28 +636,28 @@
 </style>
 
 <div class="hero">
-    <div class="hero-label">Tienda de Repuestos</div>
-    <h1 class="hero-title">Cat&aacute;logo de<br><em>Productos</em></h1>
-    <p class="hero-sub">Piezas originales para tu veh&iacute;culo - calidad garantizada</p>
+    <div class="hero-label"><?= htmlspecialchars(t('catalog_label'), ENT_QUOTES, 'UTF-8') ?></div>
+    <h1 class="hero-title"><?= htmlspecialchars(t('catalog_title'), ENT_QUOTES, 'UTF-8') ?><br><em><?= htmlspecialchars(t('catalog_title_highlight'), ENT_QUOTES, 'UTF-8') ?></em></h1>
+    <p class="hero-sub"><?= htmlspecialchars(t('catalog_subtitle'), ENT_QUOTES, 'UTF-8') ?></p>
 </div>
 
 <div class="filters">
-    <input class="filter-input" type="text" placeholder="Buscar producto..." id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" inputmode="numeric" placeholder="Precio min" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" inputmode="numeric" placeholder="Precio max" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" placeholder="<?= htmlspecialchars(t('search_product'), ENT_QUOTES, 'UTF-8') ?>" id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars(t('min_price'), ENT_QUOTES, 'UTF-8') ?>" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars(t('max_price'), ENT_QUOTES, 'UTF-8') ?>" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
-        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>>Todas las categorias</option>
+        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>><?= htmlspecialchars(t('all_categories'), ENT_QUOTES, 'UTF-8') ?></option>
         <?php foreach($todasCategorias as $cat): ?>
-        <option value="<?= $cat ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= $cat ?></option>
+        <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= htmlspecialchars(t_category((string) $cat), ENT_QUOTES, 'UTF-8') ?></option>
         <?php endforeach; ?>
     </select>
-    <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
+    <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars(t('clear'), ENT_QUOTES, 'UTF-8') ?></button>
 </div>
 
 <div class="cat-tabs">
-    <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')">Todo</button>
+    <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars(t('all'), ENT_QUOTES, 'UTF-8') ?></button>
     <?php foreach($todasCategorias as $cat): ?>
-    <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= $cat ?>" onclick="setTab(this,'<?= $cat ?>')"><?= $cat ?></button>
+    <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this,'<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>')"><?= htmlspecialchars(t_category((string) $cat), ENT_QUOTES, 'UTF-8') ?></button>
     <?php endforeach; ?>
 </div>
 
@@ -669,14 +669,14 @@
             <path d="m11 18-6-6 6-6"></path>
         </svg>
     </span>
-    Volver al catalogo
+    <?= htmlspecialchars(t('back_to_products'), ENT_QUOTES, 'UTF-8') ?>
 </a>
 <?php endif; ?>
 
 <?php if(empty($categoria_filtro) && empty($filtro) && empty($precio_min) && empty($precio_max) && !empty($masVendidos)): ?>
 <div class="category-section best-sellers-section">
     <div class="section-header">
-        <div class="section-title">Más vendidos <span class="section-count"><?= count($masVendidos) ?> productos</span></div>
+        <div class="section-title"><?= htmlspecialchars(t('best_sellers'), ENT_QUOTES, 'UTF-8') ?> <span class="section-count"><?= count($masVendidos) ?> <?= htmlspecialchars(t('product_count'), ENT_QUOTES, 'UTF-8') ?></span></div>
     </div>
     <div class="product-carousel">
         <div class="product-grid best-sellers-grid">
@@ -692,7 +692,7 @@
                  onkeydown="openProductDetailFromKey(event, this)"
                  tabindex="0"
                  role="link"
-                 aria-label="Ver detalle de <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                 aria-label="<?= htmlspecialchars(t('view_detail_of'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
                     <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -712,7 +712,7 @@
                     <div class="card-name"><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></div>
                     <div class="card-meta">
                         <span class="meta-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="meta-pill meta-stock"><?= $ventasProducto ?> vendidos</span>
+                        <span class="meta-pill meta-stock"><?= $ventasProducto ?> <?= htmlspecialchars(t('sold'), ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                     <div class="card-price">$<?= number_format((float) $p['precio']) ?> <span>COP</span></div>
                     <div class="card-footer">
@@ -737,11 +737,11 @@
 <?php foreach($categorias as $categoria => $productos): ?>
 <div id="<?= !empty($categoria_filtro) ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
-        <div class="section-title"><?= $categoria ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> productos</span></div>
+        <div class="section-title"><?= htmlspecialchars(t_category((string) $categoria), ENT_QUOTES, 'UTF-8') ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> <?= htmlspecialchars(t('product_count'), ENT_QUOTES, 'UTF-8') ?></span></div>
         <div class="section-actions">
             <a class="see-all" href="index.php?action=tienda&categoria=<?= urlencode($categoria) ?>#category-detail" onclick="event.preventDefault(); showCategory('<?= $categoria ?>');">
                 <span class="see-all-label">
-                    <span>Ver todos</span>
+                    <span><?= htmlspecialchars(t('see_all'), ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="see-all-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
                             <path d="M5 12h14"></path>
@@ -752,8 +752,8 @@
             </a>
             <?php if(empty($categoria_filtro)): ?>
             <div class="carousel-nav">
-                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="Desplazar productos a la izquierda">&#8249;</button>
-                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="Desplazar productos a la derecha">&#8250;</button>
+                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="<?= htmlspecialchars(t('scroll_left'), ENT_QUOTES, 'UTF-8') ?>">&#8249;</button>
+                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="<?= htmlspecialchars(t('scroll_right'), ENT_QUOTES, 'UTF-8') ?>">&#8250;</button>
             </div>
             <?php endif; ?>
         </div>
@@ -778,7 +778,7 @@
                  onkeydown="openProductDetailFromKey(event, this)"
                  tabindex="0"
                  role="link"
-                 aria-label="Ver detalle de <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                 aria-label="<?= htmlspecialchars(t('view_detail_of'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
                     <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -812,7 +812,7 @@
                                 </svg>
                                 <?php endif; ?>
                             </span>
-                            <?= $p['stock_p'] <= 4 ? 'Bajo ' : 'Disponible ' ?><?= $p['stock_p'] ?> uds
+                            <?= $p['stock_p'] <= 4 ? htmlspecialchars(t('low_stock'), ENT_QUOTES, 'UTF-8') . ' ' : htmlspecialchars(t('available'), ENT_QUOTES, 'UTF-8') . ' ' ?><?= $p['stock_p'] ?> <?= htmlspecialchars(t('units'), ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </div>
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
@@ -834,11 +834,11 @@
                                         <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                                     </svg>
                                 </span>
-                                <?= $enLimite ? 'Limite' : ($cantidadEnCarrito > 0 ? 'Agregar mas' : 'Agregar') ?>
+                                <?= $enLimite ? htmlspecialchars(t('limit'), ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars(t('add_more'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('add'), ENT_QUOTES, 'UTF-8')) ?>
                             </button>
                         <?php else: ?>
                             <button class="add-btn" type="button" onclick="event.stopPropagation(); location.href='index.php?action=login'">
-                                Inicia sesion para comprar
+                                <?= htmlspecialchars(t('login_to_buy'), ENT_QUOTES, 'UTF-8') ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -853,6 +853,17 @@
 <script>
 let cart = {};
 cart = <?= json_encode($carritoVista) ?>;
+const i18n = {
+    limit: <?= json_encode(t('limit')) ?>,
+    add: <?= json_encode(t('add')) ?>,
+    addMore: <?= json_encode(t('add_more')) ?>,
+    adding: <?= json_encode(t('adding')) ?>,
+    loginRequired: <?= json_encode(t('login_required')) ?>,
+    productAdded: <?= json_encode(t('product_added')) ?>,
+    cartAddError: <?= json_encode(t('cart_add_error')) ?>,
+    allCategories: <?= json_encode(t('all_categories')) ?>,
+    productCount: <?= json_encode(t('product_count')) ?>
+};
 
 function cartQty(id) {
     return parseInt(cart[id] || cart[String(id)] || 0, 10) || 0;
@@ -903,8 +914,8 @@ function syncProductControls(id, stock) {
     btn.classList.toggle('limit', atLimit);
     btn.classList.toggle('added', !atLimit && current > 0);
     btn.innerHTML = atLimit
-        ? `${cartIconSvg()} Limite`
-        : `${cartIconSvg()} ${current > 0 ? 'Agregar mas' : 'Agregar'}`;
+        ? `${cartIconSvg()} ${i18n.limit}`
+        : `${cartIconSvg()} ${current > 0 ? i18n.addMore : i18n.add}`;
 }
 
 function chgQty(id, delta, stock){
@@ -967,7 +978,7 @@ async function agregarAlCarrito(id_producto, cantidad = null){
     const qty = cantidad !== null ? parseInt(cantidad, 10) : parseInt(qtyEl ? qtyEl.textContent : '1', 10);
     const btn = document.getElementById('abtn-'+id);
     if (btn) {
-        btn.innerHTML = `${checkIconSvg()} Agregando`;
+        btn.innerHTML = `${checkIconSvg()} ${i18n.adding}`;
         btn.classList.add('added');
         btn.disabled = true;
     }
@@ -993,23 +1004,23 @@ async function agregarAlCarrito(id_producto, cantidad = null){
                 syncProductControls(id, data.stock || stock);
             }
             if (response.status === 401) {
-                mostrarMensajeCarrito(data.message || 'Debes iniciar sesion', true);
+                mostrarMensajeCarrito(data.message || i18n.loginRequired, true);
                 setTimeout(() => {
                     window.location.href = 'index.php?action=login';
                 }, 900);
                 return;
             }
-            throw new Error((data && data.message) ? data.message : 'No se pudo agregar al carrito');
+            throw new Error((data && data.message) ? data.message : i18n.cartAddError);
         }
 
         setCartQty(id, data.cantidad || 0);
         actualizarContadorCarrito(data.carrito_count || 0);
         syncProductControls(id, data.stock || stock);
-        mostrarMensajeCarrito(data.message || 'Producto agregado');
+        mostrarMensajeCarrito(data.message || i18n.productAdded);
     } catch (error) {
         console.error(error);
         syncProductControls(id, stock);
-        mostrarMensajeCarrito(error.message || 'No se pudo agregar al carrito', true);
+        mostrarMensajeCarrito(error.message || i18n.cartAddError, true);
     }
 }
 
@@ -1154,7 +1165,7 @@ function filterProducts(){
         });
 
         section.style.display = visibles>0?"block":"none";
-        section.querySelector('.section-count').textContent = visibles + ' productos';
+        section.querySelector('.section-count').textContent = visibles + ' ' + i18n.productCount;
     });
 
     syncCategoryTabs(cat);
@@ -1167,7 +1178,7 @@ function filterProducts(){
 
     let optionTodas = document.createElement("option");
     optionTodas.value = "";
-    optionTodas.textContent = "Todas las categorias";
+    optionTodas.textContent = i18n.allCategories;
     categoria.appendChild(optionTodas);
 
     opcionesOriginales.forEach(op=>{

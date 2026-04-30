@@ -2,14 +2,15 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+require_once __DIR__ . '/../../config/lang.php';
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel Admin - NAYLEX Store</title>
+<title><?= htmlspecialchars(t('admin_panel_title'), ENT_QUOTES, 'UTF-8') ?></title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
@@ -288,7 +289,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <aside class="admin-sidebar">
         <div class="sidebar-header">
             <h2>NAYLEX<br>STORE</h2>
-            <p>Panel de Administración</p>
+            <p><?= htmlspecialchars(t('admin_panel'), ENT_QUOTES, 'UTF-8') ?></p>
         </div>
 
         <div class="nav-menu">
@@ -296,28 +297,28 @@ if (session_status() === PHP_SESSION_NONE) {
             <div class="nav-item">
                 <a href="index.php?action=productos" class="nav-link">
                     <i class="fas fa-box"></i>
-                    <span>Productos</span>
+                    <span><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Pedidos</span>
+                    <span><?= htmlspecialchars(t('orders'), ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-users"></i>
-                    <span>Clientes</span>
+                    <span><?= htmlspecialchars(t('customers'), ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-cog"></i>
-                    <span>Configuración</span>
+                    <span><?= htmlspecialchars(t('settings'), ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
         </div>
@@ -325,7 +326,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="sidebar-footer">
             <button type="button" class="theme-toggle-admin" id="theme-toggle-admin">
                 <i class="fas fa-moon"></i>
-                <span>Cambiar tema</span>
+                <span><?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?></span>
             </button>
             <?php if(isset($_SESSION['nickname'])): ?>
                 <div class="user-info">
@@ -334,14 +335,14 @@ if (session_status() === PHP_SESSION_NONE) {
                     </div>
                     <div class="user-details">
                         <div class="user-name"><?= htmlspecialchars($_SESSION['nickname']) ?></div>
-                        <div class="user-role">Administrador</div>
+                        <div class="user-role"><?= htmlspecialchars(t('administrator'), ENT_QUOTES, 'UTF-8') ?></div>
                     </div>
                 </div>
             <?php endif; ?>
             
             <a href="index.php?action=logout" class="logout-link">
                 <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
+                <span><?= htmlspecialchars(t('close_session'), ENT_QUOTES, 'UTF-8') ?></span>
             </a>
         </div>
     </aside>
@@ -354,8 +355,8 @@ if (session_status() === PHP_SESSION_NONE) {
             ?>
             <div class="welcome-message">
                 <i class="fas fa-store"></i>
-                <h1>Bienvenido al Panel de Administración</h1>
-                <p>Selecciona una opción del menú lateral para comenzar</p>
+                <h1><?= htmlspecialchars(t('admin_welcome'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <p><?= htmlspecialchars(t('admin_welcome_hint'), ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <?php
         }
@@ -370,8 +371,8 @@ const adminBody = document.body;
 function applyAdminTheme(theme) {
     adminBody.setAttribute('data-theme', theme);
     adminThemeToggle.innerHTML = theme === 'dark'
-        ? '<i class="fas fa-moon"></i><span>Cambiar tema</span>'
-        : '<i class="fas fa-sun"></i><span>Cambiar tema</span>';
+        ? '<i class="fas fa-moon"></i><span><?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?></span>'
+        : '<i class="fas fa-sun"></i><span><?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?></span>';
 }
 
 adminThemeToggle.addEventListener('click', () => {

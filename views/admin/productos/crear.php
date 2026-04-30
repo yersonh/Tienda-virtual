@@ -1,7 +1,7 @@
 <!-- views/admin/productos/crear.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">Nuevo Producto</h1>
+        <h1 style="color: white; margin: 0;"><?= htmlspecialchars(t('new_product'), ENT_QUOTES, 'UTF-8') ?></h1>
         <a href="index.php?action=productos" class="btn-volver">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
@@ -15,19 +15,19 @@
         <form method="POST" action="index.php?action=productos_guardar" enctype="multipart/form-data">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="codigo">Código del producto *</label>
-                    <input type="text" id="codigo" name="codigo" required placeholder="Ej: PROD-001">
+                    <label for="codigo"><?= htmlspecialchars(t('product_code'), ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <input type="text" id="codigo" name="codigo" required placeholder="<?= htmlspecialchars(t('example_product_code'), ENT_QUOTES, 'UTF-8') ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="nombre">Nombre del producto *</label>
-                    <input type="text" id="nombre" name="nombre" required placeholder="Ej: Tractor Agrícola">
+                    <label for="nombre"><?= htmlspecialchars(t('product_name'), ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <input type="text" id="nombre" name="nombre" required placeholder="<?= htmlspecialchars(t('example_product_name'), ENT_QUOTES, 'UTF-8') ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="id_categoria">Categoría *</label>
+                    <label for="id_categoria"><?= htmlspecialchars(t('category'), ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="id_categoria" name="id_categoria" required>
-                        <option value="">Seleccione una categoría</option>
+                        <option value=""><?= htmlspecialchars(t('select_category'), ENT_QUOTES, 'UTF-8') ?></option>
                         <?php foreach($categorias as $categoria): ?>
                             <option value="<?= $categoria['id_categoria'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
                         <?php endforeach; ?>
@@ -35,40 +35,40 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="precio">Precio *</label>
+                    <label for="precio"><?= htmlspecialchars(t('price'), ENT_QUOTES, 'UTF-8') ?> *</label>
                     <input type="number" id="precio" name="precio" step="0.01" required placeholder="0.00">
                 </div>
 
                 <div class="form-group">
-                    <label for="stock">Stock *</label>
+                    <label for="stock"><?= htmlspecialchars(t('stock'), ENT_QUOTES, 'UTF-8') ?> *</label>
                     <input type="number" id="stock" name="stock" required placeholder="0">
                 </div>
 
                 <div class="form-group">
-                    <label for="estado">Estado *</label>
+                    <label for="estado"><?= htmlspecialchars(t('status'), ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="estado" name="estado" required>
-                        <option value="1" selected>Activo</option>
-                        <option value="0">Inactivo</option>
+                        <option value="1" selected><?= htmlspecialchars(t('active'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="0"><?= htmlspecialchars(t('inactive'), ENT_QUOTES, 'UTF-8') ?></option>
                     </select>
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="descripcion">Descripción</label>
-                    <textarea id="descripcion" name="descripcion" rows="4" placeholder="Descripción del producto"></textarea>
+                    <label for="descripcion"><?= htmlspecialchars(t('description'), ENT_QUOTES, 'UTF-8') ?></label>
+                    <textarea id="descripcion" name="descripcion" rows="4" placeholder="<?= htmlspecialchars(t('product_description_placeholder'), ENT_QUOTES, 'UTF-8') ?>"></textarea>
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="imagenes">Imágenes del producto</label>
+                    <label for="imagenes"><?= htmlspecialchars(t('product_images'), ENT_QUOTES, 'UTF-8') ?></label>
                     <div class="upload-area" id="uploadArea">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Arrastra o haz clic para subir imágenes</p>
+                        <p><?= htmlspecialchars(t('upload_images_hint'), ENT_QUOTES, 'UTF-8') ?></p>
                         <input type="file" id="imagenes" name="imagenes[]" multiple accept="image/jpeg,image/png,image/jpg" style="display: none;">
                         <button type="button" class="btn-upload">
-                            Seleccionar imágenes
+                            <?= htmlspecialchars(t('select'), ENT_QUOTES, 'UTF-8') ?>
                         </button>
                     </div>
                     <div id="previewImages" class="preview-grid"></div>
-                    <small class="form-help">Formatos permitidos: JPG, PNG. Tamaño máximo: 5MB por imagen</small>
+                    <small class="form-help"><?= htmlspecialchars(t('upload_formats_hint'), ENT_QUOTES, 'UTF-8') ?></small>
                 </div>
             </div>
 
@@ -76,7 +76,7 @@
                 <button type="submit" class="btn-guardar">
                     <i class="fas fa-save"></i> Guardar Producto
                 </button>
-                <a href="index.php?action=productos" class="btn-cancelar">Cancelar</a>
+                <a href="index.php?action=productos" class="btn-cancelar"><?= htmlspecialchars(t('cancel'), ENT_QUOTES, 'UTF-8') ?></a>
             </div>
         </form>
     </div>
