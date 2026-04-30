@@ -532,7 +532,7 @@ body[data-theme="light"] .form-control:focus,
         <?php if (!empty($pedidoConfirmado)): ?>
             <section class="checkout-panel glass-panel text-center">
                 <div class="mb-3 text-success fs-1"><i class="fas fa-circle-check"></i></div>
-                <h1 class="checkout-title"><?= htmlspecialchars(t('order_confirmed'), ENT_QUOTES, 'UTF-8') ?></h1>
+                <h1 class="checkout-title"><?= htmlspecialchars('order_confirmed'), ENT_QUOTES, 'UTF-8') ?></h1>
                 <p class="checkout-sub mx-auto mb-4"><?= htmlspecialchars(t('purchase_registered'), ENT_QUOTES, 'UTF-8') ?></p>
                 <div class="summary-row summary-total">
                     <span><?= htmlspecialchars(t('order'), ENT_QUOTES, 'UTF-8') ?></span>

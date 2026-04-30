@@ -1,32 +1,38 @@
 <?php
 
-
-if (!function_exists('t')) {
-    function t(string $text): string {
-        return $text;
-    }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-if (!function_exists('t_or')) {
-    function t_or(string $key, string $fallback): string {
-        return $fallback;
-    }
-}
+// 🔥 Traducciones mínimas
+$translations = [
 
-if (!function_exists('t_slug')) {
-    function t_slug(string $value): string {
-        $value = trim(mb_strtolower($value, 'UTF-8'));
-        $value = strtr($value, [
-            'á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u',
-            'ñ'=>'n','ü'=>'u'
-        ]);
-        $value = preg_replace('/[^a-z0-9]+/', '_', $value);
-        return trim($value, '_');
-    }
-}
+    // NAV
+    'home' => 'Inicio',
+    'products' => 'Productos',
+    'login' => 'Iniciar sesión',
+    'register' => 'Registrarse',
 
-if (!function_exists('t_category')) {
-    function t_category(string $category): string {
-        return $category;
-    }
+    // TIENDA
+    'catalog_label' => 'TIENDA DE REPUESTOS',
+    'catalog_title' => 'Catálogo de',
+    'catalog_title_highlight' => 'Productos',
+    'catalog_subtitle' => 'Piezas originales para tu vehículo',
+
+    'search_product' => 'Buscar producto...',
+    'min_price' => 'Precio mínimo',
+    'max_price' => 'Precio máximo',
+    'all_categories' => 'Todas las categorías',
+    'clear' => 'Limpiar',
+
+    'login_to_buy' => 'Inicia sesión para comprar',
+
+    // FOOTER
+    'footer_text' => 'Tienda Virtual del Sistema de Inventario TechSolutions'
+
+];
+
+function t(string $key): string {
+    global $translations;
+    return $translations[$key] ?? $key;
 }
