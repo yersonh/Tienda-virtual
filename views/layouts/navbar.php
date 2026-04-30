@@ -2,24 +2,23 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 require_once __DIR__ . '/../../config/lang.php';
 
 // 🔥 CONTADOR DEL CARRITO
 $logueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
-$carritoCountProvided = isset($carritoCount);
+
 $carritoCount = $logueado
-    ? ($carritoCountProvided ? (int) $carritoCount : (int) ($_SESSION['carrito_count'] ?? 0))
+    ? (int) ($_SESSION['carrito_count'] ?? 0)
     : 0;
 
 ?>
-
 <!DOCTYPE html>
-<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>NAYLEX Store</title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
-<link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -242,13 +241,6 @@ body {
           <span class="cart-badge" id="carrito-count"><?php echo $carritoCount; ?></span>
         </button>
       <?php endif; ?>
-      <form action="index.php" method="GET" class="m-0">
-        <input type="hidden" name="action" value="cambiarIdioma">
-        <select class="lang-select" name="lang" onchange="localStorage.setItem('langDetected', 'manual'); this.form.submit()" aria-label="<?= htmlspecialchars(t('language'), ENT_QUOTES, 'UTF-8') ?>">
-          <option value="es" <?= ($_SESSION['lang'] ?? 'es') === 'es' ? 'selected' : '' ?>>ES</option>
-          <option value="en" <?= ($_SESSION['lang'] ?? 'es') === 'en' ? 'selected' : '' ?>>EN</option>
-        </select>
-      </form>
       <button class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>"></button>
     </div>
 </nav>
@@ -278,13 +270,4 @@ body.setAttribute('data-theme', savedTheme);
 body.classList.toggle('light-mode', savedTheme === 'light');
 renderThemeIcon(savedTheme);
 
-const currentLang = '<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>';
-const detectedLang = (navigator.language || navigator.userLanguage || 'es').slice(0, 2).toLowerCase();
-const supportedLang = ['es', 'en'].includes(detectedLang) ? detectedLang : 'es';
-if (!localStorage.getItem('langDetected')) {
-    localStorage.setItem('langDetected', supportedLang);
-    if (supportedLang !== currentLang) {
-        window.location.href = 'index.php?action=cambiarIdioma&lang=' + encodeURIComponent(supportedLang);
-    }
-}
 </script>

@@ -4,7 +4,7 @@ $old = $_SESSION['old'] ?? [];
 ?>
 
 <!DOCTYPE html>
-<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'es', ENT_QUOTES, 'UTF-8') ?>">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <title><?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?></title>
