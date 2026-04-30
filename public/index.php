@@ -92,7 +92,7 @@ switch ($action) {
         break;
 
     case 'inicio':
-        require_once __DIR__ . '/../views/Inicio.php';
+        (new TiendaController())->inicio();
         break;
 
     case 'tienda':

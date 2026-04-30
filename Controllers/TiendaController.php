@@ -123,6 +123,14 @@ class TiendaController {
     }
 
     // Ã°Å¸â€ºÂÃ¯Â¸Â CATÃƒÂLOGO
+    public function inicio() {
+        $carritoVista = $this->obtenerCarritoVista();
+        $carritoCount = array_sum($carritoVista);
+        $masVendidos = $this->obtenerMasVendidosCacheados();
+
+        require_once __DIR__ . '/../views/Inicio.php';
+    }
+
     public function index() {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);

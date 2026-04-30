@@ -8,6 +8,14 @@ class DireccionPedidoModel {
         $this->conn = $conn;
     }
 
+    private function desactivarDmlParalelo(): void {
+        $stmt = oci_parse($this->conn, 'ALTER SESSION DISABLE PARALLEL DML');
+        if ($stmt) {
+            @oci_execute($stmt);
+            oci_free_statement($stmt);
+        }
+    }
+
     private function ensureSession(): void {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -112,7 +120,9 @@ class DireccionPedidoModel {
     }
 
     private function quitarPredeterminada(int $idUsuario): void {
-        $query = "UPDATE DIRECCION_USUARIO
+        $this->desactivarDmlParalelo();
+
+        $query = "UPDATE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ DIRECCION_USUARIO
                   SET ES_PREDETERMINADA = 0
                   WHERE ID_USUARIO = :id_usuario";
 
@@ -200,14 +210,16 @@ class DireccionPedidoModel {
 
     public function guardarDireccion($data): array {
         try {
+            $this->desactivarDmlParalelo();
             $d = $this->validarDireccion($data);
-            $d['predeterminada'] = ($d['predeterminada'] === 1 || !$this->usuarioTieneDirecciones($d['idUsuario'])) ? 1 : 0;
+            $tieneDirecciones = $this->usuarioTieneDirecciones($d['idUsuario']);
+            $d['predeterminada'] = ($d['predeterminada'] === 1 || !$tieneDirecciones) ? 1 : 0;
 
-            if ($d['predeterminada'] === 1) {
+            if ($d['predeterminada'] === 1 && $tieneDirecciones) {
                 $this->quitarPredeterminada($d['idUsuario']);
             }
 
-            $query = "INSERT INTO DIRECCION_USUARIO
+            $query = "INSERT /*+ NO_PARALLEL(DIRECCION_USUARIO) */ INTO DIRECCION_USUARIO
                         (ID_USUARIO, NOMBRE, APELLIDO, DIRECCION, CIUDAD, BARRIO, TELEFONO, TELEFONO_ALT, INFO_ADICIONAL, ES_PREDETERMINADA, CREATED_AT)
                       VALUES
                         (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alt, :info, :predeterminada, SYSDATE)
@@ -269,6 +281,7 @@ class DireccionPedidoModel {
 
     public function actualizarDireccion(int $idDireccion, int $idUsuario, array $data): array {
         try {
+            $this->desactivarDmlParalelo();
             $data['id_usuario'] = $idUsuario;
             $d = $this->validarDireccion($data);
 
@@ -280,7 +293,7 @@ class DireccionPedidoModel {
                 $this->quitarPredeterminada($idUsuario);
             }
 
-            $query = "UPDATE DIRECCION_USUARIO
+            $query = "UPDATE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ DIRECCION_USUARIO
                       SET NOMBRE = :nombre,
                           APELLIDO = :apellido,
                           DIRECCION = :direccion,
@@ -332,6 +345,7 @@ class DireccionPedidoModel {
 
     public function eliminarDireccion(int $idDireccion, int $idUsuario): array {
         try {
+            $this->desactivarDmlParalelo();
             $direccion = $this->obtenerDireccionPorId($idDireccion, $idUsuario);
             if (!$direccion) {
                 return ['success' => false, 'message' => 'La direccion no existe'];
@@ -350,7 +364,7 @@ class DireccionPedidoModel {
                 return ['success' => false, 'message' => 'No puedes eliminar tu unica direccion'];
             }
 
-            $queryDelete = "DELETE FROM DIRECCION_USUARIO
+            $queryDelete = "DELETE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ FROM DIRECCION_USUARIO
                             WHERE ID_DIRECCION = :id_direccion
                             AND ID_USUARIO = :id_usuario";
             $stmtDelete = oci_parse($this->conn, $queryDelete);
@@ -367,7 +381,7 @@ class DireccionPedidoModel {
             oci_free_statement($stmtDelete);
 
             if ((int) $direccion['es_predeterminada'] === 1) {
-                $queryDefault = "UPDATE DIRECCION_USUARIO
+                $queryDefault = "UPDATE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ DIRECCION_USUARIO
                                  SET ES_PREDETERMINADA = 1
                                  WHERE ID_DIRECCION = (
                                      SELECT MIN(ID_DIRECCION)
