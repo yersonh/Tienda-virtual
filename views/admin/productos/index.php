@@ -1,9 +1,9 @@
 <!-- views/admin/productos/index.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;"><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></h1>
+        <h1 style="color: white; margin: 0;"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></h1>
         <a href="index.php?action=productos_crear" class="btn-nuevo">
-            <i class="fas fa-plus"></i> <?= htmlspecialchars(t('new_product'), ENT_QUOTES, 'UTF-8') ?>
+            <i class="fas fa-plus"></i> <?= htmlspecialchars('Nuevo Producto', ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
@@ -15,14 +15,14 @@
         <table class="productos-table">
             <thead>
                 <tr>
-                    <th><?= htmlspecialchars(t('image'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('code'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('product_name'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('category'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('price'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('stock'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('status'), ENT_QUOTES, 'UTF-8') ?></th>
-                    <th><?= htmlspecialchars(t('actions'), ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Imagen', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Codigo', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Nombre del producto', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Categoria', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Precio', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?></th>
+                    <th><?= htmlspecialchars('Acciones', ENT_QUOTES, 'UTF-8') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -43,23 +43,23 @@
                     </td>
                     <td style="vertical-align: middle;"><?= htmlspecialchars($producto['codigo']) ?></td>
                     <td style="vertical-align: middle;"><?= htmlspecialchars($producto['nombre']) ?></td>
-                    <td style="vertical-align: middle;"><?= htmlspecialchars(t_category((string) $producto['categoria_nombre']), ENT_QUOTES, 'UTF-8') ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars((string) $producto['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></td>
                     <td style="vertical-align: middle;">$<?= number_format($producto['precio'], 2) ?></td>
                     <td style="vertical-align: middle;"><?= $producto['stock_p'] ?></td>
                     <td style="vertical-align: middle;">
                         <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
-                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? htmlspecialchars(t('active'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('inactive'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? htmlspecialchars('Activo', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Inactivo', ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </td>
                     <td style="vertical-align: middle;">
                         <div class="acciones">
-                            <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="<?= htmlspecialchars(t('view'), ENT_QUOTES, 'UTF-8') ?>">
+                            <a href="index.php?action=productos_ver&id=<?= $producto['id_producto'] ?>" class="btn-ver" title="<?= htmlspecialchars('Ver', ENT_QUOTES, 'UTF-8') ?>">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="<?= htmlspecialchars(t('edit'), ENT_QUOTES, 'UTF-8') ?>">
+                            <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar" title="<?= htmlspecialchars('Editar', ENT_QUOTES, 'UTF-8') ?>">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="<?= htmlspecialchars(t('delete'), ENT_QUOTES, 'UTF-8') ?>" onclick="return confirm(<?= json_encode(t('delete_product_confirm')) ?>)">
+                            <a href="index.php?action=productos_eliminar&id=<?= $producto['id_producto'] ?>" class="btn-eliminar" title="<?= htmlspecialchars('Eliminar', ENT_QUOTES, 'UTF-8') ?>" onclick="return confirm(<?= json_encode('Eliminar este producto?') ?>)">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </div>

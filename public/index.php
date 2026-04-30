@@ -1,6 +1,5 @@
 <?php
 session_start();
-require_once __DIR__ . '/../config/lang.php';
 
 $action = $_GET['action'] ?? 'tienda';
 $_SESSION['logueado'] = isset($_SESSION['id_usuario']);

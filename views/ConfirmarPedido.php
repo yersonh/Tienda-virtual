@@ -532,50 +532,50 @@ body[data-theme="light"] .form-control:focus,
         <?php if (!empty($pedidoConfirmado)): ?>
             <section class="checkout-panel glass-panel text-center">
                 <div class="mb-3 text-success fs-1"><i class="fas fa-circle-check"></i></div>
-                <h1 class="checkout-title"><?= htmlspecialchars('order_confirmed'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="checkout-sub mx-auto mb-4"><?= htmlspecialchars(t('purchase_registered'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h1 class="checkout-title"><?= htmlspecialchars('Pedido confirmado', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="checkout-sub mx-auto mb-4"><?= htmlspecialchars('Tu compra fue registrada correctamente.', ENT_QUOTES, 'UTF-8') ?></p>
                 <div class="summary-row summary-total">
-                    <span><?= htmlspecialchars(t('order'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Pedido', ENT_QUOTES, 'UTF-8') ?></span>
                     <strong>#<?= (int) $pedidoConfirmado['id_pedido'] ?></strong>
                 </div>
                 <?php if (isset($pedidoConfirmado['subtotal'], $pedidoConfirmado['iva'])): ?>
                     <div class="summary-row">
-                        <span><?= htmlspecialchars(t('subtotal'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= htmlspecialchars('Subtotal', ENT_QUOTES, 'UTF-8') ?></span>
                         <strong>$<?= number_format((float) $pedidoConfirmado['subtotal']) ?> COP</strong>
                     </div>
                     <div class="summary-row">
-                        <span><?= htmlspecialchars(t('vat'), ENT_QUOTES, 'UTF-8') ?> 19%</span>
+                        <span><?= htmlspecialchars('IVA', ENT_QUOTES, 'UTF-8') ?> 19%</span>
                         <strong>$<?= number_format((float) $pedidoConfirmado['iva']) ?> COP</strong>
                     </div>
                     <div class="summary-row">
-                        <span><?= htmlspecialchars(t('shipping'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span>
                         <strong>$<?= number_format((float) ($pedidoConfirmado['envio'] ?? 0)) ?> COP</strong>
                     </div>
                 <?php endif; ?>
                 <div class="summary-row">
-                    <span><?= htmlspecialchars(t('total'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span>
                     <strong>$<?= number_format((float) $pedidoConfirmado['total']) ?> COP</strong>
                 </div>
                 <?php renderEntregaBox($pedidoConfirmado['fecha_estimada_entrega'] ?? null); ?>
                 <a class="checkout-btn primary mt-3" href="index.php?action=tienda">
                     <i class="fas fa-store"></i>
-                    <?= htmlspecialchars(t('back_to_store'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
                 </a>
             </section>
         <?php else: ?>
             <div class="checkout-head">
                 <div>
-                    <h1 class="checkout-title"><?= htmlspecialchars(t('confirm_order'), ENT_QUOTES, 'UTF-8') ?></h1>
-                    <p class="checkout-sub"><?= htmlspecialchars(t('choose_delivery_address'), ENT_QUOTES, 'UTF-8') ?></p>
-                    <div class="checkout-steps" aria-label="<?= htmlspecialchars(t('checkout_progress'), ENT_QUOTES, 'UTF-8') ?>">
-                        <span class="checkout-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars(t('cart_step'), ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="checkout-step active"><i class="fas fa-location-dot"></i> <?= htmlspecialchars(t('address_step'), ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="checkout-step"><i class="fas fa-circle-check"></i> <?= htmlspecialchars(t('confirmation_step'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <h1 class="checkout-title"><?= htmlspecialchars('Confirmar pedido', ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p class="checkout-sub"><?= htmlspecialchars('Elige donde recibir tu compra y revisa el resumen antes de finalizar.', ENT_QUOTES, 'UTF-8') ?></p>
+                    <div class="checkout-steps" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
+                        <span class="checkout-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="checkout-step active"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="checkout-step"><i class="fas fa-circle-check"></i> <?= htmlspecialchars('Confirmacion', ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 </div>
                 <a class="checkout-btn secondary" href="index.php?action=resumenCompra">
                     <i class="fas fa-arrow-left"></i>
-                    <?= htmlspecialchars(t('back_to_summary'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars('Volver al resumen', ENT_QUOTES, 'UTF-8') ?>
                 </a>
             </div>
 
@@ -596,7 +596,7 @@ body[data-theme="light"] .form-control:focus,
             <div id="loading">
                 <div class="loading-overlay">
                     <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                    <?= htmlspecialchars(t('loading'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars('Procesando...', ENT_QUOTES, 'UTF-8') ?>
                 </div>
             </div>
 
@@ -604,8 +604,8 @@ body[data-theme="light"] .form-control:focus,
                 <section class="checkout-panel glass-panel">
                     <div class="section-title">
                         <div>
-                            <h2><?= htmlspecialchars(t('shipping_address'), ENT_QUOTES, 'UTF-8') ?></h2>
-                            <p class="section-kicker"><?= htmlspecialchars(t('select_or_add_address'), ENT_QUOTES, 'UTF-8') ?></p>
+                            <h2><?= htmlspecialchars('Direccion de envio', ENT_QUOTES, 'UTF-8') ?></h2>
+                            <p class="section-kicker"><?= htmlspecialchars('Selecciona una direccion guardada o agrega una nueva.', ENT_QUOTES, 'UTF-8') ?></p>
                         </div>
                     </div>
 
@@ -613,7 +613,7 @@ body[data-theme="light"] .form-control:focus,
                         <?php if (empty($direcciones)): ?>
                             <div class="empty-address">
                                 <i class="fas fa-map-location-dot me-2"></i>
-                                <?= htmlspecialchars(t('no_addresses_checkout'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Aun no tienes direcciones guardadas. Agrega una para continuar.', ENT_QUOTES, 'UTF-8') ?>
                             </div>
                         <?php else: ?>
                             <div class="address-skeleton" id="address-skeleton" aria-hidden="true">
@@ -643,13 +643,13 @@ body[data-theme="light"] .form-control:focus,
                                                     <?= htmlspecialchars($direccion['nombre_receptor'] . ' ' . $direccion['apellido_receptor'], ENT_QUOTES, 'UTF-8') ?>
                                                 </span>
                                                 <?php if ($esPredeterminada): ?>
-                                                    <span class="address-badge"><i class="fas fa-star"></i> <?= htmlspecialchars(t('default_address'), ENT_QUOTES, 'UTF-8') ?></span>
+                                                    <span class="address-badge"><i class="fas fa-star"></i> <?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
                                                 <?php endif; ?>
                                             </span>
                                             <?php if ($esPredeterminada): ?>
                                                 <span class="address-default-note">
                                                     <i class="fas fa-check-circle"></i>
-                                                    <?= htmlspecialchars(t('this_is_default_address'), ENT_QUOTES, 'UTF-8') ?>
+                                                    <?= htmlspecialchars('Esta es tu direccion predeterminada', ENT_QUOTES, 'UTF-8') ?>
                                                 </span>
                                             <?php endif; ?>
                                             <p class="address-text">
@@ -684,15 +684,15 @@ body[data-theme="light"] .form-control:focus,
                                             <span class="address-actions">
                                                 <button class="checkout-btn primary" type="button" data-use-address>
                                                     <i class="fas fa-check"></i>
-                                                    <?= htmlspecialchars(t('use_address'), ENT_QUOTES, 'UTF-8') ?>
+                                                    <?= htmlspecialchars('Usar esta direccion', ENT_QUOTES, 'UTF-8') ?>
                                                 </button>
                                                 <button class="checkout-btn secondary" type="button" data-edit-address="<?= $direccionJson ?>">
                                                     <i class="fas fa-pen"></i>
-                                                    <?= htmlspecialchars(t('edit'), ENT_QUOTES, 'UTF-8') ?>
+                                                    <?= htmlspecialchars('Editar', ENT_QUOTES, 'UTF-8') ?>
                                                 </button>
                                                 <button class="checkout-btn danger" type="button" data-delete-address="<?= $idDireccion ?>">
                                                     <i class="fas fa-trash"></i>
-                                                    <?= htmlspecialchars(t('delete'), ENT_QUOTES, 'UTF-8') ?>
+                                                    <?= htmlspecialchars('Eliminar', ENT_QUOTES, 'UTF-8') ?>
                                                 </button>
                                             </span>
                                         </span>
@@ -705,16 +705,16 @@ body[data-theme="light"] .form-control:focus,
                             <button class="checkout-btn primary" type="submit" id="confirm-order-btn" <?= empty($direcciones) ? 'disabled' : '' ?>>
                                 <span class="spinner-border spinner-border-sm submit-spinner" aria-hidden="true"></span>
                                 <i class="fas fa-lock"></i>
-                                <?= htmlspecialchars(t('continue_purchase'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Continuar compra', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                             <button class="checkout-btn outline-add" type="button" id="toggle-address-form">
                                 <i class="fas fa-plus"></i>
-                                <?= htmlspecialchars(t('add_address'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Agregar direccion', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                         </div>
                         <div class="checkout-inline-error" id="checkout-error" role="status" aria-live="polite">
                             <i class="fas fa-circle-exclamation"></i>
-                            <span><?= htmlspecialchars(t('select_shipping_address_error'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Selecciona una direccion de envio o agrega una nueva.', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                     </form>
 
@@ -722,47 +722,47 @@ body[data-theme="light"] .form-control:focus,
                         <input type="hidden" id="id_direccion" name="id_direccion" value="">
                         <div class="section-title mb-3">
                             <div>
-                                <h2 class="fs-4" id="address-form-title"><?= htmlspecialchars(t('new_address'), ENT_QUOTES, 'UTF-8') ?></h2>
-                                <p class="section-kicker"><?= htmlspecialchars(t('complete_address_data'), ENT_QUOTES, 'UTF-8') ?></p>
+                                <h2 class="fs-4" id="address-form-title"><?= htmlspecialchars('Nueva direccion', ENT_QUOTES, 'UTF-8') ?></h2>
+                                <p class="section-kicker"><?= htmlspecialchars('Completa los datos para guardar esta direccion.', ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label" for="nombre_receptor"><?= htmlspecialchars(t('first_name'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="nombre_receptor"><?= htmlspecialchars('Nombre', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="text" id="nombre_receptor" name="nombre_receptor" autocomplete="given-name" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="apellido_receptor"><?= htmlspecialchars(t('last_name'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="apellido_receptor"><?= htmlspecialchars('Apellido', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="text" id="apellido_receptor" name="apellido_receptor" autocomplete="family-name" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label" for="direccion_envio"><?= htmlspecialchars(t('address'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="direccion_envio"><?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="text" id="direccion_envio" name="direccion_envio" autocomplete="street-address" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="ciudad"><?= htmlspecialchars(t('city'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="ciudad"><?= htmlspecialchars('Ciudad', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="text" id="ciudad" name="ciudad" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="barrio"><?= htmlspecialchars(t('neighborhood'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="barrio"><?= htmlspecialchars('Barrio', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="text" id="barrio" name="barrio" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="telefono_receptor"><?= htmlspecialchars(t('phone'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="telefono_receptor"><?= htmlspecialchars('Telefono', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="tel" id="telefono_receptor" name="telefono_receptor" autocomplete="tel" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="telefono_alterno"><?= htmlspecialchars(t('alternate_phone'), ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="form-label" for="telefono_alterno"><?= htmlspecialchars('Telefono alterno', ENT_QUOTES, 'UTF-8') ?></label>
                                 <input class="form-control" type="tel" id="telefono_alterno" name="telefono_alterno">
                             </div>
                             <div class="col-12">
-                                <label class="form-label" for="informacion_adicional"><?= htmlspecialchars(t('additional_info'), ENT_QUOTES, 'UTF-8') ?></label>
-                                <textarea class="form-control" id="informacion_adicional" name="informacion_adicional" rows="3" placeholder="<?= htmlspecialchars(t('address_notes_placeholder'), ENT_QUOTES, 'UTF-8') ?>"></textarea>
+                                <label class="form-label" for="informacion_adicional"><?= htmlspecialchars('Informacion adicional', ENT_QUOTES, 'UTF-8') ?></label>
+                                <textarea class="form-control" id="informacion_adicional" name="informacion_adicional" rows="3" placeholder="<?= htmlspecialchars('Apartamento, torre, referencias o instrucciones de entrega', ENT_QUOTES, 'UTF-8') ?>"></textarea>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" value="1" id="es_predeterminada" name="es_predeterminada">
-                                    <label class="form-check-label" for="es_predeterminada"><?= htmlspecialchars(t('use_as_default_address'), ENT_QUOTES, 'UTF-8') ?></label>
+                                    <label class="form-check-label" for="es_predeterminada"><?= htmlspecialchars('Usar como direccion predeterminada', ENT_QUOTES, 'UTF-8') ?></label>
                                 </div>
                             </div>
                         </div>
@@ -770,35 +770,35 @@ body[data-theme="light"] .form-control:focus,
                         <div class="checkout-actions">
                             <button class="checkout-btn primary" type="submit" id="address-submit-label">
                                 <i class="fas fa-floppy-disk"></i>
-                                <?= htmlspecialchars(t('save_address'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Guardar direccion', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                             <button class="checkout-btn secondary" type="button" id="cancel-address-edit" style="display:none">
                                 <i class="fas fa-xmark"></i>
-                                <?= htmlspecialchars(t('cancel_edit'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Cancelar edicion', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                         </div>
                     </form>
                 </section>
 
                 <aside class="checkout-summary glass-panel" id="checkout-summary" data-subtotal="<?= htmlspecialchars((string) ($resumenCompra['subtotal'] ?? 0), ENT_QUOTES, 'UTF-8') ?>" data-iva="<?= htmlspecialchars((string) ($resumenCompra['iva'] ?? 0), ENT_QUOTES, 'UTF-8') ?>">
-                    <h2><?= htmlspecialchars(t('summary'), ENT_QUOTES, 'UTF-8') ?></h2>
+                    <h2><?= htmlspecialchars('Resumen', ENT_QUOTES, 'UTF-8') ?></h2>
                     <div class="summary-row">
-                        <span><?= htmlspecialchars(t('subtotal'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= htmlspecialchars('Subtotal', ENT_QUOTES, 'UTF-8') ?></span>
                         <strong id="summary-subtotal">$<?= number_format((float) ($resumenCompra['subtotal'] ?? 0)) ?> COP</strong>
                     </div>
                     <div class="summary-row">
-                        <span><?= htmlspecialchars(t('vat'), ENT_QUOTES, 'UTF-8') ?> 19%</span>
+                        <span><?= htmlspecialchars('IVA', ENT_QUOTES, 'UTF-8') ?> 19%</span>
                         <strong id="summary-iva">$<?= number_format((float) ($resumenCompra['iva'] ?? 0)) ?> COP</strong>
                     </div>
                     <div class="summary-row">
-                        <span><?= htmlspecialchars(t('shipping'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span>
                         <strong id="summary-envio">$<?= number_format((float) ($resumenCompra['envio'] ?? 0)) ?> COP</strong>
                     </div>
                     <div class="summary-row summary-total">
-                        <span><?= htmlspecialchars(t('total'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span>
                         <strong id="summary-total">$<?= number_format((float) ($resumenCompra['total'] ?? $total)) ?> COP</strong>
                     </div>
-                    <p class="summary-note"><?= htmlspecialchars(t('checkout_summary_note'), ENT_QUOTES, 'UTF-8') ?></p>
+                    <p class="summary-note"><?= htmlspecialchars('La direccion seleccionada se usara para crear el pedido. El total se actualiza automaticamente con el envio.', ENT_QUOTES, 'UTF-8') ?></p>
                 </aside>
             </div>
         <?php endif; ?>
@@ -822,12 +822,12 @@ const summaryIva = document.getElementById('summary-iva');
 const summaryEnvio = document.getElementById('summary-envio');
 const summaryTotal = document.getElementById('summary-total');
 const checkoutMessages = {
-    selectAddress: <?= json_encode(t('select_shipping_address_error')) ?>,
-    newAddress: <?= json_encode(t('new_address')) ?>,
-    editAddress: <?= json_encode(t('edit_address')) ?>,
-    saveAddress: <?= json_encode(t('save_address')) ?>,
-    updateAddress: <?= json_encode(t('update_address')) ?>,
-    confirmDeleteAddress: <?= json_encode(t('confirm_delete_address')) ?>
+    selectAddress: <?= json_encode('Selecciona una direccion de envio o agrega una nueva.') ?>,
+    newAddress: <?= json_encode('Nueva direccion') ?>,
+    editAddress: <?= json_encode('Editar direccion') ?>,
+    saveAddress: <?= json_encode('Guardar direccion') ?>,
+    updateAddress: <?= json_encode('Actualizar direccion') ?>,
+    confirmDeleteAddress: <?= json_encode('Quieres eliminar esta direccion?') ?>
 };
 
 function normalizeCity(city) {
@@ -910,7 +910,7 @@ function setActiveAddress(radio) {
     });
 
     if (radio) {
-        const card = radio.closest('.address-option');
+        const card = radio.closes'.address-option';
         card?.classList.add('active');
         updateCheckoutSummary(card?.dataset.city || '');
     }
@@ -976,11 +976,11 @@ async function deleteAddress(id) {
     if (!id || !confirm(checkoutMessages.confirmDeleteAddress)) return;
 
     showLoading();
-    const form = document.createElement('form');
+    const form = document.createElemen'form';
     form.method = 'POST';
     form.action = 'index.php?action=eliminarDireccionPedido';
 
-    const input = document.createElement('input');
+    const input = document.createElemen'input';
     input.type = 'hidden';
     input.name = 'id_direccion';
     input.value = id;
@@ -1019,7 +1019,7 @@ document.querySelectorAll('[data-use-address]').forEach((button) => {
     button.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        const radio = button.closest('.address-option')?.querySelector('input[name="direccion"]');
+        const radio = button.closes'.address-option'?.querySelector('input[name="direccion"]');
         if (radio) {
             radio.checked = true;
             setActiveAddress(radio);

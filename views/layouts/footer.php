@@ -27,7 +27,7 @@ body {
 
 <div class="app-footer">
     <i class="fas fa-store"></i>
-    <span><?= htmlspecialchars(t('footer_text'), ENT_QUOTES, 'UTF-8') ?></span>
+    <span><?= htmlspecialchars('Tienda Virtual del Sistema de Inventario TechSolutions', ENT_QUOTES, 'UTF-8') ?></span>
 </div>
 
 </body>

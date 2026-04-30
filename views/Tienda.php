@@ -334,9 +334,9 @@
 .product-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
-    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: relative;
     flex: 0 0 280px;
@@ -348,13 +348,13 @@
     box-shadow: 0 16px 40px rgba(0,0,0,0.4);
 }
 [data-theme="light"] .product-card {
-    background: linear-gradient(180deg, #ffffff, #f8fbff);
-    border-color: #d7e0ea;
-    box-shadow: 0 18px 38px rgba(148, 163, 184, 0.14);
+    background: var(--card-bg);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
 }
 [data-theme="light"] .product-card:hover {
-    border-color: #8de2da;
-    box-shadow: 0 20px 44px rgba(148, 163, 184, 0.22);
+    border-color: var(--accent);
+    box-shadow: 0 16px 32px rgba(148, 163, 184, 0.15);
 }
 .card-badge {
     position: absolute;
@@ -636,28 +636,28 @@
 </style>
 
 <div class="hero">
-    <div class="hero-label"><?= htmlspecialchars(t('catalog_label'), ENT_QUOTES, 'UTF-8') ?></div>
-    <h1 class="hero-title"><?= htmlspecialchars(t('catalog_title'), ENT_QUOTES, 'UTF-8') ?><br><em><?= htmlspecialchars(t('catalog_title_highlight'), ENT_QUOTES, 'UTF-8') ?></em></h1>
-    <p class="hero-sub"><?= htmlspecialchars(t('catalog_subtitle'), ENT_QUOTES, 'UTF-8') ?></p>
+    <div class="hero-label"><?= htmlspecialchars('Tienda de Repuestos', ENT_QUOTES, 'UTF-8') ?></div>
+    <h1 class="hero-title"><?= htmlspecialchars('Catalogo de', ENT_QUOTES, 'UTF-8') ?><br><em><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></em></h1>
+    <p class="hero-sub"><?= htmlspecialchars('Piezas originales para tu vehiculo - calidad garantizada', ENT_QUOTES, 'UTF-8') ?></p>
 </div>
 
 <div class="filters">
-    <input class="filter-input" type="text" placeholder="<?= htmlspecialchars(t('search_product'), ENT_QUOTES, 'UTF-8') ?>" id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars(t('min_price'), ENT_QUOTES, 'UTF-8') ?>" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars(t('max_price'), ENT_QUOTES, 'UTF-8') ?>" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" placeholder="<?= htmlspecialchars('Buscar producto...', ENT_QUOTES, 'UTF-8') ?>" id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio min', ENT_QUOTES, 'UTF-8') ?>" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio max', ENT_QUOTES, 'UTF-8') ?>" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
     <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
-        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>><?= htmlspecialchars(t('all_categories'), ENT_QUOTES, 'UTF-8') ?></option>
+        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>><?= htmlspecialchars('Todas las categorias', ENT_QUOTES, 'UTF-8') ?></option>
         <?php foreach($todasCategorias as $cat): ?>
-        <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= htmlspecialchars(t_category((string) $cat), ENT_QUOTES, 'UTF-8') ?></option>
+        <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></option>
         <?php endforeach; ?>
     </select>
-    <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars(t('clear'), ENT_QUOTES, 'UTF-8') ?></button>
+    <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars('Limpiar', ENT_QUOTES, 'UTF-8') ?></button>
 </div>
 
 <div class="cat-tabs">
-    <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars(t('all'), ENT_QUOTES, 'UTF-8') ?></button>
+    <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars('Todo', ENT_QUOTES, 'UTF-8') ?></button>
     <?php foreach($todasCategorias as $cat): ?>
-    <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this,'<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>')"><?= htmlspecialchars(t_category((string) $cat), ENT_QUOTES, 'UTF-8') ?></button>
+    <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this,'<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>')"><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></button>
     <?php endforeach; ?>
 </div>
 
@@ -669,14 +669,14 @@
             <path d="m11 18-6-6 6-6"></path>
         </svg>
     </span>
-    <?= htmlspecialchars(t('back_to_products'), ENT_QUOTES, 'UTF-8') ?>
+    <?= htmlspecialchars('Volver a productos', ENT_QUOTES, 'UTF-8') ?>
 </a>
 <?php endif; ?>
 
 <?php if(empty($categoria_filtro) && empty($filtro) && empty($precio_min) && empty($precio_max) && !empty($masVendidos)): ?>
 <div class="category-section best-sellers-section">
     <div class="section-header">
-        <div class="section-title"><?= htmlspecialchars(t('best_sellers'), ENT_QUOTES, 'UTF-8') ?> <span class="section-count"><?= count($masVendidos) ?> <?= htmlspecialchars(t('product_count'), ENT_QUOTES, 'UTF-8') ?></span></div>
+        <div class="section-title"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?> <span class="section-count"><?= count($masVendidos) ?> <?= htmlspecialchars('productos', ENT_QUOTES, 'UTF-8') ?></span></div>
     </div>
     <div class="product-carousel">
         <div class="product-grid best-sellers-grid">
@@ -692,7 +692,7 @@
                  onkeydown="openProductDetailFromKey(event, this)"
                  tabindex="0"
                  role="link"
-                 aria-label="<?= htmlspecialchars(t('view_detail_of'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                 aria-label="<?= htmlspecialchars('Ver detalle de', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
                     <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -712,7 +712,7 @@
                     <div class="card-name"><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></div>
                     <div class="card-meta">
                         <span class="meta-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="meta-pill meta-stock"><?= $ventasProducto ?> <?= htmlspecialchars(t('sold'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="meta-pill meta-stock"><?= $ventasProducto ?> <?= htmlspecialchars('vendidos', ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                     <div class="card-price">$<?= number_format((float) $p['precio']) ?> <span>COP</span></div>
                     <div class="card-footer">
@@ -737,11 +737,11 @@
 <?php foreach($categorias as $categoria => $productos): ?>
 <div id="<?= !empty($categoria_filtro) ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
-        <div class="section-title"><?= htmlspecialchars(t_category((string) $categoria), ENT_QUOTES, 'UTF-8') ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> <?= htmlspecialchars(t('product_count'), ENT_QUOTES, 'UTF-8') ?></span></div>
+        <div class="section-title"><?= htmlspecialchars((string) $categoria, ENT_QUOTES, 'UTF-8') ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> <?= htmlspecialchars('productos', ENT_QUOTES, 'UTF-8') ?></span></div>
         <div class="section-actions">
             <a class="see-all" href="index.php?action=tienda&categoria=<?= urlencode($categoria) ?>#category-detail" onclick="event.preventDefault(); showCategory('<?= $categoria ?>');">
                 <span class="see-all-label">
-                    <span><?= htmlspecialchars(t('see_all'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Ver todos', ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="see-all-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
                             <path d="M5 12h14"></path>
@@ -752,8 +752,8 @@
             </a>
             <?php if(empty($categoria_filtro)): ?>
             <div class="carousel-nav">
-                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="<?= htmlspecialchars(t('scroll_left'), ENT_QUOTES, 'UTF-8') ?>">&#8249;</button>
-                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="<?= htmlspecialchars(t('scroll_right'), ENT_QUOTES, 'UTF-8') ?>">&#8250;</button>
+                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="<?= htmlspecialchars('Desplazar productos a la izquierda', ENT_QUOTES, 'UTF-8') ?>">&#8249;</button>
+                <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="<?= htmlspecialchars('Desplazar productos a la derecha', ENT_QUOTES, 'UTF-8') ?>">&#8250;</button>
             </div>
             <?php endif; ?>
         </div>
@@ -778,7 +778,7 @@
                  onkeydown="openProductDetailFromKey(event, this)"
                  tabindex="0"
                  role="link"
-                 aria-label="<?= htmlspecialchars(t('view_detail_of'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                 aria-label="<?= htmlspecialchars('Ver detalle de', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
                     <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -812,7 +812,7 @@
                                 </svg>
                                 <?php endif; ?>
                             </span>
-                            <?= $p['stock_p'] <= 4 ? htmlspecialchars(t('low_stock'), ENT_QUOTES, 'UTF-8') . ' ' : htmlspecialchars(t('available'), ENT_QUOTES, 'UTF-8') . ' ' ?><?= $p['stock_p'] ?> <?= htmlspecialchars(t('units'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= $p['stock_p'] <= 4 ? htmlspecialchars('Bajo', ENT_QUOTES, 'UTF-8') . ' ' : htmlspecialchars('Disponible', ENT_QUOTES, 'UTF-8') . ' ' ?><?= $p['stock_p'] ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </div>
                     <div class="card-price">$<?= number_format($p['precio']) ?> <span>COP</span></div>
@@ -834,11 +834,11 @@
                                         <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                                     </svg>
                                 </span>
-                                <?= $enLimite ? htmlspecialchars(t('limit'), ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars(t('add_more'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('add'), ENT_QUOTES, 'UTF-8')) ?>
+                                <?= $enLimite ? htmlspecialchars('Limite', ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars('Agregar mas', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Agregar', ENT_QUOTES, 'UTF-8')) ?>
                             </button>
                         <?php else: ?>
                             <button class="add-btn" type="button" onclick="event.stopPropagation(); location.href='index.php?action=login'">
-                                <?= htmlspecialchars(t('login_to_buy'), ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Inicia sesion para comprar', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -854,15 +854,15 @@
 let cart = {};
 cart = <?= json_encode($carritoVista) ?>;
 const i18n = {
-    limit: <?= json_encode(t('limit')) ?>,
-    add: <?= json_encode(t('add')) ?>,
-    addMore: <?= json_encode(t('add_more')) ?>,
-    adding: <?= json_encode(t('adding')) ?>,
-    loginRequired: <?= json_encode(t('login_required')) ?>,
-    productAdded: <?= json_encode(t('product_added')) ?>,
-    cartAddError: <?= json_encode(t('cart_add_error')) ?>,
-    allCategories: <?= json_encode(t('all_categories')) ?>,
-    productCount: <?= json_encode(t('product_count')) ?>
+    limit: <?= json_encode('Limite') ?>,
+    add: <?= json_encode('Agregar') ?>,
+    addMore: <?= json_encode('Agregar mas') ?>,
+    adding: <?= json_encode('Agregando') ?>,
+    loginRequired: <?= json_encode('Debes iniciar sesion') ?>,
+    productAdded: <?= json_encode('Producto agregado') ?>,
+    cartAddError: <?= json_encode('No se pudo agregar al carrito') ?>,
+    allCategories: <?= json_encode('Todas las categorias') ?>,
+    productCount: <?= json_encode('productos') ?>
 };
 
 function cartQty(id) {
@@ -934,7 +934,7 @@ function chgQty(id, delta, stock){
 function mostrarMensajeCarrito(message, isError = false) {
     let notice = document.getElementById('cart-toast');
     if (!notice) {
-        notice = document.createElement('div');
+        notice = document.createElemen'div';
         notice.id = 'cart-toast';
         notice.style.position = 'fixed';
         notice.style.right = '18px';
@@ -1060,7 +1060,7 @@ function scrollProducts(gridId, direction){
 }
 
 function openProductDetail(card, event){
-    if(event.target.closest('.qty-wrap, .add-btn')) return;
+    if(event.target.closes'.qty-wrap, .add-btn') return;
     const id = card.dataset.id;
     const url = id ? `index.php?action=productoDetalle&id=${id}` : card.dataset.url;
     if(url){
@@ -1176,7 +1176,7 @@ function filterProducts(){
 
     categoria.innerHTML = "";
 
-    let optionTodas = document.createElement("option");
+    let optionTodas = document.createElemen'option';
     optionTodas.value = "";
     optionTodas.textContent = i18n.allCategories;
     categoria.appendChild(optionTodas);

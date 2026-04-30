@@ -3,8 +3,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../../config/lang.php';
-
 // 🔥 CONTADOR DEL CARRITO
 $logueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 
@@ -33,29 +31,23 @@ $carritoCount = $logueado
   --card-bg: rgba(255,255,255,0.03);
   --border: rgba(255,255,255,0.06);
   --hover: rgba(0,229,192,0.25);
+  --radius: 12px;
+  --transition: all 0.3s ease;
+  --shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 
-[data-theme="light"] {
+[data-theme="light"], .light-mode {
   --bg: #f8fafc;
   --text: #1e293b;
   --accent: #00e5c0;
   --secondary: #64748b;
-  --card-bg: rgba(0,0,0,0.03);
-  --border: rgba(0,0,0,0.06);
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
   --hover: rgba(0,229,192,0.1);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
-.light-mode {
-  --bg: #f8fafc;
-  --text: #1e293b;
-  --accent: #00e5c0;
-  --secondary: #64748b;
-  --card-bg: rgba(0,0,0,0.03);
-  --border: rgba(0,0,0,0.06);
-  --hover: rgba(0,229,192,0.1);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
 
 body {
     font-family: 'DM Sans', sans-serif;
@@ -220,19 +212,19 @@ body {
 <nav class="nav">
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
-      <a href="index.php?action=inicio" class="active"><?= htmlspecialchars(t('home'), ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=tienda"><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=inicio" class="active"><?= htmlspecialchars('Inicio', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=tienda"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
     </div>
     <div class="nav-actions">
       <?php if($logueado): ?>
-        <a href="index.php?action=perfil" class="btn-ghost"><?= htmlspecialchars(t('profile'), ENT_QUOTES, 'UTF-8') ?></a>
-        <a href="index.php?action=logout" class="btn-ghost"><?= htmlspecialchars(t('logout'), ENT_QUOTES, 'UTF-8') ?></a>
+        <a href="index.php?action=perfil" class="btn-ghost"><?= htmlspecialchars('Perfil', ENT_QUOTES, 'UTF-8') ?></a>
+        <a href="index.php?action=logout" class="btn-ghost"><?= htmlspecialchars('Salir', ENT_QUOTES, 'UTF-8') ?></a>
       <?php else: ?>
-        <a href="index.php?action=login" class="btn-ghost"><?= htmlspecialchars(t('login'), ENT_QUOTES, 'UTF-8') ?></a>
-        <button class="btn-primary" onclick="location.href='index.php?action=registro'"><?= htmlspecialchars(t('register'), ENT_QUOTES, 'UTF-8') ?></button>
+        <a href="index.php?action=login" class="btn-ghost"><?= htmlspecialchars('Login', ENT_QUOTES, 'UTF-8') ?></a>
+        <button class="btn-primary" onclick="location.href='index.php?action=registro'"><?= htmlspecialchars('Registro', ENT_QUOTES, 'UTF-8') ?></button>
       <?php endif; ?>
       <?php if($logueado): ?>
-        <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="<?= htmlspecialchars(t('cart'), ENT_QUOTES, 'UTF-8') ?>">
+        <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="<?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?>">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="9" cy="20" r="1"></circle>
             <circle cx="18" cy="20" r="1"></circle>
@@ -241,7 +233,7 @@ body {
           <span class="cart-badge" id="carrito-count"><?php echo $carritoCount; ?></span>
         </button>
       <?php endif; ?>
-      <button class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?>"></button>
+      <button class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?>"></button>
     </div>
 </nav>
 

@@ -1,7 +1,7 @@
 <!-- views/admin/productos/ver.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;"><?= htmlspecialchars(t('view_product'), ENT_QUOTES, 'UTF-8') ?></h1>
+        <h1 style="color: white; margin: 0;"><?= htmlspecialchars('Ver Producto', ENT_QUOTES, 'UTF-8') ?></h1>
         <div style="display: flex; gap: 10px;">
             <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar">
                 <i class="fas fa-edit"></i> Editar
@@ -14,7 +14,7 @@
 
     <div class="producto-detalle">
         <div class="producto-imagenes">
-            <h3><?= htmlspecialchars(t('image_gallery'), ENT_QUOTES, 'UTF-8') ?></h3>
+            <h3><?= htmlspecialchars('Galeria de Imagenes', ENT_QUOTES, 'UTF-8') ?></h3>
             <div class="galeria">
                 <?php if(!empty($imagenes)): ?>
                     <?php foreach($imagenes as $index => $img): ?>
@@ -28,41 +28,41 @@
                 <?php else: ?>
                     <div class="no-imagenes">
                         <i class="fas fa-image"></i>
-                        <p><?= htmlspecialchars(t('no_images_available'), ENT_QUOTES, 'UTF-8') ?></p>
+                        <p><?= htmlspecialchars('No hay imagenes disponibles', ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
         <div class="producto-info">
-            <h3><?= htmlspecialchars(t('product_info'), ENT_QUOTES, 'UTF-8') ?></h3>
+            <h3><?= htmlspecialchars('Informacion del Producto', ENT_QUOTES, 'UTF-8') ?></h3>
             <table class="info-table">
                 <tr>
                     <th>ID:</th>
                     <td><?= $producto['id_producto'] ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('code'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Codigo', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= htmlspecialchars($producto['codigo']) ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('product_name'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Nombre del producto', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= htmlspecialchars($producto['nombre']) ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('category'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Categoria', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= htmlspecialchars($producto['categoria_nombre']) ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('price'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Precio', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td>$<?= number_format($producto['precio'], 2) ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('stock'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= $producto['stock_p'] ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('status'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td>
                         <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
                             <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'Activo' : 'Inactivo' ?>
@@ -70,15 +70,15 @@
                     </td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('description'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= nl2br(htmlspecialchars($producto['descripcion'])) ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('created_at'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Fecha Creacion', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= date('d/m/Y H:i', strtotime($producto['created_at'])) ?></td>
                 </tr>
                 <tr>
-                    <th><?= htmlspecialchars(t('updated_at'), ENT_QUOTES, 'UTF-8') ?>:</th>
+                    <th><?= htmlspecialchars('Ultima Actualizacion', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td><?= date('d/m/Y H:i', strtotime($producto['updated_at'])) ?></td>
                 </tr>
             </table>

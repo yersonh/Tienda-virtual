@@ -261,8 +261,8 @@
     <div class="cart-shell">
         <div class="cart-head">
             <div>
-                <h1 class="cart-title"><?= htmlspecialchars(t('shopping_cart'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="cart-sub"><?= htmlspecialchars(t('cart_intro'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h1 class="cart-title"><?= htmlspecialchars('Carrito de compras', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="cart-sub"><?= htmlspecialchars('Revisa tus productos, ajusta cantidades y continua con tu compra.', ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <?php if (!empty($items)): ?>
                 <button class="cart-clear" type="button" onclick="vaciarCarrito()">
@@ -271,7 +271,7 @@
                         <path d="M8 6V4h8v2"></path>
                         <path d="m19 6-1 14H6L5 6"></path>
                     </svg>
-                    <?= htmlspecialchars(t('clear_cart'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars('Vaciar carrito', ENT_QUOTES, 'UTF-8') ?>
                 </button>
             <?php endif; ?>
         </div>
@@ -291,11 +291,11 @@
                         <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                     </svg>
                 </div>
-                <h2><?= htmlspecialchars(t('empty_cart'), ENT_QUOTES, 'UTF-8') ?></h2>
-                <p><?= htmlspecialchars(t('empty_cart_hint'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h2><?= htmlspecialchars('Tu carrito esta vacio', ENT_QUOTES, 'UTF-8') ?></h2>
+                <p><?= htmlspecialchars('Cuando agregues productos, apareceran aqui con su resumen y cantidades.', ENT_QUOTES, 'UTF-8') ?></p>
                 <a class="cart-checkout" href="index.php?action=tienda">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
-                    <?= htmlspecialchars(t('go_to_store'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars('Ir a la tienda', ENT_QUOTES, 'UTF-8') ?>
                 </a>
             </section>
         <?php else: ?>
@@ -329,13 +329,13 @@
                                 <div class="cart-item-meta">
                                     <span>#<?= (int) $item['id_producto'] ?></span>
                                     <?php if (!empty($item['categoria_nombre'])): ?>
-                                        <span><?= htmlspecialchars(t_category((string) $item['categoria_nombre']), ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span><?= htmlspecialchars((string) $item['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
                                     <?php endif; ?>
                                     <?php if ($stockDisponible !== null): ?>
-                                        <span><?= htmlspecialchars(t('stock'), ENT_QUOTES, 'UTF-8') ?> <?= $stockDisponible ?></span>
+                                        <span><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?> <?= $stockDisponible ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="cart-item-price"><?= htmlspecialchars(t('unit_price'), ENT_QUOTES, 'UTF-8') ?>: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
+                                <div class="cart-item-price"><?= htmlspecialchars('Precio unitario', ENT_QUOTES, 'UTF-8') ?>: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
                                 <div class="cart-controls">
                                     <div class="cart-qty">
                                         <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= $stockParam ?>)">-</button>
@@ -344,12 +344,12 @@
                                     </div>
                                     <button class="cart-remove" type="button" onclick="removeCartItem(<?= (int) $item['id_producto'] ?>)">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
-                                        <?= htmlspecialchars(t('remove'), ENT_QUOTES, 'UTF-8') ?>
+                                        <?= htmlspecialchars('Quitar', ENT_QUOTES, 'UTF-8') ?>
                                     </button>
                                 </div>
                             </div>
                             <div class="cart-line-total">
-                                <span><?= htmlspecialchars(t('total'), ENT_QUOTES, 'UTF-8') ?></span>
+                                <span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span>
                                 <strong id="cart-line-total-<?= (int) $item['id_producto'] ?>">$<?= number_format((float) $subtotalLinea) ?></strong>
                             </div>
                         </article>
@@ -364,30 +364,30 @@
                     $totalPagarResumen = $resumenCarrito['total_pagar'] ?? $subtotal;
                     ?>
                     <section class="cart-summary">
-                        <h2><?= htmlspecialchars(t('summary'), ENT_QUOTES, 'UTF-8') ?></h2>
+                        <h2><?= htmlspecialchars('Resumen', ENT_QUOTES, 'UTF-8') ?></h2>
                         <div class="cart-row">
-                            <span><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></span>
                             <strong id="cart-total-items"><?= (int) $totalItemsResumen ?></strong>
                         </div>
                         <div class="cart-row cart-total">
-                            <span><?= htmlspecialchars(t('subtotal'), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Subtotal', ENT_QUOTES, 'UTF-8') ?></span>
                             <strong id="cart-subtotal">$<?= number_format((float) $totalPagarResumen) ?></strong>
                         </div>
                     </section>
 
                     <a class="cart-checkout" href="index.php?action=tienda">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
-                        <?= !empty($_SESSION['logueado']) ? htmlspecialchars(t('continue_shopping'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('continue_viewing'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= !empty($_SESSION['logueado']) ? htmlspecialchars('Seguir comprando', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Seguir viendo', ENT_QUOTES, 'UTF-8') ?>
                     </a>
                     <a class="cart-continue" href="index.php?action=inicio">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                        <?= htmlspecialchars(t('continue_later'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= htmlspecialchars('Continuar luego', ENT_QUOTES, 'UTF-8') ?>
                     </a>
                 </aside>
             </div>
 
             <div class="d-flex justify-content-end mt-4">
-                <a class="btn btn-success btn-lg" href="index.php?action=ConfirmarPedido"><?= htmlspecialchars(t('continue_purchase'), ENT_QUOTES, 'UTF-8') ?></a>
+                <a class="btn btn-success btn-lg" href="index.php?action=ConfirmarPedido"><?= htmlspecialchars('Continuar compra', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
         <?php endif; ?>
     </div>

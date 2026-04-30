@@ -2,7 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once __DIR__ . '/../../config/lang.php';
 ?>
 
 <!DOCTYPE html>
@@ -10,7 +9,7 @@ require_once __DIR__ . '/../../config/lang.php';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= htmlspecialchars(t('admin_panel_title'), ENT_QUOTES, 'UTF-8') ?></title>
+<title><?= htmlspecialchars('Panel Admin - NAYLEX Store', ENT_QUOTES, 'UTF-8') ?></title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
@@ -289,7 +288,7 @@ require_once __DIR__ . '/../../config/lang.php';
     <aside class="admin-sidebar">
         <div class="sidebar-header">
             <h2>NAYLEX<br>STORE</h2>
-            <p><?= htmlspecialchars(t('admin_panel'), ENT_QUOTES, 'UTF-8') ?></p>
+            <p><?= htmlspecialchars('Panel de Administracion', ENT_QUOTES, 'UTF-8') ?></p>
         </div>
 
         <div class="nav-menu">
@@ -297,28 +296,28 @@ require_once __DIR__ . '/../../config/lang.php';
             <div class="nav-item">
                 <a href="index.php?action=productos" class="nav-link">
                     <i class="fas fa-box"></i>
-                    <span><?= htmlspecialchars(t('products'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
-                    <span><?= htmlspecialchars(t('orders'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Pedidos', ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-users"></i>
-                    <span><?= htmlspecialchars(t('customers'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Clientes', ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
 
             <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-cog"></i>
-                    <span><?= htmlspecialchars(t('settings'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Configuracion', ENT_QUOTES, 'UTF-8') ?></span>
                 </a>
             </div>
         </div>
@@ -326,7 +325,7 @@ require_once __DIR__ . '/../../config/lang.php';
         <div class="sidebar-footer">
             <button type="button" class="theme-toggle-admin" id="theme-toggle-admin">
                 <i class="fas fa-moon"></i>
-                <span><?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?></span>
+                <span><?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?></span>
             </button>
             <?php if(isset($_SESSION['nickname'])): ?>
                 <div class="user-info">
@@ -335,14 +334,14 @@ require_once __DIR__ . '/../../config/lang.php';
                     </div>
                     <div class="user-details">
                         <div class="user-name"><?= htmlspecialchars($_SESSION['nickname']) ?></div>
-                        <div class="user-role"><?= htmlspecialchars(t('administrator'), ENT_QUOTES, 'UTF-8') ?></div>
+                        <div class="user-role"><?= htmlspecialchars('Administrador', ENT_QUOTES, 'UTF-8') ?></div>
                     </div>
                 </div>
             <?php endif; ?>
             
             <a href="index.php?action=logout" class="logout-link">
                 <i class="fas fa-sign-out-alt"></i>
-                <span><?= htmlspecialchars(t('close_session'), ENT_QUOTES, 'UTF-8') ?></span>
+                <span><?= htmlspecialchars('Cerrar Sesion', ENT_QUOTES, 'UTF-8') ?></span>
             </a>
         </div>
     </aside>
@@ -355,8 +354,8 @@ require_once __DIR__ . '/../../config/lang.php';
             ?>
             <div class="welcome-message">
                 <i class="fas fa-store"></i>
-                <h1><?= htmlspecialchars(t('admin_welcome'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <p><?= htmlspecialchars(t('admin_welcome_hint'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h1><?= htmlspecialchars('Bienvenido al Panel de Administracion', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p><?= htmlspecialchars('Selecciona una opcion del menu lateral para comenzar', ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <?php
         }
@@ -371,8 +370,8 @@ const adminBody = document.body;
 function applyAdminTheme(theme) {
     adminBody.setAttribute('data-theme', theme);
     adminThemeToggle.innerHTML = theme === 'dark'
-        ? '<i class="fas fa-moon"></i><span><?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?></span>'
-        : '<i class="fas fa-sun"></i><span><?= htmlspecialchars(t('confirm_theme'), ENT_QUOTES, 'UTF-8') ?></span>';
+        ? '<i class="fas fa-moon"></i><span><?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?></span>'
+        : '<i class="fas fa-sun"></i><span><?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?></span>';
 }
 
 adminThemeToggle.addEventListener('click', () => {

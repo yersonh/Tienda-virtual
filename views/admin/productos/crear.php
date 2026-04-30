@@ -1,7 +1,7 @@
 <!-- views/admin/productos/crear.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;"><?= htmlspecialchars(t('new_product'), ENT_QUOTES, 'UTF-8') ?></h1>
+        <h1 style="color: white; margin: 0;"><?= htmlspecialchars('Nuevo Producto', ENT_QUOTES, 'UTF-8') ?></h1>
         <a href="index.php?action=productos" class="btn-volver">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
@@ -15,19 +15,19 @@
         <form method="POST" action="index.php?action=productos_guardar" enctype="multipart/form-data">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="codigo"><?= htmlspecialchars(t('product_code'), ENT_QUOTES, 'UTF-8') ?> *</label>
-                    <input type="text" id="codigo" name="codigo" required placeholder="<?= htmlspecialchars(t('example_product_code'), ENT_QUOTES, 'UTF-8') ?>">
+                    <label for="codigo"><?= htmlspecialchars('Codigo del producto', ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <input type="text" id="codigo" name="codigo" required placeholder="<?= htmlspecialchars('Ej: PROD-001', ENT_QUOTES, 'UTF-8') ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="nombre"><?= htmlspecialchars(t('product_name'), ENT_QUOTES, 'UTF-8') ?> *</label>
-                    <input type="text" id="nombre" name="nombre" required placeholder="<?= htmlspecialchars(t('example_product_name'), ENT_QUOTES, 'UTF-8') ?>">
+                    <label for="nombre"><?= htmlspecialchars('Nombre del producto', ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <input type="text" id="nombre" name="nombre" required placeholder="<?= htmlspecialchars('Ej: Tractor Agricola', ENT_QUOTES, 'UTF-8') ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="id_categoria"><?= htmlspecialchars(t('category'), ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <label for="id_categoria"><?= htmlspecialchars('Categoria', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="id_categoria" name="id_categoria" required>
-                        <option value=""><?= htmlspecialchars(t('select_category'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value=""><?= htmlspecialchars('Seleccione una categoria', ENT_QUOTES, 'UTF-8') ?></option>
                         <?php foreach($categorias as $categoria): ?>
                             <option value="<?= $categoria['id_categoria'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
                         <?php endforeach; ?>
@@ -35,40 +35,40 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="precio"><?= htmlspecialchars(t('price'), ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <label for="precio"><?= htmlspecialchars('Precio', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <input type="number" id="precio" name="precio" step="0.01" required placeholder="0.00">
                 </div>
 
                 <div class="form-group">
-                    <label for="stock"><?= htmlspecialchars(t('stock'), ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <label for="stock"><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <input type="number" id="stock" name="stock" required placeholder="0">
                 </div>
 
                 <div class="form-group">
-                    <label for="estado"><?= htmlspecialchars(t('status'), ENT_QUOTES, 'UTF-8') ?> *</label>
+                    <label for="estado"><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="estado" name="estado" required>
-                        <option value="1" selected><?= htmlspecialchars(t('active'), ENT_QUOTES, 'UTF-8') ?></option>
-                        <option value="0"><?= htmlspecialchars(t('inactive'), ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="1" selected><?= htmlspecialchars('Activo', ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="0"><?= htmlspecialchars('Inactivo', ENT_QUOTES, 'UTF-8') ?></option>
                     </select>
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="descripcion"><?= htmlspecialchars(t('description'), ENT_QUOTES, 'UTF-8') ?></label>
-                    <textarea id="descripcion" name="descripcion" rows="4" placeholder="<?= htmlspecialchars(t('product_description_placeholder'), ENT_QUOTES, 'UTF-8') ?>"></textarea>
+                    <label for="descripcion"><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?></label>
+                    <textarea id="descripcion" name="descripcion" rows="4" placeholder="<?= htmlspecialchars('Descripcion del producto', ENT_QUOTES, 'UTF-8') ?>"></textarea>
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="imagenes"><?= htmlspecialchars(t('product_images'), ENT_QUOTES, 'UTF-8') ?></label>
+                    <label for="imagenes"><?= htmlspecialchars('Imagenes del producto', ENT_QUOTES, 'UTF-8') ?></label>
                     <div class="upload-area" id="uploadArea">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <p><?= htmlspecialchars(t('upload_images_hint'), ENT_QUOTES, 'UTF-8') ?></p>
+                        <p><?= htmlspecialchars('Arrastra o haz clic para subir imagenes', ENT_QUOTES, 'UTF-8') ?></p>
                         <input type="file" id="imagenes" name="imagenes[]" multiple accept="image/jpeg,image/png,image/jpg" style="display: none;">
                         <button type="button" class="btn-upload">
-                            <?= htmlspecialchars(t('select'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars('Seleccionar', ENT_QUOTES, 'UTF-8') ?>
                         </button>
                     </div>
                     <div id="previewImages" class="preview-grid"></div>
-                    <small class="form-help"><?= htmlspecialchars(t('upload_formats_hint'), ENT_QUOTES, 'UTF-8') ?></small>
+                    <small class="form-help"><?= htmlspecialchars('Formatos permitidos: JPG, PNG. Tamano maximo: 5MB por imagen', ENT_QUOTES, 'UTF-8') ?></small>
                 </div>
             </div>
 
@@ -76,7 +76,7 @@
                 <button type="submit" class="btn-guardar">
                     <i class="fas fa-save"></i> Guardar Producto
                 </button>
-                <a href="index.php?action=productos" class="btn-cancelar"><?= htmlspecialchars(t('cancel'), ENT_QUOTES, 'UTF-8') ?></a>
+                <a href="index.php?action=productos" class="btn-cancelar"><?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
         </form>
     </div>
@@ -357,7 +357,7 @@
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                const div = document.createElement('div');
+                const div = document.createElemen'div';
                 div.className = 'preview-item';
                 div.innerHTML = `
                     <img src="${event.target.result}" alt="Vista previa">
@@ -372,7 +372,7 @@
     // Eliminar vista previa y el archivo del array
     preview.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-img')) {
-            const item = e.target.closest('.preview-item');
+            const item = e.target.closes'.preview-item';
             const index = Array.from(preview.children).indexOf(item);
             
             // Eliminar del array acumulador

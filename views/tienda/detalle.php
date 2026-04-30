@@ -415,17 +415,17 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                 <path d="M19 12H5"></path>
                 <path d="m11 18-6-6 6-6"></path>
             </svg>
-            <?= htmlspecialchars(t('back_to_products'), ENT_QUOTES, 'UTF-8') ?>
+            <?= htmlspecialchars('Volver a productos', ENT_QUOTES, 'UTF-8') ?>
         </a>
 
         <div class="detail-grid">
             <section class="detail-gallery">
                 <div class="detail-gallery-stage">
                     <?php if (count($imagenesProducto) > 1): ?>
-                        <button class="detail-gallery-nav prev" type="button" onclick="changeImage(-1)" aria-label="<?= htmlspecialchars(t('previous_image'), ENT_QUOTES, 'UTF-8') ?>">
+                        <button class="detail-gallery-nav prev" type="button" onclick="changeImage(-1)" aria-label="<?= htmlspecialchars('Imagen anterior', ENT_QUOTES, 'UTF-8') ?>">
                             <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>
                         </button>
-                        <button class="detail-gallery-nav next" type="button" onclick="changeImage(1)" aria-label="<?= htmlspecialchars(t('next_image'), ENT_QUOTES, 'UTF-8') ?>">
+                        <button class="detail-gallery-nav next" type="button" onclick="changeImage(1)" aria-label="<?= htmlspecialchars('Imagen siguiente', ENT_QUOTES, 'UTF-8') ?>">
                             <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
                         </button>
                     <?php endif; ?>
@@ -446,7 +446,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                     <circle cx="9" cy="10" r="1.5"></circle>
                                     <path d="M21 16 16 11 5 19"></path>
                                 </svg>
-                                <span><?= htmlspecialchars(t('product_no_images'), ENT_QUOTES, 'UTF-8') ?></span>
+                                <span><?= htmlspecialchars('Este producto aun no tiene imagenes cargadas.', ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -461,7 +461,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                 type="button"
                                 onclick="setMainImage(this, 'image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>')"
                             >
-                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="<?= htmlspecialchars(sprintf(t('image_number_of'), $index + 1, $producto['nombre']), ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
+                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="<?= htmlspecialchars(sprintf('Imagen %s de %s', $index + 1, $producto['nombre']), ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
                             </button>
                         <?php endforeach; ?>
                     </div>
@@ -469,9 +469,9 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
             </section>
 
             <aside class="detail-info">
-                <div class="detail-category"><?= htmlspecialchars(t_category((string) ($producto['categoria_nombre'] ?? t('product'))), ENT_QUOTES, 'UTF-8') ?></div>
-                <h1 class="detail-title"><?= htmlspecialchars($producto['nombre'] ?? t('product'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="detail-subline"><?= htmlspecialchars(t('product_detail_intro'), ENT_QUOTES, 'UTF-8') ?></p>
+                <div class="detail-category"><?= htmlspecialchars((string) ($producto['categoria_nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8') ?></div>
+                <h1 class="detail-title"><?= htmlspecialchars($producto['nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="detail-subline"><?= htmlspecialchars('Explora todas las imagenes, revisa disponibilidad y consulta los detalles del producto.', ENT_QUOTES, 'UTF-8') ?></p>
 
                 <div class="detail-meta">
                     <span class="detail-chip">
@@ -481,7 +481,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                             <path d="M9 17h4"></path>
                             <path d="M5 4h14v16H5z"></path>
                         </svg>
-                        <?= htmlspecialchars(t('code'), ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($producto['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>
+                        <?= htmlspecialchars('Codigo', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($producto['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                     </span>
                     <span class="detail-chip <?= ($producto['stock_p'] ?? 0) <= 4 ? 'low' : '' ?>">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -493,7 +493,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                 <path d="m5 12 5 5L20 7"></path>
                             <?php endif; ?>
                         </svg>
-                        <?= ($producto['stock_p'] ?? 0) <= 4 ? htmlspecialchars(t('stock_low'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('available'), ENT_QUOTES, 'UTF-8') ?>: <?= (int)($producto['stock_p'] ?? 0) ?> <?= htmlspecialchars(t('units'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= ($producto['stock_p'] ?? 0) <= 4 ? htmlspecialchars('Stock bajo', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Disponible', ENT_QUOTES, 'UTF-8') ?>: <?= (int)($producto['stock_p'] ?? 0) ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?>
                     </span>
                 </div>
 
@@ -503,8 +503,8 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                 </div>
 
                 <div class="detail-description">
-                    <h2><?= htmlspecialchars(t('description'), ENT_QUOTES, 'UTF-8') ?></h2>
-                    <p><?= !empty($producto['descripcion']) ? nl2br(htmlspecialchars($producto['descripcion'], ENT_QUOTES, 'UTF-8')) : htmlspecialchars(t('no_description'), ENT_QUOTES, 'UTF-8') ?></p>
+                    <h2><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?></h2>
+                    <p><?= !empty($producto['descripcion']) ? nl2br(htmlspecialchars($producto['descripcion'], ENT_QUOTES, 'UTF-8')) : htmlspecialchars('Este producto no tiene una descripcion registrada todavia.', ENT_QUOTES, 'UTF-8') ?></p>
                 </div>
 
                 <div class="detail-cart-row">
@@ -526,11 +526,11 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                 <circle cx="18" cy="20" r="1"></circle>
                                 <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                             </svg>
-                            <span id="detail-add-label"><?= $enLimite ? htmlspecialchars(t('limit_reached'), ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars(t('add_more'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('add_to_cart'), ENT_QUOTES, 'UTF-8')) ?></span>
+                            <span id="detail-add-label"><?= $enLimite ? htmlspecialchars('Limite alcanzado', ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars('Agregar mas', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Agregar al carrito', ENT_QUOTES, 'UTF-8')) ?></span>
                         </button>
                     <?php else: ?>
                         <button class="detail-add-btn" type="button" onclick="location.href='index.php?action=login'">
-                            <?= htmlspecialchars(t('login_to_buy'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars('Inicia sesion para comprar', ENT_QUOTES, 'UTF-8') ?>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -541,7 +541,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                             <path d="M19 12H5"></path>
                             <path d="m11 18-6-6 6-6"></path>
                         </svg>
-                        <?= $usuarioLogueado ? htmlspecialchars(t('continue_shopping'), ENT_QUOTES, 'UTF-8') : htmlspecialchars(t('continue_viewing'), ENT_QUOTES, 'UTF-8') ?>
+                        <?= $usuarioLogueado ? htmlspecialchars('Seguir comprando', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Seguir viendo', ENT_QUOTES, 'UTF-8') ?>
                     </a>
                     <?php if($usuarioLogueado): ?>
                         <a class="detail-action secondary" href="index.php?action=verCarrito">
@@ -550,7 +550,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                 <circle cx="18" cy="20" r="1"></circle>
                                 <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.7L21 7H7"></path>
                             </svg>
-                            <?= htmlspecialchars(t('go_to_cart'), ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars('Ir al carrito', ENT_QUOTES, 'UTF-8') ?>
                         </a>
                     <?php endif; ?>
                 </div>
@@ -561,7 +561,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
 
 <div class="detail-lightbox" id="detail-lightbox" onclick="closeLightbox(event)">
     <?php if ($imagenPrincipal): ?>
-        <button class="detail-lightbox-close" type="button" aria-label="<?= htmlspecialchars(t('close_expanded_view'), ENT_QUOTES, 'UTF-8') ?>" onclick="closeLightbox(event)">&times;</button>
+        <button class="detail-lightbox-close" type="button" aria-label="<?= htmlspecialchars('Cerrar vista ampliada', ENT_QUOTES, 'UTF-8') ?>" onclick="closeLightbox(event)">&times;</button>
         <img id="detail-lightbox-image" src="image.php?folder=productos&path=<?= urlencode($imagenPrincipal) ?>" alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
     <?php endif; ?>
 </div>
@@ -576,11 +576,11 @@ let galleryIndex = 0;
 const detailStock = <?= $stockProducto ?>;
 let detailCartQty = <?= $cantidadEnCarrito ?>;
 const i18n = {
-    limitReached: <?= json_encode(t('limit_reached')) ?>,
-    addMore: <?= json_encode(t('add_more')) ?>,
-    addToCart: <?= json_encode(t('add_to_cart')) ?>,
-    adding: <?= json_encode(t('adding')) ?>,
-    cartAddError: <?= json_encode(t('cart_add_error')) ?>
+    limitReached: <?= json_encode('Limite alcanzado') ?>,
+    addMore: <?= json_encode('Agregar mas') ?>,
+    addToCart: <?= json_encode('Agregar al carrito') ?>,
+    adding: <?= json_encode('Agregando') ?>,
+    cartAddError: <?= json_encode('No se pudo agregar al carrito') ?>
 };
 
 function setMainImage(button, src) {

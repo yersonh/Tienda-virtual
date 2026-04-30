@@ -116,21 +116,21 @@ body[data-theme="light"] {
     <div class="card-inicio">
 
         <h1>
-            <?= htmlspecialchars(t('welcome_title'), ENT_QUOTES, 'UTF-8') ?>
+            <?= htmlspecialchars('Bienvenido a NAYLEX Store', ENT_QUOTES, 'UTF-8') ?>
         </h1>
 
         <p>
-            <?= htmlspecialchars(t('welcome_subtitle'), ENT_QUOTES, 'UTF-8') ?>
+            <?= htmlspecialchars('Selecciona una opcion del menu para comenzar.', ENT_QUOTES, 'UTF-8') ?>
         </p>
 
         <div class="botones">
 
             <a href="index.php?action=tienda" class="btn-azul">
-                <?= htmlspecialchars(t('view_products'), ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars('Ver productos', ENT_QUOTES, 'UTF-8') ?>
             </a>
 
             <a href="#" class="btn-verde">
-                <?= htmlspecialchars(t('my_orders'), ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?>
             </a>
 
         </div>

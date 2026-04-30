@@ -187,12 +187,12 @@ body[data-theme="light"],
     <div class="resume-shell">
         <div class="resume-head">
             <div>
-                <h1 class="resume-title"><?= htmlspecialchars(t('summary'), ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="resume-sub"><?= htmlspecialchars(t('review_products'), ENT_QUOTES, 'UTF-8') ?></p>
+                <h1 class="resume-title"><?= htmlspecialchars('Resumen', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="resume-sub"><?= htmlspecialchars('Verifica tus productos antes de continuar.', ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <a href="index.php?action=verCarrito" class="btn-back">
                 <i class="fas fa-arrow-left"></i>
-                <?= htmlspecialchars(t('back'), ENT_QUOTES, 'UTF-8') ?>
+                <?= htmlspecialchars('Volver', ENT_QUOTES, 'UTF-8') ?>
             </a>
         </div>
 
@@ -204,8 +204,8 @@ body[data-theme="light"],
                             <div>
                                 <div class="resume-product"><?= htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') ?></div>
                                 <div class="resume-meta">
-                                    <span class="resume-chip"><?= htmlspecialchars(t('price'), ENT_QUOTES, 'UTF-8') ?>: $<?= number_format((float) $item['precio']) ?></span>
-                                    <span class="resume-chip"><?= htmlspecialchars(t('quantity'), ENT_QUOTES, 'UTF-8') ?>: <?= (int) $item['cantidad'] ?></span>
+                                    <span class="resume-chip"><?= htmlspecialchars('Precio', ENT_QUOTES, 'UTF-8') ?>: $<?= number_format((float) $item['precio']) ?></span>
+                                    <span class="resume-chip"><?= htmlspecialchars('Cantidad', ENT_QUOTES, 'UTF-8') ?>: <?= (int) $item['cantidad'] ?></span>
                                 </div>
                             </div>
                             <div class="resume-price">$<?= number_format((float) $item['subtotal']) ?></div>
@@ -215,21 +215,21 @@ body[data-theme="light"],
             </section>
 
             <aside class="resume-summary">
-                <h2 class="summary-title"><?= htmlspecialchars(t('summary'), ENT_QUOTES, 'UTF-8') ?></h2>
+                <h2 class="summary-title"><?= htmlspecialchars('Resumen', ENT_QUOTES, 'UTF-8') ?></h2>
                 <div class="summary-row">
-                    <span><?= htmlspecialchars(t('subtotal'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Subtotal', ENT_QUOTES, 'UTF-8') ?></span>
                     <strong>$<?= number_format((float) ($resumenCompra['subtotal'] ?? 0)) ?> COP</strong>
                 </div>
                 <div class="summary-row">
-                    <span><?= htmlspecialchars(t('vat'), ENT_QUOTES, 'UTF-8') ?> 19%</span>
+                    <span><?= htmlspecialchars('IVA', ENT_QUOTES, 'UTF-8') ?> 19%</span>
                     <strong>$<?= number_format((float) ($resumenCompra['iva'] ?? 0)) ?> COP</strong>
                 </div>
                 <div class="summary-row">
-                    <span><?= htmlspecialchars(t('shipping'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span>
                     <strong>$<?= number_format((float) ($resumenCompra['envio'] ?? 0)) ?> COP</strong>
                 </div>
                 <div class="summary-row summary-total">
-                    <span><?= htmlspecialchars(t('total'), ENT_QUOTES, 'UTF-8') ?></span>
+                    <span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span>
                     <strong>$<?= number_format((float) ($resumenCompra['total'] ?? $total)) ?> COP</strong>
                 </div>
 
@@ -237,7 +237,7 @@ body[data-theme="light"],
 
                 <a href="index.php?action=ConfirmarPedido" class="btn-resume">
                     <i class="fas fa-lock"></i>
-                    <?= htmlspecialchars(t('continue_purchase'), ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars('Continuar compra', ENT_QUOTES, 'UTF-8') ?>
                 </a>
             </aside>
         </div>
