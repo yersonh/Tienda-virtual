@@ -840,9 +840,63 @@ function normalizeCity(city) {
 
 function calcularEnvio(ciudad) {
     const normalized = normalizeCity(ciudad);
-    if (normalized === 'bogota') return 10000;
-    if (normalized === 'medellin') return 12000;
-    return normalized ? 15000 : 0;
+    const tarifas = {
+        villavicencio: 2000,
+        'puerto lopez': 8000,
+        granada: 10000,
+        'san jose del guaviare': 14000,
+        yopal: 14000,
+        bogota: 10000,
+        soacha: 10000,
+        chia: 11000,
+        mosquera: 11000,
+        facatativa: 12000,
+        zipaquira: 12000,
+        fusagasuga: 12000,
+        girardot: 13000,
+        tunja: 14000,
+        duitama: 14000,
+        sogamoso: 15000,
+        ibague: 15000,
+        neiva: 16000,
+        arauca: 18000,
+        'puerto carreno': 22000,
+        medellin: 18000,
+        itagui: 18000,
+        envigado: 18000,
+        bello: 18000,
+        rionegro: 19000,
+        floridablanca: 19000,
+        giron: 19000,
+        bucaramanga: 19000,
+        pereira: 19000,
+        armenia: 19000,
+        cartago: 19000,
+        manizales: 20000,
+        cali: 20000,
+        palmira: 20000,
+        tulua: 21000,
+        popayan: 22000,
+        buenaventura: 23000,
+        pasto: 24000,
+        tumaco: 26000,
+        monteria: 23000,
+        sincelejo: 23000,
+        cartagena: 24000,
+        barranquilla: 24000,
+        'santa marta': 25000,
+        valledupar: 25000,
+        riohacha: 26000,
+        ocana: 22000,
+        cucuta: 23000,
+        apartado: 26000,
+        quibdo: 28000,
+        florencia: 24000,
+        mitu: 32000,
+        leticia: 35000
+    };
+
+    return normalized ? (tarifas[normalized] ?? 15000) : 0;
 }
 
 function formatCOP(value) {

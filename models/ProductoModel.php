@@ -202,7 +202,8 @@ class ProductoModel {
         oci_bind_by_name($stmt, ':nombre', $datos['nombre']);
         oci_bind_by_name($stmt, ':codigo', $datos['codigo'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
-        oci_bind_by_name($stmt, ':precio', $datos['precio'], -1, SQLT_FLT);
+        $precio = number_format((float) $datos['precio'], 2, '.', '');
+        oci_bind_by_name($stmt, ':precio', $precio, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':estado', $estado);
         oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
@@ -247,7 +248,8 @@ class ProductoModel {
         oci_bind_by_name($stmt, ':nombre', $datos['nombre']);
         oci_bind_by_name($stmt, ':codigo', $datos['codigo'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
-        oci_bind_by_name($stmt, ':precio', $datos['precio'], -1, SQLT_FLT);
+        $precio = number_format((float) $datos['precio'], 2, '.', '');
+        oci_bind_by_name($stmt, ':precio', $precio, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':estado', $estado);
         oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);

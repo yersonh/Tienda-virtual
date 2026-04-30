@@ -452,44 +452,6 @@ body[data-theme="light"] {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 25px rgba(0,0,0,0.26);
 }
 
-.model-preview {
-    display: grid;
-    place-items: center;
-    min-height: 340px;
-    border-radius: 14px;
-    background:
-        radial-gradient(circle at 24% 20%, rgba(56,189,248,0.22), transparent 28%),
-        linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.72));
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07), 0 10px 25px rgba(0,0,0,0.22);
-    overflow: hidden;
-}
-
-[data-theme="light"] .model-preview {
-    background:
-        radial-gradient(circle at 24% 20%, rgba(14,165,233,0.18), transparent 28%),
-        linear-gradient(135deg, #e0f2fe, #f8fafc);
-}
-
-.model-load {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    padding: 12px 18px;
-    border: 0;
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--inicio-accent), var(--inicio-accent-strong));
-    color: #ffffff;
-    font-weight: 800;
-    box-shadow: 0 12px 28px rgba(37,99,235,0.28);
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.model-load:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 34px rgba(37,99,235,0.36);
-}
-
 @media (max-width: 980px) {
     .best-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -587,36 +549,40 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Car Engine</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>V8 Engine</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>V8 Twin Turbo</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Brake Disc</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
@@ -629,18 +595,20 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Tractor Wheel</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Full Tractor Wheel</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
@@ -653,18 +621,20 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Ford Mustang 1965</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Old Farm Tractor</h5>
-            <div class="model-preview" data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed">
-              <button class="model-load" type="button"><i class="fas fa-cube"></i> Cargar modelo 3D</button>
-            </div>
+            <iframe class="sketchfab-frame" loading="lazy"
+              src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowfullscreen></iframe>
           </div>
         </div>
 
@@ -722,34 +692,5 @@ body[data-theme="light"] {
     </section>
 
 </div>
-
-<script>
-document.querySelectorAll('.model-preview').forEach((preview) => {
-    const button = preview.querySelector('.model-load');
-    if (!button) {
-        return;
-    }
-
-    button.addEventListener('click', () => {
-        const src = preview.dataset.src;
-        if (!src) {
-            return;
-        }
-
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
-
-        const iframe = document.createElement('iframe');
-        iframe.className = 'sketchfab-frame';
-        iframe.loading = 'lazy';
-        iframe.src = src;
-        iframe.title = preview.closest('.model-card')?.querySelector('h5')?.textContent || 'Modelo 3D';
-        iframe.allow = 'autoplay; fullscreen; xr-spatial-tracking';
-        iframe.allowFullscreen = true;
-
-        preview.replaceWith(iframe);
-    });
-});
-</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
