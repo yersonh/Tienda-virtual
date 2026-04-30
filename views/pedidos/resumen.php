@@ -1,4 +1,9 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+<?php
+require_once __DIR__ . '/../helpers/entrega.php';
+require_once __DIR__ . '/../layouts/navbar.php';
+$fechaEstimadaResumen = $fechaEstimadaResumen ?? ($_SESSION['pedido_confirmado']['fecha_estimada_entrega'] ?? null);
+renderEntregaStyles();
+?>
 
 <main class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,6 +42,8 @@
             </tfoot>
         </table>
     </div>
+
+    <?php renderEntregaBox($fechaEstimadaResumen); ?>
 
     <div class="d-flex justify-content-end mt-4">
         <a href="index.php?action=ConfirmarPedido" class="btn btn-success btn-lg">Continuar</a>

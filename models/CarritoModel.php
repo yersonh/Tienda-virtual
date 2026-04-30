@@ -329,26 +329,32 @@ class CarritoModel {
 
     public function vaciarCarrito($idUsuario) {
         try {
-            [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-            $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
-
-            $query = "DELETE FROM DETALLE_CARRITO
-                      WHERE ID_CARRITO = :ID_CARRITO";
-
-            $stmt = oci_parse($this->conn, $query);
-            oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
-
-            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-                throw new Exception($this->oracleErrorMessage($stmt));
-            }
-
-            oci_free_statement($stmt);
+            $this->vaciarCarritoTx($idUsuario);
             oci_commit($this->conn);
             return $this->success();
         } catch (Exception $e) {
             oci_rollback($this->conn);
             return $this->failure($e->getMessage());
         }
+    }
+
+    public function vaciarCarritoTx($idUsuario): void {
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+        $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
+
+        $query = "DELETE FROM DETALLE_CARRITO
+                  WHERE ID_CARRITO = :ID_CARRITO";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error);
+        }
+
+        oci_free_statement($stmt);
     }
 
     public function obtenerMapaCarritoUsuario($idUsuario) {

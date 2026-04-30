@@ -435,6 +435,8 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                 id="detail-current-image"
                                 src="image.php?folder=productos&path=<?= urlencode($imagenPrincipal) ?>"
                                 alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                                loading="eager"
+                                decoding="async"
                                 onclick="openLightbox()"
                             >
                         <?php else: ?>
@@ -459,7 +461,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                                 type="button"
                                 onclick="setMainImage(this, 'image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>')"
                             >
-                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Imagen <?= $index + 1 ?> de <?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Imagen <?= $index + 1 ?> de <?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
                             </button>
                         <?php endforeach; ?>
                     </div>
@@ -560,7 +562,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
 <div class="detail-lightbox" id="detail-lightbox" onclick="closeLightbox(event)">
     <?php if ($imagenPrincipal): ?>
         <button class="detail-lightbox-close" type="button" aria-label="Cerrar vista ampliada" onclick="closeLightbox(event)">&times;</button>
-        <img id="detail-lightbox-image" src="image.php?folder=productos&path=<?= urlencode($imagenPrincipal) ?>" alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+        <img id="detail-lightbox-image" src="image.php?folder=productos&path=<?= urlencode($imagenPrincipal) ?>" alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
     <?php endif; ?>
 </div>
 

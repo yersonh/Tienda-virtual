@@ -327,7 +327,7 @@ class CarritoController {
         $this->ensureSession();
 
         $id = (int) ($_POST['id_producto'] ?? 0);
-        $cantidad = max(1, (int) ($_POST['cantidad'] ?? 1));
+        $cantidad = max(0, (int) ($_POST['cantidad'] ?? 1));
         $idUsuario = $this->getUsuarioId();
         $producto = $this->productoModel->obtenerPorId($id);
 
@@ -344,7 +344,7 @@ class CarritoController {
         }
 
         $stockDisponible = max(0, (int) ($producto['stock_p'] ?? 0));
-        if ($stockDisponible <= 0) {
+        if ($cantidad <= 0 || $stockDisponible <= 0) {
             if ($idUsuario > 0) {
                 $this->carritoModel->eliminarProducto($idUsuario, $id);
             } else {

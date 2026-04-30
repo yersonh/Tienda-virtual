@@ -8,42 +8,115 @@ class DireccionPedidoModel {
         $this->conn = $conn;
     }
 
-    private function normalizarFila(array $row): array {
-        return array_change_key_case($row, CASE_LOWER);
-    }
-
     private function ensureSession(): void {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
     }
 
-    private function cacheKey(int $idUsuario): string {
-        return (string) $idUsuario;
+    private function normalizarFila(array $row): array {
+        $data = array_change_key_case($row, CASE_LOWER);
+
+        if (isset($data['id_direccion'])) {
+            $data['id_direccion_pedido'] = $data['id_direccion'];
+        }
+        if (isset($data['nombre'])) {
+            $data['nombre_receptor'] = $data['nombre'];
+        }
+        if (isset($data['apellido'])) {
+            $data['apellido_receptor'] = $data['apellido'];
+        }
+        if (isset($data['direccion'])) {
+            $data['direccion_envio'] = $data['direccion'];
+        }
+        if (isset($data['telefono'])) {
+            $data['telefono_receptor'] = $data['telefono'];
+        }
+        if (isset($data['telefono_alt'])) {
+            $data['telefono_alterno'] = $data['telefono_alt'];
+        }
+        if (isset($data['info_adicional'])) {
+            $data['informacion_adicional'] = $data['info_adicional'];
+        }
+
+        $data['es_predeterminada'] = (int) ($data['es_predeterminada'] ?? 0);
+
+        return $data;
+    }
+
+    private function limpiarCache(int $idUsuario): void {
+        $this->ensureSession();
+        unset($_SESSION['direcciones'], $_SESSION['direcciones_usuario_id']);
+    }
+
+    private function validarDireccion(array $data): array {
+        $idUsuario = (int) ($data['id_usuario'] ?? 0);
+        $nombre = trim($data['nombre_receptor'] ?? $data['nombre'] ?? '');
+        $apellido = trim($data['apellido_receptor'] ?? $data['apellido'] ?? '');
+        $direccion = trim($data['direccion_envio'] ?? $data['direccion'] ?? '');
+        $ciudad = trim($data['ciudad'] ?? '');
+        $barrio = trim($data['barrio'] ?? '');
+        $telefono = preg_replace('/\D/', '', (string) ($data['telefono_receptor'] ?? $data['telefono'] ?? ''));
+        $telefonoAlt = preg_replace('/\D/', '', (string) ($data['telefono_alterno'] ?? $data['telefono_alt'] ?? ''));
+        $info = trim($data['informacion_adicional'] ?? $data['info_adicional'] ?? '');
+        $predeterminada = !empty($data['es_predeterminada']) ? 1 : 0;
+
+        if ($idUsuario <= 0 || $nombre === '' || $apellido === '' || $direccion === '' || $ciudad === '' || $barrio === '' || $telefono === '') {
+            throw new InvalidArgumentException('Todos los campos de direccion son obligatorios');
+        }
+
+        return compact('idUsuario', 'nombre', 'apellido', 'direccion', 'ciudad', 'barrio', 'telefono', 'telefonoAlt', 'info', 'predeterminada');
+    }
+
+    private function usuarioTieneDirecciones(int $idUsuario): bool {
+        $query = "SELECT COUNT(*) AS TOTAL
+                  FROM DIRECCION_USUARIO
+                  WHERE ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return (int) ($row['TOTAL'] ?? 0) > 0;
+    }
+
+    private function quitarPredeterminada(int $idUsuario): void {
+        $query = "UPDATE DIRECCION_USUARIO
+                  SET ES_PREDETERMINADA = 0
+                  WHERE ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            error_log($error['message'] ?? 'No se pudo actualizar la direccion predeterminada');
+            throw new Exception('No se pudo actualizar la direccion predeterminada');
+        }
+
+        oci_free_statement($stmt);
     }
 
     public function obtenerDirecciones($idUsuario): array {
         $idUsuario = (int) $idUsuario;
         $this->ensureSession();
 
-        if (isset($_SESSION['direcciones'][$this->cacheKey($idUsuario)]) && is_array($_SESSION['direcciones'][$this->cacheKey($idUsuario)])) {
-            return $_SESSION['direcciones'][$this->cacheKey($idUsuario)];
+        if (
+            isset($_SESSION['direcciones'], $_SESSION['direcciones_usuario_id'])
+            && (int) $_SESSION['direcciones_usuario_id'] === $idUsuario
+            && is_array($_SESSION['direcciones'])
+        ) {
+            return $_SESSION['direcciones'];
         }
 
-        $query = "SELECT ID_DIRECCION_PEDIDO,
-                         ID_USUARIO,
-                         NOMBRE_RECEPTOR,
-                         APELLIDO_RECEPTOR,
-                         DIRECCION_ENVIO,
-                         CIUDAD,
-                         BARRIO,
-                         TELEFONO_RECEPTOR,
-                         TELEFONO_ALTERNO,
-                         INFORMACION_ADICIONAL,
-                         NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA
-                  FROM DIRECCION_PEDIDO
+        $query = "SELECT *
+                  FROM DIRECCION_USUARIO
                   WHERE ID_USUARIO = :id_usuario
-                  ORDER BY NVL(ES_PREDETERMINADA, 0) DESC, ID_DIRECCION_PEDIDO DESC";
+                  ORDER BY ES_PREDETERMINADA DESC, ID_DIRECCION DESC";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
@@ -55,193 +128,358 @@ class DireccionPedidoModel {
         }
 
         oci_free_statement($stmt);
-
-        $_SESSION['direcciones'][$this->cacheKey($idUsuario)] = $direcciones;
+        $_SESSION['direcciones'] = $direcciones;
+        $_SESSION['direcciones_usuario_id'] = $idUsuario;
 
         return $direcciones;
     }
 
-    public function guardarDireccion($data): array {
-        $idUsuario = (int) ($data['id_usuario'] ?? 0);
-        $nombre = trim($data['nombre_receptor'] ?? $data['nombre'] ?? '');
-        $apellido = trim($data['apellido_receptor'] ?? $data['apellido'] ?? '');
-        $direccion = trim($data['direccion_envio'] ?? $data['direccion'] ?? '');
-        $ciudad = trim($data['ciudad'] ?? '');
-        $barrio = trim($data['barrio'] ?? '');
-        $telefono = preg_replace('/\D/', '', (string) ($data['telefono_receptor'] ?? $data['telefono'] ?? ''));
-        $telefonoAlterno = preg_replace('/\D/', '', (string) ($data['telefono_alterno'] ?? ''));
-        $informacionAdicional = trim($data['informacion_adicional'] ?? '');
-        $quierePredeterminada = !empty($data['es_predeterminada']);
+    public function obtenerDireccionPorId($idDireccion, $idUsuario = null): ?array {
+        $idDireccion = (int) $idDireccion;
+        $idUsuario = $idUsuario !== null ? (int) $idUsuario : null;
 
-        if ($idUsuario <= 0 || $nombre === '' || $apellido === '' || $direccion === '' || $ciudad === '' || $barrio === '' || $telefono === '') {
-            return ['success' => false, 'message' => 'Todos los campos de direccion son obligatorios'];
-        }
-
-        $esPredeterminada = ($quierePredeterminada || !$this->usuarioTieneDirecciones($idUsuario)) ? 1 : 0;
-
-        try {
-            if ($esPredeterminada === 1) {
-                $this->quitarPredeterminada($idUsuario);
-            }
-
-            $query = "INSERT INTO DIRECCION_PEDIDO
-                        (ID_USUARIO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, INFORMACION_ADICIONAL, ES_PREDETERMINADA)
-                      VALUES
-                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono_alt, :telefono_alterno, :info, :predeterminada)";
-
-            $stmt = oci_parse($this->conn, $query);
-
-            oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':nombre', $nombre);
-            oci_bind_by_name($stmt, ':apellido', $apellido);
-            oci_bind_by_name($stmt, ':direccion', $direccion);
-            oci_bind_by_name($stmt, ':ciudad', $ciudad);
-            oci_bind_by_name($stmt, ':barrio', $barrio);
-            oci_bind_by_name($stmt, ':telefono_alt', $telefono);
-            oci_bind_by_name($stmt, ':telefono_alterno', $telefonoAlterno);
-            oci_bind_by_name($stmt, ':info', $informacionAdicional);
-            oci_bind_by_name($stmt, ':predeterminada', $esPredeterminada, -1, SQLT_INT);
-
-            if (!@oci_execute($stmt)) {
-                $error = oci_error($stmt);
-                oci_free_statement($stmt);
-                return ['success' => false, 'message' => $error['message'] ?? 'No se pudo guardar la direccion'];
-            }
-
-            oci_free_statement($stmt);
-            $direccionGuardada = [
-                'id_direccion_pedido' => null,
-                'id_usuario' => $idUsuario,
-                'nombre_receptor' => $nombre,
-                'apellido_receptor' => $apellido,
-                'direccion_envio' => $direccion,
-                'ciudad' => $ciudad,
-                'barrio' => $barrio,
-                'telefono_receptor' => $telefono,
-                'telefono_alterno' => $telefonoAlterno,
-                'informacion_adicional' => $informacionAdicional,
-                'es_predeterminada' => $esPredeterminada
-            ];
-            unset($_SESSION['direcciones']);
-
-            return [
-                'success' => true,
-                'id_direccion' => null,
-                'direccion' => $direccionGuardada
-            ];
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-
-            return ['success' => false, 'message' => 'No se pudo guardar la direccion'];
-        }
-    }
-
-    public function obtenerDireccionPorId($id): ?array {
-        $id = (int) $id;
-        $this->ensureSession();
-
-        if (!empty($_SESSION['direcciones']) && is_array($_SESSION['direcciones'])) {
-            foreach ($_SESSION['direcciones'] as $direccionesUsuario) {
-                if (!is_array($direccionesUsuario)) {
-                    continue;
-                }
-
-                foreach ($direccionesUsuario as $direccion) {
-                    if ((int) ($direccion['id_direccion_pedido'] ?? 0) === $id) {
-                        return $direccion;
-                    }
-                }
-            }
-        }
-
-        $query = "SELECT ID_DIRECCION_PEDIDO,
+        $query = "SELECT ID_DIRECCION,
                          ID_USUARIO,
-                         NOMBRE_RECEPTOR,
-                         APELLIDO_RECEPTOR,
-                         DIRECCION_ENVIO,
+                         NOMBRE,
+                         APELLIDO,
+                         DIRECCION,
                          CIUDAD,
                          BARRIO,
-                         TELEFONO_RECEPTOR,
-                         TELEFONO_ALTERNO,
-                         INFORMACION_ADICIONAL,
-                         NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA
-                  FROM DIRECCION_PEDIDO
-                  WHERE ID_DIRECCION_PEDIDO = :id";
+                         TELEFONO,
+                         TELEFONO_ALT,
+                         INFO_ADICIONAL,
+                         NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA,
+                         CREATED_AT
+                  FROM DIRECCION_USUARIO
+                  WHERE ID_DIRECCION = :id_direccion";
+
+        if ($idUsuario !== null) {
+            $query .= " AND ID_USUARIO = :id_usuario";
+        }
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
-        oci_execute($stmt);
+        oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
+        if ($idUsuario !== null) {
+            oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        }
 
+        oci_execute($stmt);
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        if (!$row) {
-            return null;
-        }
-
-        $direccion = $this->normalizarFila($row);
-        $this->agregarDireccionACache((int) $direccion['id_usuario'], $direccion);
-
-        return $direccion;
+        return $row ? $this->normalizarFila($row) : null;
     }
 
-    private function quitarPredeterminada($idUsuario): void {
-        $query = "UPDATE DIRECCION_PEDIDO
-                  SET ES_PREDETERMINADA = 0
-                  WHERE ID_USUARIO = :id_usuario";
+    public function guardarDireccion($data): array {
+        try {
+            $d = $this->validarDireccion($data);
+            $d['predeterminada'] = ($d['predeterminada'] === 1 || !$this->usuarioTieneDirecciones($d['idUsuario'])) ? 1 : 0;
+
+            if ($d['predeterminada'] === 1) {
+                $this->quitarPredeterminada($d['idUsuario']);
+            }
+
+            $query = "INSERT INTO DIRECCION_USUARIO
+                        (ID_USUARIO, NOMBRE, APELLIDO, DIRECCION, CIUDAD, BARRIO, TELEFONO, TELEFONO_ALT, INFO_ADICIONAL, ES_PREDETERMINADA, CREATED_AT)
+                      VALUES
+                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alt, :info, :predeterminada, SYSDATE)
+                      RETURNING ID_DIRECCION INTO :id_direccion";
+
+            $stmt = oci_parse($this->conn, $query);
+            $idDireccion = null;
+
+            oci_bind_by_name($stmt, ':id_usuario', $d['idUsuario'], -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':nombre', $d['nombre']);
+            oci_bind_by_name($stmt, ':apellido', $d['apellido']);
+            oci_bind_by_name($stmt, ':direccion', $d['direccion']);
+            oci_bind_by_name($stmt, ':ciudad', $d['ciudad']);
+            oci_bind_by_name($stmt, ':barrio', $d['barrio']);
+            oci_bind_by_name($stmt, ':telefono', $d['telefono']);
+            oci_bind_by_name($stmt, ':telefono_alt', $d['telefonoAlt']);
+            oci_bind_by_name($stmt, ':info', $d['info']);
+            oci_bind_by_name($stmt, ':predeterminada', $d['predeterminada'], -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                oci_rollback($this->conn);
+                error_log($error['message'] ?? 'No se pudo guardar la direccion');
+                return ['success' => false, 'message' => 'No se pudo guardar la direccion'];
+            }
+
+            oci_free_statement($stmt);
+            oci_commit($this->conn);
+            $this->limpiarCache($d['idUsuario']);
+
+            $direccion = $this->normalizarFila([
+                'ID_DIRECCION' => (int) $idDireccion,
+                'ID_USUARIO' => $d['idUsuario'],
+                'NOMBRE' => $d['nombre'],
+                'APELLIDO' => $d['apellido'],
+                'DIRECCION' => $d['direccion'],
+                'CIUDAD' => $d['ciudad'],
+                'BARRIO' => $d['barrio'],
+                'TELEFONO' => $d['telefono'],
+                'TELEFONO_ALT' => $d['telefonoAlt'],
+                'INFO_ADICIONAL' => $d['info'],
+                'ES_PREDETERMINADA' => $d['predeterminada']
+            ]);
+
+            return [
+                'success' => true,
+                'id_direccion' => (int) $idDireccion,
+                'direccion' => $direccion
+            ];
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+
+            return ['success' => false, 'message' => $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo guardar la direccion'];
+        }
+    }
+
+    public function actualizarDireccion(int $idDireccion, int $idUsuario, array $data): array {
+        try {
+            $data['id_usuario'] = $idUsuario;
+            $d = $this->validarDireccion($data);
+
+            if (!$this->obtenerDireccionPorId($idDireccion, $idUsuario)) {
+                return ['success' => false, 'message' => 'La direccion no existe'];
+            }
+
+            if ($d['predeterminada'] === 1) {
+                $this->quitarPredeterminada($idUsuario);
+            }
+
+            $query = "UPDATE DIRECCION_USUARIO
+                      SET NOMBRE = :nombre,
+                          APELLIDO = :apellido,
+                          DIRECCION = :direccion,
+                          CIUDAD = :ciudad,
+                          BARRIO = :barrio,
+                          TELEFONO = :telefono,
+                          TELEFONO_ALT = :telefono_alt,
+                          INFO_ADICIONAL = :info,
+                          ES_PREDETERMINADA = CASE WHEN :predeterminada = 1 THEN 1 ELSE ES_PREDETERMINADA END
+                      WHERE ID_DIRECCION = :id_direccion
+                      AND ID_USUARIO = :id_usuario";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':nombre', $d['nombre']);
+            oci_bind_by_name($stmt, ':apellido', $d['apellido']);
+            oci_bind_by_name($stmt, ':direccion', $d['direccion']);
+            oci_bind_by_name($stmt, ':ciudad', $d['ciudad']);
+            oci_bind_by_name($stmt, ':barrio', $d['barrio']);
+            oci_bind_by_name($stmt, ':telefono', $d['telefono']);
+            oci_bind_by_name($stmt, ':telefono_alt', $d['telefonoAlt']);
+            oci_bind_by_name($stmt, ':info', $d['info']);
+            oci_bind_by_name($stmt, ':predeterminada', $d['predeterminada'], -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                oci_rollback($this->conn);
+                error_log($error['message'] ?? 'No se pudo actualizar la direccion');
+                return ['success' => false, 'message' => 'No se pudo actualizar la direccion'];
+            }
+
+            oci_free_statement($stmt);
+            oci_commit($this->conn);
+            $this->limpiarCache($idUsuario);
+
+            return [
+                'success' => true,
+                'direccion' => $this->obtenerDireccionPorId($idDireccion, $idUsuario)
+            ];
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+
+            return ['success' => false, 'message' => $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar la direccion'];
+        }
+    }
+
+    public function eliminarDireccion(int $idDireccion, int $idUsuario): array {
+        try {
+            $direccion = $this->obtenerDireccionPorId($idDireccion, $idUsuario);
+            if (!$direccion) {
+                return ['success' => false, 'message' => 'La direccion no existe'];
+            }
+
+            $queryCount = "SELECT COUNT(*) AS TOTAL
+                           FROM DIRECCION_USUARIO
+                           WHERE ID_USUARIO = :id_usuario";
+            $stmtCount = oci_parse($this->conn, $queryCount);
+            oci_bind_by_name($stmtCount, ':id_usuario', $idUsuario, -1, SQLT_INT);
+            oci_execute($stmtCount);
+            $rowCount = oci_fetch_assoc($stmtCount);
+            oci_free_statement($stmtCount);
+
+            if ((int) ($rowCount['TOTAL'] ?? 0) <= 1) {
+                return ['success' => false, 'message' => 'No puedes eliminar tu unica direccion'];
+            }
+
+            $queryDelete = "DELETE FROM DIRECCION_USUARIO
+                            WHERE ID_DIRECCION = :id_direccion
+                            AND ID_USUARIO = :id_usuario";
+            $stmtDelete = oci_parse($this->conn, $queryDelete);
+            oci_bind_by_name($stmtDelete, ':id_direccion', $idDireccion, -1, SQLT_INT);
+            oci_bind_by_name($stmtDelete, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+            if (!@oci_execute($stmtDelete, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmtDelete);
+                oci_free_statement($stmtDelete);
+                oci_rollback($this->conn);
+                error_log($error['message'] ?? 'No se pudo eliminar la direccion');
+                return ['success' => false, 'message' => 'No se pudo eliminar la direccion'];
+            }
+            oci_free_statement($stmtDelete);
+
+            if ((int) $direccion['es_predeterminada'] === 1) {
+                $queryDefault = "UPDATE DIRECCION_USUARIO
+                                 SET ES_PREDETERMINADA = 1
+                                 WHERE ID_DIRECCION = (
+                                     SELECT MIN(ID_DIRECCION)
+                                     FROM DIRECCION_USUARIO
+                                     WHERE ID_USUARIO = :id_usuario
+                                 )";
+                $stmtDefault = oci_parse($this->conn, $queryDefault);
+                oci_bind_by_name($stmtDefault, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+                if (!@oci_execute($stmtDefault, OCI_NO_AUTO_COMMIT)) {
+                    $error = oci_error($stmtDefault);
+                    oci_free_statement($stmtDefault);
+                    oci_rollback($this->conn);
+                    error_log($error['message'] ?? 'No se pudo asignar una direccion predeterminada');
+                    return ['success' => false, 'message' => 'No se pudo asignar una direccion predeterminada'];
+                }
+                oci_free_statement($stmtDefault);
+            }
+
+            oci_commit($this->conn);
+            $this->limpiarCache($idUsuario);
+
+            return [
+                'success' => true,
+                'direcciones' => $this->obtenerDirecciones($idUsuario)
+            ];
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+
+            return ['success' => false, 'message' => 'No se pudo eliminar la direccion'];
+        }
+    }
+
+    public function copiarDireccionParaPedido(int $idPedido, int $idDireccion, int $idUsuario, ?array $direccion = null): int {
+        $direccion = $direccion ?: $this->obtenerDireccionPorId($idDireccion, $idUsuario);
+        if (!$direccion || (int) ($direccion['id_usuario'] ?? 0) !== $idUsuario) {
+            throw new Exception('Direccion de usuario invalida');
+        }
+
+        $nombre = (string) ($direccion['nombre_receptor'] ?? '');
+        $apellido = (string) ($direccion['apellido_receptor'] ?? '');
+        $direccionEnvio = (string) ($direccion['direccion_envio'] ?? '');
+        $ciudad = (string) ($direccion['ciudad'] ?? '');
+        $barrio = (string) ($direccion['barrio'] ?? '');
+        $telefono = (string) ($direccion['telefono_receptor'] ?? '');
+        $telefonoAlt = (string) ($direccion['telefono_alterno'] ?? '');
+        $info = (string) ($direccion['informacion_adicional'] ?? '');
+
+        $queryInsert = "INSERT INTO DIRECCION_PEDIDO
+                            (ID_PEDIDO, NOMBRE_RECEPTOR, APELLIDO_RECEPTOR, DIRECCION_ENVIO, CIUDAD, BARRIO, TELEFONO_RECEPTOR, TELEFONO_ALTERNO, INFORMACION_ADICIONAL, CREATED_AT, UPDATED_AT)
+                        VALUES
+                            (:id_pedido, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alt, :info, SYSDATE, SYSDATE)
+                        RETURNING ID_DIRECCION_PEDIDO INTO :id_direccion_pedido";
+
+        $stmtInsert = oci_parse($this->conn, $queryInsert);
+        $idDireccionPedido = null;
+
+        oci_bind_by_name($stmtInsert, ':id_pedido', $idPedido, -1, SQLT_INT);
+        oci_bind_by_name($stmtInsert, ':nombre', $nombre);
+        oci_bind_by_name($stmtInsert, ':apellido', $apellido);
+        oci_bind_by_name($stmtInsert, ':direccion', $direccionEnvio);
+        oci_bind_by_name($stmtInsert, ':ciudad', $ciudad);
+        oci_bind_by_name($stmtInsert, ':barrio', $barrio);
+        oci_bind_by_name($stmtInsert, ':telefono', $telefono);
+        oci_bind_by_name($stmtInsert, ':telefono_alt', $telefonoAlt);
+        oci_bind_by_name($stmtInsert, ':info', $info);
+        oci_bind_by_name($stmtInsert, ':id_direccion_pedido', $idDireccionPedido, -1, SQLT_INT);
+
+        if (!@oci_execute($stmtInsert, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmtInsert);
+            oci_free_statement($stmtInsert);
+            error_log($error['message'] ?? 'No se pudo copiar la direccion del pedido');
+            throw new Exception('No se pudo copiar la direccion del pedido');
+        }
+        oci_free_statement($stmtInsert);
+        if ((int) $idDireccionPedido <= 0) {
+            throw new Exception('No se pudo obtener la direccion del pedido');
+        }
+
+        return $idDireccionPedido;
+    }
+
+    public function actualizarDireccionPedidoPendiente(int $idPedido, array $data): array {
+        $nombre = trim($data['nombre_receptor'] ?? '');
+        $apellido = trim($data['apellido_receptor'] ?? '');
+        $direccion = trim($data['direccion_envio'] ?? '');
+        $ciudad = trim($data['ciudad'] ?? '');
+        $barrio = trim($data['barrio'] ?? '');
+        $telefono = preg_replace('/\D/', '', (string) ($data['telefono_receptor'] ?? ''));
+        $telefonoAlt = preg_replace('/\D/', '', (string) ($data['telefono_alterno'] ?? ''));
+        $info = trim($data['informacion_adicional'] ?? '');
+
+        if ($idPedido <= 0 || $nombre === '' || $apellido === '' || $direccion === '' || $ciudad === '' || $barrio === '' || $telefono === '') {
+            return ['success' => false, 'message' => 'Todos los campos de direccion son obligatorios'];
+        }
+
+        $query = "UPDATE DIRECCION_PEDIDO dp
+                  SET dp.NOMBRE_RECEPTOR = :nombre,
+                      dp.APELLIDO_RECEPTOR = :apellido,
+                      dp.DIRECCION_ENVIO = :direccion,
+                      dp.CIUDAD = :ciudad,
+                      dp.BARRIO = :barrio,
+                      dp.TELEFONO_RECEPTOR = :telefono,
+                      dp.TELEFONO_ALTERNO = :telefono_alt,
+                      dp.INFORMACION_ADICIONAL = :info,
+                      dp.UPDATED_AT = SYSDATE
+                  WHERE dp.ID_PEDIDO = :id_pedido
+                  AND EXISTS (
+                      SELECT 1
+                      FROM PEDIDO p
+                      WHERE p.ID_PEDIDO = dp.ID_PEDIDO
+                      AND p.ID_ESTADO = 1
+                  )";
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':nombre', $nombre);
+        oci_bind_by_name($stmt, ':apellido', $apellido);
+        oci_bind_by_name($stmt, ':direccion', $direccion);
+        oci_bind_by_name($stmt, ':ciudad', $ciudad);
+        oci_bind_by_name($stmt, ':barrio', $barrio);
+        oci_bind_by_name($stmt, ':telefono', $telefono);
+        oci_bind_by_name($stmt, ':telefono_alt', $telefonoAlt);
+        oci_bind_by_name($stmt, ':info', $info);
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
 
         if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
-            throw new Exception($error['message'] ?? 'No se pudo actualizar la direccion predeterminada');
+            error_log($error['message'] ?? 'No se pudo actualizar la direccion del pedido');
+            return ['success' => false, 'message' => 'No se pudo actualizar la direccion del pedido'];
         }
 
-        oci_free_statement($stmt);
-    }
-
-    private function agregarDireccionACache(int $idUsuario, array $direccion): void {
-        $this->ensureSession();
-        $key = $this->cacheKey($idUsuario);
-
-        if (!isset($_SESSION['direcciones'][$key]) || !is_array($_SESSION['direcciones'][$key])) {
-            $_SESSION['direcciones'][$key] = [];
-        }
-
-        if ((int) ($direccion['es_predeterminada'] ?? 0) === 1) {
-            foreach ($_SESSION['direcciones'][$key] as &$item) {
-                $item['es_predeterminada'] = 0;
-            }
-            unset($item);
-
-            array_unshift($_SESSION['direcciones'][$key], $direccion);
-            return;
-        }
-
-        $_SESSION['direcciones'][$key][] = $direccion;
-    }
-
-    private function usuarioTieneDirecciones(int $idUsuario): bool {
-        $this->ensureSession();
-        $key = $this->cacheKey($idUsuario);
-
-        if (isset($_SESSION['direcciones'][$key]) && is_array($_SESSION['direcciones'][$key])) {
-            return count($_SESSION['direcciones'][$key]) > 0;
-        }
-
-        $query = "SELECT COUNT(*) AS TOTAL
-                  FROM DIRECCION_PEDIDO
-                  WHERE ID_USUARIO = :id_usuario";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
-
-        $row = oci_fetch_assoc($stmt);
+        $rows = oci_num_rows($stmt);
         oci_free_statement($stmt);
 
-        return (int) ($row['TOTAL'] ?? 0) > 0;
+        if ($rows <= 0) {
+            return ['success' => false, 'message' => 'Solo puedes editar la direccion de pedidos pendientes'];
+        }
+
+        return ['success' => true];
     }
 }

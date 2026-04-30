@@ -313,7 +313,7 @@
                         <article class="cart-item" id="cart-item-<?= (int) $item['id_producto'] ?>">
                             <div class="cart-item-media">
                                 <?php if ($imagen): ?>
-                                    <img src="<?= $imagen ?>" alt="<?= htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') ?>">
+                                    <img src="<?= $imagen ?>" alt="<?= htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
                                 <?php else: ?>
                                     <svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true">
                                         <rect x="3" y="5" width="18" height="14" rx="2"></rect>
@@ -338,7 +338,7 @@
                                 <div class="cart-item-price">Precio unitario: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
                                 <div class="cart-controls">
                                     <div class="cart-qty">
-                                        <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= $stockParam ?>)" <?= (int) $item['cantidad'] <= 1 ? 'disabled' : '' ?>>-</button>
+                                        <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= $stockParam ?>)">-</button>
                                         <span id="cart-qty-<?= (int) $item['id_producto'] ?>"><?= (int) $item['cantidad'] ?></span>
                                         <button type="button" id="cart-plus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= $stockParam ?>)" <?= $deshabilitarMas ? 'disabled' : '' ?>>+</button>
                                     </div>
@@ -387,7 +387,7 @@
             </div>
 
             <div class="d-flex justify-content-end mt-4">
-                <a class="btn btn-success btn-lg" href="index.php?action=resumenCompra">Continuar compra</a>
+                <a class="btn btn-success btn-lg" href="index.php?action=ConfirmarPedido">Continuar compra</a>
             </div>
         <?php endif; ?>
     </div>
@@ -401,7 +401,7 @@ function syncCartQtyButtons(id, stock) {
     if (!qtyEl) return;
 
     const qty = parseInt(qtyEl.textContent, 10) || 0;
-    if (minus) minus.disabled = qty <= 1;
+    if (minus) minus.disabled = qty <= 0;
     if (plus) plus.disabled = stock <= 0 || qty >= stock;
 }
 
@@ -409,12 +409,23 @@ function changeCartQty(id, delta, stock) {
     const el = document.getElementById('cart-qty-' + id);
     if (!el) return;
     let value = parseInt(el.textContent, 10) + delta;
-    if (value < 1) value = 1;
+    if (value < 0) value = 0;
     if (stock && value > stock) value = stock;
     if (value === parseInt(el.textContent, 10)) return;
     el.textContent = value;
     syncCartQtyButtons(id, stock);
     updateCartItem(id);
+}
+
+function removeCartRow(id) {
+    const row = document.getElementById('cart-item-' + id);
+    if (row) {
+        row.remove();
+    }
+
+    if (!document.querySelector('.cart-item')) {
+        window.location.reload();
+    }
 }
 
 function handleCartAuthError(response) {
@@ -451,6 +462,11 @@ async function updateCartItem(id) {
     }
 
     syncCartSummary(data);
+    if (typeof data.cantidad !== 'undefined' && data.cantidad <= 0) {
+        removeCartRow(id);
+        return;
+    }
+
     syncCartQtyButtons(id, data.stock || 0);
     const lineTotal = document.getElementById('cart-line-total-' + id);
     if (lineTotal) {
@@ -489,14 +505,7 @@ async function removeCartItem(id) {
         return;
     }
 
-    const row = document.getElementById('cart-item-' + id);
-    if (row) {
-        row.remove();
-    }
-
-    if (!document.querySelector('.cart-item')) {
-        window.location.reload();
-    }
+    removeCartRow(id);
 }
 
 async function vaciarCarrito() {

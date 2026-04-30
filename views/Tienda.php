@@ -685,7 +685,7 @@
                 $categoriaProducto = $p['categoria_nombre'] ?? 'Sin categoria';
                 $ventasProducto = (int) ($p['total_vendido'] ?? 0);
             ?>
-            <div class="product-card best-seller-card"
+            <div class="product-card producto-card best-seller-card"
                  data-id="<?= (int) $p['id_producto'] ?>"
                  data-url="index.php?action=productoDetalle&id=<?= (int) $p['id_producto'] ?>&categoria=<?= urlencode($categoriaProducto) ?>"
                  onclick="openProductDetail(this, event)"
@@ -767,7 +767,7 @@
                 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
                 $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
             ?>
-            <div class="product-card producto"
+            <div class="product-card producto-card producto"
                  data-nombre="<?= strtolower($p['nombre']) ?>"
                  data-precio="<?= $p['precio'] ?>"
                  data-categoria="<?= $categoria ?>"
@@ -1050,9 +1050,13 @@ function scrollProducts(gridId, direction){
 
 function openProductDetail(card, event){
     if(event.target.closest('.qty-wrap, .add-btn')) return;
-    const url = card.dataset.url;
+    const id = card.dataset.id;
+    const url = id ? `index.php?action=productoDetalle&id=${id}` : card.dataset.url;
     if(url){
-        window.location.href = url;
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (newWindow) {
+            newWindow.opener = null;
+        }
     }
 }
 

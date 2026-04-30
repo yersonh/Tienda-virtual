@@ -53,6 +53,11 @@ class LoginController {
         $_SESSION['username'] = $usuario['username'];
         $_SESSION['nickname'] = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
+        $_SESSION['usuario'] = [
+            'id_usuario' => (int) $usuario['id_usuario'],
+            'username' => $usuario['username'],
+            'id_tipo' => (int) $usuario['id_tipo']
+        ];
         $_SESSION['logueado'] = true;
         $_SESSION['bienvenida'] = "Bienvenido, " . $usuario['username'];
         $_SESSION['carrito_count'] = $carritoModel->obtenerTotalItemsCarrito((int) $usuario['id_usuario']);

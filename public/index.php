@@ -142,6 +142,18 @@ switch ($action) {
         (new PedidoController())->guardarDireccion();
         break;
 
+    case 'editarDireccionPedido':
+        (new PedidoController())->editarDireccion();
+        break;
+
+    case 'eliminarDireccionPedido':
+        (new PedidoController())->eliminarDireccion();
+        break;
+
+    case 'editarDireccionPedidoPendiente':
+        (new PedidoController())->editarDireccionPedido();
+        break;
+
     case 'procesarPedido':
         (new PedidoController())->procesarPedido();
         break;

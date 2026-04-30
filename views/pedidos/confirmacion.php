@@ -1,4 +1,8 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+<?php
+require_once __DIR__ . '/../helpers/entrega.php';
+require_once __DIR__ . '/../layouts/navbar.php';
+renderEntregaStyles();
+?>
 
 <main class="container py-5">
     <div class="mx-auto" style="max-width: 720px;">
@@ -14,6 +18,7 @@
                 <span class="text-secondary">Total</span>
                 <strong>$<?= number_format((float) $pedido['total']) ?> COP</strong>
             </div>
+            <?php renderEntregaBox($pedido['fecha_estimada_entrega'] ?? null); ?>
 
             <a class="btn btn-success" href="index.php?action=tienda">Volver a la tienda</a>
         </div>
