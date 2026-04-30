@@ -71,7 +71,7 @@
                             $nombreArchivo = basename($img['url']);
                             ?>
                             <div class="imagen-item" data-id="<?= $img['id_imagen'] ?>" data-producto="<?= $producto['id_producto'] ?>">
-                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto">
+                                <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto" loading="lazy" decoding="async">
                                 <button type="button" class="btn-eliminar-img" onclick="showDeleteModal(<?= $img['id_imagen'] ?>, <?= $producto['id_producto'] ?>)">
                                     <i class="fas fa-trash"></i>
                                 </button>

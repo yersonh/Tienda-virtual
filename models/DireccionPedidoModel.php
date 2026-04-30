@@ -416,7 +416,7 @@ class DireccionPedidoModel {
         }
     }
 
-    public function copiarDireccionParaPedido(int $idPedido, int $idDireccion, int $idUsuario, ?array $direccion = null): int {
+    public function copiarDireccionParaPedido(int $idPedido, int $idDireccion, int $idUsuario, ?array $direccion = null, bool $commit = true): int {
         $direccion = $direccion ?: $this->obtenerDireccionPorId($idDireccion, $idUsuario);
         if (!$direccion || (int) ($direccion['id_usuario'] ?? 0) !== $idUsuario) {
             throw new Exception('Direccion de usuario invalida');
@@ -471,7 +471,9 @@ class DireccionPedidoModel {
             throw new Exception('No se pudo copiar la direccion del pedido');
         }
         oci_free_statement($stmtInsert);
-        oci_commit($this->conn);
+        if ($commit) {
+            oci_commit($this->conn);
+        }
         if ((int) $idDireccionPedido <= 0) {
             throw new Exception('No se pudo obtener la direccion del pedido');
         }

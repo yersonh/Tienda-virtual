@@ -12,6 +12,14 @@ class ProductoController {
         $this->model = new ProductoModel($pdo);
     }
 
+    private function invalidarCacheCatalogo(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        unset($_SESSION['tienda_cache']);
+    }
+
     // Listar productos
     public function index() {
         Auth::soloAdmin();
@@ -64,6 +72,7 @@ class ProductoController {
                 $this->guardarImagenes($id_producto, $_FILES['imagenes']);
             }
             
+            $this->invalidarCacheCatalogo();
             $_SESSION['success'] = "Producto creado exitosamente";
             header("Location: index.php?action=productos");
             exit();
@@ -108,6 +117,7 @@ class ProductoController {
                 $this->guardarImagenes($id, $_FILES['imagenes']);
             }
             
+            $this->invalidarCacheCatalogo();
             $_SESSION['success'] = "Producto actualizado exitosamente";
             header("Location: index.php?action=productos");
             exit();
@@ -150,6 +160,7 @@ class ProductoController {
         // Eliminar el producto
         $this->model->eliminar($id);
         
+        $this->invalidarCacheCatalogo();
         $_SESSION['success'] = "Producto eliminado exitosamente";
         header("Location: index.php?action=productos");
         exit();
@@ -178,6 +189,7 @@ class ProductoController {
         // Eliminar SOLO esa imagen de la BD
         $this->model->eliminarImagen($id_imagen);
         
+        $this->invalidarCacheCatalogo();
         $_SESSION['success'] = "Imagen eliminada";
         header("Location: index.php?action=productos_editar&id=" . $id_producto);
         exit();

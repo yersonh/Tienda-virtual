@@ -58,6 +58,17 @@ class CarritoController {
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario > 0) {
             unset($_SESSION['carrito']);
+            $cache = $_SESSION['carrito_mapa_cache'] ?? null;
+            if (
+                is_array($cache)
+                && isset($cache['expires'], $cache['data'])
+                && $cache['expires'] >= time()
+                && is_array($cache['data'])
+            ) {
+                $_SESSION['carrito_count'] = array_sum($cache['data']);
+                return $cache['data'];
+            }
+
             $carrito = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
             $_SESSION['carrito_count'] = array_sum($carrito);
             $_SESSION['carrito_mapa_cache'] = [
@@ -77,13 +88,20 @@ class CarritoController {
 
     private function getDetailedItems() {
         $idUsuario = $this->getUsuarioId();
-        $ajustoCantidades = false;
 
         if ($idUsuario > 0) {
             $items = $this->carritoModel->obtenerItemsVisualizacion($idUsuario);
-            $_SESSION['carrito_count'] = array_sum(array_map(function($item) {
-                return (int) ($item['cantidad'] ?? 0);
-            }, $items));
+            $carrito = [];
+            foreach ($items as $item) {
+                $carrito[(int) ($item['id_producto'] ?? 0)] = (int) ($item['cantidad'] ?? 0);
+            }
+            $carrito = array_filter($carrito, fn($cantidad) => $cantidad > 0);
+            $_SESSION['carrito_count'] = array_sum($carrito);
+            $_SESSION['carrito_mapa_cache'] = [
+                'expires' => time() + 30,
+                'data' => $carrito
+            ];
+
             return $items;
         }
 
@@ -109,7 +127,6 @@ class CarritoController {
                     unset($_SESSION['carrito'][(int) $item['id_producto']]);
                 }
                 $item['cantidad'] = 0;
-                $ajustoCantidades = true;
                 continue;
             }
 
@@ -120,7 +137,6 @@ class CarritoController {
                 } else {
                     $_SESSION['carrito'][(int) $item['id_producto']] = $stock;
                 }
-                $ajustoCantidades = true;
             }
 
             $item['total_linea'] = $item['cantidad'] * (float) $item['precio'];
@@ -148,7 +164,6 @@ class CarritoController {
             $stockDisponible = (int) ($productoRespuesta['stock_p'] ?? 0);
         }
 
-        $this->syncSessionCartFromSource();
         foreach ($this->getDetailedItems() as $item) {
             $subtotal += $item['total_linea'];
             $total += (int) $item['cantidad'];
@@ -265,7 +280,7 @@ class CarritoController {
         }
 
         $stockDisponible = max(0, (int) ($producto['stock_p'] ?? 0));
-        $carritoActual = $this->carritoModel->obtenerMapaCarritoUsuario($idUsuario);
+        $carritoActual = $this->syncSessionCartFromSource();
         $cantidadActual = (int) ($carritoActual[$id] ?? 0);
         $cantidadFinal = min($stockDisponible, $cantidadActual + $cantidad);
         $cantidadAgregar = max(0, $cantidadFinal - $cantidadActual);

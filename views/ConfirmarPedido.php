@@ -117,6 +117,7 @@ body[data-theme="light"],
 .checkout-panel,
 .checkout-summary {
     padding: 26px;
+    contain: content;
 }
 .checkout-summary {
     position: sticky;

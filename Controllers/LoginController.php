@@ -25,7 +25,14 @@ class LoginController {
             exit();
         }
 
-        $usuario = $model->validarCredenciales($username, $password);
+        try {
+            $usuario = $model->validarCredenciales($username, $password);
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
+            $_SESSION['error'] = "No se pudo iniciar sesion. Intenta de nuevo.";
+            header("Location: index.php?action=login");
+            exit();
+        }
 
         if (!$usuario) {
             $_SESSION['error'] = "Credenciales incorrectas";

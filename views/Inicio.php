@@ -1,15 +1,8 @@
 <?php
-require_once __DIR__ . '/../middleware/Auth.php';
-Auth::verificarSesion();
-
 require_once __DIR__ . '/layouts/navbar.php';
 
 $masVendidos = isset($masVendidos) && is_array($masVendidos) ? $masVendidos : [];
 ?>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -87,7 +80,7 @@ body[data-theme="light"] {
 .card-inicio h1 {
     color:var(--inicio-accent);
     margin-bottom:10px;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 34px;
     letter-spacing: 1px;
     text-shadow: 0 0 15px rgba(56,189,248,0.6);
@@ -175,7 +168,7 @@ body[data-theme="light"] {
 
 .best-title {
     margin: 0;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 30px;
     color: #e0f2fe;
 }
@@ -333,6 +326,12 @@ body[data-theme="light"] {
     text-align: center;
 }
 
+.models-3d,
+.best-panel {
+    content-visibility: auto;
+    contain-intrinsic-size: 720px;
+}
+
 .models-3d {
     margin: 0 auto 46px;
     padding: 28px;
@@ -374,7 +373,7 @@ body[data-theme="light"] {
 
 .models-title {
     margin: 0;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 30px;
     color: var(--inicio-text);
 }

@@ -1,27 +1,43 @@
 <style>
 body {
-    padding-bottom: 40px;
+    padding-bottom: 48px;
 }
 .app-footer {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: rgba(30,41,59,0.9);
-    color: #e2e8f0;
-    height: 40px;
+    background: rgba(7, 11, 20, 0.86);
+    color: #dbeafe;
+    min-height: 44px;
+    padding: 8px 18px;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(148,163,184,0.16);
+    box-shadow: 0 -14px 34px rgba(2,6,23,0.24);
     z-index: 90;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
 }
 [data-theme="light"] .app-footer {
-    background: rgba(241,245,249,0.95);
+    background: rgba(255,255,255,0.88);
     color: #334155;
-    border-top-color: rgba(148,163,184,0.25);
+    border-top-color: rgba(100,116,139,0.18);
+    box-shadow: 0 -14px 34px rgba(100,116,139,0.12);
+}
+.app-footer i {
+    color: var(--accent, #38bdf8);
+}
+@media (max-width: 560px) {
+    .app-footer {
+        font-size: 12px;
+        text-align: center;
+    }
 }
 </style>
 

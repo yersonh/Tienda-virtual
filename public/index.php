@@ -28,6 +28,7 @@ $publicas = [
     'verificarUsername',
     'verificarTelefono',
     'iniciarSesion',
+    'inicio',
     'tienda',
     'productoDetalle',
   

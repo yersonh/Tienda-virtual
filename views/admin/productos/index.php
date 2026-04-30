@@ -34,7 +34,7 @@
                         if ($primeraImagen):
                             $nombreArchivo = basename($primeraImagen['url']);
                         ?>
-                            <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" class="producto-imagen-mini-img">
+                            <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" class="producto-imagen-mini-img" alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
                         <?php else: ?>
                             <div class="producto-imagen-mini">
                                 <i class="fas fa-image"></i>

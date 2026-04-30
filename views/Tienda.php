@@ -32,7 +32,7 @@
     margin-bottom: 14px;
 }
 .hero-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 40px;
     font-weight: 800;
     line-height: 1.1;
@@ -58,7 +58,7 @@
     padding: 10px 16px;
     border-radius: 10px;
     font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Manrope', sans-serif;
     outline: none;
     transition: border-color 0.2s;
 }
@@ -75,7 +75,7 @@
     padding: 10px 16px;
     border-radius: 10px;
     font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Manrope', sans-serif;
     outline: none;
     cursor: pointer;
     appearance: none;
@@ -103,7 +103,7 @@
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Manrope', sans-serif;
     transition: all 0.2s;
     white-space: nowrap;
 }
@@ -137,7 +137,7 @@
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Manrope', sans-serif;
 }
 .cat-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
 .cat-tab.active {
@@ -162,6 +162,8 @@
 }
 .category-section {
     padding-bottom: 30px;
+    content-visibility: auto;
+    contain-intrinsic-size: 620px;
 }
 .detail-back {
     display: inline-flex;
@@ -191,7 +193,7 @@
     padding: 0 32px 20px;
 }
 .section-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 18px;
     font-weight: 700;
     color: var(--text);
@@ -341,6 +343,7 @@
     position: relative;
     flex: 0 0 280px;
     scroll-snap-align: start;
+    contain: content;
 }
 .product-card:hover {
     transform: translateY(-4px);
@@ -404,7 +407,7 @@
     padding: 14px 16px 16px;
 }
 .card-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 14px;
     font-weight: 600;
     color: var(--text);
@@ -453,7 +456,7 @@
     color: #b7791f;
 }
 .card-price {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 20px;
     font-weight: 700;
     color: var(--text);
@@ -508,7 +511,7 @@
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Manrope', sans-serif;
     display: flex; align-items: center; justify-content: center; gap: 5px;
     transition: all 0.2s;
     letter-spacing: 0.3px;
@@ -633,6 +636,111 @@
         max-width: 320px;
     }
 }
+
+.store-models {
+    margin: 0 32px 32px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg, rgba(0, 229, 192, 0.08), transparent 34%),
+        var(--card-bg);
+    box-shadow: var(--shadow);
+    content-visibility: auto;
+    contain-intrinsic-size: 920px;
+}
+
+.store-models-head {
+    margin-bottom: 18px;
+}
+
+.store-models-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(0,229,192,0.1);
+    border: 1px solid rgba(0,229,192,0.22);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+}
+
+.store-models-title {
+    margin: 0;
+    color: var(--text);
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.store-models-sub {
+    margin: 6px 0 0;
+    color: var(--secondary);
+    font-size: 14px;
+}
+
+.store-model-category {
+    display: inline-flex;
+    align-items: center;
+    margin: 16px 0 14px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(0,229,192,0.1);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.store-model-card {
+    height: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.045);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+[data-theme="light"] .store-model-card {
+    background: rgba(255,255,255,0.88);
+}
+
+.store-model-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0,229,192,0.35);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.18);
+}
+
+.store-model-card h5 {
+    margin: 0 0 10px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.store-sketchfab-frame {
+    width: 100%;
+    height: 300px;
+    border: 0;
+    border-radius: 12px;
+    background: #0a0e1a;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+@media (max-width: 768px) {
+    .store-models {
+        margin: 0 16px 28px;
+        padding: 18px;
+    }
+
+    .store-sketchfab-frame {
+        height: 260px;
+    }
+}
 </style>
 
 <div class="hero">
@@ -641,11 +749,81 @@
     <p class="hero-sub"><?= htmlspecialchars('Piezas originales para tu vehiculo - calidad garantizada', ENT_QUOTES, 'UTF-8') ?></p>
 </div>
 
+<?php if (empty($categoria_filtro) && empty($filtro) && empty($precio_min) && empty($precio_max)): ?>
+<section class="store-models" aria-labelledby="store-models-title">
+    <div class="store-models-head">
+        <div class="store-models-label">Exploracion interactiva</div>
+        <h2 class="store-models-title" id="store-models-title">Modelos 3D</h2>
+        <p class="store-models-sub">Explora piezas, implementos y vehiculos de referencia antes de iniciar sesion.</p>
+    </div>
+
+    <h4 class="store-model-category">Repuestos de automovil</h4>
+    <div class="row text-center">
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>Car Engine</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>V8 Engine</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>V8 Twin Turbo</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>Brake Disc</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="store-model-category">Repuestos e implementos agricolas</h4>
+    <div class="row text-center">
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>Tractor Wheel</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>Full Tractor Wheel</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="store-model-category">Vehiculos de referencia</h4>
+    <div class="row text-center">
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>Ford Mustang 1965</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="store-model-card">
+                <h5>Old Farm Tractor</h5>
+                <iframe class="store-sketchfab-frame" loading="lazy" src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <div class="filters">
-    <input class="filter-input" type="text" placeholder="<?= htmlspecialchars('Buscar producto...', ENT_QUOTES, 'UTF-8') ?>" id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio min', ENT_QUOTES, 'UTF-8') ?>" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio max', ENT_QUOTES, 'UTF-8') ?>" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>" oninput="filterProducts()">
-    <select class="filter-input filter-select" id="cat-select" onchange="filterProducts()">
+    <input class="filter-input" type="text" placeholder="<?= htmlspecialchars('Buscar producto...', ENT_QUOTES, 'UTF-8') ?>" id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio min', ENT_QUOTES, 'UTF-8') ?>" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio max', ENT_QUOTES, 'UTF-8') ?>" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <select class="filter-input filter-select" id="cat-select">
         <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>><?= htmlspecialchars('Todas las categorias', ENT_QUOTES, 'UTF-8') ?></option>
         <?php foreach($todasCategorias as $cat): ?>
         <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></option>
@@ -1106,13 +1284,19 @@ const categoria = document.getElementById('cat-select');
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
+let filterTimer = null;
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
 
+function scheduleFilterProducts(){
+    clearTimeout(filterTimer);
+    filterTimer = setTimeout(filterProducts, 220);
+}
+
 // UN SOLO EVENTO PARA TODO
 [buscador, precioMin, precioMax].forEach(el=>{
-    el.addEventListener('input', filterProducts);
+    el.addEventListener('input', scheduleFilterProducts);
 });
 categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;

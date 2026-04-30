@@ -16,7 +16,7 @@
     margin-bottom: 28px;
 }
 .cart-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: clamp(32px, 5vw, 48px);
     line-height: 1.02;
     margin: 0 0 8px;
@@ -49,9 +49,12 @@
     border: 1px solid var(--border);
     border-radius: 28px;
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 .cart-list {
     padding: 10px;
+    content-visibility: auto;
+    contain-intrinsic-size: 540px;
 }
 .cart-item {
     display: grid;
@@ -60,6 +63,7 @@
     padding: 16px;
     border-radius: 22px;
     transition: background 0.2s;
+    contain: content;
 }
 .cart-item + .cart-item {
     border-top: 1px solid var(--border);
@@ -80,7 +84,7 @@
     object-fit: cover;
 }
 .cart-item-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 22px;
     margin-bottom: 6px;
 }
@@ -105,7 +109,7 @@
 .cart-line-total strong {
     color: var(--text);
     font-size: 22px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
 }
 .cart-controls {
     display: flex;
@@ -172,7 +176,7 @@
     padding: 24px;
 }
 .cart-summary h2 {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 24px;
     margin: 0 0 18px;
 }
@@ -213,7 +217,7 @@
     color: #fca5a5;
 }
 .cart-empty h2 {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 30px;
     margin-bottom: 10px;
 }

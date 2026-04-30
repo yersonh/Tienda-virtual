@@ -28,7 +28,11 @@ class PedidoController {
             return $_SESSION['carrito'];
         }
 
-        if (!empty($_SESSION['carrito_mapa_cache']['data']) && is_array($_SESSION['carrito_mapa_cache']['data'])) {
+        if (
+            !empty($_SESSION['carrito_mapa_cache']['data'])
+            && is_array($_SESSION['carrito_mapa_cache']['data'])
+            && (int) ($_SESSION['carrito_mapa_cache']['expires'] ?? 0) >= time()
+        ) {
             $_SESSION['carrito_count'] = array_sum($_SESSION['carrito_mapa_cache']['data']);
             return $_SESSION['carrito_mapa_cache']['data'];
         }
@@ -284,7 +288,20 @@ class PedidoController {
                 continue;
             }
 
-            if (in_array($lowerName, ['id_usuario', 'id_cliente'], true)) {
+            if ($lowerName === 'id_cliente') {
+                $insertColumns[] = $meta['name'];
+                $valueExpressions[] = 'NULL';
+                continue;
+            }
+
+            if ($lowerName === 'id_tipo') {
+                $insertColumns[] = $meta['name'];
+                $valueExpressions[] = ':id_tipo_venta';
+                $binds[':id_tipo_venta'] = ['value' => 2, 'type' => SQLT_INT];
+                continue;
+            }
+
+            if ($lowerName === 'id_usuario') {
                 $insertColumns[] = $meta['name'];
                 $valueExpressions[] = ':' . $lowerName;
                 $binds[':' . $lowerName] = ['value' => $idUsuario, 'type' => SQLT_INT];
@@ -680,7 +697,7 @@ class PedidoController {
             $total = $resumenCompra['total'];
             $idVenta = $this->crearVenta($idUsuario, $total);
             $idPedido = $this->crearPedido($idVenta, 1);
-            $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion);
+            $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
             $this->asignarDireccionPedido($idPedido, $idDireccionPedido);
             $fechaEstimadaEntrega = $this->guardarFechaEstimadaEntrega($idPedido, (string) ($direccion['ciudad'] ?? ''));
 

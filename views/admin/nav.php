@@ -15,27 +15,32 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
     :root {
-        --admin-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        --sidebar-bg: linear-gradient(180deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,0.98) 100%);
-        --sidebar-text: #e2e8f0;
-        --panel-muted: #94a3b8;
-        --panel-line: rgba(56,189,248,0.15);
-        --panel-soft: rgba(56,189,248,0.08);
-        --content-bg: rgba(15,23,42,0.6);
-        --welcome-bg: rgba(30,41,59,0.8);
+        --admin-bg: radial-gradient(circle at top left, rgba(56,189,248,0.13), transparent 34%), linear-gradient(135deg, #070b14 0%, #111827 100%);
+        --sidebar-bg: linear-gradient(180deg, rgba(15,23,42,0.98) 0%, rgba(7,11,20,0.98) 100%);
+        --sidebar-text: #edf4ff;
+        --panel-muted: #a8b5ca;
+        --panel-line: rgba(125,211,252,0.18);
+        --panel-soft: rgba(56,189,248,0.1);
+        --content-bg: rgba(15,23,42,0.48);
+        --welcome-bg: rgba(15,23,42,0.74);
+        --panel-shadow: 0 24px 60px rgba(2,6,23,0.34);
     }
     [data-theme="light"] {
-        --admin-bg: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
-        --sidebar-bg: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.98) 100%);
-        --sidebar-text: #334155;
+        --admin-bg: radial-gradient(circle at top left, rgba(14,165,233,0.14), transparent 34%), linear-gradient(135deg, #eef6ff 0%, #f8fafc 100%);
+        --sidebar-bg: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(241,245,249,0.96) 100%);
+        --sidebar-text: #122033;
         --panel-muted: #64748b;
-        --panel-line: rgba(148,163,184,0.22);
-        --panel-soft: rgba(20,184,166,0.08);
-        --content-bg: rgba(255,255,255,0.55);
-        --welcome-bg: rgba(255,255,255,0.75);
+        --panel-line: rgba(100,116,139,0.18);
+        --panel-soft: rgba(14,165,233,0.08);
+        --content-bg: rgba(255,255,255,0.54);
+        --welcome-bg: rgba(255,255,255,0.82);
+        --panel-shadow: 0 24px 60px rgba(100,116,139,0.18);
     }
     * {
         margin: 0;
@@ -44,9 +49,10 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     body {
-        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        font-family: 'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
         background: var(--admin-bg);
         overflow-x: hidden;
+        color: var(--sidebar-text);
     }
 
     .admin-wrapper {
@@ -65,8 +71,10 @@ if (session_status() === PHP_SESSION_NONE) {
         left: 0;
         top: 0;
         border-right: 1px solid var(--panel-line);
-        box-shadow: 8px 0 32px rgba(0,0,0,0.3);
+        box-shadow: 18px 0 46px rgba(2,6,23,0.3);
         z-index: 1000;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
     }
 
     .sidebar-header {
@@ -77,9 +85,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
     .sidebar-header h2 {
         color: #38bdf8;
-        font-size: 24px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 26px;
         font-weight: 700;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.04em;
         margin: 0;
         line-height: 1.2;
     }
@@ -109,7 +118,7 @@ if (session_status() === PHP_SESSION_NONE) {
         color: var(--sidebar-text);
         text-decoration: none;
         border-radius: 12px;
-        font-weight: 500;
+        font-weight: 800;
         font-size: 15px;
         transition: all 0.25s ease;
         cursor: pointer;
@@ -127,6 +136,7 @@ if (session_status() === PHP_SESSION_NONE) {
         background: var(--panel-soft);
         color: #38bdf8;
         transform: translateX(4px);
+        box-shadow: inset 0 0 0 1px var(--panel-line);
     }
 
     .nav-link:hover i {
@@ -147,6 +157,7 @@ if (session_status() === PHP_SESSION_NONE) {
         background: var(--panel-soft);
         border-radius: 12px;
         margin-bottom: 16px;
+        border: 1px solid var(--panel-line);
     }
 
     .user-avatar {
@@ -201,9 +212,10 @@ if (session_status() === PHP_SESSION_NONE) {
     .main-content {
         margin-left: 280px;
         flex: 1;
-        padding: 24px 32px;
+        padding: 28px 34px;
         min-height: 100vh;
         background: var(--content-bg);
+        backdrop-filter: blur(10px);
     }
 
     .admin-sidebar::-webkit-scrollbar {
@@ -246,10 +258,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
     .welcome-message {
         background: var(--welcome-bg);
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 40px;
         text-align: center;
         color: var(--sidebar-text);
+        border: 1px solid var(--panel-line);
+        box-shadow: var(--panel-shadow);
     }
 
     .welcome-message i {
@@ -279,6 +293,77 @@ if (session_status() === PHP_SESSION_NONE) {
         align-items: center;
         gap: 10px;
         cursor: pointer;
+        font-weight: 800;
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .theme-toggle-admin:hover {
+        transform: translateY(-2px);
+        border-color: #38bdf8;
+        background: var(--panel-soft);
+    }
+
+    .main-content .card,
+    .main-content .table-responsive,
+    .main-content form,
+    .main-content .alert {
+        border-radius: 18px;
+        border: 1px solid var(--panel-line);
+        box-shadow: var(--panel-shadow);
+    }
+
+    .main-content .card {
+        background: var(--welcome-bg);
+        color: var(--sidebar-text);
+    }
+
+    .main-content .card-header {
+        background: transparent;
+        border-bottom: 1px solid var(--panel-line);
+        font-weight: 800;
+    }
+
+    .main-content .form-control,
+    .main-content .form-select {
+        border-radius: 12px;
+        border: 1px solid var(--panel-line);
+        background: rgba(15,23,42,0.46);
+        color: var(--sidebar-text);
+        font-weight: 700;
+    }
+
+    [data-theme="light"] .main-content .form-control,
+    [data-theme="light"] .main-content .form-select {
+        background: rgba(255,255,255,0.9);
+    }
+
+    .main-content .form-control:focus,
+    .main-content .form-select:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 4px rgba(56,189,248,0.16);
+    }
+
+    .main-content .btn {
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: 0 12px 26px rgba(2,6,23,0.12);
+    }
+
+    .main-content .table {
+        color: var(--sidebar-text);
+        vertical-align: middle;
+    }
+
+    .main-content .table thead th {
+        color: var(--panel-muted);
+        border-bottom-color: var(--panel-line);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .main-content .table td {
+        border-color: var(--panel-line);
     }
 </style>
 </head>

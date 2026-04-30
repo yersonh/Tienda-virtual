@@ -63,6 +63,8 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
     border: 1px solid var(--border);
     border-radius: 28px;
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    contain: content;
 }
 .detail-gallery {
     padding: 22px;
@@ -185,7 +187,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
     margin-bottom: 10px;
 }
 .detail-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: clamp(30px, 4vw, 46px);
     line-height: 1.05;
     margin-bottom: 12px;
@@ -225,7 +227,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
     margin-bottom: 22px;
 }
 .detail-price strong {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: clamp(30px, 5vw, 44px);
     line-height: 1;
 }

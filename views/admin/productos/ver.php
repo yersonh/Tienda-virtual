@@ -22,7 +22,7 @@
                         $nombreArchivo = basename($img['url']);
                         ?>
                         <div class="galeria-item" onclick="openLightbox(<?= $index ?>)">
-                            <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto">
+                            <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto" loading="lazy" decoding="async">
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -92,7 +92,7 @@
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <span class="lightbox-prev" onclick="prevImage()">&#10094;</span>
         <span class="lightbox-next" onclick="nextImage()">&#10095;</span>
-        <img id="lightbox-img" src="" alt="Imagen ampliada">
+        <img id="lightbox-img" src="" alt="Imagen ampliada" decoding="async">
         <div class="lightbox-counter">
             <span id="current-index"></span> / <span id="total-images"></span>
         </div>
