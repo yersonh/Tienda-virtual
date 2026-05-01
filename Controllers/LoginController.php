@@ -62,6 +62,7 @@ class LoginController {
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
         $_SESSION['usuario'] = [
             'id_usuario' => (int) $usuario['id_usuario'],
+            'id_persona' => (int) $usuario['id_persona'],
             'username' => $usuario['username'],
             'id_tipo' => (int) $usuario['id_tipo']
         ];

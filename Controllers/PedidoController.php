@@ -9,6 +9,7 @@ class PedidoController {
     private $carritoModel;
     private $direccionPedidoModel;
     private $ventaColumnasCache = null;
+    private $pedidoColumnasCache = null;
 
     public function __construct() {
         $this->conn = Database::getConnection();
@@ -64,6 +65,78 @@ class PedidoController {
 
     private function getUsuarioId(): int {
         return isset($_SESSION['id_usuario']) ? (int) $_SESSION['id_usuario'] : 0;
+    }
+
+    private function obtenerPersonaUsuario(int $idUsuario): int {
+        $idPersonaSesion = (int) ($_SESSION['usuario']['id_persona'] ?? 0);
+        if ($idPersonaSesion > 0) {
+            return $idPersonaSesion;
+        }
+
+        $query = "SELECT ID_PERSONA
+                  FROM USUARIO
+                  WHERE ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar la persona del usuario');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        $idPersona = (int) ($row['ID_PERSONA'] ?? 0);
+        if ($idPersona <= 0) {
+            throw new Exception('El usuario no tiene persona asociada');
+        }
+
+        $_SESSION['usuario']['id_persona'] = $idPersona;
+        return $idPersona;
+    }
+
+    private function asegurarClientePorPersona(int $idPersona): int {
+        $query = "SELECT ID_CLIENTE
+                  FROM CLIENTE
+                  WHERE ID_PERSONA = :id_persona";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_persona', $idPersona, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el cliente');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        if ($row && isset($row['ID_CLIENTE'])) {
+            return (int) $row['ID_CLIENTE'];
+        }
+
+        $insert = "INSERT INTO CLIENTE (ID_CLIENTE, ID_PERSONA, FECHA_REGISTRO)
+                   VALUES (SEQ_CLIENTE.NEXTVAL, :id_persona, SYSDATE)
+                   RETURNING ID_CLIENTE INTO :id_cliente";
+
+        $stmtInsert = oci_parse($this->conn, $insert);
+        $idCliente = null;
+        oci_bind_by_name($stmtInsert, ':id_persona', $idPersona, -1, SQLT_INT);
+        oci_bind_by_name($stmtInsert, ':id_cliente', $idCliente, -1, SQLT_INT);
+
+        if (!@oci_execute($stmtInsert, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmtInsert);
+            oci_free_statement($stmtInsert);
+            throw new Exception($error['message'] ?? 'No se pudo crear el cliente');
+        }
+
+        oci_free_statement($stmtInsert);
+
+        return (int) $idCliente;
     }
 
     private function isAjaxRequest(): bool {
@@ -248,6 +321,10 @@ class PedidoController {
             return $this->ventaColumnasCache;
         }
 
+        if ($tabla === 'PEDIDO' && $this->pedidoColumnasCache !== null) {
+            return $this->pedidoColumnasCache;
+        }
+
         $query = "SELECT COLUMN_NAME, NULLABLE, IDENTITY_COLUMN
                   FROM USER_TAB_COLUMNS
                   WHERE TABLE_NAME = :tabla
@@ -274,10 +351,14 @@ class PedidoController {
             $_SESSION['venta_columnas_cache'] = $columnas;
         }
 
+        if ($tabla === 'PEDIDO') {
+            $this->pedidoColumnasCache = $columnas;
+        }
+
         return $columnas;
     }
 
-    private function crearVenta(int $idUsuario, float $total): int {
+    private function crearVenta(int $idUsuario, float $total, ?int $idCliente = null): int {
         $columnas = $this->obtenerColumnasTabla('VENTA');
         $insertColumns = [];
         $valueExpressions = [];
@@ -290,7 +371,12 @@ class PedidoController {
 
             if ($lowerName === 'id_cliente') {
                 $insertColumns[] = $meta['name'];
-                $valueExpressions[] = 'NULL';
+                if ($idCliente !== null && $idCliente > 0) {
+                    $valueExpressions[] = ':id_cliente';
+                    $binds[':id_cliente'] = ['value' => $idCliente, 'type' => SQLT_INT];
+                } else {
+                    $valueExpressions[] = 'NULL';
+                }
                 continue;
             }
 
@@ -466,6 +552,52 @@ class PedidoController {
         oci_free_statement($stmt);
 
         return $fechaEntrega;
+    }
+
+    private function actualizarPagoPedido(int $idPedido, int $metodo): void {
+        $columnas = $this->obtenerColumnasTabla('PEDIDO');
+        $sets = [];
+        $binds = [
+            ':id_pedido' => ['value' => $idPedido, 'type' => SQLT_INT]
+        ];
+
+        if (isset($columnas['id_metodo'])) {
+            $sets[] = $columnas['id_metodo']['name'] . ' = :metodo';
+            $binds[':metodo'] = ['value' => $metodo, 'type' => SQLT_INT];
+        } elseif (isset($columnas['id_metodo_pago'])) {
+            $sets[] = $columnas['id_metodo_pago']['name'] . ' = :metodo';
+            $binds[':metodo'] = ['value' => $metodo, 'type' => SQLT_INT];
+        }
+
+        if (isset($columnas['estado'])) {
+            $sets[] = $columnas['estado']['name'] . " = :estado_pago";
+            $binds[':estado_pago'] = ['value' => 'Pagado', 'type' => SQLT_CHR];
+        } elseif (isset($columnas['id_estado'])) {
+            $sets[] = $columnas['id_estado']['name'] . " = :id_estado_pago";
+            $binds[':id_estado_pago'] = ['value' => 2, 'type' => SQLT_INT];
+        }
+
+        if (empty($sets)) {
+            throw new Exception('La tabla PEDIDO no tiene columnas configuradas para registrar el pago');
+        }
+
+        $query = "UPDATE PEDIDO
+                  SET " . implode(', ', $sets) . "
+                  WHERE ID_PEDIDO = :id_pedido";
+
+        $stmt = oci_parse($this->conn, $query);
+        foreach ($binds as $placeholder => &$bind) {
+            oci_bind_by_name($stmt, $placeholder, $bind['value'], -1, $bind['type']);
+        }
+        unset($bind);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo procesar el pago');
+        }
+
+        oci_free_statement($stmt);
     }
 
     public function resumen() {
@@ -695,7 +827,9 @@ class PedidoController {
             $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
             $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
             $total = $resumenCompra['total'];
-            $idVenta = $this->crearVenta($idUsuario, $total);
+            $idPersona = $this->obtenerPersonaUsuario($idUsuario);
+            $idCliente = $this->asegurarClientePorPersona($idPersona);
+            $idVenta = $this->crearVenta($idUsuario, $total, $idCliente);
             $idPedido = $this->crearPedido($idVenta, 1);
             $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
             $this->asignarDireccionPedido($idPedido, $idDireccionPedido);
@@ -714,8 +848,9 @@ class PedidoController {
                 'envio' => $resumenCompra['envio'],
                 'fecha_estimada_entrega' => $fechaEstimadaEntrega
             ];
+            $_SESSION['pedido_actual'] = $idPedido;
 
-            header("Location: index.php?action=ConfirmarPedido");
+            header("Location: index.php?action=pago");
             exit();
         } catch (Exception $e) {
             oci_rollback($this->conn);
@@ -736,5 +871,103 @@ class PedidoController {
         }
 
         require_once __DIR__ . '/../views/pedidos/confirmacion.php';
+    }
+
+    public function pago() {
+        $this->ensureSession();
+
+        $idPedido = (int) ($_SESSION['pedido_actual'] ?? ($_GET['id'] ?? 0));
+        if ($idPedido <= 0) {
+            $_SESSION['error'] = 'No hay un pedido pendiente de pago';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        $_SESSION['pedido_actual'] = $idPedido;
+        $pedido = $_SESSION['pedido_confirmado'] ?? [
+            'id_pedido' => $idPedido,
+            'total' => 0
+        ];
+
+        require_once __DIR__ . '/../views/pagos/pago.php';
+    }
+
+    public function procesarPago() {
+        $this->ensureSession();
+
+        $idPedido = (int) ($_SESSION['pedido_actual'] ?? 0);
+        $metodo = (int) ($_POST['metodo_pago'] ?? 0);
+        $metodosValidos = [1, 2, 3, 4];
+
+        if ($idPedido <= 0) {
+            $_SESSION['error'] = 'No hay un pedido pendiente de pago';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        if (!in_array($metodo, $metodosValidos, true)) {
+            $_SESSION['error'] = 'Selecciona un metodo de pago valido';
+            header("Location: index.php?action=pago");
+            exit();
+        }
+
+        try {
+            $this->actualizarPagoPedido($idPedido, $metodo);
+            oci_commit($this->conn);
+            unset($_SESSION['pedido_actual'], $_SESSION['pedido_confirmado']);
+            $_SESSION['success'] = 'Pago simulado correctamente';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        } catch (Exception $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No se pudo procesar el pago';
+            header("Location: index.php?action=pago");
+            exit();
+        }
+    }
+
+    public function misPedidos() {
+        $this->ensureSession();
+
+        $id_usuario = (int) ($_SESSION['usuario']['id_usuario'] ?? ($_SESSION['id_usuario'] ?? 0));
+        if ($id_usuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para ver tus pedidos';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $query = "SELECT p.ID_PEDIDO,
+                         p.ID_VENTA,
+                         p.ID_ESTADO,
+                         p.FECHA_ESTIMADA_ENTREGA,
+                         v.FECHA,
+                         v.TOTAL
+                  FROM PEDIDO p
+                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  WHERE v.ID_USUARIO = :id_usuario
+                  ORDER BY v.FECHA DESC";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ":id_usuario", $id_usuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            error_log($error['message'] ?? 'No se pudieron consultar los pedidos');
+            $_SESSION['error'] = 'No se pudieron consultar tus pedidos';
+            header("Location: index.php?action=inicio");
+            exit();
+        }
+
+        $pedidos = [];
+
+        while ($row = oci_fetch_assoc($stmt)) {
+            $pedidos[] = array_change_key_case($row, CASE_LOWER);
+        }
+
+        oci_free_statement($stmt);
+
+        require_once __DIR__ . '/../views/pedidos/mis_pedidos.php';
     }
 }

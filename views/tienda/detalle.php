@@ -554,6 +554,16 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                             </svg>
                             <?= htmlspecialchars('Ir al carrito', ENT_QUOTES, 'UTF-8') ?>
                         </a>
+                        <?php if (!empty($_SESSION['pedido_actual'])): ?>
+                            <a class="detail-action primary" href="index.php?action=pago">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                                    <path d="M3 10h18"></path>
+                                    <path d="M7 15h3"></path>
+                                </svg>
+                                <?= htmlspecialchars('Pagar pedido', ENT_QUOTES, 'UTF-8') ?>
+                            </a>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </aside>

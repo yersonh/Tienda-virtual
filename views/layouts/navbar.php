@@ -348,6 +348,9 @@ textarea:focus {
     <div class="nav-links">
       <a href="index.php?action=inicio" class="active"><?= htmlspecialchars('Inicio', ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=tienda"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
+      <?php if($logueado): ?>
+        <a href="index.php?action=misPedidos"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
+      <?php endif; ?>
     </div>
     <div class="nav-actions">
       <?php if($logueado): ?>

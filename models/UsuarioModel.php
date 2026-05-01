@@ -56,6 +56,47 @@ class UsuarioModel {
         return ['success' => false, 'error' => 'Error en base de datos'];
     }
 
+    private function asegurarClientePorPersona(int $idPersona): ?int {
+        $query = "SELECT ID_CLIENTE
+                  FROM CLIENTE
+                  WHERE ID_PERSONA = :id_persona";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ":id_persona", $idPersona, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el cliente');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        if ($row && isset($row['ID_CLIENTE'])) {
+            return (int) $row['ID_CLIENTE'];
+        }
+
+        $insert = "INSERT INTO CLIENTE (ID_CLIENTE, ID_PERSONA, FECHA_REGISTRO)
+                   VALUES (SEQ_CLIENTE.NEXTVAL, :id_persona, SYSDATE)
+                   RETURNING ID_CLIENTE INTO :id_cliente";
+
+        $stmtInsert = oci_parse($this->conn, $insert);
+        $idCliente = null;
+        oci_bind_by_name($stmtInsert, ":id_persona", $idPersona, -1, SQLT_INT);
+        oci_bind_by_name($stmtInsert, ":id_cliente", $idCliente, -1, SQLT_INT);
+
+        if (!@oci_execute($stmtInsert, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmtInsert);
+            oci_free_statement($stmtInsert);
+            throw new Exception($error['message'] ?? 'No se pudo crear el cliente');
+        }
+
+        oci_free_statement($stmtInsert);
+
+        return (int) $idCliente;
+    }
+
     public function validarCredenciales($username, $password) {
         $username = $this->normalizarUsername($username);
 
@@ -262,6 +303,10 @@ class UsuarioModel {
                 return $response;
             }
             oci_free_statement($stmt2);
+
+            if ((int) $data['id_tipo'] === 3) {
+                $this->asegurarClientePorPersona((int) $idPersona);
+            }
 
             oci_commit($this->conn);
 

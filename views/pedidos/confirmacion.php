@@ -7,7 +7,7 @@ renderEntregaStyles();
 <main class="container py-5">
     <div class="mx-auto" style="max-width: 720px;">
         <div class="p-4 border rounded" style="background: var(--card-bg); border-color: var(--border) !important;">
-            <h1 class="mb-3" style="font-family: 'Space Grotesk', 'Manrope', sans-serif;"><?= htmlspecialchars('Pedido confirmado', ENT_QUOTES, 'UTF-8') ?></h1>
+            <h1 class="mb-3" style="font-family: 'Syne', sans-serif;"><?= htmlspecialchars('Pedido confirmado', ENT_QUOTES, 'UTF-8') ?></h1>
             <p class="text-secondary mb-4"><?= htmlspecialchars('Tu compra fue registrada correctamente.', ENT_QUOTES, 'UTF-8') ?></p>
 
             <div class="d-flex justify-content-between border-top pt-3 mb-2" style="border-color: var(--border) !important;">

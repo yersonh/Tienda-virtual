@@ -393,21 +393,85 @@ body[data-theme="light"] {
 }
 
 .models-section-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
     margin: 18px 0 16px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: rgba(56,189,248,0.12);
-    color: #bae6fd;
-    font-size: 15px;
+    color: var(--inicio-text);
+    font-size: 18px;
     font-weight: 800;
 }
 
+.models-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    margin: 18px 0 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+}
+
+.models-tab {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(56,189,248,0.2);
+    background: rgba(56,189,248,0.12);
+    color: var(--inicio-accent);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.models-tab:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56,189,248,0.42);
+    box-shadow: 0 12px 24px rgba(14,165,233,0.16);
+}
+
+.models-tab.is-active {
+    background: linear-gradient(135deg, #14b8a6, var(--inicio-accent));
+    border-color: transparent;
+    color: #06202b;
+    box-shadow: 0 14px 28px rgba(20,184,166,0.22);
+}
+
+.models-panel {
+    display: none;
+}
+
+.models-panel.is-active {
+    display: block;
+    animation: modelsFade 0.24s ease;
+}
+
+@keyframes modelsFade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 [data-theme="light"] .models-section-title {
+    color: #0f172a;
+}
+
+[data-theme="light"] .models-tab {
     background: #e0f2fe;
     color: #0369a1;
+    border-color: rgba(14,165,233,0.18);
+}
+
+[data-theme="light"] .models-tab.is-active {
+    background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+    color: #ffffff;
 }
 
 .model-card {
@@ -541,6 +605,18 @@ body[data-theme="light"] {
         </div>
       </div>
 
+      <div class="models-tabs" role="tablist" aria-label="Categorias de modelos 3D">
+        <button class="models-tab is-active" type="button" role="tab" aria-selected="true" data-model-index="0">
+          Repuestos de automovil
+        </button>
+        <button class="models-tab" type="button" role="tab" aria-selected="false" data-model-index="1">
+          Repuestos e implementos agricolas
+        </button>
+        <button class="models-tab" type="button" role="tab" aria-selected="false" data-model-index="2">
+          Vehiculos de referencia
+        </button>
+      </div>
+
       <!-- REPUETOS AUTOMÓVIL -->
       <h4 class="models-section-title">⚙️ Repuestos de automóvil</h4>
       <div class="row text-center">
@@ -595,7 +671,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Tractor Wheel</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
+              data-src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -605,7 +681,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Full Tractor Wheel</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
+              data-src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -621,7 +697,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Ford Mustang 1965</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
+              data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -631,7 +707,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Old Farm Tractor</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
+              data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -691,5 +767,63 @@ body[data-theme="light"] {
     </section>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = Array.from(document.querySelectorAll('.models-tab'));
+    const sectionTitles = Array.from(document.querySelectorAll('.models-3d .models-section-title'));
+    const labels = [
+        'Repuestos de automovil',
+        'Repuestos e implementos agricolas',
+        'Vehiculos de referencia'
+    ];
+    const sections = sectionTitles.map(function (title, index) {
+        title.textContent = labels[index] || title.textContent;
+        return {
+            title: title,
+            grid: title.nextElementSibling
+        };
+    });
+
+    function loadFrames(section) {
+        if (!section || !section.grid) {
+            return;
+        }
+
+        section.grid.querySelectorAll('iframe[data-src]').forEach(function (frame) {
+            frame.src = frame.dataset.src;
+            frame.removeAttribute('data-src');
+        });
+    }
+
+    function showSection(index) {
+        tabs.forEach(function (tab, tabIndex) {
+            const active = tabIndex === index;
+            tab.classList.toggle('is-active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+
+        sections.forEach(function (section, sectionIndex) {
+            const active = sectionIndex === index;
+            if (section.title) {
+                section.title.hidden = !active;
+            }
+            if (section.grid) {
+                section.grid.hidden = !active;
+            }
+        });
+
+        loadFrames(sections[index]);
+    }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            showSection(Number(tab.dataset.modelIndex || 0));
+        });
+    });
+
+    showSection(0);
+});
+</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

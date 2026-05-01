@@ -74,8 +74,6 @@ body[data-theme="light"],
     background: var(--checkout-card);
     box-shadow: 0 22px 58px rgba(0,0,0,0.24);
     backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    contain: content;
 }
 .resume-list {
     padding: 18px;

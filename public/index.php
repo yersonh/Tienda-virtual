@@ -164,6 +164,18 @@ switch ($action) {
         (new PedidoController())->confirmacion();
         break;
 
+    case 'pago':
+        (new PedidoController())->pago();
+        break;
+
+    case 'procesarPago':
+        (new PedidoController())->procesarPago();
+        break;
+
+    case 'misPedidos':
+        (new PedidoController())->misPedidos();
+        break;
+
     case 'perfil':
         (new PerfilController())->verPerfil();
         break;
