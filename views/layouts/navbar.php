@@ -463,13 +463,40 @@ textarea:focus {
     </button>
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
-      <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=inicio#nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
-      <?php if($logueado): ?>
-        <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
-      <?php endif; ?>
+
+        <a href="index.php?action=inicio"
+            onclick="mostrarSeccion('interaccion-360');"
+            data-nav-key="interaccion"
+            class="<?= $currentAction === 'inicio' ? 'active' : '' ?>">
+            <?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
+        <a href="index.php?action=inicio"
+            onclick="mostrarSeccion('lo-nuevo')"
+            data-nav-key="nuevo">
+            <?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
+        <a href="index.php?action=inicio"
+            onclick="mostrarSeccion('mas-vendidos');"
+            data-nav-key="mas-vendidos">
+            <?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
+        <a href="index.php?action=tienda"
+            data-nav-key="tienda"
+            class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>">
+            <?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
+        <?php if($logueado): ?>
+            <a href="index.php?action=misPedidos"
+            data-nav-key="mis-pedidos"
+            class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>">
+            <?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?>
+            </a>
+        <?php endif; ?>
+
     </div>
     <div class="nav-actions">
       <?php if($logueado): ?>
@@ -584,6 +611,28 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', newTheme);
 });
 
+function mostrarSeccion(id) {
+    if (window.location.search.includes('action=inicio')) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    } else {
+        window.location.href = 'index.php?action=inicio#' + id;
+    }
+}
+
+window.addEventListener('load', function () {
+    if (window.location.hash) {
+        const id = window.location.hash.replace('#', '');
+        const el = document.getElementById(id);
+        if (el) {
+            setTimeout(() => {
+                el.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+    }
+});
 // Load saved theme
 const savedTheme = localStorage.getItem('theme') || 'dark';
 body.setAttribute('data-theme', savedTheme);

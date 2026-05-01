@@ -689,209 +689,147 @@ body[data-theme="light"] {
         </div>
 
       </div>
-
       <!-- VEHÍCULOS -->
-      <h4 class="models-section-title">🚗🚜 Vehículos de referencia</h4>
-      <div class="row text-center">
+    <section id="interaccion-360" class="bloque">
 
-        <div class="col-md-6 mb-4">
-          <div class="model-card">
-            <h5>Ford Mustang 1965</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
-              allow="autoplay; fullscreen; xr-spatial-tracking"
-              allowfullscreen></iframe>
-          </div>
+        <h4 class="models-section-title">🚗🚜 Vehículos de referencia</h4>
+        <div class="row text-center">
+
+            <div class="col-md-6 mb-4">
+            <div class="model-card">
+                <h5>Ford Mustang 1965</h5>
+                <iframe class="sketchfab-frame" loading="lazy"
+                data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                allowfullscreen></iframe>
+            </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+            <div class="model-card">
+                <h5>Old Farm Tractor</h5>
+                <iframe class="sketchfab-frame" loading="lazy"
+                data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                allowfullscreen></iframe>
+            </div>
+            </div>
+
         </div>
 
-        <div class="col-md-6 mb-4">
-          <div class="model-card">
-            <h5>Old Farm Tractor</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
-              allow="autoplay; fullscreen; xr-spatial-tracking"
-              allowfullscreen></iframe>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-    <section class="best-panel" id="lo-nuevo" aria-labelledby="new-title">
-        <div class="best-header">
-            <div>
-                <div class="best-kicker"><?= htmlspecialchars('Recien agregados', ENT_QUOTES, 'UTF-8') ?></div>
-                <h2 class="best-title" id="new-title"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></h2>
-                <p class="best-sub"><?= htmlspecialchars('Los ultimos productos incorporados al catalogo para que los encuentres rapido.', ENT_QUOTES, 'UTF-8') ?></p>
-            </div>
-            <a class="best-link" href="index.php?action=tienda"><?= htmlspecialchars('Ver catalogo', ENT_QUOTES, 'UTF-8') ?></a>
-        </div>
-
-        <?php if (!empty($productosNuevos)): ?>
-            <div class="best-grid">
-                <?php foreach ($productosNuevos as $producto): ?>
-                    <?php
-                    $idProducto = (int) ($producto['id_producto'] ?? 0);
-                    $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
-                    $categoriaProducto = (string) ($producto['categoria_nombre'] ?? 'Sin categoria');
-                    $precioProducto = (float) ($producto['precio'] ?? 0);
-                    $stockProducto = (int) ($producto['stock_p'] ?? 0);
-                    $imagenProducto = (string) ($producto['imagen'] ?? '');
-                    ?>
-                    <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
-                        <div class="best-img">
-                            <?php if ($imagenProducto !== ''): ?>
-                                <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
-                            <?php else: ?>
-                                <div class="best-placeholder" aria-hidden="true">
-                                    <i class="fas fa-box-open"></i>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="best-body">
-                            <h3 class="best-name"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></h3>
-                            <div class="best-meta">
-                                <span class="best-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
-                                <span class="best-pill"><?= $stockProducto ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
-                            </div>
-                            <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <div class="best-empty">
-                <?= htmlspecialchars('Aun no hay productos nuevos para mostrar.', ENT_QUOTES, 'UTF-8') ?>
-            </div>
-        <?php endif; ?>
     </section>
 
-    <section class="best-panel" id="mas-vendidos" aria-labelledby="best-title">
-        <div class="best-header">
-            <div>
-                <div class="best-kicker"><?= htmlspecialchars('Productos destacados', ENT_QUOTES, 'UTF-8') ?></div>
-                <h2 class="best-title" id="best-title"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></h2>
-                <p class="best-sub"><?= htmlspecialchars('Los productos con mayor salida para entrar rapido al detalle.', ENT_QUOTES, 'UTF-8') ?></p>
+        <section class="best-panel bloque" id="lo-nuevo" aria-labelledby="new-title">
+            <div class="best-header">
+                <div>
+                    <div class="best-kicker"><?= htmlspecialchars('Recien agregados', ENT_QUOTES, 'UTF-8') ?></div>
+                    <h2 class="best-title" id="new-title"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></h2>
+                    <p class="best-sub"><?= htmlspecialchars('Los ultimos productos incorporados al catalogo para que los encuentres rapido.', ENT_QUOTES, 'UTF-8') ?></p>
+                </div>
+                <a class="best-link" href="index.php?action=tienda"><?= htmlspecialchars('Ver catalogo', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
-            <a class="best-link" href="index.php?action=tienda"><?= htmlspecialchars('Ver catalogo', ENT_QUOTES, 'UTF-8') ?></a>
-        </div>
 
-        <?php if (!empty($masVendidos)): ?>
-            <div class="best-grid">
-                <?php foreach ($masVendidos as $producto): ?>
-                    <?php
-                    $idProducto = (int) ($producto['id_producto'] ?? 0);
-                    $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
-                    $categoriaProducto = (string) ($producto['categoria_nombre'] ?? 'Sin categoria');
-                    $precioProducto = (float) ($producto['precio'] ?? 0);
-                    $ventasProducto = (int) ($producto['total_vendido'] ?? 0);
-                    $imagenProducto = (string) ($producto['imagen'] ?? '');
-                    ?>
-                    <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
-                        <div class="best-img">
-                            <?php if ($imagenProducto !== ''): ?>
-                                <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
-                            <?php else: ?>
-                                <div class="best-placeholder" aria-hidden="true">
-                                    <i class="fas fa-box-open"></i>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="best-body">
-                            <h3 class="best-name"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></h3>
-                            <div class="best-meta">
-                                <span class="best-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
-                                <span class="best-pill"><?= $ventasProducto ?> <?= htmlspecialchars('vendidos', ENT_QUOTES, 'UTF-8') ?></span>
+            <?php if (!empty($productosNuevos)): ?>
+                <div class="best-grid">
+                    <?php foreach ($productosNuevos as $producto): ?>
+                        <?php
+                        $idProducto = (int) ($producto['id_producto'] ?? 0);
+                        $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
+                        $categoriaProducto = (string) ($producto['categoria_nombre'] ?? 'Sin categoria');
+                        $precioProducto = (float) ($producto['precio'] ?? 0);
+                        $stockProducto = (int) ($producto['stock_p'] ?? 0);
+                        $imagenProducto = (string) ($producto['imagen'] ?? '');
+                        ?>
+                        <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
+                            <div class="best-img">
+                                <?php if ($imagenProducto !== ''): ?>
+                                    <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                                <?php else: ?>
+                                    <div class="best-placeholder" aria-hidden="true">
+                                        <i class="fas fa-box-open"></i>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
+                            <div class="best-body">
+                                <h3 class="best-name"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></h3>
+                                <div class="best-meta">
+                                    <span class="best-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="best-pill"><?= $stockProducto ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
+                                <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="best-empty">
+                    <?= htmlspecialchars('Aun no hay productos nuevos para mostrar.', ENT_QUOTES, 'UTF-8') ?>
+                </div>
+            <?php endif; ?>
+        </section>
+
+        <section class="best-panel bloque" id="mas-vendidos" aria-labelledby="best-title">
+            <div class="best-header">
+                <div>
+                    <div class="best-kicker"><?= htmlspecialchars('Productos destacados', ENT_QUOTES, 'UTF-8') ?></div>
+                    <h2 class="best-title" id="best-title"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></h2>
+                    <p class="best-sub"><?= htmlspecialchars('Los productos con mayor salida para entrar rapido al detalle.', ENT_QUOTES, 'UTF-8') ?></p>
+                </div>
+                <a class="best-link" href="index.php?action=tienda"><?= htmlspecialchars('Ver catalogo', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
-        <?php else: ?>
-            <div class="best-empty">
-                <?= htmlspecialchars('Aun no hay productos destacados para mostrar.', ENT_QUOTES, 'UTF-8') ?>
-            </div>
-        <?php endif; ?>
-    </section>
 
-</div>
+            <?php if (!empty($masVendidos)): ?>
+                <div class="best-grid">
+                    <?php foreach ($masVendidos as $producto): ?>
+                        <?php
+                        $idProducto = (int) ($producto['id_producto'] ?? 0);
+                        $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
+                        $categoriaProducto = (string) ($producto['categoria_nombre'] ?? 'Sin categoria');
+                        $precioProducto = (float) ($producto['precio'] ?? 0);
+                        $ventasProducto = (int) ($producto['total_vendido'] ?? 0);
+                        $imagenProducto = (string) ($producto['imagen'] ?? '');
+                        ?>
+                        <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
+                            <div class="best-img">
+                                <?php if ($imagenProducto !== ''): ?>
+                                    <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                                <?php else: ?>
+                                    <div class="best-placeholder" aria-hidden="true">
+                                        <i class="fas fa-box-open"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="best-body">
+                                <h3 class="best-name"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></h3>
+                                <div class="best-meta">
+                                    <span class="best-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="best-pill"><?= $ventasProducto ?> <?= htmlspecialchars('vendidos', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
+                                <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="best-empty">
+                    <?= htmlspecialchars('Aun no hay productos destacados para mostrar.', ENT_QUOTES, 'UTF-8') ?>
+                </div>
+            <?php endif; ?>
+        </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const tabs = Array.from(document.querySelectorAll('.models-tab'));
-    const sectionTitles = Array.from(document.querySelectorAll('.models-3d .models-section-title'));
-    const labels = [
-        'Repuestos de automovil',
-        'Repuestos e implementos agricolas',
-        'Vehiculos de referencia'
-    ];
-    const sections = sectionTitles.map(function (title, index) {
-        title.textContent = labels[index] || title.textContent;
-        return {
-            title: title,
-            grid: title.nextElementSibling
-        };
+    <script>
+    function mostrarSeccion(id) {
+        document.querySelectorAll('.bloque').forEach(sec => {
+            sec.style.display = 'none';
+        });
+
+        const activa = document.getElementById(id);
+        if (activa) activa.style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        mostrarSeccion('interaccion-360');
     });
-
-    function loadFrames(section) {
-        if (!section || !section.grid) {
-            return;
-        }
-
-        section.grid.querySelectorAll('iframe[data-src]').forEach(function (frame) {
-            frame.src = frame.dataset.src;
-            frame.removeAttribute('data-src');
-        });
-    }
-
-    let activeModelIndex = 0;
-
-    function showSection(index, shouldLoad) {
-        activeModelIndex = index;
-        tabs.forEach(function (tab, tabIndex) {
-            const active = tabIndex === index;
-            tab.classList.toggle('is-active', active);
-            tab.setAttribute('aria-selected', active ? 'true' : 'false');
-        });
-
-        sections.forEach(function (section, sectionIndex) {
-            const active = sectionIndex === index;
-            if (section.title) {
-                section.title.hidden = !active;
-            }
-            if (section.grid) {
-                section.grid.hidden = !active;
-            }
-        });
-
-        if (shouldLoad) {
-            loadFrames(sections[index]);
-        }
-    }
-
-    tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            showSection(Number(tab.dataset.modelIndex || 0), true);
-        });
-    });
-
-    showSection(0, false);
-
-    const modelsBlock = document.getElementById('interaccion-360');
-    if ('IntersectionObserver' in window && modelsBlock) {
-        const observer = new IntersectionObserver(function (entries) {
-            if (entries.some(function (entry) { return entry.isIntersecting; })) {
-                loadFrames(sections[activeModelIndex]);
-                observer.disconnect();
-            }
-        }, { rootMargin: '160px 0px' });
-        observer.observe(modelsBlock);
-    } else if (window.location.hash === '#interaccion-360') {
-        loadFrames(sections[activeModelIndex]);
-    }
-});
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
