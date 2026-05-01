@@ -782,16 +782,38 @@ body[data-theme="light"] {
 
     <script>
     function mostrarSeccion(id) {
-        document.querySelectorAll('.bloque-principal').forEach(sec => {
-            sec.style.display = 'none';
+        document.querySelectorAll('.bloque').forEach(sec => {
+            sec.hidden = true;
+            sec.classList.remove('is-visible');
         });
 
         const activa = document.getElementById(id);
-        if (activa) activa.style.display = 'block';
+        if (!activa) return false;
+
+        activa.hidden = false;
+        activa.classList.add('is-visible');
+        history.replaceState(null, '', '#' + id);
+
+        const navKeyBySection = {
+            'interaccion-360': 'interaccion',
+            'lo-nuevo': 'nuevo',
+            'mas-vendidos': 'mas-vendidos'
+        };
+        if (typeof setActiveNav === 'function' && navKeyBySection[id]) {
+            setActiveNav(navKeyBySection[id]);
+        }
+
+        return false;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        mostrarSeccion('interaccion-360');
+        const sectionByHash = {
+            '#interaccion-360': 'interaccion-360',
+            '#lo-nuevo': 'lo-nuevo',
+            '#nuevo': 'lo-nuevo',
+            '#mas-vendidos': 'mas-vendidos'
+        };
+        mostrarSeccion(sectionByHash[window.location.hash] || 'interaccion-360');
     });
 </script>
 

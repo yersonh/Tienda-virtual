@@ -176,6 +176,10 @@ switch ($action) {
         (new PedidoController())->misPedidos();
         break;
 
+    case 'cancelarPedido':
+        (new PedidoController())->cancelarPedido();
+        break;
+
     case 'perfil':
         (new PerfilController())->verPerfil();
         break;

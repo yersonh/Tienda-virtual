@@ -135,35 +135,46 @@ body.light-mode {
 }
 .nav-links {
     display: flex;
-    gap: 6px;
+    gap: 10px;
     align-items: center;
-    padding: 5px;
-    border: 1px solid rgba(56, 189, 248, 0.14);
-    border-radius: 999px;
-    background: rgba(12, 22, 39, 0.82);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 28px rgba(2, 8, 23, 0.2);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 [data-theme="light"] .nav-links {
-    background: rgba(255, 255, 255, 0.66);
-    border-color: rgba(8, 145, 178, 0.18);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 12px 28px rgba(15, 55, 90, 0.1);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
 }
 .nav-links a {
     color: var(--secondary);
     text-decoration: none;
     font-size: 14px;
     font-weight: 800;
-    padding: 8px 14px;
+    padding: 9px 15px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
     border-radius: 999px;
-    transition: color var(--transition), background var(--transition), transform var(--transition);
+    background: rgba(12, 22, 39, 0.74);
+    transition: color var(--transition), background var(--transition), transform var(--transition), border-color var(--transition);
     cursor: pointer;
 }
 
-.nav-links a:hover { color: var(--text); background: rgba(34, 211, 238, 0.1); }
+.nav-links a:hover {
+    color: var(--text);
+    border-color: rgba(34, 211, 238, 0.36);
+    background: rgba(34, 211, 238, 0.1);
+}
 .nav-links a.active {
     color: #041522;
+    border-color: transparent;
     background: linear-gradient(135deg, #22d3ee, #38bdf8);
     box-shadow: 0 12px 26px rgba(34, 211, 238, 0.26);
+}
+[data-theme="light"] .nav-links a {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(8, 145, 178, 0.18);
 }
 .side-backdrop {
     position: fixed;

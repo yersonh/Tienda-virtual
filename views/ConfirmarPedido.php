@@ -2,6 +2,7 @@
 $direcciones = $_SESSION['direcciones'] ?? [];
 require_once __DIR__ . '/helpers/entrega.php';
 require_once __DIR__ . '/layouts/navbar.php';
+renderEntregaStyles();
 
 $resumenCompra = $resumenCompra ?? ($_SESSION['checkout_resumen'] ?? [
     'subtotal' => (float) ($pedidoConfirmado['subtotal'] ?? $total ?? 0),
@@ -533,69 +534,128 @@ body[data-theme="light"] .form-control:focus,
 }
 
 .checkout-invoice-card {
-    max-width: 980px;
+    max-width: 920px;
     margin: 0 auto;
     padding: 0;
     overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: #f4f7fc;
+    color: #0f2a55;
+    box-shadow: 0 28px 70px rgba(2, 8, 23, 0.34);
+}
+
+.checkout-invoice-card::before,
+.checkout-invoice-card::after {
+    content: '';
+    display: block;
+    height: 8px;
+    background: #f2b705;
 }
 
 .checkout-invoice-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 28px;
-    border-bottom: 1px solid var(--checkout-border);
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 28px;
+    min-height: 245px;
+    padding: 58px 84px 44px;
+    border-bottom: 0;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 46% 0%, rgba(22, 57, 122, 0.74), transparent 36%),
+        linear-gradient(135deg, #0b2b67 0%, #0d347b 56%, #0a2456 100%);
     text-align: left;
+}
+
+.checkout-invoice-top::after {
+    content: '';
+    position: absolute;
+    right: 80px;
+    bottom: -34px;
+    width: 126px;
+    height: 126px;
+    border-radius: 999px;
+    background: #2262d3;
+    box-shadow: 0 18px 36px rgba(7, 25, 73, 0.24);
+    z-index: 1;
 }
 
 .checkout-invoice-brand {
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: 26px;
+    font-size: 44px;
     font-weight: 900;
-    color: var(--checkout-strong);
+    color: #ffffff;
+    letter-spacing: 0.04em;
+    line-height: 1;
 }
 
-.checkout-invoice-brand span,
-.checkout-invoice-title span,
-.checkout-invoice-total strong {
-    color: var(--accent);
+.checkout-invoice-brand span {
+    color: #f2b705;
+}
+
+.checkout-invoice-brand small {
+    display: block;
+    margin-top: 14px;
+    color: #8fb3ef;
+    font-size: 11px;
+    letter-spacing: 0.42em;
 }
 
 .checkout-invoice-kicker {
-    margin: 10px 0 8px;
-    color: var(--accent);
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    min-width: 238px;
+    min-height: 42px;
+    justify-content: center;
+    margin: 0 0 22px;
+    padding: 0 24px;
+    color: #051b3c;
+    background: #f2b705;
+    font-size: 11px;
     font-weight: 900;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    clip-path: polygon(0 0, 96% 0, 100% 100%, 0% 100%);
 }
 
 .checkout-invoice-title {
     margin: 0;
-    color: var(--checkout-strong);
+    color: #ffffff;
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
     font-weight: 900;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
     line-height: 1;
+    text-align: right;
+}
+
+.checkout-invoice-title span {
+    color: #ffffff;
 }
 
 .checkout-invoice-meta {
-    min-width: 230px;
-    padding: 16px;
-    border: 1px solid var(--checkout-border);
-    border-radius: 10px;
-    background: rgba(255,255,255,0.045);
+    position: relative;
+    z-index: 2;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    min-width: 0;
+    margin-top: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .checkout-invoice-row {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    min-height: 52px;
+    min-height: 48px;
     align-items: center;
-    padding: 0 16px;
-    border-bottom: 1px solid var(--checkout-border);
+    padding: 0;
+    border-bottom: 1px solid rgba(10, 38, 86, 0.08);
 }
 
 .checkout-invoice-row:last-child {
@@ -603,82 +663,282 @@ body[data-theme="light"] .form-control:focus,
 }
 
 .checkout-invoice-meta .checkout-invoice-row {
-    min-height: auto;
-    padding: 0;
+    display: block;
+    min-height: 82px;
+    padding: 18px 18px 0;
     border: 0;
+    border-left: 1px solid rgba(242, 183, 5, 0.55);
 }
 
 .checkout-invoice-meta .checkout-invoice-row + .checkout-invoice-row {
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 .checkout-invoice-label {
-    color: var(--checkout-muted);
-    font-size: 13px;
+    display: block;
+    color: #7fa3df;
+    font-size: 10px;
     font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .checkout-invoice-value {
-    color: var(--checkout-strong);
+    display: block;
+    margin-top: 12px;
+    color: #ffffff;
     font-weight: 900;
-    text-align: right;
+    text-align: left;
+}
+
+.checkout-invoice-meta .checkout-invoice-row:last-child {
+    position: absolute;
+    right: 112px;
+    bottom: -22px;
+    width: 84px;
+    min-height: 84px;
+    padding: 20px 0 0;
+    border: 0;
+    text-align: center;
+}
+
+.checkout-invoice-meta .checkout-invoice-row:last-child .checkout-invoice-label,
+.checkout-invoice-meta .checkout-invoice-row:last-child .checkout-invoice-value {
+    color: #ffffff;
+    text-align: center;
 }
 
 .checkout-invoice-body {
-    padding: 28px;
+    padding: 44px 78px 34px;
     text-align: left;
 }
 
 .checkout-invoice-status {
+    display: none;
+}
+
+.checkout-invoice-boxes {
     display: grid;
-    grid-template-columns: 46px 1fr;
-    gap: 14px;
-    align-items: center;
-    margin-bottom: 22px;
-    padding: 16px;
-    border: 1px solid rgba(34,211,238,0.24);
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin: -6px 0 28px;
+}
+
+.checkout-invoice-box {
+    position: relative;
+    min-height: 116px;
+    padding: 18px 20px 16px 32px;
     border-radius: 10px;
-    background: rgba(34,211,238,0.08);
+    border: 1px solid #dce4f2;
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(15, 42, 85, 0.08);
 }
 
-.checkout-invoice-status-icon {
-    width: 46px;
-    height: 46px;
+.checkout-invoice-box::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 12px;
+    background: #2262d3;
+}
+
+.checkout-invoice-box-title {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    color: #041522;
-    font-size: 20px;
+    min-width: 100%;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: #eef3fb;
+    color: #2262d3;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
 }
 
-.checkout-invoice-status p {
-    margin: 3px 0 0;
-    color: var(--checkout-muted);
+.checkout-invoice-box strong {
+    display: block;
+    margin-top: 14px;
+    color: #0d2d6f;
+    font-size: 13px;
+}
+
+.checkout-invoice-box p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.45;
 }
 
 .checkout-invoice-table {
-    border: 1px solid var(--checkout-border);
-    border-radius: 10px;
+    border: 0;
+    border-radius: 0;
     overflow: hidden;
-    margin: 18px 0;
+    margin: 14px 0 0;
+}
+
+.checkout-invoice-section-title {
+    display: inline-block;
+    margin: 0 0 14px;
+    padding-bottom: 7px;
+    border-bottom: 6px solid #2262d3;
+    color: #0b2b67;
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.invoice-products {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    color: #0f2a55;
+}
+
+.invoice-products th {
+    padding: 14px 16px;
+    background: #0d347b;
+    color: #ffffff;
+    font-size: 11px;
+    text-align: right;
+}
+
+.invoice-products th:first-child,
+.invoice-products td:first-child {
+    text-align: left;
+}
+
+.invoice-products td {
+    padding: 14px 16px;
+    text-align: right;
+    border-bottom: 1px solid #e1e8f4;
+    background: #ffffff;
+}
+
+.invoice-products tr:nth-child(even) td {
+    background: #eaf0fb;
+}
+
+.checkout-invoice-summary {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 320px;
+    gap: 24px;
+    align-items: end;
+    margin-top: 22px;
+}
+
+.checkout-invoice-breakdown {
+    display: grid;
+    gap: 12px;
+}
+
+.checkout-invoice-breakdown .checkout-invoice-row {
+    min-height: auto;
+    padding: 0 0 10px;
+    border-color: #dfe7f4;
+}
+
+.checkout-invoice-breakdown .checkout-invoice-label {
+    color: #7b8798;
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.checkout-invoice-breakdown .checkout-invoice-value {
+    margin-top: 0;
+    color: #475569;
+    text-align: right;
+    font-size: 12px;
 }
 
 .checkout-invoice-total {
-    min-height: 64px;
-    background: rgba(34,211,238,0.08);
+    position: relative;
+    display: block;
+    min-height: 92px;
+    padding: 18px 24px 18px 46px;
+    border: 0;
+    background: #0d347b;
+    color: #ffffff;
+    box-shadow: 0 18px 38px rgba(13, 52, 123, 0.24);
 }
 
-.checkout-invoice-total strong {
+.checkout-invoice-total::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 24px;
+    background: #f2b705;
+}
+
+.checkout-invoice-total .checkout-invoice-label {
+    color: #9db8e5;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.checkout-invoice-total .checkout-invoice-value {
+    margin-top: 8px;
+    color: #ffffff;
+    text-align: right;
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: 24px;
+    font-size: 32px;
+}
+
+.checkout-invoice-payment {
+    margin-top: 8px;
+    color: #9db8e5;
+    font-size: 10px;
+    text-align: right;
+}
+
+.checkout-invoice-delivery {
+    margin-top: 26px;
+}
+
+.checkout-invoice-delivery .entrega-box {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: #2262d3;
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.checkout-invoice-delivery .entrega-main {
+    color: #f2b705;
+    font-size: 13px;
+}
+
+.checkout-invoice-delivery .entrega-date {
+    color: #dbeafe;
+    font-size: 11px;
+}
+
+.checkout-invoice-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    padding: 24px 78px 30px;
+    background: #0d347b;
+    color: #ffffff;
+}
+
+.checkout-invoice-footer strong {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.checkout-invoice-footer span,
+.checkout-invoice-footer p {
+    display: block;
+    margin: 0;
+    color: #c9d7f5;
+    font-size: 11px;
 }
 
 .checkout-invoice-note {
     margin: 18px 0 0;
-    color: var(--checkout-muted);
-    font-size: 13px;
+    color: #7b8798;
+    font-size: 11px;
     line-height: 1.55;
 }
 
@@ -698,19 +958,37 @@ body[data-theme="light"] .form-control:focus,
 
     .checkout-invoice-card {
         box-shadow: none !important;
-        border-color: #d1d5db !important;
-        background: #ffffff !important;
+        background: #f4f7fc !important;
         color: #111827 !important;
     }
 }
 
 @media (max-width: 720px) {
     .checkout-invoice-top {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        padding: 34px 24px 44px;
     }
 
     .checkout-invoice-meta {
-        width: 100%;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .checkout-invoice-meta .checkout-invoice-row:last-child {
+        position: static;
+        width: auto;
+        text-align: left;
+    }
+
+    .checkout-invoice-body,
+    .checkout-invoice-footer {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .checkout-invoice-boxes,
+    .checkout-invoice-summary,
+    .checkout-invoice-footer {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -721,71 +999,131 @@ body[data-theme="light"] .form-control:focus,
             <section class="checkout-panel glass-panel checkout-invoice-card" id="factura-pedido">
                 <header class="checkout-invoice-top">
                     <div>
-                        <div class="checkout-invoice-brand">NAYLEX<span>.</span> <small>STORE</small></div>
+                        <div class="checkout-invoice-brand">NAYLEX<span>.</span><small>STORE</small></div>
+                    </div>
+                    <div>
                         <p class="checkout-invoice-kicker"><?= htmlspecialchars('Factura de compra', ENT_QUOTES, 'UTF-8') ?></p>
-                        <h1 class="checkout-invoice-title"><?= htmlspecialchars('Pedido confirmado', ENT_QUOTES, 'UTF-8') ?> <span>#<?= (int) $pedidoConfirmado['id_pedido'] ?></span></h1>
+                        <h1 class="checkout-invoice-title">#NVX-<?= str_pad((string) ((int) $pedidoConfirmado['id_pedido']), 6, '0', STR_PAD_LEFT) ?></h1>
                     </div>
                     <div class="checkout-invoice-meta">
-                        <div class="checkout-invoice-row">
-                            <span class="checkout-invoice-label"><?= htmlspecialchars('Factura', ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong class="checkout-invoice-value">NVX-<?= str_pad((string) ((int) $pedidoConfirmado['id_pedido']), 6, '0', STR_PAD_LEFT) ?></strong>
-                        </div>
-                        <div class="checkout-invoice-row">
-                            <span class="checkout-invoice-label"><?= htmlspecialchars('Fecha', ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong class="checkout-invoice-value"><?= htmlspecialchars(date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?></strong>
-                        </div>
-                        <div class="checkout-invoice-row">
-                            <span class="checkout-invoice-label"><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong class="checkout-invoice-value"><?= htmlspecialchars('Confirmado', ENT_QUOTES, 'UTF-8') ?></strong>
-                        </div>
-                    </div>
-                </header>
-                <div class="checkout-invoice-body">
-                    <div class="checkout-invoice-status">
-                        <span class="checkout-invoice-status-icon" aria-hidden="true"><i class="fas fa-check"></i></span>
-                        <div>
-                            <strong><?= htmlspecialchars('Compra registrada correctamente', ENT_QUOTES, 'UTF-8') ?></strong>
-                            <p><?= htmlspecialchars('Puedes descargar esta factura o revisarla despues desde Mis pedidos.', ENT_QUOTES, 'UTF-8') ?></p>
-                        </div>
-                    </div>
-                    <div class="checkout-steps mb-4" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
-                        <span class="checkout-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="checkout-step"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="checkout-step"><i class="fas fa-credit-card"></i> <?= htmlspecialchars('Pago', ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="checkout-step active"><i class="fas fa-circle-check"></i> <?= htmlspecialchars('Confirmacion', ENT_QUOTES, 'UTF-8') ?></span>
-                    </div>
-                    <div class="checkout-invoice-table">
                         <div class="checkout-invoice-row">
                             <span class="checkout-invoice-label"><?= htmlspecialchars('Pedido', ENT_QUOTES, 'UTF-8') ?></span>
                             <strong class="checkout-invoice-value">#<?= (int) $pedidoConfirmado['id_pedido'] ?></strong>
                         </div>
-                        <?php if (isset($pedidoConfirmado['subtotal'], $pedidoConfirmado['iva'])): ?>
+                        <div class="checkout-invoice-row">
+                            <span class="checkout-invoice-label"><?= htmlspecialchars('Fecha', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong class="checkout-invoice-value"><?= htmlspecialchars(date('d M Y'), ENT_QUOTES, 'UTF-8') ?></strong>
+                        </div>
+                        <div class="checkout-invoice-row">
+                            <span class="checkout-invoice-label"><?= htmlspecialchars('Vence', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong class="checkout-invoice-value"><?= htmlspecialchars(date('d M Y'), ENT_QUOTES, 'UTF-8') ?></strong>
+                        </div>
+                        <div class="checkout-invoice-row">
+                            <span class="checkout-invoice-label"><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong class="checkout-invoice-value"><?= htmlspecialchars('Pagado', ENT_QUOTES, 'UTF-8') ?></strong>
+                        </div>
+                    </div>
+                </header>
+                <div class="checkout-invoice-body">
+                    <?php
+                    $receptorFactura = $pedidoConfirmado['receptor'] ?? [];
+                    $itemsFactura = isset($pedidoConfirmado['items']) && is_array($pedidoConfirmado['items']) ? $pedidoConfirmado['items'] : [];
+                    $entregaFactura = obtenerMensajeEntrega($pedidoConfirmado['fecha_estimada_entrega'] ?? null);
+                    ?>
+                    <div class="checkout-invoice-boxes">
+                        <div class="checkout-invoice-box">
+                            <span class="checkout-invoice-box-title"><?= htmlspecialchars('Facturado a', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong><?= htmlspecialchars((string) ($receptorFactura['nombre'] ?? 'Cliente NAYLEX'), ENT_QUOTES, 'UTF-8') ?></strong>
+                            <p><?= htmlspecialchars((string) ($receptorFactura['direccion'] ?? 'Direccion registrada'), ENT_QUOTES, 'UTF-8') ?></p>
+                            <p><?= htmlspecialchars((string) ($receptorFactura['ciudad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></p>
+                        </div>
+                        <div class="checkout-invoice-box">
+                            <span class="checkout-invoice-box-title"><?= htmlspecialchars('Entrega y pago', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong><?= htmlspecialchars((string) ($entregaFactura['mensaje'] ?? 'Entrega programada'), ENT_QUOTES, 'UTF-8') ?><?= !empty($entregaFactura['fecha']) ? ' - ' . htmlspecialchars((string) $entregaFactura['fecha'], ENT_QUOTES, 'UTF-8') : '' ?></strong>
+                            <p><?= htmlspecialchars('Metodo: ' . (string) ($pedidoConfirmado['metodo_pago'] ?? 'Pago registrado'), ENT_QUOTES, 'UTF-8') ?></p>
+                            <p><?= htmlspecialchars('Envio express certificado', ENT_QUOTES, 'UTF-8') ?></p>
+                        </div>
+                    </div>
+
+                    <div class="checkout-invoice-table">
+                        <h2 class="checkout-invoice-section-title"><?= htmlspecialchars('Productos del pedido', ENT_QUOTES, 'UTF-8') ?></h2>
+                        <?php if (!empty($itemsFactura)): ?>
+                            <table class="invoice-products">
+                                <thead>
+                                    <tr>
+                                        <th><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?></th>
+                                        <th><?= htmlspecialchars('Cant.', ENT_QUOTES, 'UTF-8') ?></th>
+                                        <th><?= htmlspecialchars('Precio unit.', ENT_QUOTES, 'UTF-8') ?></th>
+                                        <th><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($itemsFactura as $itemFactura): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars((string) ($itemFactura['nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8') ?></td>
+                                            <td>x<?= (int) ($itemFactura['cantidad'] ?? 0) ?></td>
+                                            <td>$<?= number_format((float) ($itemFactura['precio'] ?? 0)) ?></td>
+                                            <td>$<?= number_format((float) ($itemFactura['subtotal'] ?? 0)) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <table class="invoice-products">
+                                <tbody>
+                                    <tr>
+                                        <td><?= htmlspecialchars('Productos del pedido', ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td>1</td>
+                                        <td>$<?= number_format((float) ($pedidoConfirmado['subtotal'] ?? 0)) ?></td>
+                                        <td>$<?= number_format((float) ($pedidoConfirmado['subtotal'] ?? 0)) ?></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="checkout-invoice-summary">
+                        <p class="checkout-invoice-note"><?= htmlspecialchars('Esta factura es un documento oficial de compra. Conserva este soporte para cualquier reclamacion o devolucion.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <div class="checkout-invoice-breakdown">
                             <div class="checkout-invoice-row">
                                 <span class="checkout-invoice-label"><?= htmlspecialchars('Subtotal productos', ENT_QUOTES, 'UTF-8') ?></span>
-                                <strong class="checkout-invoice-value">$<?= number_format((float) $pedidoConfirmado['subtotal']) ?> COP</strong>
+                                <strong class="checkout-invoice-value">$<?= number_format((float) ($pedidoConfirmado['subtotal'] ?? 0)) ?></strong>
                             </div>
                             <div class="checkout-invoice-row">
                                 <span class="checkout-invoice-label"><?= htmlspecialchars('IVA', ENT_QUOTES, 'UTF-8') ?> 19%</span>
-                                <strong class="checkout-invoice-value">$<?= number_format((float) $pedidoConfirmado['iva']) ?> COP</strong>
+                                <strong class="checkout-invoice-value">$<?= number_format((float) ($pedidoConfirmado['iva'] ?? 0)) ?></strong>
                             </div>
                             <div class="checkout-invoice-row">
                                 <span class="checkout-invoice-label"><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span>
-                                <strong class="checkout-invoice-value">$<?= number_format((float) ($pedidoConfirmado['envio'] ?? 0)) ?> COP</strong>
+                                <strong class="checkout-invoice-value">$<?= number_format((float) ($pedidoConfirmado['envio'] ?? 0)) ?></strong>
                             </div>
-                            <?php if (!empty($pedidoConfirmado['metodo_pago'])): ?>
-                            <div class="checkout-invoice-row">
-                                <span class="checkout-invoice-label"><?= htmlspecialchars('Metodo de pago', ENT_QUOTES, 'UTF-8') ?></span>
-                                <strong class="checkout-invoice-value"><?= htmlspecialchars((string) $pedidoConfirmado['metodo_pago'], ENT_QUOTES, 'UTF-8') ?></strong>
+                            <div class="checkout-invoice-total">
+                                <span class="checkout-invoice-label"><?= htmlspecialchars('Total a pagar', ENT_QUOTES, 'UTF-8') ?></span>
+                                <strong class="checkout-invoice-value">$<?= number_format((float) $pedidoConfirmado['total']) ?></strong>
+                                <p class="checkout-invoice-payment"><?= htmlspecialchars('Pesos colombianos (COP) / IVA incluido', ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                        <div class="checkout-invoice-row checkout-invoice-total">
-                            <span class="checkout-invoice-label"><?= htmlspecialchars('Total pagado', ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong class="checkout-invoice-value">$<?= number_format((float) $pedidoConfirmado['total']) ?> COP</strong>
                         </div>
                     </div>
-                    <?php renderEntregaBox($pedidoConfirmado['fecha_estimada_entrega'] ?? null); ?>
-                    <p class="checkout-invoice-note"><?= htmlspecialchars('Para guardar como PDF, usa Descargar factura y elige Guardar como PDF en la ventana de impresion.', ENT_QUOTES, 'UTF-8') ?></p>
+
+                    <div class="checkout-invoice-delivery">
+                        <?php renderEntregaBox($pedidoConfirmado['fecha_estimada_entrega'] ?? null); ?>
+                    </div>
+                </div>
+                <footer class="checkout-invoice-footer">
+                    <div>
+                        <strong>NAYLEX.</strong>
+                        <span>www.naylex.store</span>
+                        <span>soporte@naylex.store</span>
+                    </div>
+                    <div>
+                        <strong><?= htmlspecialchars('Gracias por tu compra', ENT_QUOTES, 'UTF-8') ?></strong>
+                        <p><?= htmlspecialchars('Tu satisfaccion es nuestra prioridad', ENT_QUOTES, 'UTF-8') ?></p>
+                    </div>
+                    <div>
+                        <span>Factura #NVX-<?= str_pad((string) ((int) $pedidoConfirmado['id_pedido']), 6, '0', STR_PAD_LEFT) ?></span>
+                        <span><?= htmlspecialchars('Emitida: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars(date('d M Y'), ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                </footer>
                 <div class="checkout-actions mt-3">
                     <button class="checkout-btn primary" type="button" onclick="window.print()">
                         <i class="fas fa-file-arrow-down"></i>
@@ -799,7 +1137,6 @@ body[data-theme="light"] .form-control:focus,
                         <i class="fas fa-store"></i>
                         <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
                     </a>
-                </div>
                 </div>
             </section>
         <?php else: ?>

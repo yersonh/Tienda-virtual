@@ -19,22 +19,27 @@ function orderStepIndex(array $pedido): int {
 
     $idEstado = (int) ($pedido['id_estado'] ?? 0);
     if ($idEstado > 0) {
-        return max(1, min(5, $idEstado));
+        return max(1, min(4, $idEstado));
     }
 
-    if (str_contains($estado, 'entreg')) return 5;
-    if (str_contains($estado, 'ruta') || str_contains($estado, 'camino') || str_contains($estado, 'despach')) return 4;
-    if (str_contains($estado, 'prepar')) return 3;
-    if (str_contains($estado, 'pag') || str_contains($estado, 'apro')) return 2;
+    if (str_contains($estado, 'entreg')) return 4;
+    if (str_contains($estado, 'envi') || str_contains($estado, 'ruta') || str_contains($estado, 'camino') || str_contains($estado, 'despach')) return 3;
+    if (str_contains($estado, 'proces') || str_contains($estado, 'pag') || str_contains($estado, 'apro')) return 2;
     return 1;
 }
 
-function statusClass(string $estado): string {
+function statusClass(string $estado, int $idEstado = 0): string {
+    if ($idEstado === 1) return 'is-pending';
+    if ($idEstado === 2) return 'is-processed';
+    if ($idEstado === 3) return 'is-shipped';
+    if ($idEstado === 4) return 'is-done';
+    if ($idEstado === 5) return 'is-canceled';
+
     $estado = strtolower($estado);
     if (str_contains($estado, 'cancel')) return 'is-canceled';
     if (str_contains($estado, 'entreg')) return 'is-done';
-    if (str_contains($estado, 'ruta') || str_contains($estado, 'camino') || str_contains($estado, 'despach')) return 'is-route';
-    if (str_contains($estado, 'pag') || str_contains($estado, 'apro') || str_contains($estado, 'prepar')) return 'is-active';
+    if (str_contains($estado, 'envi') || str_contains($estado, 'ruta') || str_contains($estado, 'camino') || str_contains($estado, 'despach')) return 'is-shipped';
+    if (str_contains($estado, 'proces') || str_contains($estado, 'pag') || str_contains($estado, 'apro')) return 'is-processed';
     return 'is-pending';
 }
 
@@ -189,12 +194,17 @@ function canCancelOrder(array $pedido): bool {
     font-size: 12px;
     font-weight: 900;
 }
-.status-pill.is-active {
+.status-pill.is-pending {
+    border-color: rgba(251,191,36,0.36);
+    background: rgba(251,191,36,0.13);
+    color: #fbbf24;
+}
+.status-pill.is-processed {
     border-color: rgba(56,189,248,0.3);
     background: rgba(56,189,248,0.12);
     color: #7dd3fc;
 }
-.status-pill.is-route {
+.status-pill.is-shipped {
     border-color: rgba(20,216,189,0.32);
     background: rgba(20,216,189,0.12);
     color: var(--accent);
@@ -317,7 +327,7 @@ function canCancelOrder(array $pedido): bool {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 .delivery-step {
@@ -359,6 +369,43 @@ function canCancelOrder(array $pedido): bool {
     border-radius: 14px;
     color: var(--secondary);
     background: rgba(56,189,248,0.07);
+}
+.order-items-mini {
+    display: grid;
+    gap: 10px;
+}
+.order-mini-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+.order-mini-item:last-child {
+    border-bottom: 0;
+}
+.order-mini-name {
+    display: block;
+    color: var(--text);
+    font-weight: 900;
+    line-height: 1.25;
+}
+.order-mini-meta {
+    display: block;
+    margin-top: 4px;
+    color: var(--secondary);
+    font-size: 12px;
+}
+.order-mini-total {
+    color: var(--accent-strong);
+    font-weight: 900;
+    white-space: nowrap;
+}
+.order-mini-empty {
+    margin: 0;
+    color: var(--secondary);
+    font-size: 13px;
 }
 @media (max-width: 820px) {
     .orders-head,
@@ -413,6 +460,7 @@ function canCancelOrder(array $pedido): bool {
             <div class="orders-toolbar">
                 <?php if ($pedidoDetalle): ?>
                     <a class="orders-btn" href="index.php?action=misPedidos"><i class="fas fa-arrow-left"></i><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
+                    <button class="orders-btn primary" type="button" onclick="window.print()"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></button>
                 <?php endif; ?>
                 <a class="orders-btn primary" href="index.php?action=tienda"><i class="fas fa-store"></i><?= htmlspecialchars('Tienda', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
@@ -428,14 +476,14 @@ function canCancelOrder(array $pedido): bool {
         <?php if ($pedidoDetalle): ?>
             <?php
             $stepIndex = orderStepIndex($pedidoDetalle);
-            $progress = (($stepIndex - 1) / 4) * 100;
+            $progress = (($stepIndex - 1) / 3) * 100;
             $estadoDetalle = (string) ($pedidoDetalle['estado'] ?? 'Pendiente');
             $puedeCancelarDetalle = canCancelOrder($pedidoDetalle);
+            $itemsPedidoDetalle = isset($pedidoDetalle['items']) && is_array($pedidoDetalle['items']) ? $pedidoDetalle['items'] : [];
             $steps = [
-                ['Pedido recibido', 'Creamos tu orden y guardamos la direccion.'],
-                ['Pago confirmado', 'El pago fue registrado y el pedido queda activo.'],
-                ['Preparacion', 'Estamos separando y revisando los productos.'],
-                ['En ruta', 'El pedido salio hacia la direccion registrada.'],
+                ['Pendiente', 'Creamos tu orden y estamos validando el pedido.'],
+                ['Procesado', 'El pedido fue procesado y queda listo para envio.'],
+                ['Enviado', 'El pedido salio hacia la direccion registrada.'],
                 ['Entregado', 'La compra ya fue entregada al receptor.']
             ];
             ?>
@@ -443,7 +491,7 @@ function canCancelOrder(array $pedido): bool {
                 <div class="detail-layout">
                     <div class="detail-box">
                         <h2><?= htmlspecialchars('Proceso de entrega', ENT_QUOTES, 'UTF-8') ?></h2>
-                        <span class="status-pill <?= statusClass($estadoDetalle) ?>"><?= htmlspecialchars($estadoDetalle, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="status-pill <?= statusClass($estadoDetalle, (int) ($pedidoDetalle['id_estado'] ?? 0)) ?>"><?= htmlspecialchars($estadoDetalle, ENT_QUOTES, 'UTF-8') ?></span>
                         <div class="delivery-track" style="--progress: <?= number_format($progress, 2, '.', '') ?>%;">
                             <div class="delivery-cart" aria-hidden="true"><i class="fas fa-shopping-cart"></i></div>
                             <div class="delivery-line"></div>
@@ -494,6 +542,44 @@ function canCancelOrder(array $pedido): bool {
                         <p class="orders-sub"><?= htmlspecialchars($pedidoDetalle['informacion_adicional'] ?? 'Sin informacion adicional para este pedido.', ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
                 </div>
+
+                <div class="detail-layout" style="margin-top:18px;">
+                    <div class="detail-box">
+                        <h2><?= htmlspecialchars('Productos comprados', ENT_QUOTES, 'UTF-8') ?></h2>
+                        <?php if (!empty($itemsPedidoDetalle)): ?>
+                            <div class="order-items-mini">
+                                <?php foreach ($itemsPedidoDetalle as $itemPedido): ?>
+                                    <?php
+                                        $nombreItem = (string) ($itemPedido['nombre'] ?? 'Producto');
+                                        $cantidadItem = (int) ($itemPedido['cantidad'] ?? 0);
+                                        $precioItem = (float) ($itemPedido['precio'] ?? 0);
+                                        $subtotalItem = (float) ($itemPedido['subtotal'] ?? ($precioItem * $cantidadItem));
+                                    ?>
+                                    <div class="order-mini-item">
+                                        <span>
+                                            <span class="order-mini-name"><?= htmlspecialchars($nombreItem, ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="order-mini-meta"><?= $cantidadItem ?> x $<?= number_format($precioItem) ?> COP</span>
+                                        </span>
+                                        <strong class="order-mini-total">$<?= number_format($subtotalItem) ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <p class="order-mini-empty"><?= htmlspecialchars('No hay productos detallados para este pedido.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="detail-box">
+                        <h2><?= htmlspecialchars('Resumen productos', ENT_QUOTES, 'UTF-8') ?></h2>
+                        <div class="detail-row">
+                            <span><?= htmlspecialchars('Unidades', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong><?= array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $itemsPedidoDetalle)) ?></strong>
+                        </div>
+                        <div class="detail-row">
+                            <span><?= htmlspecialchars('Subtotal items', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong>$<?= number_format(array_sum(array_map(fn($item) => (float) ($item['subtotal'] ?? 0), $itemsPedidoDetalle))) ?> COP</strong>
+                        </div>
+                    </div>
+                </div>
             </section>
         <?php else: ?>
             <?php
@@ -527,12 +613,16 @@ function canCancelOrder(array $pedido): bool {
                                 <div class="order-muted">COP</div>
                             </div>
                             <div>
-                                <span class="status-pill <?= statusClass($estado) ?>"><?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="status-pill <?= statusClass($estado, (int) ($pedido['id_estado'] ?? 0)) ?>"><?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
                             <div class="orders-toolbar">
                                 <a class="orders-btn primary" href="index.php?action=misPedidos&id=<?= $idPedido ?>">
                                     <i class="fas fa-route"></i>
                                     <?= htmlspecialchars('Ver detalle', ENT_QUOTES, 'UTF-8') ?>
+                                </a>
+                                <a class="orders-btn" href="index.php?action=misPedidos&id=<?= $idPedido ?>&print=1">
+                                    <i class="fas fa-file-arrow-down"></i>
+                                    <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
                                 </a>
                                 <?php if ($puedeCancelar): ?>
                                     <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
@@ -575,6 +665,10 @@ document.querySelectorAll('[data-confirm-cancel]').forEach((form) => {
         }
     });
 });
+
+<?php if (!empty($_GET['print']) && $pedidoDetalle): ?>
+window.addEventListener('load', () => window.print());
+<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
