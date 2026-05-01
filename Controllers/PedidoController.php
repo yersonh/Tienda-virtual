@@ -240,10 +240,6 @@ class PedidoController {
     }
 
     private function obtenerColumnasTabla(string $tabla): array {
-        if ($tabla === 'VENTA' && isset($_SESSION['venta_columnas_cache']) && is_array($_SESSION['venta_columnas_cache'])) {
-            return $_SESSION['venta_columnas_cache'];
-        }
-
         if ($tabla === 'VENTA' && $this->ventaColumnasCache !== null) {
             return $this->ventaColumnasCache;
         }
@@ -271,7 +267,7 @@ class PedidoController {
 
         if ($tabla === 'VENTA') {
             $this->ventaColumnasCache = $columnas;
-            $_SESSION['venta_columnas_cache'] = $columnas;
+            unset($_SESSION['venta_columnas_cache']);
         }
 
         return $columnas;
@@ -315,6 +311,7 @@ class PedidoController {
                 continue;
             }
 
+            // La tabla VENTA usa FECHA para registrar la fecha de la venta.
             if (in_array($lowerName, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at'], true)) {
                 $insertColumns[] = $meta['name'];
                 $valueExpressions[] = 'SYSDATE';

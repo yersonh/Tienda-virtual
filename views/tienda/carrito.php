@@ -2,10 +2,10 @@
 
 <style>
 .cart-page {
-    padding: 36px 32px 88px;
+    padding: 28px 24px 88px;
 }
 .cart-shell {
-    max-width: 1280px;
+    max-width: 1180px;
     margin: 0 auto;
 }
 .cart-head {
@@ -13,11 +13,11 @@
     justify-content: space-between;
     align-items: end;
     gap: 16px;
-    margin-bottom: 28px;
+    margin-bottom: 22px;
 }
 .cart-title {
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: clamp(32px, 5vw, 48px);
+    font-size: clamp(30px, 4vw, 44px);
     line-height: 1.02;
     margin: 0 0 8px;
 }
@@ -30,7 +30,7 @@
     align-items: center;
     gap: 8px;
     padding: 11px 16px;
-    border-radius: 14px;
+    border-radius: 8px;
     border: 1px solid rgba(239,68,68,0.2);
     background: rgba(239,68,68,0.08);
     color: #f87171;
@@ -39,39 +39,46 @@
 }
 .cart-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 24px;
+    align-items: start;
 }
 .cart-list,
 .cart-summary,
 .cart-empty {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 28px;
+    border-radius: 10px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
 }
 .cart-list {
-    padding: 10px;
+    padding: 8px;
     content-visibility: auto;
     contain-intrinsic-size: 540px;
 }
 .cart-item {
     display: grid;
-    grid-template-columns: 122px minmax(0, 1fr) auto;
+    grid-template-columns: 112px minmax(0, 1fr) minmax(112px, auto);
     gap: 18px;
     padding: 16px;
-    border-radius: 22px;
-    transition: background 0.2s;
+    border-radius: 8px;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     contain: content;
+}
+.cart-item:hover {
+    background: rgba(255,255,255,0.045);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.16);
 }
 .cart-item + .cart-item {
     border-top: 1px solid var(--border);
 }
 .cart-item-media {
-    width: 122px;
-    height: 122px;
-    border-radius: 18px;
+    width: 112px;
+    height: 112px;
+    border-radius: 8px;
     overflow: hidden;
     background: rgba(255,255,255,0.04);
     display: flex;
@@ -85,7 +92,7 @@
 }
 .cart-item-name {
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: 22px;
+    font-size: 19px;
     margin-bottom: 6px;
 }
 .cart-item-name a {
@@ -99,6 +106,15 @@
     color: var(--secondary);
     font-size: 13px;
     margin-bottom: 12px;
+}
+.cart-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
 }
 .cart-item-price {
     font-size: 15px;
@@ -121,7 +137,7 @@
     display: inline-flex;
     align-items: center;
     min-height: 46px;
-    border-radius: 14px;
+    border-radius: 8px;
     border: 1px solid var(--border);
     overflow: hidden;
     background: rgba(255,255,255,0.04);
@@ -133,6 +149,11 @@
     color: var(--secondary);
     font-size: 20px;
     cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.cart-qty button:hover:not(:disabled) {
+    background: rgba(20,216,189,0.12);
+    color: var(--accent);
 }
 .cart-qty button:disabled {
     cursor: not-allowed;
@@ -148,19 +169,26 @@
 .cart-checkout {
     min-height: 46px;
     padding: 0 16px;
-    border-radius: 14px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     text-decoration: none;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 800;
 }
 .cart-checkout {
     border: 1px solid rgba(0,229,192,0.28);
-    background: rgba(0,229,192,0.12);
-    color: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: #06121f;
+    box-shadow: 0 14px 26px rgba(20,216,189,0.2);
+}
+.cart-checkout:hover,
+.cart-continue:hover,
+.cart-remove:hover,
+.cart-clear:hover {
+    transform: translateY(-2px);
 }
 .cart-remove {
     border: 1px solid rgba(239,68,68,0.18);
@@ -171,6 +199,8 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
+    position: sticky;
+    top: 92px;
 }
 .cart-summary {
     padding: 24px;
@@ -186,6 +216,7 @@
     gap: 12px;
     color: var(--secondary);
     margin-bottom: 14px;
+    align-items: center;
 }
 .cart-row strong {
     color: var(--text);
@@ -194,6 +225,21 @@
     padding-top: 16px;
     border-top: 1px solid var(--border);
     font-size: 18px;
+}
+.cart-total strong {
+    color: var(--accent);
+    font-size: 24px;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+}
+.cart-summary-note {
+    margin: 16px 0 18px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(20,216,189,0.18);
+    background: rgba(20,216,189,0.08);
+    color: var(--secondary);
+    font-size: 13px;
+    line-height: 1.45;
 }
 .cart-checkout,
 .cart-continue {
@@ -205,14 +251,14 @@
     color: var(--text);
 }
 .cart-empty {
-    padding: 42px;
+    padding: 52px 28px;
     text-align: center;
 }
 .cart-alert {
     margin-bottom: 18px;
     padding: 12px 16px;
     border: 1px solid rgba(239,68,68,0.2);
-    border-radius: 14px;
+    border-radius: 8px;
     background: rgba(239,68,68,0.08);
     color: #fca5a5;
 }
@@ -238,9 +284,34 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+.cart-line-total {
+    text-align: right;
+    align-self: center;
+}
+.cart-line-total span {
+    display: block;
+    color: var(--secondary);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+.cart-status {
+    display: none;
+    margin-top: 12px;
+    color: var(--secondary);
+    font-size: 13px;
+}
+.cart-status.is-visible {
+    display: block;
+}
 @media (max-width: 980px) {
     .cart-grid {
         grid-template-columns: 1fr;
+    }
+    .cart-side {
+        position: static;
     }
 }
 @media (max-width: 640px) {
@@ -257,6 +328,9 @@
     .cart-item-media {
         width: 100%;
         height: 240px;
+    }
+    .cart-line-total {
+        text-align: left;
     }
 }
 </style>
@@ -331,12 +405,12 @@
                                     <a href="<?= htmlspecialchars($categoriaLink, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') ?></a>
                                 </div>
                                 <div class="cart-item-meta">
-                                    <span>#<?= (int) $item['id_producto'] ?></span>
+                                    <span class="cart-pill">#<?= (int) $item['id_producto'] ?></span>
                                     <?php if (!empty($item['categoria_nombre'])): ?>
-                                        <span><?= htmlspecialchars((string) $item['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="cart-pill"><?= htmlspecialchars((string) $item['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
                                     <?php endif; ?>
                                     <?php if ($stockDisponible !== null): ?>
-                                        <span><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?> <?= $stockDisponible ?></span>
+                                        <span class="cart-pill"><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?> <?= $stockDisponible ?></span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="cart-item-price"><?= htmlspecialchars('Precio unitario', ENT_QUOTES, 'UTF-8') ?>: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
@@ -377,9 +451,17 @@
                             <span><?= htmlspecialchars('Subtotal', ENT_QUOTES, 'UTF-8') ?></span>
                             <strong id="cart-subtotal">$<?= number_format((float) $totalPagarResumen) ?></strong>
                         </div>
+                        <p class="cart-summary-note">
+                            <?= htmlspecialchars('El envio y los impuestos finales se calculan en el siguiente paso segun tu direccion.', ENT_QUOTES, 'UTF-8') ?>
+                        </p>
+                        <a class="cart-checkout" href="index.php?action=ConfirmarPedido">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+                            <?= htmlspecialchars('Continuar compra', ENT_QUOTES, 'UTF-8') ?>
+                        </a>
+                        <div class="cart-status" id="cart-status" role="status" aria-live="polite"></div>
                     </section>
 
-                    <a class="cart-checkout" href="index.php?action=tienda">
+                    <a class="cart-continue" href="index.php?action=tienda">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
                         <?= !empty($_SESSION['logueado']) ? htmlspecialchars('Seguir comprando', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Seguir viendo', ENT_QUOTES, 'UTF-8') ?>
                     </a>
@@ -388,10 +470,6 @@
                         <?= htmlspecialchars('Continuar luego', ENT_QUOTES, 'UTF-8') ?>
                     </a>
                 </aside>
-            </div>
-
-            <div class="d-flex justify-content-end mt-4">
-                <a class="btn btn-success btn-lg" href="index.php?action=ConfirmarPedido"><?= htmlspecialchars('Continuar compra', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
         <?php endif; ?>
     </div>
@@ -441,64 +519,61 @@ function handleCartAuthError(response) {
     return false;
 }
 
-async function updateCartItem(id) {
-    const qty = parseInt(document.getElementById('cart-qty-' + id).textContent, 10);
-    const response = await fetch('index.php?action=actualizarCarrito', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            'X-Requested-With': 'fetch',
-            'Accept': 'application/json'
-        },
-        body: new URLSearchParams({
-            id_producto: id,
-            cantidad: qty
-        })
-    });
+function showCartStatus(message, isError = false) {
+    const status = document.getElementById('cart-status');
+    if (!status) return;
 
-    const data = await response.json();
-    if (handleCartAuthError(response)) return;
-    if (!response.ok || !data.ok) return;
+    status.textContent = message;
+    status.style.color = isError ? '#fca5a5' : 'var(--secondary)';
+    status.classList.add('is-visible');
 
-    const qtyEl = document.getElementById('cart-qty-' + id);
-    if (qtyEl && typeof data.cantidad !== 'undefined') {
-        qtyEl.textContent = data.cantidad;
-    }
-
-    syncCartSummary(data);
-    if (typeof data.cantidad !== 'undefined' && data.cantidad <= 0) {
-        removeCartRow(id);
-        return;
-    }
-
-    syncCartQtyButtons(id, data.stock || 0);
-    const lineTotal = document.getElementById('cart-line-total-' + id);
-    if (lineTotal) {
-        lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');
-    }
+    window.clearTimeout(showCartStatus.timer);
+    showCartStatus.timer = window.setTimeout(() => {
+        status.classList.remove('is-visible');
+    }, 2600);
 }
 
-async function removeCartItem(id) {
-    const response = await fetch('index.php?action=eliminarCarrito', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            'X-Requested-With': 'fetch',
-            'Accept': 'application/json'
-        },
-        body: new URLSearchParams({ id_producto: id })
-    });
+async function readCartJson(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        throw new Error('Respuesta inesperada del servidor');
+    }
 
-    const data = await response.json();
-    if (handleCartAuthError(response)) return;
-    if (!response.ok || !data.ok) return;
+    return response.json();
+}
 
-    syncCartSummary(data);
+async function updateCartItem(id) {
+    try {
+        const qty = parseInt(document.getElementById('cart-qty-' + id).textContent, 10);
+        const response = await fetch('index.php?action=actualizarCarrito', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams({
+                id_producto: id,
+                cantidad: qty
+            })
+        });
 
-    if (typeof data.cantidad !== 'undefined' && data.cantidad > 0) {
+        if (handleCartAuthError(response)) return;
+        const data = await readCartJson(response);
+        if (!response.ok || !data.ok) {
+            showCartStatus(data.message || 'No se pudo actualizar el carrito', true);
+            return;
+        }
+
         const qtyEl = document.getElementById('cart-qty-' + id);
-        if (qtyEl) {
+        if (qtyEl && typeof data.cantidad !== 'undefined') {
             qtyEl.textContent = data.cantidad;
+        }
+
+        syncCartSummary(data);
+        if (typeof data.cantidad !== 'undefined' && data.cantidad <= 0) {
+            removeCartRow(id);
+            return;
         }
 
         syncCartQtyButtons(id, data.stock || 0);
@@ -506,26 +581,76 @@ async function removeCartItem(id) {
         if (lineTotal) {
             lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');
         }
-        return;
+        showCartStatus('Carrito actualizado');
+    } catch (error) {
+        showCartStatus(error.message || 'No se pudo actualizar el carrito', true);
     }
+}
 
-    removeCartRow(id);
+async function removeCartItem(id) {
+    try {
+        const response = await fetch('index.php?action=eliminarCarrito', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams({ id_producto: id })
+        });
+
+        if (handleCartAuthError(response)) return;
+        const data = await readCartJson(response);
+        if (!response.ok || !data.ok) {
+            showCartStatus(data.message || 'No se pudo quitar el producto', true);
+            return;
+        }
+
+        syncCartSummary(data);
+
+        if (typeof data.cantidad !== 'undefined' && data.cantidad > 0) {
+            const qtyEl = document.getElementById('cart-qty-' + id);
+            if (qtyEl) {
+                qtyEl.textContent = data.cantidad;
+            }
+
+            syncCartQtyButtons(id, data.stock || 0);
+            const lineTotal = document.getElementById('cart-line-total-' + id);
+            if (lineTotal) {
+                lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');
+            }
+            showCartStatus('Producto actualizado');
+            return;
+        }
+
+        showCartStatus('Producto quitado');
+        removeCartRow(id);
+    } catch (error) {
+        showCartStatus(error.message || 'No se pudo quitar el producto', true);
+    }
 }
 
 async function vaciarCarrito() {
-    const response = await fetch('index.php?action=vaciarCarrito', {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'fetch',
-            'Accept': 'application/json'
+    try {
+        const response = await fetch('index.php?action=vaciarCarrito', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (handleCartAuthError(response)) return;
+        const data = await readCartJson(response);
+        if (!response.ok || !data.ok) {
+            showCartStatus(data.message || 'No se pudo vaciar el carrito', true);
+            return;
         }
-    });
 
-    const data = await response.json();
-    if (handleCartAuthError(response)) return;
-    if (!response.ok || !data.ok) return;
-
-    window.location.reload();
+        window.location.reload();
+    } catch (error) {
+        showCartStatus(error.message || 'No se pudo vaciar el carrito', true);
+    }
 }
 
 function syncCartSummary(data) {

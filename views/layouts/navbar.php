@@ -28,42 +28,49 @@ $currentAction = $_GET['action'] ?? 'tienda';
 
 <style>
 :root {
-  --bg: #070b14;
-  --text: #edf4ff;
-  --accent: #14d8bd;
+  --bg: #07101f;
+  --text: #e9f2ff;
+  --accent: #22d3ee;
   --accent-strong: #38bdf8;
-  --secondary: #9aa8bd;
-  --card-bg: rgba(15, 23, 42, 0.74);
-  --border: rgba(148, 163, 184, 0.16);
-  --hover: rgba(20, 216, 189, 0.28);
+  --secondary: #9fb0c8;
+  --card-bg: rgba(15, 27, 46, 0.82);
+  --border: rgba(56, 189, 248, 0.18);
+  --hover: rgba(34, 211, 238, 0.22);
   --radius: 14px;
   --transition: 180ms ease;
-  --shadow: 0 18px 46px rgba(2, 6, 23, 0.34);
-  --soft-surface: rgba(255, 255, 255, 0.06);
+  --shadow: 0 22px 54px rgba(2, 8, 23, 0.42);
+  --soft-surface: rgba(56, 189, 248, 0.08);
 }
 
 [data-theme="light"], .light-mode {
-  --bg: #f5f8fb;
-  --text: #122033;
-  --accent: #0f766e;
-  --accent-strong: #0284c7;
-  --secondary: #64748b;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --border: rgba(100, 116, 139, 0.18);
-  --hover: rgba(15, 118, 110, 0.12);
-  --shadow: 0 18px 42px rgba(100, 116, 139, 0.16);
-  --soft-surface: rgba(15, 23, 42, 0.04);
+  --bg: #eef7fb;
+  --text: #102033;
+  --accent: #0891b2;
+  --accent-strong: #38bdf8;
+  --secondary: #5f7188;
+  --card-bg: rgba(255, 255, 255, 0.78);
+  --border: rgba(8, 145, 178, 0.2);
+  --hover: rgba(34, 211, 238, 0.16);
+  --shadow: 0 22px 48px rgba(15, 55, 90, 0.16);
+  --soft-surface: rgba(8, 145, 178, 0.08);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
+    background:
+        linear-gradient(180deg, #07101f 0%, #0f1b2e 46%, #101827 100%);
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
     text-rendering: geometricPrecision;
+}
+[data-theme="light"] body,
+body[data-theme="light"],
+body.light-mode {
+    background:
+        linear-gradient(180deg, #f7fbff 0%, #eaf7fb 48%, #dfeff7 100%);
 }
 
 /* NAV */
@@ -73,19 +80,19 @@ body {
     justify-content: space-between;
     gap: 18px;
     padding: 14px clamp(16px, 3vw, 34px);
-    background: rgba(7, 11, 20, 0.84);
+    background: rgba(7, 13, 26, 0.88);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 12px 34px rgba(2, 6, 23, 0.22);
+    border-bottom: 1px solid rgba(56, 189, 248, 0.16);
+    box-shadow: 0 16px 38px rgba(2, 8, 23, 0.34);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 [data-theme="light"] .nav {
-    background: rgba(255, 255, 255, 0.86);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 12px 30px rgba(100, 116, 139, 0.12);
+    background: rgba(247, 252, 255, 0.82);
+    border-bottom: 1px solid rgba(8, 145, 178, 0.16);
+    box-shadow: 0 16px 34px rgba(15, 55, 90, 0.12);
 }
 .nav-logo {
     font-family: 'Space Grotesk', sans-serif;
@@ -129,9 +136,15 @@ body {
     gap: 6px;
     align-items: center;
     padding: 5px;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(56, 189, 248, 0.14);
     border-radius: 999px;
-    background: var(--soft-surface);
+    background: rgba(12, 22, 39, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 28px rgba(2, 8, 23, 0.2);
+}
+[data-theme="light"] .nav-links {
+    background: rgba(255, 255, 255, 0.66);
+    border-color: rgba(8, 145, 178, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 12px 28px rgba(15, 55, 90, 0.1);
 }
 .nav-links a {
     color: var(--secondary);
@@ -144,11 +157,11 @@ body {
     cursor: pointer;
 }
 
-.nav-links a:hover { color: var(--text); background: rgba(148, 163, 184, 0.1); }
+.nav-links a:hover { color: var(--text); background: rgba(34, 211, 238, 0.1); }
 .nav-links a.active {
-    color: #06201d;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    box-shadow: 0 10px 22px rgba(20, 216, 189, 0.18);
+    color: #041522;
+    background: linear-gradient(135deg, #22d3ee, #38bdf8);
+    box-shadow: 0 12px 26px rgba(34, 211, 238, 0.26);
 }
 .side-backdrop {
     position: fixed;
@@ -170,7 +183,7 @@ body {
     width: min(320px, 88vw);
     height: 100vh;
     padding: 22px;
-    background: rgba(7, 11, 20, 0.94);
+    background: rgba(7, 13, 26, 0.94);
     border-right: 1px solid var(--border);
     box-shadow: 28px 0 58px rgba(2, 6, 23, 0.42);
     backdrop-filter: blur(18px);
@@ -180,7 +193,7 @@ body {
     z-index: 200;
 }
 [data-theme="light"] .side-panel {
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(247, 252, 255, 0.96);
 }
 .side-panel.is-open {
     transform: translateX(0);
@@ -245,7 +258,7 @@ body {
 }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); box-shadow: 0 12px 24px rgba(2, 6, 23, 0.12); }
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background: linear-gradient(135deg, #22d3ee, #38bdf8);
     border: none;
     color: #ffffff;
     padding: 9px 18px;
@@ -254,7 +267,7 @@ body {
     font-weight: 800;
     cursor: pointer;
     font-family: inherit;
-    box-shadow: 0 12px 26px rgba(14, 165, 233, 0.25);
+    box-shadow: 0 12px 26px rgba(34, 211, 238, 0.25);
     transition: transform var(--transition), box-shadow var(--transition), filter var(--transition);
 }
 .btn-primary:hover { filter: brightness(1.05); transform: translateY(-2px); box-shadow: 0 16px 34px rgba(14, 165, 233, 0.34); }
@@ -361,6 +374,21 @@ textarea:focus {
     box-shadow: var(--shadow);
 }
 
+[data-theme="light"] .product-card,
+[data-theme="light"] .cart-panel,
+[data-theme="light"] .cart-summary,
+[data-theme="light"] .checkout-panel,
+[data-theme="light"] .checkout-summary,
+[data-theme="light"] .detail-gallery,
+[data-theme="light"] .detail-info,
+[data-theme="light"] .profile-card,
+[data-theme="light"] .best-panel,
+[data-theme="light"] .models-3d {
+    background: rgba(255, 255, 255, 0.76) !important;
+    border-color: rgba(8, 145, 178, 0.2) !important;
+    box-shadow: 0 22px 48px rgba(15, 55, 90, 0.16);
+}
+
 .hero-title,
 .card-name,
 .card-price,
@@ -377,7 +405,7 @@ textarea:focus {
 .add-btn,
 .cart-checkout,
 .detail-add-btn {
-    border-radius: 12px;
+    border-radius: 8px;
     font-weight: 800;
     transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
 }

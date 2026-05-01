@@ -557,10 +557,20 @@ body[data-theme="light"] .form-control:focus,
                     <strong>$<?= number_format((float) $pedidoConfirmado['total']) ?> COP</strong>
                 </div>
                 <?php renderEntregaBox($pedidoConfirmado['fecha_estimada_entrega'] ?? null); ?>
-                <a class="checkout-btn primary mt-3" href="index.php?action=tienda">
-                    <i class="fas fa-store"></i>
-                    <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
-                </a>
+                <div class="checkout-actions justify-content-center mt-3">
+                    <button class="checkout-btn primary" type="button" onclick="window.print()">
+                        <i class="fas fa-file-arrow-down"></i>
+                        <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
+                    </button>
+                    <a class="checkout-btn secondary" href="index.php?action=misPedidos">
+                        <i class="fas fa-receipt"></i>
+                        <?= htmlspecialchars('Ver mis pedidos', ENT_QUOTES, 'UTF-8') ?>
+                    </a>
+                    <a class="checkout-btn secondary" href="index.php?action=tienda">
+                        <i class="fas fa-store"></i>
+                        <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
+                    </a>
+                </div>
             </section>
         <?php else: ?>
             <div class="checkout-head">

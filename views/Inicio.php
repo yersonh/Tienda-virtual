@@ -7,34 +7,34 @@ $productosNuevos = isset($productosNuevos) && is_array($productosNuevos) ? $prod
 
 <style>
 :root {
-    --inicio-surface: rgba(17, 24, 39, 0.72);
-    --inicio-surface-strong: rgba(15, 23, 42, 0.84);
-    --inicio-border: rgba(125, 211, 252, 0.2);
-    --inicio-text: #e5eefb;
-    --inicio-muted: #a8b5ca;
-    --inicio-accent: #38bdf8;
-    --inicio-accent-strong: #2563eb;
-    --inicio-success: #22c55e;
-    --inicio-shadow: 0 18px 48px rgba(2, 8, 23, 0.42);
+    --inicio-surface: rgba(15, 27, 46, 0.84);
+    --inicio-surface-strong: rgba(9, 18, 34, 0.9);
+    --inicio-border: rgba(56, 189, 248, 0.2);
+    --inicio-text: #e9f2ff;
+    --inicio-muted: #9fb0c8;
+    --inicio-accent: #22d3ee;
+    --inicio-accent-strong: #38bdf8;
+    --inicio-success: #14d8bd;
+    --inicio-shadow: 0 22px 54px rgba(2, 8, 23, 0.42);
 }
 
 [data-theme="light"] {
-    --inicio-surface: rgba(255, 255, 255, 0.9);
-    --inicio-surface-strong: rgba(248, 250, 252, 0.94);
-    --inicio-border: rgba(14, 165, 233, 0.18);
-    --inicio-text: #122033;
-    --inicio-muted: #64748b;
-    --inicio-accent: #0284c7;
-    --inicio-accent-strong: #2563eb;
-    --inicio-success: #16a34a;
-    --inicio-shadow: 0 18px 42px rgba(100, 116, 139, 0.18);
+    --inicio-surface: rgba(255, 255, 255, 0.78);
+    --inicio-surface-strong: rgba(247, 252, 255, 0.9);
+    --inicio-border: rgba(8, 145, 178, 0.2);
+    --inicio-text: #102033;
+    --inicio-muted: #5f7188;
+    --inicio-accent: #0891b2;
+    --inicio-accent-strong: #38bdf8;
+    --inicio-success: #0f766e;
+    --inicio-shadow: 0 22px 48px rgba(15, 55, 90, 0.16);
 }
 
 /* 🌄 FONDO GLOBAL */
 body {
     min-height:100vh;
     background:
-        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.7)),
+        linear-gradient(180deg, rgba(7,13,26,0.84), rgba(15,27,46,0.9)),
         url('imagenes/Fondo.png') no-repeat center center fixed;
     background-size:cover;
     background-position:center;
@@ -43,7 +43,7 @@ body {
 }
 body[data-theme="light"] {
     background:
-        linear-gradient(rgba(255,255,255,0.82), rgba(241,245,249,0.92)),
+        linear-gradient(180deg, rgba(247,252,255,0.78), rgba(224,244,250,0.88)),
         url('imagenes/Fondoclaro.png') no-repeat center center fixed;
     background-size: cover;
     background-position:center;
@@ -63,7 +63,7 @@ body[data-theme="light"] {
     margin:80px auto 42px;
     background:var(--inicio-surface);
     padding:40px;
-    border-radius:18px;
+    border-radius:10px;
     backdrop-filter: blur(14px);
     text-align:center;
     color:var(--inicio-text);
@@ -84,7 +84,7 @@ body[data-theme="light"] {
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 34px;
     letter-spacing: 1px;
-    text-shadow: 0 0 15px rgba(56,189,248,0.6);
+    text-shadow: 0 0 18px rgba(34,211,238,0.34);
 }
 
 /* TEXTO */
@@ -114,12 +114,14 @@ body[data-theme="light"] {
 
 .btn-azul {
     background:linear-gradient(135deg,var(--inicio-accent),var(--inicio-accent-strong));
-    box-shadow:0 5px 15px rgba(37,99,235,0.5);
+    color:#041522;
+    box-shadow:0 12px 26px rgba(34,211,238,0.24);
 }
 
 .btn-verde {
-    background:linear-gradient(135deg,#34d399,var(--inicio-success));
-    box-shadow:0 5px 15px rgba(34,197,94,0.5);
+    background:linear-gradient(135deg,#14d8bd,#22d3ee);
+    color:#041522;
+    box-shadow:0 12px 26px rgba(20,216,189,0.22);
 }
 
 /* HOVER */
@@ -135,7 +137,7 @@ body[data-theme="light"] {
 .best-panel {
     margin: 0 auto 46px;
     padding: 26px;
-    border-radius: 18px;
+    border-radius: 10px;
     background: var(--inicio-surface);
     border: 1px solid var(--inicio-border);
     box-shadow: var(--inicio-shadow);
@@ -159,7 +161,7 @@ body[data-theme="light"] {
 }
 
 .best-kicker {
-    color: #38bdf8;
+    color: var(--inicio-accent);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.3px;
@@ -171,7 +173,7 @@ body[data-theme="light"] {
     margin: 0;
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 30px;
-    color: #e0f2fe;
+    color: var(--inicio-text);
 }
 
 [data-theme="light"] .best-title {
@@ -194,9 +196,9 @@ body[data-theme="light"] {
     justify-content: center;
     min-height: 38px;
     padding: 9px 16px;
-    border-radius: 10px;
-    color: #0f172a;
-    background: #38bdf8;
+    border-radius: 8px;
+    color: #041522;
+    background: linear-gradient(135deg, var(--inicio-accent), var(--inicio-accent-strong));
     text-decoration: none;
     font-weight: 700;
     white-space: nowrap;
@@ -218,9 +220,9 @@ body[data-theme="light"] {
 .best-card {
     min-width: 0;
     overflow: hidden;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(15,27,46,0.62);
+    border: 1px solid rgba(56,189,248,0.14);
     text-decoration: none;
     color: inherit;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -234,8 +236,8 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .best-card {
-    background: rgba(248,250,252,0.92);
-    border-color: rgba(148,163,184,0.24);
+    background: rgba(255,255,255,0.74);
+    border-color: rgba(8,145,178,0.16);
 }
 
 .best-img {
@@ -259,9 +261,9 @@ body[data-theme="light"] {
     justify-content: center;
     width: 58px;
     height: 58px;
-    border-radius: 16px;
-    background: rgba(56,189,248,0.14);
-    color: #38bdf8;
+    border-radius: 8px;
+    background: rgba(34,211,238,0.14);
+    color: var(--inicio-accent);
     font-size: 26px;
 }
 
@@ -293,7 +295,7 @@ body[data-theme="light"] {
     max-width: 100%;
     padding: 5px 8px;
     border-radius: 999px;
-    background: rgba(56,189,248,0.12);
+    background: rgba(34,211,238,0.12);
     color: #bae6fd;
     font-size: 11px;
     font-weight: 700;
@@ -303,12 +305,12 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .best-pill {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: rgba(8,145,178,0.1);
+    color: #075985;
 }
 
 .best-price {
-    color: #38bdf8;
+    color: var(--inicio-accent);
     font-size: 17px;
     font-weight: 800;
 }
@@ -336,7 +338,7 @@ body[data-theme="light"] {
 .models-3d {
     margin: 0 auto 46px;
     padding: 28px;
-    border-radius: 18px;
+    border-radius: 10px;
     background:
         linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 36%),
         var(--inicio-surface);
@@ -418,8 +420,8 @@ body[data-theme="light"] {
     min-height: 44px;
     padding: 10px 18px;
     border-radius: 999px;
-    border: 1px solid rgba(56,189,248,0.2);
-    background: rgba(56,189,248,0.12);
+    border: 1px solid rgba(56,189,248,0.22);
+    background: rgba(34,211,238,0.1);
     color: var(--inicio-accent);
     font-size: 15px;
     font-weight: 800;
@@ -434,7 +436,7 @@ body[data-theme="light"] {
 }
 
 .models-tab.is-active {
-    background: linear-gradient(135deg, #14b8a6, var(--inicio-accent));
+    background: linear-gradient(135deg, var(--inicio-accent), var(--inicio-accent-strong));
     border-color: transparent;
     color: #06202b;
     box-shadow: 0 14px 28px rgba(20,184,166,0.22);
@@ -442,11 +444,15 @@ body[data-theme="light"] {
 
 .models-panel {
     display: none;
+    opacity: 0;
+    transform: translateY(8px);
 }
 
 .models-panel.is-active {
     display: block;
     animation: modelsFade 0.24s ease;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 @keyframes modelsFade {
@@ -465,22 +471,22 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .models-tab {
-    background: #e0f2fe;
-    color: #0369a1;
-    border-color: rgba(14,165,233,0.18);
+    background: rgba(255,255,255,0.68);
+    color: #075985;
+    border-color: rgba(8,145,178,0.18);
 }
 
 [data-theme="light"] .models-tab.is-active {
-    background: linear-gradient(135deg, #0ea5e9, #14b8a6);
-    color: #ffffff;
+    background: linear-gradient(135deg, #22d3ee, #38bdf8);
+    color: #041522;
 }
 
 .model-card {
     height: 100%;
     padding: 12px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.055);
-    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    background: rgba(15,27,46,0.62);
+    border: 1px solid rgba(56,189,248,0.14);
     box-shadow: 0 14px 30px rgba(0,0,0,0.2);
     transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
@@ -492,8 +498,8 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .model-card {
-    background: rgba(248,250,252,0.92);
-    border-color: rgba(148,163,184,0.24);
+    background: rgba(255,255,255,0.76);
+    border-color: rgba(8,145,178,0.16);
 }
 
 .model-card h5 {
@@ -510,10 +516,32 @@ body[data-theme="light"] {
 .sketchfab-frame {
     width: 100%;
     height: 340px;
-    border-radius: 14px;
+    border-radius: 8px;
     border: none;
     background: #0f172a;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 25px rgba(0,0,0,0.26);
+}
+
+.bloque-principal {
+    display: none;
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.bloque-principal.is-visible {
+    display: block;
+    animation: inicioFade 0.28s ease both;
+}
+
+@keyframes inicioFade {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 980px) {
@@ -596,7 +624,7 @@ body[data-theme="light"] {
 
     </div>
 
-    <div class="models-3d container my-5" id="interaccion-360">
+    <section class="models-3d container my-5 bloque-principal" id="interaccion-360">
 
       <div class="models-intro">
         <div>
@@ -607,18 +635,19 @@ body[data-theme="light"] {
       </div>
 
       <div class="models-tabs" role="tablist" aria-label="Categorias de modelos 3D">
-        <button class="models-tab is-active" type="button" role="tab" aria-selected="true" data-model-index="0">
+        <button class="models-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="tab-automovil" data-model-tab="tab-automovil">
           Repuestos de automovil
         </button>
-        <button class="models-tab" type="button" role="tab" aria-selected="false" data-model-index="1">
+        <button class="models-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-agricola" data-model-tab="tab-agricola">
           Repuestos e implementos agricolas
         </button>
-        <button class="models-tab" type="button" role="tab" aria-selected="false" data-model-index="2">
+        <button class="models-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-vehiculos" data-model-tab="tab-vehiculos">
           Vehiculos de referencia
         </button>
       </div>
 
-      <!-- REPUETOS AUTOMÓVIL -->
+      <!-- REPUETOS AUTOMOVIL -->
+      <div class="models-panel is-active" id="tab-automovil" role="tabpanel">
       <h4 class="models-section-title">⚙️ Repuestos de automóvil</h4>
       <div class="row text-center">
 
@@ -626,7 +655,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Car Engine</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
+              src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -636,7 +665,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>V8 Engine</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
+              src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -646,7 +675,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>V8 Twin Turbo</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
+              src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -656,7 +685,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Brake Disc</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
+              src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -664,7 +693,10 @@ body[data-theme="light"] {
 
       </div>
 
-      <!-- AGRÍCOLA -->
+      </div>
+
+      <!-- AGRICOLA -->
+      <div class="models-panel" id="tab-agricola" role="tabpanel">
       <h4 class="models-section-title">🌾 Repuestos e implementos agrícolas</h4>
       <div class="row text-center">
 
@@ -672,7 +704,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Tractor Wheel</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
+              src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -682,15 +714,17 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Full Tractor Wheel</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              data-src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
+              src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
         </div>
 
       </div>
-      <!-- VEHÍCULOS -->
-    <section id="interaccion-360" class="bloque">
+      </div>
+
+      <!-- VEHICULOS -->
+      <div class="models-panel" id="tab-vehiculos" role="tabpanel">
 
         <h4 class="models-section-title">🚗🚜 Vehículos de referencia</h4>
         <div class="row text-center">
@@ -699,7 +733,7 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Ford Mustang 1965</h5>
                 <iframe class="sketchfab-frame" loading="lazy"
-                data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
+                src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowfullscreen></iframe>
             </div>
@@ -709,7 +743,7 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Old Farm Tractor</h5>
                 <iframe class="sketchfab-frame" loading="lazy"
-                data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
+                src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowfullscreen></iframe>
             </div>
@@ -717,9 +751,11 @@ body[data-theme="light"] {
 
         </div>
 
+      </div>
+
     </section>
 
-        <section class="best-panel bloque" id="lo-nuevo" aria-labelledby="new-title">
+        <section class="best-panel bloque-principal" id="lo-nuevo" aria-labelledby="new-title">
             <div class="best-header">
                 <div>
                     <div class="best-kicker"><?= htmlspecialchars('Recien agregados', ENT_QUOTES, 'UTF-8') ?></div>
@@ -768,7 +804,7 @@ body[data-theme="light"] {
             <?php endif; ?>
         </section>
 
-        <section class="best-panel bloque" id="mas-vendidos" aria-labelledby="best-title">
+        <section class="best-panel bloque-principal" id="mas-vendidos" aria-labelledby="best-title">
             <div class="best-header">
                 <div>
                     <div class="best-kicker"><?= htmlspecialchars('Productos destacados', ENT_QUOTES, 'UTF-8') ?></div>
@@ -817,19 +853,60 @@ body[data-theme="light"] {
             <?php endif; ?>
         </section>
 
+    </div>
+
     <script>
     function mostrarSeccion(id) {
-        document.querySelectorAll('.bloque').forEach(sec => {
-            sec.style.display = 'none';
+        document.querySelectorAll('.bloque-principal').forEach((seccion) => {
+            seccion.classList.remove('is-visible');
+            seccion.setAttribute('hidden', 'hidden');
         });
 
         const activa = document.getElementById(id);
-        if (activa) activa.style.display = 'block';
+        if (!activa) return;
+
+        activa.removeAttribute('hidden');
+        activa.classList.add('is-visible');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        const seccionesPorNav = {
+            interaccion: 'interaccion-360',
+            nuevo: 'lo-nuevo',
+            'mas-vendidos': 'mas-vendidos'
+        };
+
+        document.querySelectorAll('[data-nav-key]').forEach((link) => {
+            const sectionId = seccionesPorNav[link.dataset.navKey];
+            if (!sectionId) return;
+
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                mostrarSeccion(sectionId);
+                if (typeof setActiveNav === 'function') {
+                    setActiveNav(link.dataset.navKey);
+                }
+            });
+        });
+
+        document.querySelectorAll('.models-tab').forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const panelId = tab.dataset.modelTab;
+
+                document.querySelectorAll('.models-tab').forEach((item) => {
+                    const active = item === tab;
+                    item.classList.toggle('is-active', active);
+                    item.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+
+                document.querySelectorAll('.models-panel').forEach((panel) => {
+                    panel.classList.toggle('is-active', panel.id === panelId);
+                });
+            });
+        });
+
         mostrarSeccion('interaccion-360');
     });
-</script>
+    </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

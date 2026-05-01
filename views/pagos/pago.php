@@ -9,43 +9,33 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 <style>
 .payment-page {
     min-height: calc(100vh - 80px);
-    padding: 38px 20px 96px;
+    padding: 24px 20px 86px;
     color: var(--text);
 }
 
 .payment-shell {
-    max-width: 1040px;
+    max-width: 1160px;
     margin: 0 auto;
 }
 
 .payment-card {
     border: 1px solid var(--border);
-    border-radius: 26px;
+    border-radius: 10px;
     background: var(--card-bg);
     box-shadow: var(--shadow);
-    overflow: hidden;
+    overflow: visible;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 }
 
 .payment-head {
     position: relative;
-    padding: 34px 38px 26px;
-    border-bottom: 1px solid var(--border);
-    background:
-        linear-gradient(135deg, rgba(20,216,189,0.12), transparent 38%),
-        linear-gradient(180deg, rgba(255,255,255,0.035), transparent);
+    padding: 26px 28px 18px;
+    background: transparent;
 }
 
 .payment-head::after {
-    content: '';
-    position: absolute;
-    right: 34px;
-    bottom: -1px;
-    width: 160px;
-    height: 3px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, var(--accent), var(--accent-strong));
+    content: none;
 }
 
 .payment-kicker {
@@ -60,7 +50,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 .payment-title {
     margin: 0;
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: clamp(2.25rem, 5vw, 4rem);
+    font-size: clamp(2rem, 4vw, 3.25rem);
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1.02;
@@ -75,7 +65,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 }
 
 .payment-body {
-    padding: 34px 38px 38px;
+    padding: 18px 28px 26px;
 }
 
 .payment-layout {
@@ -93,7 +83,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     margin-bottom: 26px;
     padding: 20px 22px;
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 8px;
     background: rgba(255,255,255,0.045);
 }
 
@@ -143,7 +133,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     min-height: 92px;
     padding: 16px;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: 8px;
     background: rgba(255,255,255,0.035);
     color: var(--text);
     text-align: left;
@@ -172,9 +162,9 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 }
 
 .payment-method-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 14px;
+    width: 54px;
+    height: 54px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -275,7 +265,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     margin: 18px 0 20px;
     padding: 20px;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: 8px;
     background: rgba(255,255,255,0.035);
 }
 
@@ -327,7 +317,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     min-height: 48px;
     padding: 0 20px;
     border: 0;
-    border-radius: 14px;
+    border-radius: 8px;
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
     color: #06121f;
     font-weight: 800;
@@ -353,7 +343,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     min-height: 48px;
     padding: 0 18px;
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 8px;
     color: var(--text);
     text-decoration: none;
     font-weight: 800;
@@ -379,7 +369,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     min-height: 48px;
     padding: 0 18px;
     border: 1px solid rgba(248,113,113,0.34);
-    border-radius: 14px;
+    border-radius: 8px;
     background: rgba(248,113,113,0.12);
     color: #fca5a5;
     font-weight: 800;
@@ -405,8 +395,8 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 
 .payment-aside {
     border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 20px;
+    border-radius: 8px;
+    padding: 28px 24px;
     background: rgba(255,255,255,0.035);
 }
 
@@ -437,14 +427,27 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 
 .payment-steps {
     display: grid;
-    gap: 12px;
+    gap: 18px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
 }
 
 .payment-step {
     display: grid;
     grid-template-columns: 28px 1fr;
-    gap: 10px;
+    gap: 14px;
     align-items: start;
+    position: relative;
+}
+
+.payment-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 32px;
+    width: 1px;
+    height: calc(100% + 10px);
+    background: var(--border);
 }
 
 .payment-step span {
@@ -486,6 +489,35 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 
 [data-theme="light"] .payment-method.is-active {
     background: #e7fffb;
+}
+
+.payment-order-number {
+    color: var(--accent);
+}
+
+.payment-invoice-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 18px 0 22px;
+    padding: 14px;
+    border: 1px solid rgba(20,216,189,0.2);
+    border-radius: 8px;
+    background: rgba(20,216,189,0.08);
+    color: var(--secondary);
+    line-height: 1.5;
+}
+
+.payment-invoice-note svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    color: var(--accent);
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 @media (max-width: 900px) {
@@ -541,13 +573,14 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
         <section class="payment-card">
             <div class="payment-head">
                 <div class="payment-kicker"><?= htmlspecialchars('Proceso de Pago', ENT_QUOTES, 'UTF-8') ?></div>
-                <h1 class="payment-title"><?= htmlspecialchars('Pagar pedido', ENT_QUOTES, 'UTF-8') ?> #<?= $idPedido ?></h1>
+                <h1 class="payment-title"><?= htmlspecialchars('Pagar pedido', ENT_QUOTES, 'UTF-8') ?> <span class="payment-order-number">#<?= $idPedido ?></span></h1>
                 <p class="payment-sub"><?= htmlspecialchars('Selecciona un metodo y confirma el pago simulado para finalizar el pedido.', ENT_QUOTES, 'UTF-8') ?></p>
             </div>
 
             <div class="payment-body">
                 <div class="payment-layout">
-                    <form method="POST" action="index.php?action=procesarPago">
+                    <div class="payment-main">
+                    <form id="payment-confirm-form" method="POST" action="index.php?action=procesarPago">
                         <div class="payment-summary">
                             <span><?= htmlspecialchars('Total del pedido', ENT_QUOTES, 'UTF-8') ?></span>
                             <strong>$<?= number_format($totalPedido) ?> COP</strong>
@@ -623,8 +656,10 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                             </p>
                         </div>
 
+                    </form>
+
                         <div class="payment-actions">
-                            <button class="payment-btn" type="submit">
+                            <button class="payment-btn" type="submit" form="payment-confirm-form">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"></path></svg>
                                 <?= htmlspecialchars('Confirmar pago', ENT_QUOTES, 'UTF-8') ?>
                             </button>
@@ -640,7 +675,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 </button>
                             </form>
                         </div>
-                    </form>
+                    </div>
 
                     <aside class="payment-aside">
                         <span class="payment-aside-icon" aria-hidden="true">
@@ -648,6 +683,10 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                         </span>
                         <h2><?= htmlspecialchars('Pago seguro simulado', ENT_QUOTES, 'UTF-8') ?></h2>
                         <p><?= htmlspecialchars('Al confirmar, el sistema descuenta inventario, registra el pago simulado y sincroniza tu carrito.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <div class="payment-invoice-note">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15l-3-2-3 2-3-2-3 2-3-2V3z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path></svg>
+                            <span><?= htmlspecialchars('Despues de confirmar, revisa el pedido #' . $idPedido . ' en Mis pedidos para ver el soporte y descargar o imprimir la factura.', ENT_QUOTES, 'UTF-8') ?></span>
+                        </div>
                         <div class="payment-steps">
                             <div class="payment-step">
                                 <span>1</span>
@@ -726,4 +765,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<?php require_once __DIR__ . '/../layouts/footer.php'; ?> ese es el texto, damelo completo para copiarlo alla
+<?php require_once __DIR__ . '/../layouts/footer.php'; ?>
