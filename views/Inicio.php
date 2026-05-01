@@ -57,8 +57,83 @@ body[data-theme="light"] {
     padding: 0 20px 40px;
 }
 
+/* CARD PRINCIPAL */
+.card-inicio {
+    max-width:600px;
+    margin:80px auto 42px;
+    background:var(--inicio-surface);
+    padding:40px;
+    border-radius:18px;
+    backdrop-filter: blur(14px);
+    text-align:center;
+    color:var(--inicio-text);
+    box-shadow:var(--inicio-shadow);
+    border:1px solid var(--inicio-border);
+}
+[data-theme="light"] .card-inicio {
+    background: var(--inicio-surface);
+    color: var(--inicio-text);
+    box-shadow: var(--inicio-shadow);
+    border-color: var(--inicio-border);
+}
+
+/* TITULO */
+.card-inicio h1 {
+    color:var(--inicio-accent);
+    margin-bottom:10px;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 34px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 15px rgba(56,189,248,0.6);
+}
+
+/* TEXTO */
+.card-inicio p {
+    font-size:15px;
+    color: var(--inicio-muted);
+}
+[data-theme="light"] .card-inicio p {
+    color: var(--inicio-muted);
+}
+
+/* BOTONES */
+.botones {
+    margin-top:25px;
+}
+
+/* BOTONES */
+.btn-azul, .btn-verde {
+    display:inline-block;
+    padding:12px 25px;
+    border-radius:10px;
+    text-decoration:none;
+    color:white;
+    font-weight:500;
+    transition:all 0.3s ease;
+}
+
+.btn-azul {
+    background:linear-gradient(135deg,var(--inicio-accent),var(--inicio-accent-strong));
+    box-shadow:0 5px 15px rgba(37,99,235,0.5);
+}
+
+.btn-verde {
+    background:linear-gradient(135deg,#34d399,var(--inicio-success));
+    box-shadow:0 5px 15px rgba(34,197,94,0.5);
+}
+
+/* HOVER */
+.btn-azul:hover, .btn-verde:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px rgba(56,189,248,0.6);
+}
+[data-theme="light"] .btn-azul:hover,
+[data-theme="light"] .btn-verde:hover {
+    box-shadow: 0 10px 24px rgba(56,189,248,0.22);
+}
+
 .best-panel {
-    margin: 0 auto 52px;
+    margin: 0 auto 46px;
     padding: 26px;
     border-radius: 18px;
     background: var(--inicio-surface);
@@ -66,30 +141,6 @@ body[data-theme="light"] {
     box-shadow: var(--inicio-shadow);
     backdrop-filter: blur(14px);
     color: var(--inicio-text);
-}
-
-#interaccion-360,
-#mas-vendidos {
-    scroll-margin-top: 112px;
-}
-
-#interaccion-360 {
-    margin-bottom: 84px;
-}
-
-#mas-vendidos {
-    position: relative;
-    margin-top: 84px;
-}
-
-#mas-vendidos::before {
-    content: '';
-    position: absolute;
-    top: -44px;
-    left: 26px;
-    right: 26px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(56,189,248,0.36), transparent);
 }
 
 [data-theme="light"] .best-panel {
@@ -476,6 +527,20 @@ body[data-theme="light"] {
         padding: 0 14px 30px;
     }
 
+    .card-inicio {
+        margin-top: 36px;
+        padding: 28px 20px;
+    }
+
+    .card-inicio h1 {
+        font-size: 28px;
+    }
+
+    .botones {
+        display: grid;
+        gap: 12px;
+    }
+
     .best-panel {
         padding: 20px;
     }
@@ -506,6 +571,30 @@ body[data-theme="light"] {
 </style>
 
 <div class="main container">
+
+    <div class="card-inicio">
+
+        <h1>
+            <?= htmlspecialchars('Bienvenido a NAYLEX Store', ENT_QUOTES, 'UTF-8') ?>
+        </h1>
+
+        <p>
+            <?= htmlspecialchars('Selecciona una opcion del menu para comenzar.', ENT_QUOTES, 'UTF-8') ?>
+        </p>
+
+        <div class="botones">
+
+            <a href="index.php?action=tienda" class="btn-azul">
+                <?= htmlspecialchars('Ver productos', ENT_QUOTES, 'UTF-8') ?>
+            </a>
+
+            <a href="#" class="btn-verde">
+                <?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?>
+            </a>
+
+        </div>
+
+    </div>
 
     <div class="models-3d container my-5" id="interaccion-360">
 
@@ -633,7 +722,7 @@ body[data-theme="light"] {
         <div class="best-header">
             <div>
                 <div class="best-kicker"><?= htmlspecialchars('Recien agregados', ENT_QUOTES, 'UTF-8') ?></div>
-                <h2 class="best-title" id="new-title"><?= htmlspecialchars('Lo Nuevo', ENT_QUOTES, 'UTF-8') ?></h2>
+                <h2 class="best-title" id="new-title"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></h2>
                 <p class="best-sub"><?= htmlspecialchars('Los ultimos productos incorporados al catalogo para que los encuentres rapido.', ENT_QUOTES, 'UTF-8') ?></p>
             </div>
             <a class="best-link" href="index.php?action=tienda"><?= htmlspecialchars('Ver catalogo', ENT_QUOTES, 'UTF-8') ?></a>

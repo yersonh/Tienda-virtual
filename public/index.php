@@ -111,7 +111,7 @@ switch ($action) {
     case 'agregarAjax':
         (new CarritoController())->agregarAjax();
         break;
-
+        
     case 'verCarrito':
         (new CarritoController())->ver();
         break;
@@ -162,22 +162,6 @@ switch ($action) {
 
     case 'confirmacionPedido':
         (new PedidoController())->confirmacion();
-        break;
-
-    case 'pago':
-        (new PedidoController())->pago();
-        break;
-
-    case 'procesarPago':
-        (new PedidoController())->procesarPago();
-        break;
-
-    case 'cancelarPedido':
-        (new PedidoController())->cancelarPedido();
-        break;
-
-    case 'misPedidos':
-        (new PedidoController())->misPedidos();
         break;
 
     case 'perfil':

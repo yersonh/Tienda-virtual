@@ -193,14 +193,21 @@ class ProductoModel {
 
     public function obtenerMasVendidos($limite = 5) {
         $limite = max(1, min(10, (int) $limite));
-        $columns = $this->productoColumns('p', true);
+        $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
 
-        $query = "SELECT $columns
+        $query = "SELECT $columns,
+                         ventas.total_vendido
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
                   $imageJoin
-                  ORDER BY p.id_producto DESC
+                  INNER JOIN (
+                      SELECT id_producto, SUM(cantidad) AS total_vendido
+                      FROM detalle_venta
+                      GROUP BY id_producto
+                  ) ventas ON ventas.id_producto = p.id_producto
+                  WHERE ventas.total_vendido > 0
+                  ORDER BY ventas.total_vendido DESC, p.id_producto DESC
                   FETCH FIRST :limite ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);

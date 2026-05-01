@@ -599,9 +599,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 <strong><?= htmlspecialchars('Transferencia bancaria', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Registro manual del pago.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                        </div>
-
-                        <div id="tarjeta" class="payment-dynamic">
+                        </div><div id="tarjeta" class="payment-dynamic">
                             <div class="payment-card-fields">
                                 <div class="payment-field">
                                     <label for="numero_tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
@@ -728,4 +726,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+<?php require_once __DIR__ . '/../layouts/footer.php'; ?> ese es el texto, damelo completo para copiarlo alla

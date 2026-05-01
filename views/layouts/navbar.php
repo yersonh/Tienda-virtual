@@ -464,6 +464,7 @@ textarea:focus {
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
       <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=inicio#nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
       <?php if($logueado): ?>
@@ -500,6 +501,7 @@ textarea:focus {
   </div>
   <div class="side-links">
     <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
+    <a href="index.php?action=inicio#nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
     <?php if($logueado): ?>
@@ -525,6 +527,10 @@ function setActiveNav(key) {
 function syncActiveNavFromLocation() {
     const params = new URLSearchParams(window.location.search);
     const action = params.get('action') || 'tienda';
+    if (action === 'inicio' && window.location.hash === '#nuevo') {
+        setActiveNav('nuevo');
+        return;
+    }
     if (action === 'inicio' && window.location.hash === '#mas-vendidos') {
         setActiveNav('mas-vendidos');
         return;

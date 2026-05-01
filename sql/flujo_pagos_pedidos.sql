@@ -22,7 +22,7 @@ BEGIN
     add_column_if_missing('VENTA', 'ENVIO', 'NUMBER(10,2)');
     add_column_if_missing('VENTA', 'METODO_PAGO', 'VARCHAR2(50)');
     add_column_if_missing('VENTA', 'ESTADO', 'VARCHAR2(20)');
-    add_column_if_missing('VENTA', 'FECHA_PAGO', 'DATE');
+    add_column_if_missing('VENTA', 'FECHA', 'DATE');
     add_column_if_missing('DETALLE_VENTA', 'PRECIO_UNITARIO', 'NUMBER(10,2)');
     add_column_if_missing('DETALLE_VENTA', 'SUBTOTAL', 'NUMBER(10,2)');
     add_column_if_missing('DETALLE_VENTA', 'NOMBRE_PRODUCTO', 'VARCHAR2(150)');
@@ -55,7 +55,7 @@ BEGIN
         ENVIO,
         METODO_PAGO,
         ESTADO,
-        FECHA_PAGO
+        FECHA
     )
     VALUES (
         p_id_usuario,
@@ -144,7 +144,7 @@ BEGIN
     UPDATE VENTA
     SET METODO_PAGO = v_metodo_pago,
         ESTADO = 'PAGADA',
-        FECHA_PAGO = SYSDATE
+        FECHA = SYSDATE
     WHERE ID_VENTA = p_id_venta;
 
 END;
