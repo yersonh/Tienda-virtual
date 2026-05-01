@@ -180,6 +180,10 @@ switch ($action) {
         (new PedidoController())->cancelarPedido();
         break;
 
+    case 'facturaPedido':
+        (new PedidoController())->facturaPedido();
+        break;
+
     case 'perfil':
         (new PerfilController())->verPerfil();
         break;

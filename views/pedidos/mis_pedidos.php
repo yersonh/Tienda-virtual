@@ -309,7 +309,7 @@ function canCancelOrder(array $pedido): bool {
 .delivery-cart {
     position: absolute;
     top: 16px;
-    left: var(--progress);
+    left: var(--cart-progress, 8%);
     width: 46px;
     height: 46px;
     border-radius: 999px;
@@ -460,7 +460,7 @@ function canCancelOrder(array $pedido): bool {
             <div class="orders-toolbar">
                 <?php if ($pedidoDetalle): ?>
                     <a class="orders-btn" href="index.php?action=misPedidos"><i class="fas fa-arrow-left"></i><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
-                    <button class="orders-btn primary" type="button" onclick="window.print()"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></button>
+                    <a class="orders-btn primary" href="index.php?action=facturaPedido&id=<?= (int) $pedidoDetalle['id_pedido'] ?>&print=1"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></a>
                 <?php endif; ?>
                 <a class="orders-btn primary" href="index.php?action=tienda"><i class="fas fa-store"></i><?= htmlspecialchars('Tienda', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
@@ -477,6 +477,7 @@ function canCancelOrder(array $pedido): bool {
             <?php
             $stepIndex = orderStepIndex($pedidoDetalle);
             $progress = (($stepIndex - 1) / 3) * 100;
+            $cartProgress = 8 + ($progress * 0.84);
             $estadoDetalle = (string) ($pedidoDetalle['estado'] ?? 'Pendiente');
             $puedeCancelarDetalle = canCancelOrder($pedidoDetalle);
             $itemsPedidoDetalle = isset($pedidoDetalle['items']) && is_array($pedidoDetalle['items']) ? $pedidoDetalle['items'] : [];
@@ -492,7 +493,7 @@ function canCancelOrder(array $pedido): bool {
                     <div class="detail-box">
                         <h2><?= htmlspecialchars('Proceso de entrega', ENT_QUOTES, 'UTF-8') ?></h2>
                         <span class="status-pill <?= statusClass($estadoDetalle, (int) ($pedidoDetalle['id_estado'] ?? 0)) ?>"><?= htmlspecialchars($estadoDetalle, ENT_QUOTES, 'UTF-8') ?></span>
-                        <div class="delivery-track" style="--progress: <?= number_format($progress, 2, '.', '') ?>%;">
+                        <div class="delivery-track" style="--progress: <?= number_format($progress, 2, '.', '') ?>%; --cart-progress: <?= number_format($cartProgress, 2, '.', '') ?>%;">
                             <div class="delivery-cart" aria-hidden="true"><i class="fas fa-shopping-cart"></i></div>
                             <div class="delivery-line"></div>
                             <div class="delivery-steps" id="delivery-steps">
@@ -620,7 +621,7 @@ function canCancelOrder(array $pedido): bool {
                                     <i class="fas fa-route"></i>
                                     <?= htmlspecialchars('Ver detalle', ENT_QUOTES, 'UTF-8') ?>
                                 </a>
-                                <a class="orders-btn" href="index.php?action=misPedidos&id=<?= $idPedido ?>&print=1">
+                                <a class="orders-btn" href="index.php?action=facturaPedido&id=<?= $idPedido ?>&print=1">
                                     <i class="fas fa-file-arrow-down"></i>
                                     <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
                                 </a>
@@ -666,9 +667,6 @@ document.querySelectorAll('[data-confirm-cancel]').forEach((form) => {
     });
 });
 
-<?php if (!empty($_GET['print']) && $pedidoDetalle): ?>
-window.addEventListener('load', () => window.print());
-<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

@@ -431,6 +431,49 @@ class PedidoController {
                 END";
     }
 
+    private function actualizarEstadosPedidosUsuario(int $idUsuario): void {
+        $columnasVenta = $this->obtenerColumnasTabla('VENTA');
+        $columnaFecha = $this->columnaVentaDisponible($columnasVenta, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at']);
+        if (!$columnaFecha) {
+            return;
+        }
+
+        $query = "UPDATE PEDIDO p
+                  SET p.ID_ESTADO = (
+                      SELECT CASE
+                          WHEN ((SYSDATE - v.$columnaFecha) * 1440) >= 15 THEN 4
+                          WHEN ((SYSDATE - v.$columnaFecha) * 1440) >= 10 THEN GREATEST(p.ID_ESTADO, 3)
+                          WHEN ((SYSDATE - v.$columnaFecha) * 1440) >= 5 THEN GREATEST(p.ID_ESTADO, 2)
+                          ELSE p.ID_ESTADO
+                      END
+                      FROM VENTA v
+                      WHERE v.ID_VENTA = p.ID_VENTA
+                        AND v.ID_USUARIO = :id_usuario
+                  )
+                  WHERE p.ID_ESTADO IN (1, 2, 3)
+                    AND EXISTS (
+                        SELECT 1
+                        FROM VENTA v
+                        WHERE v.ID_VENTA = p.ID_VENTA
+                          AND v.ID_USUARIO = :id_usuario
+                    )";
+
+        $stmt = @oci_parse($this->conn, $query);
+        if (!$stmt) {
+            return;
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            oci_free_statement($stmt);
+            oci_rollback($this->conn);
+            return;
+        }
+
+        oci_free_statement($stmt);
+        oci_commit($this->conn);
+    }
+
     private function obtenerPedidosUsuario(int $idUsuario): array {
         $venta = $this->expresionesResumenVenta();
         $estadoSql = $this->estadoPedidoSql();
@@ -1139,6 +1182,7 @@ class PedidoController {
         $pedidoDetalle = null;
 
         try {
+            $this->actualizarEstadosPedidosUsuario($idUsuario);
             $idPedido = (int) ($_GET['id'] ?? 0);
             if ($idPedido > 0) {
                 $pedidoDetalle = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
@@ -1156,6 +1200,65 @@ class PedidoController {
         }
 
         require_once __DIR__ . '/../views/pedidos/mis_pedidos.php';
+    }
+
+    public function facturaPedido() {
+        $this->ensureSession();
+
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para descargar la factura';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $idPedido = (int) ($_GET['id'] ?? 0);
+        if ($idPedido <= 0) {
+            $_SESSION['error'] = 'Pedido invalido';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        $pedido = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
+        if (!$pedido) {
+            $_SESSION['error'] = 'Pedido no encontrado';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        $items = isset($pedido['items']) && is_array($pedido['items']) ? $pedido['items'] : [];
+        $subtotalItems = array_sum(array_map(fn($item) => (float) ($item['subtotal'] ?? 0), $items));
+        $total = (float) ($pedido['total'] ?? 0);
+        $iva = $subtotalItems > 0 ? round($subtotalItems * 0.19, 2) : 0;
+        $envio = max(0, $total - $subtotalItems - $iva);
+        if ($subtotalItems <= 0) {
+            $subtotalItems = max(0, round($total / 1.19, 2));
+            $iva = max(0, $total - $subtotalItems);
+            $envio = 0;
+        }
+
+        $pedidoConfirmado = [
+            'id_pedido' => (int) $pedido['id_pedido'],
+            'id_venta' => 0,
+            'total' => $total,
+            'subtotal' => $subtotalItems,
+            'iva' => $iva,
+            'envio' => $envio,
+            'fecha_estimada_entrega' => $pedido['fecha_estimada_entrega'] ?? null,
+            'metodo_pago' => 'Registrado',
+            'items' => $items,
+            'receptor' => [
+                'nombre' => trim((string) (($pedido['nombre_receptor'] ?? '') . ' ' . ($pedido['apellido_receptor'] ?? ''))),
+                'direccion' => (string) ($pedido['direccion_envio'] ?? ''),
+                'ciudad' => (string) ($pedido['ciudad'] ?? ''),
+                'telefono' => (string) ($pedido['telefono_receptor'] ?? '')
+            ]
+        ];
+        $facturaAutoPrint = !empty($_GET['print']);
+        $direcciones = [];
+        $total = (float) $pedidoConfirmado['total'];
+
+        require_once __DIR__ . '/../views/ConfirmarPedido.php';
     }
 
     public function cancelarPedido() {
