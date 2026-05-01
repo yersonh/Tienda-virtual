@@ -4,8 +4,24 @@
 
 <style>
 /* HERO SECTION */
+.store-card {
+    width: min(1820px, calc(100% - 56px));
+    margin: 32px auto 52px;
+    padding: 28px 0 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 22px 60px rgba(0,0,0,0.26);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    overflow: hidden;
+}
+[data-theme="light"] .store-card {
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 18px 44px rgba(148,163,184,0.18);
+}
 .hero {
-    padding: 48px 32px 32px;
+    padding: 42px 32px 32px;
     position: relative;
 }
 .hero::before {
@@ -541,6 +557,96 @@
     background: #c2f4ed;
     border-color: #34cbbd;
 }
+.cart-toast {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 9999;
+    width: min(360px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(9, 18, 34, 0.94);
+    border: 1px solid rgba(0, 229, 192, 0.32);
+    color: #f8fafc;
+    box-shadow: 0 22px 48px rgba(0,0,0,0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    overflow: hidden;
+}
+.cart-toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+.cart-toast.error {
+    border-color: rgba(248, 113, 113, 0.42);
+}
+.cart-toast-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 229, 192, 0.14);
+    color: var(--accent);
+}
+.cart-toast.error .cart-toast-icon {
+    background: rgba(248, 113, 113, 0.14);
+    color: #f87171;
+}
+.cart-toast-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.cart-toast-title {
+    margin: 0 0 3px;
+    font-size: 14px;
+    font-weight: 800;
+}
+.cart-toast-text {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.35;
+}
+.cart-toast-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: left;
+    animation: toastBar 2.6s linear forwards;
+}
+.cart-toast.error .cart-toast-bar {
+    background: #f87171;
+}
+[data-theme="light"] .cart-toast {
+    background: rgba(255,255,255,0.96);
+    color: #0f172a;
+    box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+}
+[data-theme="light"] .cart-toast-text {
+    color: #475569;
+}
+@keyframes toastBar {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
 
 /* FOOTER */
 .footer {
@@ -592,6 +698,12 @@
     }
 }
 @media (max-width: 768px) {
+    .store-card {
+        width: min(100% - 24px, 1820px);
+        margin: 18px auto 38px;
+        padding-top: 8px;
+        border-radius: 16px;
+    }
     .hero {
         padding: 32px 20px 24px;
     }
@@ -639,11 +751,12 @@
 
 </style>
 
-<div class="hero">
-    <div class="hero-label"><?= htmlspecialchars('Tienda de Repuestos', ENT_QUOTES, 'UTF-8') ?></div>
-    <h1 class="hero-title"><?= htmlspecialchars('Catalogo de', ENT_QUOTES, 'UTF-8') ?><br><em><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></em></h1>
-    <p class="hero-sub"><?= htmlspecialchars('Piezas originales para tu vehiculo - calidad garantizada', ENT_QUOTES, 'UTF-8') ?></p>
-</div>
+<div class="store-card">
+    <div class="hero">
+        <div class="hero-label"><?= htmlspecialchars('Tienda de Repuestos', ENT_QUOTES, 'UTF-8') ?></div>
+        <h1 class="hero-title"><?= htmlspecialchars('Catalogo de', ENT_QUOTES, 'UTF-8') ?><br><em><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></em></h1>
+        <p class="hero-sub"><?= htmlspecialchars('Piezas originales para tu vehiculo - calidad garantizada', ENT_QUOTES, 'UTF-8') ?></p>
+    </div>
 
 <div class="filters">
     <input class="filter-input" type="text" placeholder="<?= htmlspecialchars('Buscar producto...', ENT_QUOTES, 'UTF-8') ?>" id="search-input" value="<?= htmlspecialchars($filtro ?? '', ENT_QUOTES, 'UTF-8') ?>">
@@ -724,7 +837,7 @@
                  aria-label="<?= htmlspecialchars('Ver detalle de', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
-                    <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                    <img data-src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='220' viewBox='0 0 320 220'%3E%3Crect width='320' height='220' fill='%2312162a'/%3E%3C/svg%3E" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
                     <?php else: ?>
                     <div class="card-placeholder">
                         <span class="placeholder-icon" aria-hidden="true">
@@ -792,6 +905,7 @@
     </div>
 </div>
 <?php endforeach; ?>
+</div>
 
 <script>
 let cart = {};
@@ -839,6 +953,12 @@ function checkIconSvg() {
     `;
 }
 
+function escapeToastText(value) {
+    const div = document.createElement('div');
+    div.textContent = value || '';
+    return div.innerHTML;
+}
+
 function syncProductControls(id, stock) {
     const current = cartQty(id);
     const atLimit = stock <= 0 || current >= stock;
@@ -879,26 +999,34 @@ function mostrarMensajeCarrito(message, isError = false) {
     if (!notice) {
         notice = document.createElement('div');
         notice.id = 'cart-toast';
-        notice.style.position = 'fixed';
-        notice.style.right = '18px';
-        notice.style.bottom = '18px';
-        notice.style.zIndex = '9999';
-        notice.style.padding = '12px 16px';
-        notice.style.borderRadius = '8px';
-        notice.style.fontWeight = '700';
-        notice.style.boxShadow = '0 12px 30px rgba(0,0,0,.25)';
+        notice.className = 'cart-toast';
+        notice.setAttribute('role', 'status');
+        notice.setAttribute('aria-live', 'polite');
         document.body.appendChild(notice);
     }
 
-    notice.textContent = message;
-    notice.style.background = isError ? '#ef4444' : '#00e5c0';
-    notice.style.color = isError ? '#fff' : '#06211d';
-    notice.style.opacity = '1';
+    notice.className = `cart-toast ${isError ? 'error' : ''}`;
+    const safeMessage = escapeToastText(message);
+    notice.innerHTML = `
+        <span class="cart-toast-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                ${isError
+                    ? '<path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.5 2.9 16.3A2 2 0 0 0 4.6 19h14.8a2 2 0 0 0 1.7-2.7L13.7 3.5a2 2 0 0 0-3.4 0z"></path>'
+                    : '<path d="m5 12 5 5L20 7"></path>'}
+            </svg>
+        </span>
+        <span>
+            <p class="cart-toast-title">${isError ? 'No se pudo agregar' : 'Agregado al carrito'}</p>
+            <p class="cart-toast-text">${safeMessage}</p>
+        </span>
+        <span class="cart-toast-bar" aria-hidden="true"></span>
+    `;
+    requestAnimationFrame(() => notice.classList.add('show'));
 
     clearTimeout(window.cartToastTimer);
     window.cartToastTimer = setTimeout(() => {
-        notice.style.opacity = '0';
-    }, 2200);
+        notice.classList.remove('show');
+    }, 2600);
 }
 
 function actualizarContadorCarrito(total) {
@@ -959,6 +1087,10 @@ async function agregarAlCarrito(id_producto, cantidad = null){
         setCartQty(id, data.cantidad || 0);
         actualizarContadorCarrito(data.carrito_count || 0);
         syncProductControls(id, data.stock || stock);
+        const updatedStock = data.stock || stock;
+        if (qtyEl && cartQty(id) < updatedStock) {
+            qtyEl.textContent = '1';
+        }
         mostrarMensajeCarrito(data.message || i18n.productAdded);
     } catch (error) {
         console.error(error);
@@ -1004,12 +1136,11 @@ function scrollProducts(gridId, direction){
 
 function openProductDetail(card, event){
     if(event.target.closest('.qty-wrap, .add-btn')) return;
-    const id = card.dataset.id;
-    const url = id ? `index.php?action=productoDetalle&id=${id}` : card.dataset.url;
+    const url = card.dataset.url;
     if(url){
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        const newWindow = window.open(url, '_blank');
         if (newWindow) {
-            newWindow.opener = null;
+            newWindow.focus();
         }
     }
 }
@@ -1050,6 +1181,30 @@ const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 let filterTimer = null;
+
+const productImageObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const img = entry.target;
+            if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            }
+            observer.unobserve(img);
+        });
+    }, { rootMargin: '500px 0px' })
+    : null;
+
+document.querySelectorAll('img[data-src]').forEach((img) => {
+    if (productImageObserver) {
+        productImageObserver.observe(img);
+        return;
+    }
+
+    img.src = img.dataset.src;
+    img.removeAttribute('data-src');
+});
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);

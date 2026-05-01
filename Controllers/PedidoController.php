@@ -8,8 +8,6 @@ class PedidoController {
     private $conn;
     private $carritoModel;
     private $direccionPedidoModel;
-    private $ventaColumnasCache = null;
-    private $pedidoColumnasCache = null;
 
     public function __construct() {
         $this->conn = Database::getConnection();
@@ -52,15 +50,50 @@ class PedidoController {
     }
 
     private function obtenerProductoResumen(int $idProducto): ?array {
-        $query = "SELECT NOMBRE, PRECIO FROM PRODUCTO WHERE ID_PRODUCTO = :id";
+        $productos = $this->obtenerProductosResumen([$idProducto]);
+        return $productos[$idProducto] ?? null;
+    }
+
+    private function obtenerProductosResumen(array $idsProductos): array {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $idsProductos), fn($id) => $id > 0)));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = [];
+        $binds = [];
+        foreach ($ids as $index => $idProducto) {
+            $placeholder = ':id' . $index;
+            $placeholders[] = $placeholder;
+            $binds[$placeholder] = $idProducto;
+        }
+
+        $query = "SELECT ID_PRODUCTO, NOMBRE, PRECIO
+                  FROM PRODUCTO
+                  WHERE ID_PRODUCTO IN (" . implode(', ', $placeholders) . ")";
+
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id', $idProducto, -1, SQLT_INT);
-        oci_execute($stmt);
+        foreach ($binds as $placeholder => &$value) {
+            oci_bind_by_name($stmt, $placeholder, $value, -1, SQLT_INT);
+        }
+        unset($value);
 
-        $row = oci_fetch_assoc($stmt);
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudieron consultar los productos');
+        }
+
+        $productos = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $productos[(int) $row['ID_PRODUCTO']] = [
+                'nombre' => $row['NOMBRE'],
+                'precio' => (float) $row['PRECIO']
+            ];
+        }
+
         oci_free_statement($stmt);
-
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+        return $productos;
     }
 
     private function getUsuarioId(): int {
@@ -147,48 +180,34 @@ class PedidoController {
     }
 
     private function calcularTotalCarrito(array $carrito): float {
-        $ids = array_values(array_filter(array_map('intval', array_keys($carrito)), fn($id) => $id > 0));
-        if (empty($ids)) {
-            return 0;
-        }
+        return $this->calcularTotalProductos($this->normalizarCarrito($carrito), $this->obtenerProductosResumen(array_keys($carrito)));
+    }
 
-        $placeholders = [];
-        $binds = [];
-        foreach ($ids as $index => $idProducto) {
-            $placeholder = ':id' . $index;
-            $placeholders[] = $placeholder;
-            $binds[$placeholder] = $idProducto;
-        }
-
-        $query = "SELECT ID_PRODUCTO, PRECIO
-                  FROM PRODUCTO
-                  WHERE ID_PRODUCTO IN (" . implode(', ', $placeholders) . ")";
-
-        $stmt = oci_parse($this->conn, $query);
-        foreach ($binds as $placeholder => &$value) {
-            oci_bind_by_name($stmt, $placeholder, $value, -1, SQLT_INT);
-        }
-        unset($value);
-
-        oci_execute($stmt);
-
-        $precios = [];
-        while ($row = oci_fetch_assoc($stmt)) {
-            $precios[(int) $row['ID_PRODUCTO']] = (float) $row['PRECIO'];
-        }
-        oci_free_statement($stmt);
-
+    private function calcularTotalProductos(array $itemsPedido, array $productos): float {
         $total = 0;
-        foreach ($carrito as $idProducto => $cantidad) {
+        foreach ($itemsPedido as $idProducto => $cantidad) {
             $idProducto = (int) $idProducto;
-            if (!isset($precios[$idProducto])) {
+            if (!isset($productos[$idProducto])) {
                 continue;
             }
 
-            $total += $precios[$idProducto] * (int) $cantidad;
+            $total += (float) $productos[$idProducto]['precio'] * (int) $cantidad;
         }
 
         return $total;
+    }
+
+    private function normalizarCarrito(array $carrito): array {
+        $normalizado = [];
+        foreach ($carrito as $idProducto => $cantidad) {
+            $idProducto = (int) $idProducto;
+            $cantidad = (int) $cantidad;
+            if ($idProducto > 0 && $cantidad > 0) {
+                $normalizado[$idProducto] = $cantidad;
+            }
+        }
+
+        return $normalizado;
     }
 
     private function normalizarCiudadEnvio(string $ciudad): string {
@@ -312,138 +331,56 @@ class PedidoController {
         return $resumen;
     }
 
-    private function obtenerColumnasTabla(string $tabla): array {
-        if ($tabla === 'VENTA' && isset($_SESSION['venta_columnas_cache']) && is_array($_SESSION['venta_columnas_cache'])) {
-            return $_SESSION['venta_columnas_cache'];
-        }
-
-        if ($tabla === 'VENTA' && $this->ventaColumnasCache !== null) {
-            return $this->ventaColumnasCache;
-        }
-
-        if ($tabla === 'PEDIDO' && $this->pedidoColumnasCache !== null) {
-            return $this->pedidoColumnasCache;
-        }
-
-        $query = "SELECT COLUMN_NAME, NULLABLE, IDENTITY_COLUMN
-                  FROM USER_TAB_COLUMNS
-                  WHERE TABLE_NAME = :tabla
-                  ORDER BY COLUMN_ID";
-
-        $stmt = oci_parse($this->conn, $query);
-        $tabla = strtoupper($tabla);
-        oci_bind_by_name($stmt, ':tabla', $tabla);
-        oci_execute($stmt);
-
-        $columnas = [];
-        while ($row = oci_fetch_assoc($stmt)) {
-            $columnas[strtolower($row['COLUMN_NAME'])] = [
-                'name' => $row['COLUMN_NAME'],
-                'nullable' => $row['NULLABLE'],
-                'identity' => $row['IDENTITY_COLUMN'] ?? 'NO'
-            ];
-        }
-
-        oci_free_statement($stmt);
-
-        if ($tabla === 'VENTA') {
-            $this->ventaColumnasCache = $columnas;
-            $_SESSION['venta_columnas_cache'] = $columnas;
-        }
-
-        if ($tabla === 'PEDIDO') {
-            $this->pedidoColumnasCache = $columnas;
-        }
-
-        return $columnas;
-    }
-
-    private function crearVenta(int $idUsuario, float $total, ?int $idCliente = null): int {
-        $columnas = $this->obtenerColumnasTabla('VENTA');
-        $insertColumns = [];
-        $valueExpressions = [];
-        $binds = [];
-
-        foreach ($columnas as $lowerName => $meta) {
-            if ($lowerName === 'id_venta' || strtoupper($meta['identity']) === 'YES') {
-                continue;
-            }
-
-            if ($lowerName === 'id_cliente') {
-                $insertColumns[] = $meta['name'];
-                if ($idCliente !== null && $idCliente > 0) {
-                    $valueExpressions[] = ':id_cliente';
-                    $binds[':id_cliente'] = ['value' => $idCliente, 'type' => SQLT_INT];
-                } else {
-                    $valueExpressions[] = 'NULL';
-                }
-                continue;
-            }
-
-            if ($lowerName === 'id_tipo') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':id_tipo_venta';
-                $binds[':id_tipo_venta'] = ['value' => 2, 'type' => SQLT_INT];
-                continue;
-            }
-
-            if ($lowerName === 'id_usuario') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':' . $lowerName;
-                $binds[':' . $lowerName] = ['value' => $idUsuario, 'type' => SQLT_INT];
-                continue;
-            }
-
-            if (in_array($lowerName, ['total', 'total_venta', 'total_pagar', 'valor_total', 'monto_total'], true)) {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':' . $lowerName;
-                $binds[':' . $lowerName] = ['value' => number_format($total, 2, '.', ''), 'type' => SQLT_CHR];
-                continue;
-            }
-
-            if (in_array($lowerName, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at'], true)) {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = 'SYSDATE';
-                continue;
-            }
-
-            if ($lowerName === 'id_estado') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':id_estado_venta';
-                $binds[':id_estado_venta'] = ['value' => 1, 'type' => SQLT_INT];
-                continue;
-            }
-
-            if ($lowerName === 'estado') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':estado_venta';
-                $binds[':estado_venta'] = ['value' => 'PENDIENTE', 'type' => SQLT_CHR];
-                continue;
-            }
-
-            if ($meta['nullable'] === 'N') {
-                throw new Exception('La tabla VENTA tiene una columna obligatoria no mapeada: ' . $meta['name']);
-            }
-        }
-
-        if (empty($insertColumns)) {
-            $query = "INSERT INTO VENTA (ID_VENTA)
-                      VALUES (DEFAULT)
-                      RETURNING ID_VENTA INTO :id_venta";
-        } else {
-            $query = "INSERT INTO VENTA (" . implode(', ', $insertColumns) . ")
-                      VALUES (" . implode(', ', $valueExpressions) . ")
-                      RETURNING ID_VENTA INTO :id_venta";
-        }
+    private function crearVenta(int $idUsuario, array $resumenCompra, ?int $idCliente = null): int {
+        $subtotal = (float) ($resumenCompra['subtotal'] ?? 0);
+        $iva = (float) ($resumenCompra['iva'] ?? 0);
+        $envio = (float) ($resumenCompra['envio'] ?? 0);
+        $total = (float) ($resumenCompra['total'] ?? ($subtotal + $iva + $envio));
+        $query = "INSERT INTO VENTA (
+                    ID_USUARIO,
+                    ID_CLIENTE,
+                    ID_TIPO,
+                    FECHA,
+                    TOTAL,
+                    SUBTOTAL,
+                    IVA,
+                    ENVIO,
+                    METODO_PAGO,
+                    ESTADO,
+                    FECHA_PAGO
+                  )
+                  VALUES (
+                    :id_usuario,
+                    :id_cliente,
+                    :id_tipo,
+                    SYSDATE,
+                    :total,
+                    :subtotal,
+                    :iva,
+                    :envio,
+                    NULL,
+                    :estado,
+                    NULL
+                  )
+                  RETURNING ID_VENTA INTO :id_venta";
 
         $stmt = oci_parse($this->conn, $query);
         $idVenta = null;
+        $idTipoVenta = 2;
+        $estado = 'PENDIENTE';
+        $subtotal = number_format($subtotal, 2, '.', '');
+        $iva = number_format($iva, 2, '.', '');
+        $envio = number_format($envio, 2, '.', '');
+        $total = number_format($total, 2, '.', '');
 
-        foreach ($binds as $placeholder => &$bind) {
-            oci_bind_by_name($stmt, $placeholder, $bind['value'], -1, $bind['type']);
-        }
-        unset($bind);
-
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_cliente', $idCliente, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_tipo', $idTipoVenta, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':total', $total, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':subtotal', $subtotal, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':iva', $iva, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':envio', $envio, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':estado', $estado, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
@@ -455,6 +392,66 @@ class PedidoController {
         oci_free_statement($stmt);
 
         return (int) $idVenta;
+    }
+
+    private function crearDetallesVenta(int $idVenta, array $itemsPedido, ?array $productos = null): void {
+        if (empty($itemsPedido)) {
+            return;
+        }
+
+        $productos = $productos ?? $this->obtenerProductosResumen(array_keys($itemsPedido));
+        $query = "INSERT INTO DETALLE_VENTA (
+                    ID_VENTA,
+                    ID_PRODUCTO,
+                    CANTIDAD,
+                    PRECIO_UNITARIO,
+                    SUBTOTAL,
+                    NOMBRE_PRODUCTO
+                  )
+                  VALUES (
+                    :id_venta,
+                    :id_producto,
+                    :cantidad,
+                    :precio_unitario,
+                    :subtotal,
+                    :nombre_producto
+                  )";
+        $stmt = oci_parse($this->conn, $query);
+        $idProductoDetalle = 0;
+        $cantidadDetalle = 0;
+        $precioUnitarioValor = '0.00';
+        $subtotalValor = '0.00';
+        $nombreProducto = '';
+
+        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_producto', $idProductoDetalle, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':cantidad', $cantidadDetalle, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':precio_unitario', $precioUnitarioValor, 32, SQLT_CHR);
+        oci_bind_by_name($stmt, ':subtotal', $subtotalValor, 32, SQLT_CHR);
+        oci_bind_by_name($stmt, ':nombre_producto', $nombreProducto, 150, SQLT_CHR);
+
+        foreach ($itemsPedido as $idProducto => $cantidad) {
+            $producto = $productos[(int) $idProducto] ?? null;
+            if (!$producto) {
+                oci_free_statement($stmt);
+                throw new Exception('Uno de los productos del pedido ya no existe');
+            }
+
+            $idProductoDetalle = (int) $idProducto;
+            $cantidadDetalle = (int) $cantidad;
+            $precioUnitario = (float) $producto['precio'];
+            $precioUnitarioValor = number_format($precioUnitario, 2, '.', '');
+            $subtotalValor = number_format(round($precioUnitario * $cantidadDetalle, 2), 2, '.', '');
+            $nombreProducto = (string) $producto['nombre'];
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($error['message'] ?? 'No se pudo guardar el detalle de la venta');
+            }
+        }
+
+        oci_free_statement($stmt);
     }
 
     private function crearPedido(int $idVenta, int $estado = 1): int {
@@ -554,12 +551,255 @@ class PedidoController {
         return $fechaEntrega;
     }
 
+    private function obtenerItemsPedidoActual(int $idPedido): array {
+        $snapshot = $_SESSION['pedido_actual_items'][$idPedido] ?? null;
+        if (is_array($snapshot)) {
+            return $this->normalizarCarrito($snapshot);
+        }
+
+        $carrito = $this->obtenerCarritoSesion();
+        return $this->normalizarCarrito($carrito);
+    }
+
+    private function descontarStockPedidoTx(array $itemsPedido): void {
+        if (empty($itemsPedido)) {
+            throw new Exception('No se encontraron productos para confirmar el pedido');
+        }
+
+        foreach ($itemsPedido as $idProducto => $cantidad) {
+            $query = "SELECT NOMBRE, STOCK_P
+                      FROM PRODUCTO
+                      WHERE ID_PRODUCTO = :id_producto
+                      FOR UPDATE";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($error['message'] ?? 'No se pudo validar el stock');
+            }
+
+            $producto = oci_fetch_assoc($stmt);
+            oci_free_statement($stmt);
+
+            if (!$producto) {
+                throw new Exception('Uno de los productos del pedido ya no existe');
+            }
+
+            $stockDisponible = (int) ($producto['STOCK_P'] ?? 0);
+            if ($stockDisponible < $cantidad) {
+                $nombre = (string) ($producto['NOMBRE'] ?? 'producto');
+                throw new Exception('Stock insuficiente para ' . $nombre);
+            }
+
+            $query = "UPDATE PRODUCTO
+                      SET STOCK_P = STOCK_P - :cantidad
+                      WHERE ID_PRODUCTO = :id_producto";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($error['message'] ?? 'No se pudo descontar el stock');
+            }
+
+            oci_free_statement($stmt);
+        }
+    }
+
+    private function reducirCarritoPedidoTx(int $idUsuario, array $itemsPedido): void {
+        $idCarrito = $this->carritoModel->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return;
+        }
+
+        foreach ($itemsPedido as $idProducto => $cantidadPedido) {
+            $query = "SELECT ID_DETALLE, CANTIDAD
+                      FROM DETALLE_CARRITO
+                      WHERE ID_CARRITO = :id_carrito
+                      AND ID_PRODUCTO = :id_producto
+                      FOR UPDATE";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($error['message'] ?? 'No se pudo actualizar el carrito');
+            }
+
+            $detalle = oci_fetch_assoc($stmt);
+            oci_free_statement($stmt);
+
+            if (!$detalle) {
+                continue;
+            }
+
+            $cantidadActual = (int) ($detalle['CANTIDAD'] ?? 0);
+            $idDetalle = (int) ($detalle['ID_DETALLE'] ?? 0);
+            $cantidadRestante = $cantidadActual - $cantidadPedido;
+
+            if ($cantidadRestante > 0) {
+                $query = "UPDATE DETALLE_CARRITO
+                          SET CANTIDAD = :cantidad
+                          WHERE ID_DETALLE = :id_detalle";
+                $stmt = oci_parse($this->conn, $query);
+                oci_bind_by_name($stmt, ':cantidad', $cantidadRestante, -1, SQLT_INT);
+                oci_bind_by_name($stmt, ':id_detalle', $idDetalle, -1, SQLT_INT);
+            } else {
+                $query = "DELETE FROM DETALLE_CARRITO
+                          WHERE ID_DETALLE = :id_detalle";
+                $stmt = oci_parse($this->conn, $query);
+                oci_bind_by_name($stmt, ':id_detalle', $idDetalle, -1, SQLT_INT);
+            }
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($error['message'] ?? 'No se pudo limpiar el carrito');
+            }
+
+            oci_free_statement($stmt);
+        }
+    }
+
     private function obtenerPedidoParaPago(int $idPedido, int $idUsuario): ?array {
         $query = "SELECT p.ID_PEDIDO,
                          p.ID_VENTA,
                          v.TOTAL
                   FROM PEDIDO p
                   INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  WHERE p.ID_PEDIDO = :id_pedido
+                  AND v.ID_USUARIO = :id_usuario
+                  AND p.ID_ESTADO = 1";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el pedido para pago');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+    }
+
+    private function obtenerIdEstadoCancelado(): int {
+        $query = "SELECT ID_ESTADO
+                  FROM ESTADO_PEDIDO
+                  WHERE LOWER(NOMBRE) LIKE '%cancel%'
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el estado cancelado');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        if ($row && (int) ($row['ID_ESTADO'] ?? 0) > 0) {
+            return (int) $row['ID_ESTADO'];
+        }
+
+        $query = "SELECT NVL(MAX(ID_ESTADO), 0) + 1 AS ID_ESTADO
+                  FROM ESTADO_PEDIDO";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo calcular el estado cancelado');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        $idEstado = (int) ($row['ID_ESTADO'] ?? 0);
+        if ($idEstado <= 0) {
+            throw new Exception('No se pudo calcular el estado cancelado');
+        }
+
+        $query = "INSERT INTO ESTADO_PEDIDO (ID_ESTADO, NOMBRE)
+                  VALUES (:id_estado, 'Cancelado')";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_estado', $idEstado, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo crear el estado cancelado');
+        }
+
+        oci_free_statement($stmt);
+        return (int) $idEstado;
+    }
+
+    private function cancelarPedidoPendiente(int $idPedido, int $idUsuario): bool {
+        $idCancelado = $this->obtenerIdEstadoCancelado();
+
+        $query = "UPDATE PEDIDO p
+                  SET p.ID_ESTADO = :id_cancelado
+                  WHERE p.ID_PEDIDO = :id_pedido
+                  AND p.ID_ESTADO = 1
+                  AND EXISTS (
+                      SELECT 1
+                      FROM VENTA v
+                      WHERE v.ID_VENTA = p.ID_VENTA
+                      AND v.ID_USUARIO = :id_usuario
+                  )";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_cancelado', $idCancelado, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo cancelar el pedido');
+        }
+
+        $updated = oci_num_rows($stmt) > 0;
+        oci_free_statement($stmt);
+
+        return $updated;
+    }
+
+    private function obtenerDetallePedidoUsuario(int $idPedido, int $idUsuario): ?array {
+        $query = "SELECT p.ID_PEDIDO,
+                         p.ID_ESTADO,
+                         p.FECHA_ESTIMADA_ENTREGA,
+                         v.ID_VENTA,
+                         v.FECHA,
+                         v.TOTAL,
+                         e.NOMBRE AS ESTADO,
+                         dp.NOMBRE_RECEPTOR,
+                         dp.APELLIDO_RECEPTOR,
+                         dp.DIRECCION_ENVIO,
+                         dp.CIUDAD,
+                         dp.BARRIO,
+                         dp.TELEFONO_RECEPTOR,
+                         dp.INFORMACION_ADICIONAL
+                  FROM PEDIDO p
+                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  INNER JOIN ESTADO_PEDIDO e ON e.ID_ESTADO = p.ID_ESTADO
+                  LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_DIRECCION_PEDIDO = p.ID_DIRECCION_PEDIDO
                   WHERE p.ID_PEDIDO = :id_pedido
                   AND v.ID_USUARIO = :id_usuario";
 
@@ -570,7 +810,7 @@ class PedidoController {
         if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
-            throw new Exception($error['message'] ?? 'No se pudo consultar el pedido para pago');
+            throw new Exception($error['message'] ?? 'No se pudo consultar el detalle del pedido');
         }
 
         $row = oci_fetch_assoc($stmt);
@@ -589,7 +829,7 @@ class PedidoController {
         oci_bind_by_name($stmt, ':metodo', $metodo, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':monto', $monto, -1, SQLT_CHR);
 
-        if (!@oci_execute($stmt)) {
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
             throw new Exception($error['message'] ?? 'No se pudo procesar el pago');
@@ -601,32 +841,25 @@ class PedidoController {
     public function resumen() {
         $this->ensureSession();
 
-        $carrito = $this->obtenerCarritoSesion();
+        $carrito = $this->normalizarCarrito($this->obtenerCarritoSesion());
         $items = [];
-        $total = 0;
+        $productos = $this->obtenerProductosResumen(array_keys($carrito));
+        $total = $this->calcularTotalProductos($carrito, $productos);
 
         foreach ($carrito as $idProducto => $cantidad) {
-            $idProducto = (int) $idProducto;
-            $cantidad = (int) $cantidad;
-
-            if ($idProducto <= 0 || $cantidad <= 0) {
-                continue;
-            }
-
-            $producto = $this->obtenerProductoResumen($idProducto);
+            $producto = $productos[(int) $idProducto] ?? null;
             if (!$producto) {
                 continue;
             }
 
             $precio = (float) $producto['precio'];
             $subtotal = $precio * $cantidad;
-            $total += $subtotal;
 
             $items[] = [
-                'id_producto' => $idProducto,
+                'id_producto' => (int) $idProducto,
                 'nombre' => $producto['nombre'],
                 'precio' => $precio,
-                'cantidad' => $cantidad,
+                'cantidad' => (int) $cantidad,
                 'subtotal' => $subtotal
             ];
         }
@@ -814,7 +1047,7 @@ class PedidoController {
             exit();
         }
 
-        $carrito = $this->obtenerCarritoSesion();
+        $carrito = $this->normalizarCarrito($this->obtenerCarritoSesion());
         if (empty($carrito)) {
             $_SESSION['error'] = 'Tu carrito esta vacio';
             header("Location: index.php?action=verCarrito");
@@ -822,21 +1055,23 @@ class PedidoController {
         }
 
         try {
+            $productos = $this->obtenerProductosResumen(array_keys($carrito));
             $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
-            $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
+            $resumenCompra = $this->calcularResumenCompra($this->calcularTotalProductos($carrito, $productos), $envio);
             $total = $resumenCompra['total'];
             $idPersona = $this->obtenerPersonaUsuario($idUsuario);
             $idCliente = $this->asegurarClientePorPersona($idPersona);
-            $idVenta = $this->crearVenta($idUsuario, $total, $idCliente);
+            $itemsPedido = $carrito;
+            $idVenta = $this->crearVenta($idUsuario, $resumenCompra, $idCliente);
+            $this->crearDetallesVenta($idVenta, $itemsPedido, $productos);
             $idPedido = $this->crearPedido($idVenta, 1);
             $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
             $this->asignarDireccionPedido($idPedido, $idDireccionPedido);
             $fechaEstimadaEntrega = $this->guardarFechaEstimadaEntrega($idPedido, (string) ($direccion['ciudad'] ?? ''));
 
-            $this->carritoModel->vaciarCarritoTx($idUsuario);
             oci_commit($this->conn);
-            unset($_SESSION['carrito'], $_SESSION['carrito_mapa_cache']);
-            $_SESSION['carrito_count'] = 0;
+            $_SESSION['pedido_actual_items'][$idPedido] = $itemsPedido;
+            $_SESSION['carrito_count'] = array_sum($carrito);
             $_SESSION['pedido_confirmado'] = [
                 'id_pedido' => $idPedido,
                 'id_venta' => $idVenta,
@@ -940,15 +1175,75 @@ class PedidoController {
                 throw new Exception('No se encontro el pedido para procesar el pago');
             }
 
+            $itemsPedido = $this->obtenerItemsPedidoActual($idPedido);
+            $this->descontarStockPedidoTx($itemsPedido);
+            $this->reducirCarritoPedidoTx($idUsuario, $itemsPedido);
             $this->registrarPago((int) $pedidoPago['id_venta'], $metodo, (float) $pedidoPago['total']);
-            unset($_SESSION['pedido_actual'], $_SESSION['venta_actual'], $_SESSION['monto_pago_actual'], $_SESSION['pedido_confirmado']);
-            $_SESSION['success'] = 'Pago simulado correctamente';
+            oci_commit($this->conn);
+            unset(
+                $_SESSION['pedido_actual'],
+                $_SESSION['venta_actual'],
+                $_SESSION['monto_pago_actual'],
+                $_SESSION['pedido_confirmado'],
+                $_SESSION['pedido_actual_items'][$idPedido],
+                $_SESSION['carrito'],
+                $_SESSION['carrito_mapa_cache'],
+                $_SESSION['tienda_cache']
+            );
+            $_SESSION['carrito_count'] = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
+            $_SESSION['success'] = 'Pago simulado correctamente. Inventario actualizado y carrito sincronizado.';
             header("Location: index.php?action=misPedidos");
             exit();
         } catch (Exception $e) {
+            oci_rollback($this->conn);
             error_log($e->getMessage());
-            $_SESSION['error'] = 'No se pudo procesar el pago';
+            $_SESSION['error'] = $e->getMessage() ?: 'No se pudo procesar el pago';
             header("Location: index.php?action=pago");
+            exit();
+        }
+    }
+
+    public function cancelarPedido() {
+        $this->ensureSession();
+
+        $idPedido = (int) ($_POST['id_pedido'] ?? 0);
+        $idUsuario = $this->getUsuarioId();
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para cancelar un pedido';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        if ($idPedido <= 0) {
+            $_SESSION['error'] = 'Pedido invalido';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        try {
+            $cancelado = $this->cancelarPedidoPendiente($idPedido, $idUsuario);
+            if (!$cancelado) {
+                oci_rollback($this->conn);
+                $_SESSION['error'] = 'Solo puedes cancelar pedidos que sigan en estado pendiente';
+                header("Location: index.php?action=misPedidos&id=" . $idPedido);
+                exit();
+            }
+
+            oci_commit($this->conn);
+            if ((int) ($_SESSION['pedido_actual'] ?? 0) === $idPedido) {
+                unset($_SESSION['pedido_actual'], $_SESSION['venta_actual'], $_SESSION['monto_pago_actual'], $_SESSION['pedido_confirmado']);
+            }
+            unset($_SESSION['pedido_actual_items'][$idPedido]);
+
+            $_SESSION['success'] = 'Pedido cancelado correctamente';
+            header("Location: index.php?action=misPedidos&id=" . $idPedido);
+            exit();
+        } catch (Exception $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No se pudo cancelar el pedido';
+            header("Location: index.php?action=misPedidos&id=" . $idPedido);
             exit();
         }
     }
@@ -961,6 +1256,28 @@ class PedidoController {
             $_SESSION['error'] = 'Debes iniciar sesion para ver tus pedidos';
             header("Location: index.php?action=login");
             exit();
+        }
+
+        $idPedidoDetalle = (int) ($_GET['id'] ?? 0);
+        if ($idPedidoDetalle > 0) {
+            try {
+                $pedidoDetalle = $this->obtenerDetallePedidoUsuario($idPedidoDetalle, $id_usuario);
+            } catch (Exception $e) {
+                error_log($e->getMessage());
+                $_SESSION['error'] = 'No se pudo consultar el detalle del pedido';
+                header("Location: index.php?action=misPedidos");
+                exit();
+            }
+
+            if (!$pedidoDetalle) {
+                $_SESSION['error'] = 'No encontramos ese pedido en tu cuenta';
+                header("Location: index.php?action=misPedidos");
+                exit();
+            }
+
+            $pedidos = [];
+            require_once __DIR__ . '/../views/pedidos/mis_pedidos.php';
+            return;
         }
 
         $query = "SELECT ID_PEDIDO,

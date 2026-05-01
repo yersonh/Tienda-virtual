@@ -26,23 +26,31 @@ class ProductoModel {
         return $normalized;
     }
 
-    private function productoColumns(string $alias = 'p', bool $includeTotalVendido = false, string $categoriaAlias = 'c'): string {
+    private function productoColumns(
+        string $alias = 'p',
+        bool $includeTotalVendido = false,
+        string $categoriaAlias = 'c',
+        string $imagenAlias = 'img',
+        bool $includeDescripcion = true
+    ): string {
         $prefix = $alias !== '' ? $alias . '.' : '';
         $categoriaPrefix = $categoriaAlias !== '' ? $categoriaAlias . '.' : '';
+        $imagenPrefix = $imagenAlias !== '' ? $imagenAlias . '.' : '';
         $columns = [
             "{$prefix}id_producto",
             "{$prefix}nombre",
             "{$prefix}codigo",
-            "{$prefix}descripcion",
             "{$prefix}precio",
             "{$prefix}stock_p",
             "{$prefix}estado",
             "{$prefix}id_categoria",
             "{$categoriaPrefix}nombre AS categoria_nombre",
-            "(SELECT MIN(pi.url) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.orden, 999999), pi.id_imagen)
-              FROM producto_imagen pi
-              WHERE pi.id_producto = {$prefix}id_producto) AS imagen"
+            "{$imagenPrefix}imagen AS imagen"
         ];
+
+        if ($includeDescripcion) {
+            array_splice($columns, 3, 0, "{$prefix}descripcion");
+        }
 
         if ($includeTotalVendido) {
             $columns[] = "0 AS total_vendido";
@@ -51,12 +59,23 @@ class ProductoModel {
         return implode(",\n                         ", $columns);
     }
 
+    private function primeraImagenJoin(string $alias = 'img'): string {
+        return "LEFT JOIN (
+                    SELECT id_producto,
+                           MIN(url) KEEP (DENSE_RANK FIRST ORDER BY NVL(orden, 999999), id_imagen) AS imagen
+                    FROM producto_imagen
+                    GROUP BY id_producto
+                ) {$alias} ON {$alias}.id_producto = p.id_producto";
+    }
+
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
-    public function obtenerCatalogo() {
-    $columns = $this->productoColumns('p');
+    public function obtenerCatalogo(bool $includeDescripcion = true) {
+    $columns = $this->productoColumns('p', false, 'c', 'img', $includeDescripcion);
+    $imageJoin = $this->primeraImagenJoin();
     $query = "SELECT $columns
               FROM producto p
               INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+              $imageJoin
               ORDER BY c.nombre, p.nombre";
 
     $stmt = oci_parse($this->conn, $query);
@@ -73,9 +92,11 @@ class ProductoModel {
 
     public function obtenerTodos() {
         $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $imageJoin
                   ORDER BY p.id_producto DESC";
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
@@ -91,9 +112,11 @@ class ProductoModel {
 
     public function obtenerPorId($id) {
         $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $imageJoin
                   WHERE p.id_producto = :id";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id);
@@ -143,9 +166,11 @@ class ProductoModel {
         $placeholdersStr = implode(',', $placeholders);
 
         $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $imageJoin
                   WHERE p.id_producto IN ($placeholdersStr)
                   ORDER BY p.nombre";
 
@@ -169,10 +194,12 @@ class ProductoModel {
     public function obtenerMasVendidos($limite = 5) {
         $limite = max(1, min(10, (int) $limite));
         $columns = $this->productoColumns('p', true);
+        $imageJoin = $this->primeraImagenJoin();
 
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $imageJoin
                   ORDER BY p.id_producto DESC
                   FETCH FIRST :limite ROWS ONLY";
 
@@ -192,10 +219,12 @@ class ProductoModel {
     public function obtenerProductosNuevos($limite = 10) {
         $limite = max(1, min(10, (int) $limite));
         $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
 
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $imageJoin
                   ORDER BY p.id_producto DESC
                   FETCH FIRST :limite ROWS ONLY";
 

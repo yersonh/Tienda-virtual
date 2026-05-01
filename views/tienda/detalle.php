@@ -12,6 +12,10 @@ if (!empty($imagenesProducto)) {
     $imagenPrincipal = basename($imagenesProducto[0]['url']);
 }
 $carritoVista = isset($carritoVista) && is_array($carritoVista) ? $carritoVista : ($_SESSION['carrito'] ?? []);
+$carritoItemsResumen = isset($carritoItemsResumen) && is_array($carritoItemsResumen) ? $carritoItemsResumen : [];
+$carritoResumenTotal = array_reduce($carritoItemsResumen, function($carry, $item) {
+    return $carry + (float) ($item['subtotal'] ?? $item['total_linea'] ?? 0);
+}, 0);
 $stockProducto = (int) ($producto['stock_p'] ?? 0);
 $cantidadEnCarrito = isset($carritoVista[$producto['id_producto']]) ? (int) $carritoVista[$producto['id_producto']] : 0;
 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
@@ -354,6 +358,91 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
 [data-theme="light"] .detail-action.secondary {
     background: rgba(255,255,255,0.9);
 }
+.detail-order-mini {
+    margin-top: 22px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.035);
+}
+.detail-order-head,
+.detail-order-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.detail-order-head {
+    margin-bottom: 12px;
+}
+.detail-order-head h2 {
+    margin: 0;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0;
+}
+.detail-order-count {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+}
+.detail-order-list {
+    display: grid;
+    gap: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.detail-order-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+}
+.detail-order-name {
+    display: block;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+.detail-order-meta {
+    display: block;
+    margin-top: 3px;
+    color: var(--secondary);
+    font-size: 12px;
+}
+.detail-order-price {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+    white-space: nowrap;
+}
+.detail-order-total {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    color: var(--secondary);
+    font-size: 13px;
+}
+.detail-order-total strong {
+    color: var(--text);
+    font-size: 15px;
+}
+.detail-order-empty {
+    margin: 0;
+    color: var(--secondary);
+    font-size: 13px;
+    line-height: 1.5;
+}
+[data-theme="light"] .detail-order-mini,
+[data-theme="light"] .detail-order-item {
+    background: rgba(255,255,255,0.82);
+}
 .detail-lightbox {
     position: fixed;
     inset: 0;
@@ -386,6 +475,96 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
     color: #fff;
     cursor: pointer;
     font-size: 24px;
+}
+.cart-toast {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 9999;
+    width: min(360px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(9, 18, 34, 0.94);
+    border: 1px solid rgba(0, 229, 192, 0.32);
+    color: #f8fafc;
+    box-shadow: 0 22px 48px rgba(0,0,0,0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    overflow: hidden;
+}
+.cart-toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+.cart-toast.error {
+    border-color: rgba(248, 113, 113, 0.42);
+}
+.cart-toast-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 229, 192, 0.14);
+    color: var(--accent);
+}
+.cart-toast.error .cart-toast-icon {
+    background: rgba(248, 113, 113, 0.14);
+    color: #f87171;
+}
+.cart-toast-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.cart-toast-title {
+    margin: 0 0 3px;
+    font-size: 14px;
+    font-weight: 800;
+}
+.cart-toast-text {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.35;
+}
+.cart-toast-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: left;
+    animation: toastBar 2.6s linear forwards;
+}
+.cart-toast.error .cart-toast-bar {
+    background: #f87171;
+}
+[data-theme="light"] .cart-toast {
+    background: rgba(255,255,255,0.96);
+    color: #0f172a;
+    box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+}
+[data-theme="light"] .cart-toast-text {
+    color: #475569;
+}
+@keyframes toastBar {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
 }
 @media (max-width: 980px) {
     .detail-grid {
@@ -538,7 +717,7 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                 </div>
 
                 <div class="detail-actions">
-                    <a class="detail-action primary" href="<?= htmlspecialchars($volverUrl, ENT_QUOTES, 'UTF-8') ?>">
+                    <a class="detail-action primary" id="detail-follow-link" href="<?= htmlspecialchars($volverUrl, ENT_QUOTES, 'UTF-8') ?>">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M19 12H5"></path>
                             <path d="m11 18-6-6 6-6"></path>
@@ -566,6 +745,40 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
+
+                <?php if($usuarioLogueado): ?>
+                    <section class="detail-order-mini" aria-label="<?= htmlspecialchars('Resumen del carrito', ENT_QUOTES, 'UTF-8') ?>">
+                        <div class="detail-order-head">
+                            <h2><?= htmlspecialchars('Tu encargo', ENT_QUOTES, 'UTF-8') ?></h2>
+                            <span class="detail-order-count" id="detail-order-count"><?= (int) array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $carritoItemsResumen)) ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
+                        </div>
+                        <div class="detail-order-list" id="detail-order-list">
+                            <?php if(!empty($carritoItemsResumen)): ?>
+                                <?php foreach($carritoItemsResumen as $item): ?>
+                                    <?php
+                                        $itemId = (int) ($item['id_producto'] ?? 0);
+                                        $itemCantidad = (int) ($item['cantidad'] ?? 0);
+                                        $itemPrecio = (float) ($item['precio'] ?? 0);
+                                        $itemSubtotal = (float) ($item['subtotal'] ?? $item['total_linea'] ?? ($itemPrecio * $itemCantidad));
+                                    ?>
+                                    <div class="detail-order-item" data-order-item="<?= $itemId ?>" data-price="<?= $itemPrecio ?>">
+                                        <span>
+                                            <span class="detail-order-name"><?= htmlspecialchars((string) ($item['nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="detail-order-meta"><span data-order-qty><?= $itemCantidad ?></span> x $<?= number_format($itemPrecio) ?> COP</span>
+                                        </span>
+                                        <strong class="detail-order-price" data-order-subtotal>$<?= number_format($itemSubtotal) ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="detail-order-empty" id="detail-order-empty"><?= htmlspecialchars('Aun no has agregado productos al carrito.', ENT_QUOTES, 'UTF-8') ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="detail-order-total">
+                            <span><?= htmlspecialchars('Total carrito', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong id="detail-order-total">$<?= number_format($carritoResumenTotal) ?> COP</strong>
+                        </div>
+                    </section>
+                <?php endif; ?>
             </aside>
         </div>
     </div>
@@ -587,6 +800,11 @@ const galleryImages = [
 let galleryIndex = 0;
 const detailStock = <?= $stockProducto ?>;
 let detailCartQty = <?= $cantidadEnCarrito ?>;
+const detailProduct = {
+    id: <?= (int) ($producto['id_producto'] ?? 0) ?>,
+    name: <?= json_encode((string) ($producto['nombre'] ?? 'Producto')) ?>,
+    price: <?= (float) ($producto['precio'] ?? 0) ?>
+};
 const i18n = {
     limitReached: <?= json_encode('Limite alcanzado') ?>,
     addMore: <?= json_encode('Agregar mas') ?>,
@@ -654,8 +872,101 @@ function syncDetailControls(stock) {
     label.textContent = atLimit ? i18n.limitReached : (detailCartQty > 0 ? i18n.addMore : i18n.addToCart);
 }
 
+function escapeToastText(value) {
+    const div = document.createElement('div');
+    div.textContent = value || '';
+    return div.innerHTML;
+}
+
+function showCartToast(message, isError = false) {
+    let notice = document.getElementById('cart-toast');
+    if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'cart-toast';
+        notice.className = 'cart-toast';
+        notice.setAttribute('role', 'status');
+        notice.setAttribute('aria-live', 'polite');
+        document.body.appendChild(notice);
+    }
+
+    notice.className = `cart-toast ${isError ? 'error' : ''}`;
+    const safeMessage = escapeToastText(message);
+    notice.innerHTML = `
+        <span class="cart-toast-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                ${isError
+                    ? '<path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.5 2.9 16.3A2 2 0 0 0 4.6 19h14.8a2 2 0 0 0 1.7-2.7L13.7 3.5a2 2 0 0 0-3.4 0z"></path>'
+                    : '<path d="m5 12 5 5L20 7"></path>'}
+            </svg>
+        </span>
+        <span>
+            <p class="cart-toast-title">${isError ? 'No se pudo agregar' : 'Agregado al carrito'}</p>
+            <p class="cart-toast-text">${safeMessage}</p>
+        </span>
+        <span class="cart-toast-bar" aria-hidden="true"></span>
+    `;
+    requestAnimationFrame(() => notice.classList.add('show'));
+
+    clearTimeout(window.cartToastTimer);
+    window.cartToastTimer = setTimeout(() => {
+        notice.classList.remove('show');
+    }, 2600);
+}
+
+function formatCop(value, includeCurrency = false) {
+    const formatted = new Intl.NumberFormat('es-CO', {
+        maximumFractionDigits: 0
+    }).format(Number(value) || 0);
+
+    return `$${formatted}${includeCurrency ? ' COP' : ''}`;
+}
+
+function updateDetailOrderMini(product, quantity) {
+    const list = document.getElementById('detail-order-list');
+    const count = document.getElementById('detail-order-count');
+    const total = document.getElementById('detail-order-total');
+    if (!list || !count || !total) return;
+
+    let item = list.querySelector(`[data-order-item="${product.id}"]`);
+    const empty = document.getElementById('detail-order-empty');
+
+    if (!item) {
+        if (empty) empty.remove();
+        item = document.createElement('div');
+        item.className = 'detail-order-item';
+        item.dataset.orderItem = product.id;
+        item.dataset.price = product.price;
+        item.innerHTML = `
+            <span>
+                <span class="detail-order-name"></span>
+                <span class="detail-order-meta"><span data-order-qty></span> x <span data-order-unit></span> COP</span>
+            </span>
+            <strong class="detail-order-price" data-order-subtotal></strong>
+        `;
+        list.appendChild(item);
+    }
+
+    item.querySelector('.detail-order-name').textContent = product.name;
+    item.querySelector('[data-order-qty]').textContent = quantity;
+    item.querySelector('[data-order-unit]').textContent = formatCop(product.price);
+    item.querySelector('[data-order-subtotal]').textContent = formatCop(product.price * quantity);
+
+    let totalQty = 0;
+    let totalPrice = 0;
+    list.querySelectorAll('.detail-order-item').forEach((row) => {
+        const qty = parseInt(row.querySelector('[data-order-qty]')?.textContent || '0', 10) || 0;
+        const price = parseFloat(row.dataset.price || '0') || 0;
+        totalQty += qty;
+        totalPrice += qty * price;
+    });
+
+    count.textContent = `${totalQty} uds`;
+    total.textContent = formatCop(totalPrice, true);
+}
+
 async function addDetailToCart(idProducto) {
-    const qty = parseInt(document.getElementById('detail-qty-value').textContent, 10);
+    const qtyEl = document.getElementById('detail-qty-value');
+    const qty = parseInt(qtyEl.textContent, 10);
     const btn = document.getElementById('detail-add-btn');
     const label = document.getElementById('detail-add-label');
     if (detailStock <= 0 || detailCartQty >= detailStock) {
@@ -686,6 +997,7 @@ async function addDetailToCart(idProducto) {
                 syncDetailControls(data.stock || detailStock);
             }
             if (response.status === 401) {
+                showCartToast(data.message || 'Debes iniciar sesion', true);
                 window.location.href = 'index.php?action=login';
                 return;
             }
@@ -694,14 +1006,21 @@ async function addDetailToCart(idProducto) {
 
         detailCartQty = data.cantidad || 0;
         syncDetailControls(data.stock || detailStock);
+        const updatedStock = data.stock || detailStock;
+        if (qtyEl && detailCartQty < updatedStock) {
+            qtyEl.textContent = '1';
+        }
 
         const cartCount = document.getElementById('carrito-count');
         if (cartCount) {
             cartCount.textContent = data.carrito_count;
         }
+        updateDetailOrderMini(detailProduct, detailCartQty);
+        showCartToast(data.message || 'Producto agregado');
     } catch (error) {
         console.error(error);
         syncDetailControls(detailStock);
+        showCartToast(error.message || i18n.cartAddError, true);
     }
 }
 
@@ -726,6 +1045,17 @@ document.addEventListener('keydown', (event) => {
         closeLightbox();
     }
 });
+
+const followLink = document.getElementById('detail-follow-link');
+if (followLink) {
+    followLink.addEventListener('click', (event) => {
+        if (window.opener && !window.opener.closed) {
+            event.preventDefault();
+            window.opener.focus();
+            window.close();
+        }
+    });
+}
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

@@ -413,6 +413,12 @@ textarea:focus {
     .nav {
         align-items: flex-start;
         flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .nav-logo {
+        margin-right: auto;
     }
 
     .nav-links {

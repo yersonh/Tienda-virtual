@@ -172,6 +172,10 @@ switch ($action) {
         (new PedidoController())->procesarPago();
         break;
 
+    case 'cancelarPedido':
+        (new PedidoController())->cancelarPedido();
+        break;
+
     case 'misPedidos':
         (new PedidoController())->misPedidos();
         break;

@@ -89,14 +89,15 @@ class TiendaController {
         ];
     }
 
-    private function obtenerCatalogoCacheado(): array {
-        $productos = $this->getCache('catalogo');
+    private function obtenerCatalogoCacheado(bool $incluirDescripcion = true): array {
+        $cacheKey = $incluirDescripcion ? 'catalogo_full' : 'catalogo_ligero';
+        $productos = $this->getCache($cacheKey);
         if ($productos !== null) {
             return $productos;
         }
 
-        $productos = $this->productoModel()->obtenerCatalogo();
-        $this->setCache('catalogo', $productos);
+        $productos = $this->productoModel()->obtenerCatalogo($incluirDescripcion);
+        $this->setCache($cacheKey, $productos);
         return $productos;
     }
 
@@ -152,7 +153,7 @@ class TiendaController {
         $precio_max = preg_replace('/\D/', '', $_GET['precio_max'] ?? '');
         $categoria_filtro = $_GET['categoria'] ?? '';
 
-        $productos = $this->obtenerCatalogoCacheado();
+        $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
 
         $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
 
@@ -164,7 +165,7 @@ class TiendaController {
                 $match_texto =
                     str_contains(strtolower($p['nombre']), $f) ||
                     str_contains(strtolower($p['codigo']), $f) ||
-                    str_contains(strtolower($p['descripcion']), $f);
+                    str_contains(strtolower((string) ($p['descripcion'] ?? '')), $f);
             }
 
             // Ã°Å¸â€™Â° PRECIO
@@ -205,6 +206,11 @@ class TiendaController {
     public function detalle() {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
+        $carritoItemsResumen = [];
+
+        if (!empty($_SESSION['logueado']) && isset($_SESSION['id_usuario'])) {
+            $carritoItemsResumen = $this->carritoModel()->obtenerItemsVisualizacion((int) $_SESSION['id_usuario']);
+        }
 
         $id = $_GET['id'] ?? 0;
 

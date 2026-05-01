@@ -587,10 +587,17 @@ body[data-theme="light"] .form-control:focus,
             <?php endif; ?>
 
             <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
-                    <i class="fas fa-circle-check"></i>
-                    <span><?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['success']); ?></span>
-                </div>
+                <?php
+                    $successMessage = (string) $_SESSION['success'];
+                    unset($_SESSION['success']);
+                    $isPaymentMessage = stripos($successMessage, 'pago') !== false;
+                ?>
+                <?php if (!$isPaymentMessage): ?>
+                    <div class="alert alert-success d-flex align-items-center gap-2" role="alert">
+                        <i class="fas fa-circle-check"></i>
+                        <span><?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <div id="loading">

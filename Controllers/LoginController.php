@@ -75,10 +75,8 @@ class LoginController {
             exit();
         }
 
-        if ($usuario['id_tipo'] == 3) {
-            header("Location: index.php?action=inicio");
-            exit();
-        }
+        header("Location: index.php?action=tienda");
+        exit();
     }
 
     public function logout() {
