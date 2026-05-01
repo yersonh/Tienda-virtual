@@ -239,6 +239,64 @@ class PedidoController {
         return $resumen;
     }
 
+    private function nombreMetodoPago(int $metodo): string {
+        return match ($metodo) {
+            1 => 'Efectivo',
+            2 => 'Tarjeta debito',
+            3 => 'Tarjeta credito',
+            4 => 'Transferencia bancaria',
+            default => 'No seleccionado'
+        };
+    }
+
+    private function validarDatosPago(array $data): array {
+        $metodo = (int) ($data['metodo_pago'] ?? 0);
+        $errores = [];
+
+        if (!in_array($metodo, [1, 2, 3, 4], true)) {
+            $errores[] = 'Selecciona un metodo de pago valido';
+        }
+
+        if ($metodo === 1) {
+            if (trim((string) ($data['nombre_pagador'] ?? '')) === '') {
+                $errores[] = 'Escribe el nombre de quien paga en efectivo';
+            }
+            if (trim((string) ($data['documento_pagador'] ?? '')) === '') {
+                $errores[] = 'Escribe el documento de quien paga en efectivo';
+            }
+        }
+
+        if (in_array($metodo, [2, 3], true)) {
+            $numero = preg_replace('/\D+/', '', (string) ($data['numero_tarjeta'] ?? ''));
+            $cvv = preg_replace('/\D+/', '', (string) ($data['cvv_tarjeta'] ?? ''));
+            $vencimiento = trim((string) ($data['vencimiento_tarjeta'] ?? ''));
+
+            if (strlen($numero) < 13 || strlen($numero) > 19) {
+                $errores[] = 'Ingresa un numero de tarjeta valido';
+            }
+            if (trim((string) ($data['titular_tarjeta'] ?? '')) === '') {
+                $errores[] = 'Ingresa el nombre del titular';
+            }
+            if (!preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $vencimiento)) {
+                $errores[] = 'Ingresa el vencimiento en formato MM/AA';
+            }
+            if (strlen($cvv) < 3 || strlen($cvv) > 4) {
+                $errores[] = 'Ingresa un CVV valido';
+            }
+        }
+
+        if ($metodo === 4) {
+            if (trim((string) ($data['banco_origen'] ?? '')) === '') {
+                $errores[] = 'Escribe el banco de origen';
+            }
+            if (trim((string) ($data['referencia_transferencia'] ?? '')) === '') {
+                $errores[] = 'Escribe la referencia de transferencia';
+            }
+        }
+
+        return $errores;
+    }
+
     private function obtenerColumnasTabla(string $tabla): array {
         if ($tabla === 'VENTA' && $this->ventaColumnasCache !== null) {
             return $this->ventaColumnasCache;
@@ -271,6 +329,112 @@ class PedidoController {
         }
 
         return $columnas;
+    }
+
+    private function columnaVentaDisponible(array $columnas, array $candidatas): ?string {
+        foreach ($candidatas as $columna) {
+            $key = strtolower($columna);
+            if (isset($columnas[$key])) {
+                return $columnas[$key]['name'];
+            }
+        }
+
+        return null;
+    }
+
+    private function expresionesResumenVenta(): array {
+        $columnasVenta = $this->obtenerColumnasTabla('VENTA');
+        $columnaFecha = $this->columnaVentaDisponible($columnasVenta, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at']);
+        $columnaTotal = $this->columnaVentaDisponible($columnasVenta, ['total', 'total_venta', 'total_pagar', 'valor_total', 'monto_total']);
+
+        return [
+            'fecha' => $columnaFecha ? "TO_CHAR(v.$columnaFecha, 'YYYY-MM-DD HH24:MI:SS')" : "''",
+            'total' => $columnaTotal ? "NVL(v.$columnaTotal, 0)" : '0'
+        ];
+    }
+
+    private function estadoPedidoSql(): string {
+        return "CASE p.ID_ESTADO
+                    WHEN 1 THEN 'Pendiente'
+                    WHEN 2 THEN 'Pago confirmado'
+                    WHEN 3 THEN 'Preparacion'
+                    WHEN 4 THEN 'En ruta'
+                    WHEN 5 THEN 'Entregado'
+                    WHEN 6 THEN 'Cancelado'
+                    ELSE 'Pendiente'
+                END";
+    }
+
+    private function obtenerPedidosUsuario(int $idUsuario): array {
+        $venta = $this->expresionesResumenVenta();
+        $estadoSql = $this->estadoPedidoSql();
+
+        $query = "SELECT p.ID_PEDIDO,
+                         p.ID_ESTADO,
+                         $estadoSql AS ESTADO,
+                         {$venta['fecha']} AS FECHA,
+                         {$venta['total']} AS TOTAL,
+                         TO_CHAR(p.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA
+                  FROM PEDIDO p
+                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  WHERE v.ID_USUARIO = :id_usuario
+                  ORDER BY p.ID_PEDIDO DESC";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudieron consultar los pedidos');
+        }
+
+        $pedidos = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $pedidos[] = array_change_key_case($row, CASE_LOWER);
+        }
+
+        oci_free_statement($stmt);
+        return $pedidos;
+    }
+
+    private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
+        $venta = $this->expresionesResumenVenta();
+        $estadoSql = $this->estadoPedidoSql();
+
+        $query = "SELECT p.ID_PEDIDO,
+                         p.ID_ESTADO,
+                         $estadoSql AS ESTADO,
+                         {$venta['fecha']} AS FECHA,
+                         {$venta['total']} AS TOTAL,
+                         TO_CHAR(p.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA,
+                         dp.NOMBRE_RECEPTOR,
+                         dp.APELLIDO_RECEPTOR,
+                         dp.DIRECCION_ENVIO,
+                         dp.CIUDAD,
+                         dp.TELEFONO_RECEPTOR,
+                         dp.INFORMACION_ADICIONAL
+                  FROM PEDIDO p
+                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_DIRECCION_PEDIDO = p.ID_DIRECCION_PEDIDO
+                  WHERE v.ID_USUARIO = :id_usuario
+                    AND p.ID_PEDIDO = :id_pedido
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el pedido');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
     private function crearVenta(int $idUsuario, float $total): int {
@@ -688,19 +852,128 @@ class PedidoController {
             exit();
         }
 
+        $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
+        $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
+        $_SESSION['checkout_direccion_id'] = $idDireccion;
+        $_SESSION['checkout_direccion_snapshot'] = $direccion;
+        $_SESSION['checkout_fecha_estimada_entrega'] = date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
+
+        header("Location: index.php?action=pago");
+        exit();
+    }
+
+    public function pago() {
+        $this->ensureSession();
+
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para pagar';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
+        if ($idDireccion <= 0) {
+            $_SESSION['error'] = 'Selecciona una direccion antes de elegir el metodo de pago';
+            header("Location: index.php?action=ConfirmarPedido");
+            exit();
+        }
+
+        $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion);
+        if (!$direccion || (int) $direccion['id_usuario'] !== $idUsuario) {
+            unset($_SESSION['checkout_direccion_id'], $_SESSION['checkout_direccion_snapshot']);
+            $_SESSION['error'] = 'La direccion seleccionada no esta disponible';
+            header("Location: index.php?action=ConfirmarPedido");
+            exit();
+        }
+
+        $carrito = $this->obtenerCarritoSesion();
+        if (empty($carrito)) {
+            $_SESSION['error'] = 'Tu carrito esta vacio';
+            header("Location: index.php?action=verCarrito");
+            exit();
+        }
+
+        $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
+        $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
+        $total = $resumenCompra['total'];
+        $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
+
+        require_once __DIR__ . '/../views/pagos/pago.php';
+    }
+
+    public function procesarPago() {
+        $this->ensureSession();
+
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para finalizar el pago';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
+        if ($idDireccion <= 0) {
+            $_SESSION['error'] = 'Selecciona una direccion antes de pagar';
+            header("Location: index.php?action=ConfirmarPedido");
+            exit();
+        }
+
+        $erroresPago = $this->validarDatosPago($_POST);
+        if (!empty($erroresPago)) {
+            $_SESSION['error'] = implode('. ', $erroresPago);
+            $_SESSION['payment_old'] = [
+                'metodo_pago' => (int) ($_POST['metodo_pago'] ?? 1),
+                'nombre_pagador' => trim((string) ($_POST['nombre_pagador'] ?? '')),
+                'documento_pagador' => trim((string) ($_POST['documento_pagador'] ?? '')),
+                'titular_tarjeta' => trim((string) ($_POST['titular_tarjeta'] ?? '')),
+                'vencimiento_tarjeta' => trim((string) ($_POST['vencimiento_tarjeta'] ?? '')),
+                'banco_origen' => trim((string) ($_POST['banco_origen'] ?? '')),
+                'referencia_transferencia' => trim((string) ($_POST['referencia_transferencia'] ?? ''))
+            ];
+            header("Location: index.php?action=pago");
+            exit();
+        }
+
+        $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion);
+        if (!$direccion || (int) $direccion['id_usuario'] !== $idUsuario) {
+            $_SESSION['error'] = 'La direccion seleccionada no es valida';
+            header("Location: index.php?action=ConfirmarPedido");
+            exit();
+        }
+
+        $carrito = $this->obtenerCarritoSesion();
+        if (empty($carrito)) {
+            $_SESSION['error'] = 'Tu carrito esta vacio';
+            header("Location: index.php?action=verCarrito");
+            exit();
+        }
+
         try {
             $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
             $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
             $total = $resumenCompra['total'];
             $idVenta = $this->crearVenta($idUsuario, $total);
-            $idPedido = $this->crearPedido($idVenta, 1);
+            try {
+                $idPedido = $this->crearPedido($idVenta, 2);
+            } catch (Exception $estadoException) {
+                error_log($estadoException->getMessage());
+                $idPedido = $this->crearPedido($idVenta, 1);
+            }
             $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
             $this->asignarDireccionPedido($idPedido, $idDireccionPedido);
             $fechaEstimadaEntrega = $this->guardarFechaEstimadaEntrega($idPedido, (string) ($direccion['ciudad'] ?? ''));
 
             $this->carritoModel->vaciarCarritoTx($idUsuario);
             oci_commit($this->conn);
-            unset($_SESSION['carrito'], $_SESSION['carrito_mapa_cache']);
+            unset(
+                $_SESSION['carrito'],
+                $_SESSION['carrito_mapa_cache'],
+                $_SESSION['checkout_direccion_id'],
+                $_SESSION['checkout_direccion_snapshot'],
+                $_SESSION['checkout_fecha_estimada_entrega'],
+                $_SESSION['payment_old']
+            );
             $_SESSION['carrito_count'] = 0;
             $_SESSION['pedido_confirmado'] = [
                 'id_pedido' => $idPedido,
@@ -709,7 +982,8 @@ class PedidoController {
                 'subtotal' => $resumenCompra['subtotal'],
                 'iva' => $resumenCompra['iva'],
                 'envio' => $resumenCompra['envio'],
-                'fecha_estimada_entrega' => $fechaEstimadaEntrega
+                'fecha_estimada_entrega' => $fechaEstimadaEntrega,
+                'metodo_pago' => $this->nombreMetodoPago((int) ($_POST['metodo_pago'] ?? 0))
             ];
 
             header("Location: index.php?action=ConfirmarPedido");
@@ -717,8 +991,8 @@ class PedidoController {
         } catch (Exception $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
-            $_SESSION['error'] = 'No se pudo procesar el pedido. Verifica la informacion e intenta de nuevo.';
-            header("Location: index.php?action=ConfirmarPedido");
+            $_SESSION['error'] = 'No se pudo procesar el pago. Verifica la informacion e intenta de nuevo.';
+            header("Location: index.php?action=pago");
             exit();
         }
     }
@@ -736,6 +1010,35 @@ class PedidoController {
     }
 
     public function misPedidos() {
-     // consulta por usuario
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para ver tus pedidos';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $pedidos = [];
+        $pedidoDetalle = null;
+
+        try {
+            $idPedido = (int) ($_GET['id'] ?? 0);
+            if ($idPedido > 0) {
+                $pedidoDetalle = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
+                if (!$pedidoDetalle) {
+                    $_SESSION['error'] = 'Pedido no encontrado';
+                    header("Location: index.php?action=misPedidos");
+                    exit();
+                }
+            } else {
+                $pedidos = $this->obtenerPedidosUsuario($idUsuario);
+            }
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No se pudieron cargar tus pedidos en este momento';
+        }
+
+        require_once __DIR__ . '/../views/pedidos/mis_pedidos.php';
     }
 }

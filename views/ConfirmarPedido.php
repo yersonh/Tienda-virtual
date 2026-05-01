@@ -10,7 +10,13 @@ $resumenCompra = $resumenCompra ?? ($_SESSION['checkout_resumen'] ?? [
     'total' => (float) ($pedidoConfirmado['total'] ?? $total ?? 0)
 ]);
 $direccionSeleccionada = null;
+$direccionPendiente = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
 foreach ($direcciones as $index => $direccion) {
+    if ($direccionPendiente > 0 && (int) $direccion['id_direccion'] === $direccionPendiente) {
+        $direccionSeleccionada = $direccionPendiente;
+        break;
+    }
+
     if ((int) ($direccion['es_predeterminada'] ?? 0) === 1) {
         $direccionSeleccionada = (int) $direccion['id_direccion'];
         break;
@@ -745,6 +751,7 @@ body[data-theme="light"] .form-control:focus,
                     <div class="checkout-steps mb-4" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
                         <span class="checkout-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="checkout-step"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="checkout-step"><i class="fas fa-credit-card"></i> <?= htmlspecialchars('Pago', ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="checkout-step active"><i class="fas fa-circle-check"></i> <?= htmlspecialchars('Confirmacion', ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                     <div class="checkout-invoice-table">
@@ -765,6 +772,12 @@ body[data-theme="light"] .form-control:focus,
                                 <span class="checkout-invoice-label"><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span>
                                 <strong class="checkout-invoice-value">$<?= number_format((float) ($pedidoConfirmado['envio'] ?? 0)) ?> COP</strong>
                             </div>
+                            <?php if (!empty($pedidoConfirmado['metodo_pago'])): ?>
+                            <div class="checkout-invoice-row">
+                                <span class="checkout-invoice-label"><?= htmlspecialchars('Metodo de pago', ENT_QUOTES, 'UTF-8') ?></span>
+                                <strong class="checkout-invoice-value"><?= htmlspecialchars((string) $pedidoConfirmado['metodo_pago'], ENT_QUOTES, 'UTF-8') ?></strong>
+                            </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                         <div class="checkout-invoice-row checkout-invoice-total">
                             <span class="checkout-invoice-label"><?= htmlspecialchars('Total pagado', ENT_QUOTES, 'UTF-8') ?></span>
@@ -797,6 +810,7 @@ body[data-theme="light"] .form-control:focus,
                     <div class="checkout-steps" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
                         <span class="checkout-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="checkout-step active"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
+                        <span class="checkout-step"><i class="fas fa-credit-card"></i> <?= htmlspecialchars('Pago', ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="checkout-step"><i class="fas fa-circle-check"></i> <?= htmlspecialchars('Confirmacion', ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 </div>

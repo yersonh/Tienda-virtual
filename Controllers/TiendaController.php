@@ -118,7 +118,7 @@ class TiendaController {
             return $masVendidos;
         }
 
-        $masVendidos = $this->productoModel()->obtenerMasVendidos(5);
+        $masVendidos = $this->productoModel()->obtenerMasVendidos(10);
         $this->setCache('mas_vendidos', $masVendidos);
         return $masVendidos;
     }

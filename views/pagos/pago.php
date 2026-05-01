@@ -1,9 +1,17 @@
 <?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 
 <?php
-$pedido = isset($pedido) && is_array($pedido) ? $pedido : [];
-$idPedido = (int) ($pedido['id_pedido'] ?? ($_SESSION['pedido_actual'] ?? 0));
-$totalPedido = (float) ($pedido['total'] ?? 0);
+$resumenCompra = $resumenCompra ?? ($_SESSION['checkout_resumen'] ?? [
+    'subtotal' => 0,
+    'iva' => 0,
+    'envio' => 0,
+    'total' => 0
+]);
+$totalPedido = (float) ($resumenCompra['total'] ?? $total ?? 0);
+$paymentOld = isset($_SESSION['payment_old']) && is_array($_SESSION['payment_old']) ? $_SESSION['payment_old'] : [];
+unset($_SESSION['payment_old']);
+$metodoSeleccionado = (int) ($paymentOld['metodo_pago'] ?? 1);
+$metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metodoSeleccionado : 1;
 ?>
 
 <style>
@@ -280,8 +288,55 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 }
 
 .payment-card-fields .payment-field:first-child,
-.payment-card-fields .payment-field:nth-child(2) {
+.payment-card-fields .payment-field:nth-child(2),
+.payment-transfer-fields .payment-field:first-child {
     grid-column: 1 / -1;
+}
+
+.payment-cash-fields,
+.payment-transfer-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.payment-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid rgba(248,113,113,0.34);
+    border-radius: 8px;
+    background: rgba(248,113,113,0.12);
+    color: #fecaca;
+    line-height: 1.45;
+}
+
+[data-theme="light"] .payment-error {
+    color: #991b1b;
+}
+
+.payment-breakdown {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+}
+
+.payment-breakdown div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--secondary);
+    font-size: 14px;
+}
+
+.payment-breakdown strong {
+    color: var(--text);
 }
 
 .payment-note {
@@ -565,6 +620,11 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
     .payment-card-fields {
         grid-template-columns: 1fr;
     }
+
+    .payment-cash-fields,
+    .payment-transfer-fields {
+        grid-template-columns: 1fr;
+    }
 }
 
 .payment-card {
@@ -691,8 +751,8 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
         <section class="payment-card">
             <div class="payment-head">
                 <div class="payment-kicker"><?= htmlspecialchars('Proceso de Pago', ENT_QUOTES, 'UTF-8') ?></div>
-                <h1 class="payment-title"><?= htmlspecialchars('Pagar pedido', ENT_QUOTES, 'UTF-8') ?> <span class="payment-order-number">#<?= $idPedido ?></span></h1>
-                <p class="payment-sub"><?= htmlspecialchars('Selecciona un metodo y confirma el pago simulado para finalizar el pedido.', ENT_QUOTES, 'UTF-8') ?></p>
+                <h1 class="payment-title"><?= htmlspecialchars('Seleccionar metodo de pago', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="payment-sub"><?= htmlspecialchars('Completa los datos del metodo elegido. La compra se confirma y la factura se genera despues de validar este paso.', ENT_QUOTES, 'UTF-8') ?></p>
                 <div class="payment-progress" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
                     <span class="payment-progress-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="payment-progress-step"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
@@ -705,18 +765,31 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                 <div class="payment-layout">
                     <div class="payment-main">
                     <form id="payment-confirm-form" method="POST" action="index.php?action=procesarPago">
+                        <?php if (isset($_SESSION['error'])): ?>
+                            <div class="payment-error" role="alert">
+                                <i class="fas fa-circle-exclamation"></i>
+                                <span><?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error']); ?></span>
+                            </div>
+                        <?php endif; ?>
+
                         <div class="payment-summary">
                             <span><?= htmlspecialchars('Total del pedido', ENT_QUOTES, 'UTF-8') ?></span>
                             <strong>$<?= number_format($totalPedido) ?> COP</strong>
+                        </div>
+
+                        <div class="payment-breakdown" aria-label="<?= htmlspecialchars('Resumen de pago', ENT_QUOTES, 'UTF-8') ?>">
+                            <div><span><?= htmlspecialchars('Subtotal productos', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format((float) ($resumenCompra['subtotal'] ?? 0)) ?> COP</strong></div>
+                            <div><span><?= htmlspecialchars('IVA', ENT_QUOTES, 'UTF-8') ?> 19%</span><strong>$<?= number_format((float) ($resumenCompra['iva'] ?? 0)) ?> COP</strong></div>
+                            <div><span><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format((float) ($resumenCompra['envio'] ?? 0)) ?> COP</strong></div>
                         </div>
 
                         <div class="payment-section-title">
                             <label id="payment-method-label"><?= htmlspecialchars('Metodo de pago', ENT_QUOTES, 'UTF-8') ?></label>
                         </div>
 
-                        <input type="hidden" name="metodo_pago" id="metodo_pago" value="1">
+                        <input type="hidden" name="metodo_pago" id="metodo_pago" value="<?= $metodoSeleccionado ?>">
                         <div class="payment-method-grid" role="radiogroup" aria-labelledby="payment-method-label">
-                            <button class="payment-method is-active" type="button" data-method="1" role="radio" aria-checked="true">
+                            <button class="payment-method <?= $metodoSeleccionado === 1 ? 'is-active' : '' ?>" type="button" data-method="1" role="radio" aria-checked="<?= $metodoSeleccionado === 1 ? 'true' : 'false' ?>">
                                 <span class="payment-method-top">
                                     <span class="payment-method-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 12h10"></path><path d="M7 15h4"></path></svg>
@@ -726,7 +799,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 <strong><?= htmlspecialchars('Efectivo', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Pago simulado al recibir.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                            <button class="payment-method" type="button" data-method="2" role="radio" aria-checked="false">
+                            <button class="payment-method <?= $metodoSeleccionado === 2 ? 'is-active' : '' ?>" type="button" data-method="2" role="radio" aria-checked="<?= $metodoSeleccionado === 2 ? 'true' : 'false' ?>">
                                 <span class="payment-method-top">
                                     <span class="payment-method-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path><path d="M7 15h3"></path></svg>
@@ -736,7 +809,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 <strong><?= htmlspecialchars('Tarjeta debito', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Datos de prueba para continuar.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                            <button class="payment-method" type="button" data-method="3" role="radio" aria-checked="false">
+                            <button class="payment-method <?= $metodoSeleccionado === 3 ? 'is-active' : '' ?>" type="button" data-method="3" role="radio" aria-checked="<?= $metodoSeleccionado === 3 ? 'true' : 'false' ?>">
                                 <span class="payment-method-top">
                                     <span class="payment-method-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path><path d="M16 15h2"></path></svg>
@@ -746,7 +819,7 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 <strong><?= htmlspecialchars('Tarjeta credito', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Confirmacion inmediata simulada.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                            <button class="payment-method" type="button" data-method="4" role="radio" aria-checked="false">
+                            <button class="payment-method <?= $metodoSeleccionado === 4 ? 'is-active' : '' ?>" type="button" data-method="4" role="radio" aria-checked="<?= $metodoSeleccionado === 4 ? 'true' : 'false' ?>">
                                 <span class="payment-method-top">
                                     <span class="payment-method-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24"><path d="M3 10h18"></path><path d="M5 10V8l7-4 7 4v2"></path><path d="M6 10v8"></path><path d="M10 10v8"></path><path d="M14 10v8"></path><path d="M18 10v8"></path><path d="M4 18h16"></path></svg>
@@ -758,28 +831,51 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                             </button>
                         </div>
 
+                        <div id="efectivo" class="payment-dynamic">
+                            <div class="payment-cash-fields">
+                                <div class="payment-field">
+                                    <label for="nombre_pagador"><?= htmlspecialchars('Nombre del pagador', ENT_QUOTES, 'UTF-8') ?></label>
+                                    <input id="nombre_pagador" name="nombre_pagador" type="text" placeholder="Nombre completo" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['nombre_pagador'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                </div>
+                                <div class="payment-field">
+                                    <label for="documento_pagador"><?= htmlspecialchars('Documento', ENT_QUOTES, 'UTF-8') ?></label>
+                                    <input id="documento_pagador" name="documento_pagador" type="text" inputmode="numeric" placeholder="Cedula o NIT" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['documento_pagador'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="tarjeta" class="payment-dynamic">
                             <div class="payment-card-fields">
                                 <div class="payment-field">
                                     <label for="numero_tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="numero_tarjeta" type="text" inputmode="numeric" placeholder="0000 0000 0000 0000" class="form-control">
+                                    <input id="numero_tarjeta" name="numero_tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control">
                                 </div>
                                 <div class="payment-field">
                                     <label for="titular_tarjeta"><?= htmlspecialchars('Nombre titular', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="titular_tarjeta" type="text" placeholder="Nombre como aparece en la tarjeta" class="form-control">
+                                    <input id="titular_tarjeta" name="titular_tarjeta" type="text" autocomplete="cc-name" placeholder="Nombre como aparece en la tarjeta" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['titular_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                </div>
+                                <div class="payment-field">
+                                    <label for="vencimiento_tarjeta"><?= htmlspecialchars('Vencimiento', ENT_QUOTES, 'UTF-8') ?></label>
+                                    <input id="vencimiento_tarjeta" name="vencimiento_tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                 </div>
                                 <div class="payment-field">
                                     <label for="cvv_tarjeta"><?= htmlspecialchars('CVV', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="cvv_tarjeta" type="text" inputmode="numeric" maxlength="4" placeholder="123" class="form-control">
+                                    <input id="cvv_tarjeta" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control">
                                 </div>
                             </div>
                         </div>
 
                         <div id="transferencia" class="payment-dynamic">
-                            <p class="payment-note">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg>
-                                <span><?= htmlspecialchars('Simula la transferencia bancaria y confirma para marcar el pedido como pagado.', ENT_QUOTES, 'UTF-8') ?></span>
-                            </p>
+                            <div class="payment-transfer-fields">
+                                <div class="payment-field">
+                                    <label for="banco_origen"><?= htmlspecialchars('Banco de origen', ENT_QUOTES, 'UTF-8') ?></label>
+                                    <input id="banco_origen" name="banco_origen" type="text" placeholder="Nombre del banco" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['banco_origen'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                </div>
+                                <div class="payment-field">
+                                    <label for="referencia_transferencia"><?= htmlspecialchars('Referencia', ENT_QUOTES, 'UTF-8') ?></label>
+                                    <input id="referencia_transferencia" name="referencia_transferencia" type="text" placeholder="Codigo de comprobante" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['referencia_transferencia'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                </div>
+                            </div>
                         </div>
 
                     </form>
@@ -789,17 +885,10 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"></path></svg>
                                 <?= htmlspecialchars('Confirmar pago', ENT_QUOTES, 'UTF-8') ?>
                             </button>
-                            <a class="payment-link" href="index.php?action=misPedidos">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h6"></path><path d="M9 12h6"></path><path d="M9 17h4"></path><path d="M5 4h14v16H5z"></path></svg>
-                                <?= htmlspecialchars('Ver mis pedidos', ENT_QUOTES, 'UTF-8') ?>
+                            <a class="payment-link" href="index.php?action=ConfirmarPedido">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+                                <?= htmlspecialchars('Volver a direccion', ENT_QUOTES, 'UTF-8') ?>
                             </a>
-                            <form class="payment-cancel-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel-payment>
-                                <input type="hidden" name="id_pedido" value="<?= $idPedido ?>">
-                                <button class="payment-cancel" type="submit">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>
-                                    <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
-                                </button>
-                            </form>
                         </div>
                     </div>
 
@@ -808,10 +897,10 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                             <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
                         </span>
                         <h2><?= htmlspecialchars('Pago seguro simulado', ENT_QUOTES, 'UTF-8') ?></h2>
-                        <p><?= htmlspecialchars('Al confirmar, el sistema descuenta inventario, registra el pago simulado y sincroniza tu carrito.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <p><?= htmlspecialchars('Al confirmar, el sistema registra la compra, sincroniza tu carrito y genera la factura.', ENT_QUOTES, 'UTF-8') ?></p>
                         <div class="payment-invoice-note">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15l-3-2-3 2-3-2-3 2-3-2V3z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path></svg>
-                            <span><?= htmlspecialchars('Despues de confirmar, revisa el pedido #' . $idPedido . ' en Mis pedidos para ver el soporte y descargar o imprimir la factura.', ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Despues del pago veras la confirmacion y podras descargar o imprimir la factura.', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                         <div class="payment-steps">
                             <div class="payment-step">
@@ -847,13 +936,26 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
 document.addEventListener('DOMContentLoaded', function () {
     const metodoInput = document.getElementById('metodo_pago');
     const methodButtons = Array.from(document.querySelectorAll('.payment-method'));
+    const efectivo = document.getElementById('efectivo');
     const tarjeta = document.getElementById('tarjeta');
     const transferencia = document.getElementById('transferencia');
+    const paymentForm = document.getElementById('payment-confirm-form');
+
+    function setRequired(container, required) {
+        if (!container) return;
+        container.querySelectorAll('input, select, textarea').forEach((field) => {
+            field.required = required;
+        });
+    }
 
     function syncPaymentFields() {
         const val = metodoInput.value;
+        efectivo.classList.toggle('is-visible', val === '1');
         tarjeta.classList.toggle('is-visible', val === '2' || val === '3');
         transferencia.classList.toggle('is-visible', val === '4');
+        setRequired(efectivo, val === '1');
+        setRequired(tarjeta, val === '2' || val === '3');
+        setRequired(transferencia, val === '4');
 
         methodButtons.forEach((button) => {
             const active = button.dataset.method === val;
@@ -880,6 +982,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     syncPaymentFields();
+
+    document.getElementById('numero_tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 19);
+        event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    });
+
+    document.getElementById('vencimiento_tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+        event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+    });
+
+    document.getElementById('cvv_tarjeta')?.addEventListener('input', (event) => {
+        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    paymentForm?.addEventListener('submit', () => {
+        const button = document.querySelector('.payment-btn[form="payment-confirm-form"]');
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Confirmando pago';
+        }
+    });
 
     document.querySelectorAll('[data-confirm-cancel-payment]').forEach((form) => {
         form.addEventListener('submit', (event) => {

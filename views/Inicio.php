@@ -1232,6 +1232,12 @@ body[data-theme="light"] {
             nuevo: 'lo-nuevo',
             'mas-vendidos': 'mas-vendidos'
         };
+        const seccionesPorHash = {
+            '#interaccion-360': 'interaccion-360',
+            '#lo-nuevo': 'lo-nuevo',
+            '#nuevo': 'lo-nuevo',
+            '#mas-vendidos': 'mas-vendidos'
+        };
 
         document.querySelectorAll('[data-nav-key]').forEach((link) => {
             const sectionId = seccionesPorNav[link.dataset.navKey];
@@ -1240,6 +1246,7 @@ body[data-theme="light"] {
             link.addEventListener('click', (event) => {
                 event.preventDefault();
                 mostrarSeccion(sectionId);
+                history.replaceState(null, '', '#' + sectionId);
                 if (typeof setActiveNav === 'function') {
                     setActiveNav(link.dataset.navKey);
                 }
@@ -1264,7 +1271,12 @@ body[data-theme="light"] {
             });
         });
 
-        mostrarSeccion('interaccion-360');
+        const initialSection = seccionesPorHash[window.location.hash] || 'interaccion-360';
+        mostrarSeccion(initialSection);
+        if (typeof setActiveNav === 'function') {
+            const activeKey = Object.keys(seccionesPorNav).find((key) => seccionesPorNav[key] === initialSection) || 'interaccion';
+            setActiveNav(activeKey);
+        }
     });
     </script>
 
