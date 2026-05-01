@@ -123,10 +123,22 @@ class TiendaController {
     }
 
     // Ã°Å¸â€ºÂÃ¯Â¸Â CATÃƒÂLOGO
+    private function obtenerProductosNuevosCacheados(): array {
+        $productosNuevos = $this->getCache('productos_nuevos');
+        if ($productosNuevos !== null) {
+            return $productosNuevos;
+        }
+
+        $productosNuevos = $this->productoModel()->obtenerProductosNuevos(10);
+        $this->setCache('productos_nuevos', $productosNuevos);
+        return $productosNuevos;
+    }
+
     public function inicio() {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
         $masVendidos = $this->obtenerMasVendidosCacheados();
+        $productosNuevos = $this->obtenerProductosNuevosCacheados();
 
         require_once __DIR__ . '/../views/Inicio.php';
     }
@@ -141,9 +153,6 @@ class TiendaController {
         $categoria_filtro = $_GET['categoria'] ?? '';
 
         $productos = $this->obtenerCatalogoCacheado();
-        $masVendidos = empty($filtro) && empty($precio_min) && empty($precio_max) && empty($categoria_filtro)
-            ? $this->obtenerMasVendidosCacheados()
-            : [];
 
         $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
 

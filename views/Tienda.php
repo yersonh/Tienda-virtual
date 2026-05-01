@@ -677,67 +677,6 @@
 </a>
 <?php endif; ?>
 
-<?php if(empty($categoria_filtro) && empty($filtro) && empty($precio_min) && empty($precio_max) && !empty($masVendidos)): ?>
-<div class="category-section best-sellers-section">
-    <div class="section-header">
-        <div class="section-title"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?> <span class="section-count"><?= count($masVendidos) ?> <?= htmlspecialchars('productos', ENT_QUOTES, 'UTF-8') ?></span></div>
-    </div>
-    <div class="product-carousel">
-        <div class="product-grid best-sellers-grid">
-            <?php foreach($masVendidos as $p): ?>
-            <?php
-                $categoriaProducto = $p['categoria_nombre'] ?? 'Sin categoria';
-                $ventasProducto = (int) ($p['total_vendido'] ?? 0);
-            ?>
-            <div class="product-card producto-card best-seller-card"
-                 data-id="<?= (int) $p['id_producto'] ?>"
-                 data-url="index.php?action=productoDetalle&id=<?= (int) $p['id_producto'] ?>&categoria=<?= urlencode($categoriaProducto) ?>"
-                 onclick="openProductDetail(this, event)"
-                 onkeydown="openProductDetailFromKey(event, this)"
-                 tabindex="0"
-                 role="link"
-                 aria-label="<?= htmlspecialchars('Ver detalle de', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
-                <div class="card-img-wrap">
-                    <?php if(!empty($p['imagen'])): ?>
-                    <img src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" alt="<?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
-                    <?php else: ?>
-                    <div class="card-placeholder">
-                        <span class="placeholder-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-                                <circle cx="9" cy="10" r="1.5"></circle>
-                                <path d="M21 16 16 11 5 19"></path>
-                            </svg>
-                        </span>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                <div class="card-body">
-                    <div class="card-name"><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></div>
-                    <div class="card-meta">
-                        <span class="meta-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="meta-pill meta-stock"><?= $ventasProducto ?> <?= htmlspecialchars('vendidos', ENT_QUOTES, 'UTF-8') ?></span>
-                    </div>
-                    <div class="card-price">$<?= number_format((float) $p['precio']) ?> <span>COP</span></div>
-                    <div class="card-footer">
-                        <button class="add-btn added" type="button" onclick="event.stopPropagation(); location.href='index.php?action=productoDetalle&id=<?= (int) $p['id_producto'] ?>&categoria=<?= urlencode($categoriaProducto) ?>'">
-                            <span class="btn-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M5 12h14"></path>
-                                    <path d="m13 6 6 6-6 6"></path>
-                                </svg>
-                            </span>
-                            Ver producto
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
 <?php foreach($categorias as $categoria => $productos): ?>
 <div id="<?= !empty($categoria_filtro) ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">

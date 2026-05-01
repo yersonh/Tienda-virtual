@@ -10,6 +10,8 @@ $carritoCount = $logueado
     ? (int) ($_SESSION['carrito_count'] ?? 0)
     : 0;
 
+$currentAction = $_GET['action'] ?? 'tienda';
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -95,6 +97,33 @@ body {
 }
 .nav-logo span { color: var(--accent); }
 .nav-logo sub { font-size: 10px; color: var(--secondary); font-weight: 700; letter-spacing: 2px; vertical-align: -4px; margin-left: 4px; }
+.side-menu-btn {
+    background: var(--soft-surface);
+    border: 1px solid var(--border);
+    color: var(--secondary);
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition), border-color var(--transition), color var(--transition), background var(--transition);
+}
+.side-menu-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+}
+.side-menu-btn svg {
+    width: 19px;
+    height: 19px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 .nav-links {
     display: flex;
     gap: 6px;
@@ -120,6 +149,81 @@ body {
     color: #06201d;
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
     box-shadow: 0 10px 22px rgba(20, 216, 189, 0.18);
+}
+.side-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.56);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition);
+    z-index: 190;
+}
+.side-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+.side-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(320px, 88vw);
+    height: 100vh;
+    padding: 22px;
+    background: rgba(7, 11, 20, 0.94);
+    border-right: 1px solid var(--border);
+    box-shadow: 28px 0 58px rgba(2, 6, 23, 0.42);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    z-index: 200;
+}
+[data-theme="light"] .side-panel {
+    background: rgba(255, 255, 255, 0.96);
+}
+.side-panel.is-open {
+    transform: translateX(0);
+}
+.side-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.side-close {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--soft-surface);
+    color: var(--secondary);
+    cursor: pointer;
+}
+.side-links {
+    display: grid;
+    gap: 10px;
+}
+.side-links a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--soft-surface);
+    color: var(--secondary);
+    text-decoration: none;
+    font-weight: 800;
+    transition: background var(--transition), color var(--transition), transform var(--transition), border-color var(--transition);
+}
+.side-links a:hover,
+.side-links a.active {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: #06201d;
+    transform: translateX(4px);
 }
 .nav-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .btn-ghost {
@@ -344,12 +448,20 @@ textarea:focus {
 
 <!-- 🔥 NAVBAR -->
 <nav class="nav">
+    <button class="side-menu-btn" id="side-menu-open" type="button" aria-label="<?= htmlspecialchars('Abrir menu', ENT_QUOTES, 'UTF-8') ?>">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 17h16"></path>
+      </svg>
+    </button>
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
-      <a href="index.php?action=inicio" class="active"><?= htmlspecialchars('Inicio', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=tienda"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
       <?php if($logueado): ?>
-        <a href="index.php?action=misPedidos"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
+        <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
       <?php endif; ?>
     </div>
     <div class="nav-actions">
@@ -374,9 +486,76 @@ textarea:focus {
     </div>
 </nav>
 
+<div class="side-backdrop" id="side-backdrop"></div>
+<aside class="side-panel" id="side-panel" aria-hidden="true">
+  <div class="side-head">
+    <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
+    <button class="side-close" id="side-menu-close" type="button" aria-label="<?= htmlspecialchars('Cerrar menu', ENT_QUOTES, 'UTF-8') ?>">&times;</button>
+  </div>
+  <div class="side-links">
+    <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
+    <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
+    <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
+    <?php if($logueado): ?>
+      <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
+    <?php endif; ?>
+  </div>
+</aside>
+
 <script>
 const themeToggle = document.getElementById('theme-toggle');
 const body = document.body;
+const sidePanel = document.getElementById('side-panel');
+const sideBackdrop = document.getElementById('side-backdrop');
+const sideOpen = document.getElementById('side-menu-open');
+const sideClose = document.getElementById('side-menu-close');
+
+function setActiveNav(key) {
+    document.querySelectorAll('[data-nav-key]').forEach((link) => {
+        link.classList.toggle('active', link.dataset.navKey === key);
+    });
+}
+
+function syncActiveNavFromLocation() {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action') || 'tienda';
+    if (action === 'inicio' && window.location.hash === '#mas-vendidos') {
+        setActiveNav('mas-vendidos');
+        return;
+    }
+    if (action === 'inicio') {
+        setActiveNav('interaccion');
+        return;
+    }
+    if (action === 'misPedidos') {
+        setActiveNav('mis-pedidos');
+        return;
+    }
+    if (action === 'tienda' || action === 'productoDetalle') {
+        setActiveNav('tienda');
+    }
+}
+
+function toggleSidePanel(open) {
+    sidePanel.classList.toggle('is-open', open);
+    sideBackdrop.classList.toggle('is-open', open);
+    sidePanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+}
+
+sideOpen.addEventListener('click', () => toggleSidePanel(true));
+sideClose.addEventListener('click', () => toggleSidePanel(false));
+sideBackdrop.addEventListener('click', () => toggleSidePanel(false));
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        toggleSidePanel(false);
+    }
+});
+document.querySelectorAll('[data-nav-key]').forEach((link) => {
+    link.addEventListener('click', () => {
+        setActiveNav(link.dataset.navKey);
+        toggleSidePanel(false);
+    });
+});
 
 function renderThemeIcon(theme) {
     themeToggle.innerHTML = theme === 'dark'
@@ -398,5 +577,7 @@ const savedTheme = localStorage.getItem('theme') || 'dark';
 body.setAttribute('data-theme', savedTheme);
 body.classList.toggle('light-mode', savedTheme === 'light');
 renderThemeIcon(savedTheme);
+syncActiveNavFromLocation();
+window.addEventListener('hashchange', syncActiveNavFromLocation);
 
 </script>

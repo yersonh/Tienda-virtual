@@ -2,6 +2,7 @@
 require_once __DIR__ . '/layouts/navbar.php';
 
 $masVendidos = isset($masVendidos) && is_array($masVendidos) ? $masVendidos : [];
+$productosNuevos = isset($productosNuevos) && is_array($productosNuevos) ? $productosNuevos : [];
 ?>
 
 <style>
@@ -595,12 +596,12 @@ body[data-theme="light"] {
 
     </div>
 
-    <div class="models-3d container my-5">
+    <div class="models-3d container my-5" id="interaccion-360">
 
       <div class="models-intro">
         <div>
           <div class="models-kicker"><?= htmlspecialchars('Exploracion interactiva', ENT_QUOTES, 'UTF-8') ?></div>
-          <h2 class="models-title"><?= htmlspecialchars('Modelos 3D', ENT_QUOTES, 'UTF-8') ?></h2>
+          <h2 class="models-title"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></h2>
           <p class="models-sub"><?= htmlspecialchars('Rota, acerca y revisa piezas y vehiculos de referencia directamente desde la pagina.', ENT_QUOTES, 'UTF-8') ?></p>
         </div>
       </div>
@@ -625,7 +626,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Car Engine</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
+              data-src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -635,7 +636,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>V8 Engine</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
+              data-src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -645,7 +646,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>V8 Twin Turbo</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
+              data-src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -655,7 +656,7 @@ body[data-theme="light"] {
           <div class="model-card">
             <h5>Brake Disc</h5>
             <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
+              data-src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -717,7 +718,56 @@ body[data-theme="light"] {
 
     </div>
 
-    <section class="best-panel" aria-labelledby="best-title">
+    <section class="best-panel" id="lo-nuevo" aria-labelledby="new-title">
+        <div class="best-header">
+            <div>
+                <div class="best-kicker"><?= htmlspecialchars('Recien agregados', ENT_QUOTES, 'UTF-8') ?></div>
+                <h2 class="best-title" id="new-title"><?= htmlspecialchars('Lo Nuevo', ENT_QUOTES, 'UTF-8') ?></h2>
+                <p class="best-sub"><?= htmlspecialchars('Los ultimos productos incorporados al catalogo para que los encuentres rapido.', ENT_QUOTES, 'UTF-8') ?></p>
+            </div>
+            <a class="best-link" href="index.php?action=tienda"><?= htmlspecialchars('Ver catalogo', ENT_QUOTES, 'UTF-8') ?></a>
+        </div>
+
+        <?php if (!empty($productosNuevos)): ?>
+            <div class="best-grid">
+                <?php foreach ($productosNuevos as $producto): ?>
+                    <?php
+                    $idProducto = (int) ($producto['id_producto'] ?? 0);
+                    $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
+                    $categoriaProducto = (string) ($producto['categoria_nombre'] ?? 'Sin categoria');
+                    $precioProducto = (float) ($producto['precio'] ?? 0);
+                    $stockProducto = (int) ($producto['stock_p'] ?? 0);
+                    $imagenProducto = (string) ($producto['imagen'] ?? '');
+                    ?>
+                    <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
+                        <div class="best-img">
+                            <?php if ($imagenProducto !== ''): ?>
+                                <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                            <?php else: ?>
+                                <div class="best-placeholder" aria-hidden="true">
+                                    <i class="fas fa-box-open"></i>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="best-body">
+                            <h3 class="best-name"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></h3>
+                            <div class="best-meta">
+                                <span class="best-pill"><?= htmlspecialchars($categoriaProducto, ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="best-pill"><?= $stockProducto ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
+                            </div>
+                            <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="best-empty">
+                <?= htmlspecialchars('Aun no hay productos nuevos para mostrar.', ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="best-panel" id="mas-vendidos" aria-labelledby="best-title">
         <div class="best-header">
             <div>
                 <div class="best-kicker"><?= htmlspecialchars('Productos destacados', ENT_QUOTES, 'UTF-8') ?></div>
@@ -796,7 +846,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function showSection(index) {
+    let activeModelIndex = 0;
+
+    function showSection(index, shouldLoad) {
+        activeModelIndex = index;
         tabs.forEach(function (tab, tabIndex) {
             const active = tabIndex === index;
             tab.classList.toggle('is-active', active);
@@ -813,16 +866,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        loadFrames(sections[index]);
+        if (shouldLoad) {
+            loadFrames(sections[index]);
+        }
     }
 
     tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
-            showSection(Number(tab.dataset.modelIndex || 0));
+            showSection(Number(tab.dataset.modelIndex || 0), true);
         });
     });
 
-    showSection(0);
+    showSection(0, false);
+
+    const modelsBlock = document.getElementById('interaccion-360');
+    if ('IntersectionObserver' in window && modelsBlock) {
+        const observer = new IntersectionObserver(function (entries) {
+            if (entries.some(function (entry) { return entry.isIntersecting; })) {
+                loadFrames(sections[activeModelIndex]);
+                observer.disconnect();
+            }
+        }, { rootMargin: '160px 0px' });
+        observer.observe(modelsBlock);
+    } else if (window.location.hash === '#interaccion-360') {
+        loadFrames(sections[activeModelIndex]);
+    }
 });
 </script>
 

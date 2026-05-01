@@ -128,6 +128,7 @@
                             <th><?= htmlspecialchars('ID pedido', ENT_QUOTES, 'UTF-8') ?></th>
                             <th><?= htmlspecialchars('Fecha', ENT_QUOTES, 'UTF-8') ?></th>
                             <th><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></th>
+                            <th><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?></th>
                             <th><?= htmlspecialchars('Acciones', ENT_QUOTES, 'UTF-8') ?></th>
                         </tr>
                     </thead>
@@ -137,11 +138,13 @@
                             $idPedido = (int) ($pedido['id_pedido'] ?? 0);
                             $fecha = (string) ($pedido['fecha'] ?? '');
                             $total = (float) ($pedido['total'] ?? 0);
+                            $estado = (string) ($pedido['estado'] ?? 'Pendiente');
                             ?>
                             <tr>
                                 <td>#<?= $idPedido ?></td>
                                 <td><?= htmlspecialchars($fecha !== '' ? $fecha : 'Sin fecha', ENT_QUOTES, 'UTF-8') ?></td>
                                 <td>$<?= number_format($total) ?> COP</td>
+                                <td><?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?></td>
                                 <td>
                                     <a class="orders-action" href="index.php?action=misPedidos&id=<?= $idPedido ?>">
                                         <?= htmlspecialchars('Ver detalle', ENT_QUOTES, 'UTF-8') ?>

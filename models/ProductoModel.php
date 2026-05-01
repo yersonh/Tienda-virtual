@@ -189,6 +189,29 @@ class ProductoModel {
         return $results;
     }
 
+    public function obtenerProductosNuevos($limite = 10) {
+        $limite = max(1, min(10, (int) $limite));
+        $columns = $this->productoColumns('p');
+
+        $query = "SELECT $columns
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  ORDER BY p.id_producto DESC
+                  FETCH FIRST :limite ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':limite', $limite, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
     public function crear($datos) {
         $estadoBool = ($datos['estado'] === 'Activo' || $datos['estado'] === '1' || $datos['estado'] === true);
 
