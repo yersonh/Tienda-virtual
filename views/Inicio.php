@@ -3,6 +3,13 @@ require_once __DIR__ . '/layouts/navbar.php';
 
 $masVendidos = isset($masVendidos) && is_array($masVendidos) ? $masVendidos : [];
 $productosNuevos = isset($productosNuevos) && is_array($productosNuevos) ? $productosNuevos : [];
+$usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
+$carritoVista = [];
+if (isset($_SESSION['carrito']) && is_array($_SESSION['carrito'])) {
+    $carritoVista = $_SESSION['carrito'];
+} elseif (isset($_SESSION['carrito_mapa_cache']['data']) && is_array($_SESSION['carrito_mapa_cache']['data'])) {
+    $carritoVista = $_SESSION['carrito_mapa_cache']['data'];
+}
 ?>
 
 <style>
@@ -54,7 +61,7 @@ body[data-theme="light"] {
 .main.container {
     background: transparent;
     max-width: 1180px;
-    padding: 0 20px 40px;
+    padding: 18px 20px 40px;
 }
 
 /* CARD PRINCIPAL */
@@ -225,6 +232,7 @@ body[data-theme="light"] {
     border: 1px solid rgba(56,189,248,0.14);
     text-decoration: none;
     color: inherit;
+    cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -313,6 +321,7 @@ body[data-theme="light"] {
     color: var(--inicio-accent);
     font-size: 17px;
     font-weight: 800;
+    margin-bottom: 12px;
 }
 
 .best-price span {
@@ -327,6 +336,158 @@ body[data-theme="light"] {
     border-radius: 14px;
     color: #94a3b8;
     text-align: center;
+}
+
+.best-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inicio-qty {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    border: 1px solid var(--inicio-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.04);
+}
+
+.inicio-qty button {
+    width: 30px;
+    height: 34px;
+    border: 0;
+    background: transparent;
+    color: var(--inicio-muted);
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.inicio-qty button:hover:not(:disabled) {
+    color: var(--inicio-accent);
+    background: rgba(34,211,238,0.12);
+}
+
+.inicio-qty button:disabled,
+.inicio-add-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+}
+
+.inicio-qty span {
+    min-width: 28px;
+    text-align: center;
+    color: var(--inicio-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.inicio-add-btn {
+    flex: 1;
+    min-height: 34px;
+    border: 1px solid rgba(34,211,238,0.24);
+    border-radius: 8px;
+    background: rgba(34,211,238,0.12);
+    color: var(--inicio-accent);
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.inicio-add-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: rgba(34,211,238,0.22);
+    border-color: rgba(34,211,238,0.42);
+}
+
+.inicio-add-btn.added {
+    background: linear-gradient(135deg, rgba(34,211,238,0.22), rgba(56,189,248,0.18));
+}
+
+.inicio-add-btn.limit {
+    border-color: rgba(148,163,184,0.18);
+    background: rgba(148,163,184,0.1);
+    color: var(--inicio-muted);
+}
+
+.cart-toast {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 9999;
+    width: min(360px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(9, 18, 34, 0.94);
+    border: 1px solid rgba(34, 211, 238, 0.32);
+    color: #f8fafc;
+    box-shadow: 0 22px 48px rgba(0,0,0,0.35);
+    backdrop-filter: blur(16px);
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    overflow: hidden;
+}
+
+.cart-toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.cart-toast.error {
+    border-color: rgba(248, 113, 113, 0.42);
+}
+
+.cart-toast-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(34, 211, 238, 0.14);
+    color: var(--inicio-accent);
+}
+
+.cart-toast.error .cart-toast-icon {
+    background: rgba(248, 113, 113, 0.14);
+    color: #f87171;
+}
+
+.cart-toast-title {
+    margin: 0 0 3px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.cart-toast-text {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.cart-toast-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--inicio-accent);
+    transform-origin: left;
+    animation: toastBar 2.6s linear forwards;
+}
+
+@keyframes toastBar {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
 }
 
 .models-3d,
@@ -362,7 +523,7 @@ body[data-theme="light"] {
     align-items: end;
     justify-content: space-between;
     gap: 18px;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
 }
 
 .models-kicker {
@@ -406,7 +567,7 @@ body[data-theme="light"] {
     display: flex;
     flex-wrap: nowrap;
     gap: 12px;
-    margin: 18px 0 24px;
+    margin: 12px 0 22px;
     overflow-x: auto;
     padding-bottom: 4px;
     scrollbar-width: thin;
@@ -518,8 +679,16 @@ body[data-theme="light"] {
     height: 340px;
     border-radius: 8px;
     border: none;
-    background: #0f172a;
+    background:
+        linear-gradient(135deg, rgba(34,211,238,0.08), transparent),
+        #0f172a;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 25px rgba(0,0,0,0.26);
+}
+
+.sketchfab-frame:not([src]) {
+    background:
+        linear-gradient(135deg, rgba(34,211,238,0.08), transparent),
+        #0f172a;
 }
 
 .bloque-principal {
@@ -600,31 +769,7 @@ body[data-theme="light"] {
 
 <div class="main container">
 
-    <div class="card-inicio">
-
-        <h1>
-            <?= htmlspecialchars('Bienvenido a NAYLEX Store', ENT_QUOTES, 'UTF-8') ?>
-        </h1>
-
-        <p>
-            <?= htmlspecialchars('Selecciona una opcion del menu para comenzar.', ENT_QUOTES, 'UTF-8') ?>
-        </p>
-
-        <div class="botones">
-
-            <a href="index.php?action=tienda" class="btn-azul">
-                <?= htmlspecialchars('Ver productos', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-
-            <a href="#" class="btn-verde">
-                <?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-
-        </div>
-
-    </div>
-
-    <section class="models-3d container my-5 bloque-principal" id="interaccion-360">
+    <section class="models-3d container bloque-principal" id="interaccion-360">
 
       <div class="models-intro">
         <div>
@@ -654,8 +799,8 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Car Engine</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
+            <iframe class="sketchfab-frame" loading="lazy" title="Car Engine"
+              data-src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -664,8 +809,8 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>V8 Engine</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
+            <iframe class="sketchfab-frame" loading="lazy" title="V8 Engine"
+              data-src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -674,8 +819,8 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>V8 Twin Turbo</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
+            <iframe class="sketchfab-frame" loading="lazy" title="V8 Twin Turbo"
+              data-src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -684,8 +829,8 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Brake Disc</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
+            <iframe class="sketchfab-frame" loading="lazy" title="Brake Disc"
+              data-src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -703,8 +848,8 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Tractor Wheel</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
+            <iframe class="sketchfab-frame" loading="lazy" title="Tractor Wheel"
+              data-src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -713,8 +858,8 @@ body[data-theme="light"] {
         <div class="col-md-6 mb-4">
           <div class="model-card">
             <h5>Full Tractor Wheel</h5>
-            <iframe class="sketchfab-frame" loading="lazy"
-              src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
+            <iframe class="sketchfab-frame" loading="lazy" title="Full Tractor Wheel"
+              data-src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
               allow="autoplay; fullscreen; xr-spatial-tracking"
               allowfullscreen></iframe>
           </div>
@@ -732,8 +877,8 @@ body[data-theme="light"] {
             <div class="col-md-6 mb-4">
             <div class="model-card">
                 <h5>Ford Mustang 1965</h5>
-                <iframe class="sketchfab-frame" loading="lazy"
-                src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
+                <iframe class="sketchfab-frame" loading="lazy" title="Ford Mustang 1965"
+                data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowfullscreen></iframe>
             </div>
@@ -742,8 +887,8 @@ body[data-theme="light"] {
             <div class="col-md-6 mb-4">
             <div class="model-card">
                 <h5>Old Farm Tractor</h5>
-                <iframe class="sketchfab-frame" loading="lazy"
-                src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
+                <iframe class="sketchfab-frame" loading="lazy" title="Old Farm Tractor"
+                data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowfullscreen></iframe>
             </div>
@@ -775,8 +920,12 @@ body[data-theme="light"] {
                         $precioProducto = (float) ($producto['precio'] ?? 0);
                         $stockProducto = (int) ($producto['stock_p'] ?? 0);
                         $imagenProducto = (string) ($producto['imagen'] ?? '');
+                        $cantidadEnCarrito = (int) ($carritoVista[$idProducto] ?? $carritoVista[(string) $idProducto] ?? 0);
+                        $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
+                        $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
+                        $cardKey = 'nuevo-' . $idProducto;
                         ?>
-                        <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
+                        <article class="best-card inicio-product-card" data-product-id="<?= $idProducto ?>" data-stock="<?= $stockProducto ?>" data-url="index.php?action=productoDetalle&id=<?= $idProducto ?>" onclick="inicioOpenProduct(this, event)" tabindex="0" role="link">
                             <div class="best-img">
                                 <?php if ($imagenProducto !== ''): ?>
                                     <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -793,8 +942,24 @@ body[data-theme="light"] {
                                     <span class="best-pill"><?= $stockProducto ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                                 <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
+                                <div class="best-actions">
+                                    <?php if ($usuarioLogueado): ?>
+                                        <div class="inicio-qty">
+                                            <button type="button" data-qty-minus="<?= $cardKey ?>" onclick="event.stopPropagation(); inicioChangeQty('<?= $cardKey ?>', -1, <?= $stockProducto ?>, <?= $idProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
+                                            <span data-qty-value="<?= $cardKey ?>"><?= $cantidadInicial ?></span>
+                                            <button type="button" data-qty-plus="<?= $cardKey ?>" onclick="event.stopPropagation(); inicioChangeQty('<?= $cardKey ?>', 1, <?= $stockProducto ?>, <?= $idProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
+                                        </div>
+                                        <button class="inicio-add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>" type="button" data-add-product="<?= $idProducto ?>" data-card-key="<?= $cardKey ?>" onclick="event.stopPropagation(); inicioAddToCart(<?= $idProducto ?>, '<?= $cardKey ?>')" <?= $enLimite ? 'disabled' : '' ?>>
+                                            <?= $enLimite ? htmlspecialchars('Limite', ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars('Agregar mas', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Agregar', ENT_QUOTES, 'UTF-8')) ?>
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="inicio-add-btn" type="button" onclick="event.stopPropagation(); location.href='index.php?action=login'">
+                                            <?= htmlspecialchars('Inicia sesion', ENT_QUOTES, 'UTF-8') ?>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </a>
+                        </article>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
@@ -823,9 +988,14 @@ body[data-theme="light"] {
                         $categoriaProducto = (string) ($producto['categoria_nombre'] ?? 'Sin categoria');
                         $precioProducto = (float) ($producto['precio'] ?? 0);
                         $ventasProducto = (int) ($producto['total_vendido'] ?? 0);
+                        $stockProducto = (int) ($producto['stock_p'] ?? 0);
                         $imagenProducto = (string) ($producto['imagen'] ?? '');
+                        $cantidadEnCarrito = (int) ($carritoVista[$idProducto] ?? $carritoVista[(string) $idProducto] ?? 0);
+                        $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
+                        $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
+                        $cardKey = 'vendido-' . $idProducto;
                         ?>
-                        <a class="best-card" href="index.php?action=productoDetalle&id=<?= $idProducto ?>">
+                        <article class="best-card inicio-product-card" data-product-id="<?= $idProducto ?>" data-stock="<?= $stockProducto ?>" data-url="index.php?action=productoDetalle&id=<?= $idProducto ?>" onclick="inicioOpenProduct(this, event)" tabindex="0" role="link">
                             <div class="best-img">
                                 <?php if ($imagenProducto !== ''): ?>
                                     <img src="image.php?folder=productos&path=<?= urlencode(basename($imagenProducto)) ?>" alt="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -842,8 +1012,24 @@ body[data-theme="light"] {
                                     <span class="best-pill"><?= $ventasProducto ?> <?= htmlspecialchars('vendidos', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                                 <div class="best-price">$<?= number_format($precioProducto) ?> <span>COP</span></div>
+                                <div class="best-actions">
+                                    <?php if ($usuarioLogueado): ?>
+                                        <div class="inicio-qty">
+                                            <button type="button" data-qty-minus="<?= $cardKey ?>" onclick="event.stopPropagation(); inicioChangeQty('<?= $cardKey ?>', -1, <?= $stockProducto ?>, <?= $idProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
+                                            <span data-qty-value="<?= $cardKey ?>"><?= $cantidadInicial ?></span>
+                                            <button type="button" data-qty-plus="<?= $cardKey ?>" onclick="event.stopPropagation(); inicioChangeQty('<?= $cardKey ?>', 1, <?= $stockProducto ?>, <?= $idProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
+                                        </div>
+                                        <button class="inicio-add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>" type="button" data-add-product="<?= $idProducto ?>" data-card-key="<?= $cardKey ?>" onclick="event.stopPropagation(); inicioAddToCart(<?= $idProducto ?>, '<?= $cardKey ?>')" <?= $enLimite ? 'disabled' : '' ?>>
+                                            <?= $enLimite ? htmlspecialchars('Limite', ENT_QUOTES, 'UTF-8') : ($cantidadEnCarrito > 0 ? htmlspecialchars('Agregar mas', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Agregar', ENT_QUOTES, 'UTF-8')) ?>
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="inicio-add-btn" type="button" onclick="event.stopPropagation(); location.href='index.php?action=login'">
+                                            <?= htmlspecialchars('Inicia sesion', ENT_QUOTES, 'UTF-8') ?>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </a>
+                        </article>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
@@ -856,6 +1042,173 @@ body[data-theme="light"] {
     </div>
 
     <script>
+    const inicioCart = <?= json_encode($carritoVista) ?>;
+
+    function inicioCartQty(id) {
+        return parseInt(inicioCart[id] || inicioCart[String(id)] || 0, 10) || 0;
+    }
+
+    function inicioSetCartQty(id, qty) {
+        inicioCart[id] = qty;
+        inicioCart[String(id)] = qty;
+    }
+
+    function loadSketchfabFrame(frame) {
+        if (!frame || frame.src || !frame.dataset.src) return;
+        frame.src = frame.dataset.src;
+        frame.removeAttribute('data-src');
+    }
+
+    const sketchfabObserver = 'IntersectionObserver' in window
+        ? new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                loadSketchfabFrame(entry.target);
+                observer.unobserve(entry.target);
+            });
+        }, { rootMargin: '180px 0px' })
+        : null;
+
+    function watchSketchfabFrames(scope = document) {
+        scope.querySelectorAll('.sketchfab-frame[data-src]').forEach((frame) => {
+            if (sketchfabObserver) {
+                sketchfabObserver.observe(frame);
+                return;
+            }
+
+            loadSketchfabFrame(frame);
+        });
+    }
+
+    function loadActiveModelPanel(panelId = null) {
+        const panel = panelId ? document.getElementById(panelId) : document.querySelector('.models-panel.is-active');
+        if (!panel) return;
+        watchSketchfabFrames(panel);
+    }
+
+    function inicioOpenProduct(card, event) {
+        if (event.target.closest('.inicio-qty, .inicio-add-btn')) return;
+        const url = card.dataset.url;
+        if (url) window.location.href = url;
+    }
+
+    function inicioChangeQty(cardKey, delta, stock, productId) {
+        const qtyEl = document.querySelector(`[data-qty-value="${cardKey}"]`);
+        if (!qtyEl) return;
+
+        const remaining = Math.max(0, stock - inicioCartQty(productId));
+        if (remaining <= 0) {
+            inicioSyncProductControls(productId, stock);
+            return;
+        }
+
+        let value = parseInt(qtyEl.textContent, 10) + delta;
+        if (value < 1) value = 1;
+        if (value > remaining) value = remaining;
+        qtyEl.textContent = value;
+    }
+
+    function inicioSyncProductControls(productId, stock) {
+        const current = inicioCartQty(productId);
+        const atLimit = stock <= 0 || current >= stock;
+
+        document.querySelectorAll(`[data-product-id="${productId}"]`).forEach((card) => {
+            const cardKey = card.querySelector('[data-card-key]')?.dataset.cardKey;
+            if (!cardKey) return;
+
+            const qtyEl = card.querySelector(`[data-qty-value="${cardKey}"]`);
+            const minus = card.querySelector(`[data-qty-minus="${cardKey}"]`);
+            const plus = card.querySelector(`[data-qty-plus="${cardKey}"]`);
+            const btn = card.querySelector(`[data-card-key="${cardKey}"]`);
+            const nextQty = atLimit ? Math.max(0, stock) : 1;
+
+            if (qtyEl) qtyEl.textContent = nextQty;
+            if (minus) minus.disabled = atLimit;
+            if (plus) plus.disabled = atLimit;
+            if (!btn) return;
+
+            btn.disabled = atLimit;
+            btn.classList.toggle('limit', atLimit);
+            btn.classList.toggle('added', !atLimit && current > 0);
+            btn.textContent = atLimit ? 'Limite' : (current > 0 ? 'Agregar mas' : 'Agregar');
+        });
+    }
+
+    function inicioToast(message, isError = false) {
+        let toast = document.getElementById('inicio-cart-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'inicio-cart-toast';
+            toast.className = 'cart-toast';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            document.body.appendChild(toast);
+        }
+
+        toast.className = `cart-toast ${isError ? 'error' : ''}`;
+        toast.innerHTML = `
+            <span class="cart-toast-icon" aria-hidden="true"><i class="fas ${isError ? 'fa-triangle-exclamation' : 'fa-check'}"></i></span>
+            <span>
+                <p class="cart-toast-title">${isError ? 'No se pudo agregar' : 'Agregado al carrito'}</p>
+                <p class="cart-toast-text">${message}</p>
+            </span>
+            <span class="cart-toast-bar" aria-hidden="true"></span>
+        `;
+        requestAnimationFrame(() => toast.classList.add('show'));
+        clearTimeout(window.inicioToastTimer);
+        window.inicioToastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    async function inicioAddToCart(productId, cardKey) {
+        const card = document.querySelector(`[data-qty-value="${cardKey}"]`)?.closest('[data-product-id]');
+        const stock = card ? parseInt(card.dataset.stock, 10) || 0 : 0;
+        if (stock <= 0 || inicioCartQty(productId) >= stock) {
+            inicioSyncProductControls(productId, stock);
+            return;
+        }
+
+        const qtyEl = document.querySelector(`[data-qty-value="${cardKey}"]`);
+        const qty = parseInt(qtyEl?.textContent || '1', 10) || 1;
+        const btn = document.querySelector(`[data-card-key="${cardKey}"]`);
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Agregando';
+        }
+
+        try {
+            const response = await fetch('index.php?action=agregarAjax', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({
+                    id_producto: productId,
+                    cantidad: qty
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                if (response.status === 401) {
+                    window.location.href = 'index.php?action=login';
+                    return;
+                }
+                throw new Error(data.message || 'No se pudo agregar al carrito');
+            }
+
+            inicioSetCartQty(productId, data.cantidad || 0);
+            const cartCount = document.getElementById('carrito-count');
+            if (cartCount) cartCount.textContent = data.carrito_count || 0;
+            inicioSyncProductControls(productId, data.stock || stock);
+            inicioToast(data.message || 'Producto agregado');
+        } catch (error) {
+            inicioSyncProductControls(productId, stock);
+            inicioToast(error.message || 'No se pudo agregar al carrito', true);
+        }
+    }
+
     function mostrarSeccion(id) {
         document.querySelectorAll('.bloque-principal').forEach((seccion) => {
             seccion.classList.remove('is-visible');
@@ -867,6 +1220,10 @@ body[data-theme="light"] {
 
         activa.removeAttribute('hidden');
         activa.classList.add('is-visible');
+
+        if (id === 'interaccion-360') {
+            loadActiveModelPanel();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -902,6 +1259,8 @@ body[data-theme="light"] {
                 document.querySelectorAll('.models-panel').forEach((panel) => {
                     panel.classList.toggle('is-active', panel.id === panelId);
                 });
+
+                loadActiveModelPanel(panelId);
             });
         });
 

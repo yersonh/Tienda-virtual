@@ -25,6 +25,33 @@
     color: var(--secondary);
     margin: 0;
 }
+.cart-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+.cart-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(15, 27, 46, 0.58);
+    color: var(--secondary);
+    font-weight: 800;
+}
+.cart-step.active {
+    border-color: rgba(56, 189, 248, 0.7);
+    background: rgba(34, 211, 238, 0.14);
+    color: var(--text);
+    box-shadow: 0 0 26px rgba(34, 211, 238, 0.14);
+}
+[data-theme="light"] .cart-step {
+    background: rgba(255,255,255,0.66);
+}
 .cart-clear {
     display: inline-flex;
     align-items: center;
@@ -179,7 +206,7 @@
     font-weight: 800;
 }
 .cart-checkout {
-    border: 1px solid rgba(0,229,192,0.28);
+    border: 1px solid rgba(34,211,238,0.28);
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
     color: #06121f;
     box-shadow: 0 14px 26px rgba(20,216,189,0.2);
@@ -341,6 +368,11 @@
             <div>
                 <h1 class="cart-title"><?= htmlspecialchars('Carrito de compras', ENT_QUOTES, 'UTF-8') ?></h1>
                 <p class="cart-sub"><?= htmlspecialchars('Revisa tus productos, ajusta cantidades y continua con tu compra.', ENT_QUOTES, 'UTF-8') ?></p>
+                <div class="cart-steps" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
+                    <span class="cart-step active"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="cart-step"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="cart-step"><i class="fas fa-circle-check"></i> <?= htmlspecialchars('Confirmacion', ENT_QUOTES, 'UTF-8') ?></span>
+                </div>
             </div>
             <?php if (!empty($items)): ?>
                 <button class="cart-clear" type="button" onclick="vaciarCarrito()">

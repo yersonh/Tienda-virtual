@@ -29,15 +29,15 @@
     position: absolute;
     top: -60px; left: -100px;
     width: 500px; height: 400px;
-    background: radial-gradient(ellipse, rgba(0,229,192,0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(34,211,238,0.08) 0%, transparent 70%);
     pointer-events: none;
 }
 .hero-label {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(0,229,192,0.08);
-    border: 1px solid rgba(0,229,192,0.2);
+    background: rgba(34,211,238,0.08);
+    border: 1px solid rgba(34,211,238,0.2);
     color: var(--accent);
     font-size: 11px;
     font-weight: 500;
@@ -111,8 +111,8 @@
     color: #0f172a;
 }
 .btn-clear {
-    background: rgba(0,229,192,0.1);
-    border: 1px solid rgba(0,229,192,0.25);
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.25);
     color: var(--accent);
     padding: 10px 20px;
     border-radius: 10px;
@@ -123,7 +123,7 @@
     transition: all 0.2s;
     white-space: nowrap;
 }
-.btn-clear:hover { background: rgba(0,229,192,0.2); }
+.btn-clear:hover { background: rgba(34,211,238,0.2); }
 [data-theme="light"] .btn-clear {
     background: #dff7f5;
     border-color: #9fe8e1;
@@ -157,8 +157,8 @@
 }
 .cat-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
 .cat-tab.active {
-    background: rgba(0,229,192,0.1);
-    border-color: rgba(0,229,192,0.35);
+    background: rgba(34,211,238,0.12);
+    border-color: rgba(34,211,238,0.35);
     color: var(--accent);
 }
 [data-theme="light"] .cat-tab {
@@ -283,8 +283,8 @@
     width: 36px;
     height: 36px;
     border-radius: 999px;
-    border: 1px solid rgba(0,229,192,0.24);
-    background: rgba(0,229,192,0.08);
+    border: 1px solid rgba(34,211,238,0.24);
+    background: rgba(34,211,238,0.08);
     color: var(--accent);
     display: inline-flex;
     align-items: center;
@@ -294,8 +294,8 @@
 }
 .carousel-btn:hover {
     transform: translateY(-1px);
-    background: rgba(0,229,192,0.16);
-    border-color: rgba(0,229,192,0.4);
+    background: rgba(34,211,238,0.16);
+    border-color: rgba(34,211,238,0.4);
 }
 [data-theme="light"] .carousel-btn {
     background: #f0fdfa;
@@ -320,13 +320,13 @@
     scroll-snap-type: x proximity;
     padding: 0 0 10px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(0,229,192,0.3) transparent;
+    scrollbar-color: rgba(34,211,238,0.3) transparent;
 }
 .product-grid::-webkit-scrollbar {
     height: 8px;
 }
 .product-grid::-webkit-scrollbar-thumb {
-    background: rgba(0,229,192,0.24);
+    background: rgba(34,211,238,0.24);
     border-radius: 999px;
 }
 .product-grid::-webkit-scrollbar-track {
@@ -379,8 +379,8 @@
     position: absolute;
     top: 10px; left: 10px;
     z-index: 2;
-    background: rgba(0,229,192,0.15);
-    border: 1px solid rgba(0,229,192,0.3);
+    background: rgba(34,211,238,0.15);
+    border: 1px solid rgba(34,211,238,0.3);
     color: var(--accent);
     font-size: 10px;
     font-weight: 600;
@@ -452,9 +452,9 @@
     color: #64748b;
 }
 .meta-stock {
-    background: rgba(0,229,192,0.08);
+    background: rgba(34,211,238,0.08);
     color: var(--accent);
-    border: 1px solid rgba(0,229,192,0.15);
+    border: 1px solid rgba(34,211,238,0.15);
 }
 [data-theme="light"] .meta-stock {
     background: #e7fffb;
@@ -519,8 +519,8 @@
 }
 .add-btn {
     flex: 1;
-    background: rgba(0,229,192,0.12);
-    border: 1px solid rgba(0,229,192,0.25);
+    background: rgba(34,211,238,0.12);
+    border: 1px solid rgba(34,211,238,0.25);
     color: var(--accent);
     height: 32px;
     border-radius: 8px;
@@ -532,8 +532,8 @@
     transition: all 0.2s;
     letter-spacing: 0.3px;
 }
-.add-btn:hover { background: rgba(0,229,192,0.22); border-color: rgba(0,229,192,0.5); }
-.add-btn.added { background: rgba(0,229,192,0.25); border-color: var(--accent); }
+.add-btn:hover { background: rgba(34,211,238,0.22); border-color: rgba(34,211,238,0.5); }
+.add-btn.added { background: rgba(34,211,238,0.25); border-color: var(--accent); }
 .add-btn:disabled,
 .qty-btn:disabled {
     cursor: not-allowed;
@@ -570,7 +570,7 @@
     padding: 14px 16px;
     border-radius: 16px;
     background: rgba(9, 18, 34, 0.94);
-    border: 1px solid rgba(0, 229, 192, 0.32);
+    border: 1px solid rgba(34, 211, 238, 0.32);
     color: #f8fafc;
     box-shadow: 0 22px 48px rgba(0,0,0,0.35);
     backdrop-filter: blur(16px);
@@ -595,7 +595,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 229, 192, 0.14);
+    background: rgba(34, 211, 238, 0.14);
     color: var(--accent);
 }
 .cart-toast.error .cart-toast-icon {

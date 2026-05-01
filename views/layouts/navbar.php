@@ -24,6 +24,8 @@ $currentAction = $_GET['action'] ?? 'tienda';
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://sketchfab.com">
+<link rel="preconnect" href="https://static.sketchfab.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -561,6 +563,8 @@ textarea:focus {
     <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
     <?php if($logueado): ?>
       <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=perfil" data-nav-key="perfil" class="<?= $currentAction === 'perfil' ? 'active' : '' ?>"><?= htmlspecialchars('Perfil', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=logout" data-nav-key="salir"><?= htmlspecialchars('Salir', ENT_QUOTES, 'UTF-8') ?></a>
     <?php endif; ?>
   </div>
 </aside>

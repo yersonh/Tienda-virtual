@@ -566,6 +566,124 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
         grid-template-columns: 1fr;
     }
 }
+
+.payment-card {
+    position: relative;
+}
+
+.payment-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+}
+
+.payment-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.payment-progress-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 15px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(15, 27, 46, 0.58);
+    color: var(--secondary);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.payment-progress-step.active {
+    border-color: rgba(56, 189, 248, 0.72);
+    background: rgba(34, 211, 238, 0.14);
+    color: var(--text);
+    box-shadow: 0 0 26px rgba(34, 211, 238, 0.14);
+}
+
+.payment-summary {
+    background:
+        linear-gradient(135deg, rgba(34,211,238,0.09), transparent 60%),
+        rgba(255,255,255,0.045);
+}
+
+.payment-summary strong {
+    color: var(--accent);
+}
+
+.payment-method {
+    min-height: 100px;
+}
+
+.payment-method:hover {
+    border-color: rgba(34,211,238,0.5);
+    background: rgba(34,211,238,0.07);
+}
+
+.payment-method.is-active {
+    background: rgba(34,211,238,0.12);
+    box-shadow: 0 16px 36px rgba(34,211,238,0.12);
+}
+
+.payment-method-icon,
+.payment-aside-icon,
+.payment-step span {
+    background: rgba(34,211,238,0.12);
+}
+
+.payment-dynamic {
+    background: rgba(255,255,255,0.045);
+    animation: paymentFade 0.22s ease both;
+}
+
+.payment-aside {
+    background:
+        linear-gradient(145deg, rgba(34,211,238,0.08), transparent 55%),
+        rgba(255,255,255,0.035);
+    position: sticky;
+    top: 92px;
+}
+
+.payment-invoice-note {
+    border-color: rgba(34,211,238,0.22);
+    background: rgba(34,211,238,0.08);
+}
+
+[data-theme="light"] .payment-progress-step,
+[data-theme="light"] .payment-method,
+[data-theme="light"] .payment-dynamic,
+[data-theme="light"] .payment-link,
+[data-theme="light"] .payment-aside {
+    background: rgba(255,255,255,0.78);
+}
+
+[data-theme="light"] .payment-method.is-active {
+    background: rgba(224, 247, 255, 0.86);
+}
+
+@keyframes paymentFade {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 900px) {
+    .payment-aside {
+        position: static;
+    }
+}
 </style>
 
 <main class="payment-page">
@@ -575,6 +693,12 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                 <div class="payment-kicker"><?= htmlspecialchars('Proceso de Pago', ENT_QUOTES, 'UTF-8') ?></div>
                 <h1 class="payment-title"><?= htmlspecialchars('Pagar pedido', ENT_QUOTES, 'UTF-8') ?> <span class="payment-order-number">#<?= $idPedido ?></span></h1>
                 <p class="payment-sub"><?= htmlspecialchars('Selecciona un metodo y confirma el pago simulado para finalizar el pedido.', ENT_QUOTES, 'UTF-8') ?></p>
+                <div class="payment-progress" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
+                    <span class="payment-progress-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="payment-progress-step"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="payment-progress-step active"><i class="fas fa-credit-card"></i> <?= htmlspecialchars('Pago', ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="payment-progress-step"><i class="fas fa-file-invoice"></i> <?= htmlspecialchars('Factura', ENT_QUOTES, 'UTF-8') ?></span>
+                </div>
             </div>
 
             <div class="payment-body">
@@ -632,7 +756,9 @@ $totalPedido = (float) ($pedido['total'] ?? 0);
                                 <strong><?= htmlspecialchars('Transferencia bancaria', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Registro manual del pago.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                        </div><div id="tarjeta" class="payment-dynamic">
+                        </div>
+
+                        <div id="tarjeta" class="payment-dynamic">
                             <div class="payment-card-fields">
                                 <div class="payment-field">
                                     <label for="numero_tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
