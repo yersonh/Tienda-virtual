@@ -18,6 +18,7 @@ require_once __DIR__ . '/../Controllers/ProductoController.php';
 require_once __DIR__ . '/../Controllers/TiendaController.php';
 require_once __DIR__ . '/../Controllers/CarritoController.php';
 require_once __DIR__ . '/../Controllers/PedidoController.php';
+require_once __DIR__ . '/../Controllers/CheckoutController.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 
 $publicas = [
@@ -165,7 +166,11 @@ switch ($action) {
         break;
 
     case 'procesarPago':
-        (new PedidoController())->procesarPago();
+        (new CheckoutController())->confirmarPedido();
+        break;
+
+    case 'confirmarPedido':
+        (new CheckoutController())->confirmarPedido();
         break;
 
     case 'confirmacionPedido':

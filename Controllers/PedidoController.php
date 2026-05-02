@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
+require_once __DIR__ . '/CheckoutController.php';
 
 class PedidoController {
 
@@ -144,45 +145,6 @@ class PedidoController {
         }
 
         return $items;
-    }
-
-    private function guardarDetalleVenta(int $idVenta, array $items): void {
-        if (empty($items)) {
-            return;
-        }
-
-        $query = "INSERT INTO DETALLE_VENTA
-                    (ID_VENTA, ID_PRODUCTO, CANTIDAD, PRECIO_UNITARIO, SUBTOTAL, NOMBRE_PRODUCTO)
-                  VALUES
-                    (:id_venta, :id_producto, :cantidad, :precio_unitario, :subtotal, :nombre_producto)";
-
-        foreach ($items as $item) {
-            $idProducto = (int) ($item['id_producto'] ?? 0);
-            $cantidad = (int) ($item['cantidad'] ?? 0);
-            $precio = (float) ($item['precio'] ?? 0);
-            $subtotal = (float) ($item['subtotal'] ?? ($precio * $cantidad));
-            $nombre = substr((string) ($item['nombre'] ?? 'Producto'), 0, 150);
-
-            if ($idProducto <= 0 || $cantidad <= 0) {
-                continue;
-            }
-
-            $stmt = oci_parse($this->conn, $query);
-            oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':precio_unitario', $precio);
-            oci_bind_by_name($stmt, ':subtotal', $subtotal);
-            oci_bind_by_name($stmt, ':nombre_producto', $nombre);
-
-            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-                $error = oci_error($stmt);
-                oci_free_statement($stmt);
-                throw new Exception($error['message'] ?? 'No se pudo guardar el detalle de venta');
-            }
-
-            oci_free_statement($stmt);
-        }
     }
 
     private function normalizarCiudadEnvio(string $ciudad): string {
@@ -587,142 +549,6 @@ class PedidoController {
         return $items;
     }
 
-    private function crearVenta(int $idUsuario, float $total): int {
-        $columnas = $this->obtenerColumnasTabla('VENTA');
-        $insertColumns = [];
-        $valueExpressions = [];
-        $binds = [];
-
-        foreach ($columnas as $lowerName => $meta) {
-            if ($lowerName === 'id_venta' || strtoupper($meta['identity']) === 'YES') {
-                continue;
-            }
-
-            if ($lowerName === 'id_cliente') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = 'NULL';
-                continue;
-            }
-
-            if ($lowerName === 'id_tipo') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':id_tipo_venta';
-                $binds[':id_tipo_venta'] = ['value' => 2, 'type' => SQLT_INT];
-                continue;
-            }
-
-            if ($lowerName === 'id_usuario') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':' . $lowerName;
-                $binds[':' . $lowerName] = ['value' => $idUsuario, 'type' => SQLT_INT];
-                continue;
-            }
-
-            if (in_array($lowerName, ['total', 'total_venta', 'total_pagar', 'valor_total', 'monto_total'], true)) {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':' . $lowerName;
-                $binds[':' . $lowerName] = ['value' => number_format($total, 2, '.', ''), 'type' => SQLT_CHR];
-                continue;
-            }
-
-            // La tabla VENTA usa FECHA para registrar la fecha de la venta.
-            if (in_array($lowerName, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at'], true)) {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = 'SYSDATE';
-                continue;
-            }
-
-            if ($lowerName === 'id_estado') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':id_estado_venta';
-                $binds[':id_estado_venta'] = ['value' => 1, 'type' => SQLT_INT];
-                continue;
-            }
-
-            if ($lowerName === 'estado') {
-                $insertColumns[] = $meta['name'];
-                $valueExpressions[] = ':estado_venta';
-                $binds[':estado_venta'] = ['value' => 'PENDIENTE', 'type' => SQLT_CHR];
-                continue;
-            }
-
-            if ($meta['nullable'] === 'N') {
-                throw new Exception('La tabla VENTA tiene una columna obligatoria no mapeada: ' . $meta['name']);
-            }
-        }
-
-        if (empty($insertColumns)) {
-            $query = "INSERT INTO VENTA (ID_VENTA)
-                      VALUES (DEFAULT)
-                      RETURNING ID_VENTA INTO :id_venta";
-        } else {
-            $query = "INSERT INTO VENTA (" . implode(', ', $insertColumns) . ")
-                      VALUES (" . implode(', ', $valueExpressions) . ")
-                      RETURNING ID_VENTA INTO :id_venta";
-        }
-
-        $stmt = oci_parse($this->conn, $query);
-        $idVenta = null;
-
-        foreach ($binds as $placeholder => &$bind) {
-            oci_bind_by_name($stmt, $placeholder, $bind['value'], -1, $bind['type']);
-        }
-        unset($bind);
-
-        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $error = oci_error($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($error['message'] ?? 'No se pudo crear la venta');
-        }
-
-        oci_free_statement($stmt);
-
-        return (int) $idVenta;
-    }
-
-    private function crearPedido(int $idVenta, int $estado = 1): int {
-        $query = "INSERT INTO PEDIDO (ID_VENTA, ID_ESTADO)
-                  VALUES (:id_venta, :estado)
-                  RETURNING ID_PEDIDO INTO :id_pedido";
-
-        $stmt = oci_parse($this->conn, $query);
-        $idPedido = null;
-
-        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':estado', $estado, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $error = oci_error($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($error['message'] ?? 'No se pudo crear el pedido');
-        }
-
-        oci_free_statement($stmt);
-
-        return (int) $idPedido;
-    }
-
-    private function asignarDireccionPedido(int $idPedido, int $idDireccionPedido): void {
-        $query = "UPDATE PEDIDO
-                  SET ID_DIRECCION_PEDIDO = :id_direccion_pedido
-                  WHERE ID_PEDIDO = :id_pedido";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_direccion_pedido', $idDireccionPedido, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $error = oci_error($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($error['message'] ?? 'No se pudo asignar la direccion al pedido');
-        }
-
-        oci_free_statement($stmt);
-    }
-
     private function obtenerDiasEntregaPorCiudad(string $ciudad): int {
         $dias = 4;
         $ciudad = trim($ciudad);
@@ -753,30 +579,6 @@ class PedidoController {
         }
 
         return min($dias, 5);
-    }
-
-    private function guardarFechaEstimadaEntrega(int $idPedido, string $ciudad): string {
-        $dias = $this->obtenerDiasEntregaPorCiudad($ciudad);
-        $fechaEntrega = date('Y-m-d', strtotime("+$dias days"));
-
-        $query = "UPDATE PEDIDO
-                  SET FECHA_ESTIMADA_ENTREGA = TO_DATE(:fecha, 'YYYY-MM-DD')
-                  WHERE ID_PEDIDO = :id_pedido";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':fecha', $fechaEntrega);
-        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $error = oci_error($stmt);
-            oci_free_statement($stmt);
-            error_log($error['message'] ?? 'No se pudo guardar la fecha estimada de entrega');
-            throw new Exception('No se pudo guardar la fecha estimada de entrega');
-        }
-
-        oci_free_statement($stmt);
-
-        return $fechaEntrega;
     }
 
     public function resumen() {
@@ -1053,107 +855,8 @@ class PedidoController {
     }
 
     public function procesarPago() {
-        $this->ensureSession();
-
-        $idUsuario = $this->getUsuarioId();
-        if ($idUsuario <= 0) {
-            $_SESSION['error'] = 'Debes iniciar sesion para finalizar el pago';
-            header("Location: index.php?action=login");
-            exit();
-        }
-
-        $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
-        if ($idDireccion <= 0) {
-            $_SESSION['error'] = 'Selecciona una direccion antes de pagar';
-            header("Location: index.php?action=ConfirmarPedido");
-            exit();
-        }
-
-        $erroresPago = $this->validarDatosPago($_POST);
-        if (!empty($erroresPago)) {
-            $_SESSION['error'] = implode('. ', $erroresPago);
-            $_SESSION['payment_old'] = [
-                'metodo_pago' => (int) ($_POST['metodo_pago'] ?? 1),
-                'nombre_pagador' => trim((string) ($_POST['nombre_pagador'] ?? '')),
-                'documento_pagador' => trim((string) ($_POST['documento_pagador'] ?? '')),
-                'titular_tarjeta' => trim((string) ($_POST['titular_tarjeta'] ?? '')),
-                'vencimiento_tarjeta' => trim((string) ($_POST['vencimiento_tarjeta'] ?? '')),
-                'banco_origen' => trim((string) ($_POST['banco_origen'] ?? '')),
-                'referencia_transferencia' => trim((string) ($_POST['referencia_transferencia'] ?? ''))
-            ];
-            header("Location: index.php?action=pago");
-            exit();
-        }
-
-        $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion);
-        if (!$direccion || (int) $direccion['id_usuario'] !== $idUsuario) {
-            $_SESSION['error'] = 'La direccion seleccionada no es valida';
-            header("Location: index.php?action=ConfirmarPedido");
-            exit();
-        }
-
-        $carrito = $this->obtenerCarritoSesion();
-        if (empty($carrito)) {
-            $_SESSION['error'] = 'Tu carrito esta vacio';
-            header("Location: index.php?action=verCarrito");
-            exit();
-        }
-
-        try {
-            $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
-            $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
-            $itemsFactura = $this->obtenerItemsFactura($carrito);
-            $total = $resumenCompra['total'];
-            $idVenta = $this->crearVenta($idUsuario, $total);
-            try {
-                $idPedido = $this->crearPedido($idVenta, 2);
-            } catch (Exception $estadoException) {
-                error_log($estadoException->getMessage());
-                $idPedido = $this->crearPedido($idVenta, 1);
-            }
-            $this->guardarDetalleVenta($idVenta, $itemsFactura);
-            $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
-            $this->asignarDireccionPedido($idPedido, $idDireccionPedido);
-            $fechaEstimadaEntrega = $this->guardarFechaEstimadaEntrega($idPedido, (string) ($direccion['ciudad'] ?? ''));
-
-            $this->carritoModel->vaciarCarritoTx($idUsuario);
-            oci_commit($this->conn);
-            unset(
-                $_SESSION['carrito'],
-                $_SESSION['carrito_mapa_cache'],
-                $_SESSION['checkout_direccion_id'],
-                $_SESSION['checkout_direccion_snapshot'],
-                $_SESSION['checkout_fecha_estimada_entrega'],
-                $_SESSION['payment_old']
-            );
-            $_SESSION['carrito_count'] = 0;
-            $_SESSION['pedido_confirmado'] = [
-                'id_pedido' => $idPedido,
-                'id_venta' => $idVenta,
-                'total' => $total,
-                'subtotal' => $resumenCompra['subtotal'],
-                'iva' => $resumenCompra['iva'],
-                'envio' => $resumenCompra['envio'],
-                'fecha_estimada_entrega' => $fechaEstimadaEntrega,
-                'metodo_pago' => $this->nombreMetodoPago((int) ($_POST['metodo_pago'] ?? 0)),
-                'items' => $itemsFactura,
-                'receptor' => [
-                    'nombre' => trim((string) (($direccion['nombre_receptor'] ?? '') . ' ' . ($direccion['apellido_receptor'] ?? ''))),
-                    'direccion' => (string) ($direccion['direccion_envio'] ?? ''),
-                    'ciudad' => (string) ($direccion['ciudad'] ?? ''),
-                    'telefono' => (string) ($direccion['telefono_receptor'] ?? '')
-                ]
-            ];
-
-            header("Location: index.php?action=ConfirmarPedido");
-            exit();
-        } catch (Exception $e) {
-            oci_rollback($this->conn);
-            error_log($e->getMessage());
-            $_SESSION['error'] = 'No se pudo procesar el pago. Verifica la informacion e intenta de nuevo.';
-            header("Location: index.php?action=pago");
-            exit();
-        }
+        (new CheckoutController())->confirmarPedido();
+        exit();
     }
 
     public function confirmacion() {

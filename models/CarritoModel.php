@@ -340,13 +340,15 @@ class CarritoModel {
 
     public function vaciarCarritoTx($idUsuario): void {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-        $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
 
-        $query = "DELETE FROM DETALLE_CARRITO
-                  WHERE ID_CARRITO = :ID_CARRITO";
+        $query = "BEGIN PC_VACIAR_CARRITO(:p_id_usuario); END;";
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':p_id_usuario', $idUsuario, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $error = $this->oracleErrorMessage($stmt);

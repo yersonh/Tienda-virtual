@@ -151,7 +151,18 @@ class DireccionPedidoModel {
             return $_SESSION['direcciones'];
         }
 
-        $query = "SELECT *
+        $query = "SELECT ID_DIRECCION,
+                         ID_USUARIO,
+                         NOMBRE,
+                         APELLIDO,
+                         DIRECCION,
+                         CIUDAD,
+                         BARRIO,
+                         TELEFONO,
+                         TELEFONO_ALT,
+                         INFO_ADICIONAL,
+                         NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA,
+                         CREATED_AT
                   FROM DIRECCION_USUARIO
                   WHERE ID_USUARIO = :id_usuario
                   ORDER BY ES_PREDETERMINADA DESC, ID_DIRECCION DESC";
