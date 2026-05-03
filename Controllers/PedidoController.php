@@ -393,6 +393,19 @@ class PedidoController {
                 END";
     }
 
+    private function expresionesDetalleVenta(string $alias = 'dv', string $productoAlias = 'p'): array {
+        $columnas = $this->obtenerColumnasTabla('DETALLE_VENTA');
+        $precio = isset($columnas['precio_unitario']) ? "NVL($alias.PRECIO_UNITARIO, $productoAlias.PRECIO)" : "$productoAlias.PRECIO";
+        $subtotal = isset($columnas['subtotal']) ? "NVL($alias.SUBTOTAL, $precio * $alias.CANTIDAD)" : "($precio * $alias.CANTIDAD)";
+        $nombre = isset($columnas['nombre_producto']) ? "NVL($alias.NOMBRE_PRODUCTO, $productoAlias.NOMBRE)" : "$productoAlias.NOMBRE";
+
+        return [
+            'nombre' => $nombre,
+            'precio' => $precio,
+            'subtotal' => $subtotal
+        ];
+    }
+
     private function actualizarEstadosPedidosUsuario(int $idUsuario): void {
         $columnasVenta = $this->obtenerColumnasTabla('VENTA');
         $columnaFecha = $this->columnaVentaDisponible($columnasVenta, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at']);
@@ -487,9 +500,11 @@ class PedidoController {
             $binds[$placeholder] = $idPedido;
         }
 
+        $detalle = $this->expresionesDetalleVenta();
+
         $query = "SELECT pe.ID_PEDIDO,
                          dv.ID_PRODUCTO,
-                         NVL(dv.NOMBRE_PRODUCTO, p.NOMBRE) AS NOMBRE,
+                         {$detalle['nombre']} AS NOMBRE,
                          dv.CANTIDAD,
                          (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
                           FROM PRODUCTO_IMAGEN pi
@@ -557,7 +572,9 @@ class PedidoController {
                          dp.APELLIDO_RECEPTOR,
                          dp.DIRECCION_ENVIO,
                          dp.CIUDAD,
+                         dp.BARRIO,
                          dp.TELEFONO_RECEPTOR,
+                         dp.TELEFONO_ALTERNO,
                          dp.INFORMACION_ADICIONAL
                   FROM PEDIDO p
                   INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
@@ -590,11 +607,13 @@ class PedidoController {
     }
 
     private function obtenerItemsPedidoUsuario(int $idUsuario, int $idPedido): array {
+        $detalle = $this->expresionesDetalleVenta();
+
         $query = "SELECT dv.ID_PRODUCTO,
-                         NVL(dv.NOMBRE_PRODUCTO, p.NOMBRE) AS NOMBRE,
+                         {$detalle['nombre']} AS NOMBRE,
                          dv.CANTIDAD,
-                         NVL(dv.PRECIO_UNITARIO, p.PRECIO) AS PRECIO,
-                         NVL(dv.SUBTOTAL, NVL(dv.PRECIO_UNITARIO, p.PRECIO) * dv.CANTIDAD) AS SUBTOTAL,
+                         {$detalle['precio']} AS PRECIO,
+                         {$detalle['subtotal']} AS SUBTOTAL,
                          (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
                           FROM PRODUCTO_IMAGEN pi
                           WHERE pi.ID_PRODUCTO = dv.ID_PRODUCTO) AS IMAGEN
@@ -828,8 +847,21 @@ class PedidoController {
 
     public function editarDireccionPedido() {
         $this->ensureSession();
-        $resultado = $this->direccionPedidoModel->actualizarDireccionPedidoPendiente((int) ($_POST['id_pedido'] ?? 0), $_POST);
-        $this->responderDireccion($resultado, $resultado['success'] ? 200 : 422);
+        $idPedido = (int) ($_POST['id_pedido'] ?? 0);
+        $resultado = $this->direccionPedidoModel->actualizarDireccionPedidoPendiente($idPedido, $_POST);
+
+        if ($this->isAjaxRequest()) {
+            $this->responderDireccion($resultado, $resultado['success'] ? 200 : 422);
+        }
+
+        if ($resultado['success']) {
+            $_SESSION['success'] = 'Direccion del pedido actualizada correctamente';
+        } else {
+            $_SESSION['error'] = $resultado['message'] ?? 'No se pudo actualizar la direccion del pedido';
+        }
+
+        header("Location: index.php?action=misPedidos&id=" . $idPedido);
+        exit();
     }
 
     private function responderDireccion(array $resultado, int $status = 200): void {
@@ -1037,7 +1069,22 @@ class PedidoController {
                 'telefono' => (string) ($pedido['telefono_receptor'] ?? '')
             ]
         ];
-        $facturaAutoPrint = !empty($_GET['print']);
+
+        if (!empty($_GET['download'])) {
+            $facturaPedido = $pedidoConfirmado;
+            $facturaDownloadMode = true;
+            $filename = 'factura-' . str_pad((string) ((int) $pedidoConfirmado['id_pedido']), 6, '0', STR_PAD_LEFT) . '.html';
+
+            header('Content-Type: text/html; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+
+            require_once __DIR__ . '/../views/helpers/entrega.php';
+            require_once __DIR__ . '/../views/pedidos/factura_moderna.php';
+            exit();
+        }
+
         $direcciones = [];
         $total = (float) $pedidoConfirmado['total'];
 

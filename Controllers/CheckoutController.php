@@ -183,6 +183,7 @@ class CheckoutController {
             $this->pedidoModel->actualizarDireccionPedidoTx($idPedido, $idDireccionPedido);
 
             $this->pagoModel->procesarPago($idVenta, $idMetodo, $resumen['total']);
+            $this->pedidoModel->mantenerPendienteTx($idPedido);
 
             foreach ($items as $item) {
                 $this->ventaModel->descontarStockTx((int) $item['id_producto'], (int) $item['cantidad']);

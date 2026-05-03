@@ -12,6 +12,7 @@ $facturaVence = !empty($facturaPedido['fecha_estimada_entrega'])
 $facturaMetodo = (string) ($facturaPedido['metodo_pago'] ?? 'Registrado');
 $facturaSubtotal = (float) ($facturaPedido['subtotal'] ?? 0);
 $facturaRootTag = isset($facturaRootTag) && in_array($facturaRootTag, ['main', 'section'], true) ? $facturaRootTag : 'main';
+$facturaDownloadMode = !empty($facturaDownloadMode);
 
 if ($facturaSubtotal <= 0 && !empty($facturaItems)) {
     foreach ($facturaItems as $facturaItem) {
@@ -533,19 +534,21 @@ if (!function_exists('facturaMoney')) {
             </footer>
         </article>
 
-        <div class="modern-invoice-actions">
-            <button class="modern-invoice-action primary" type="button" onclick="window.print()">
-                <i class="fas fa-file-arrow-down"></i>
-                <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
-            </button>
-            <a class="modern-invoice-action" href="index.php?action=misPedidos">
-                <i class="fas fa-receipt"></i>
-                <?= htmlspecialchars('Ver mis pedidos', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-            <a class="modern-invoice-action" href="index.php?action=tienda">
-                <i class="fas fa-store"></i>
-                <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-        </div>
+        <?php if (!$facturaDownloadMode): ?>
+            <div class="modern-invoice-actions">
+                <a class="modern-invoice-action primary" href="index.php?action=facturaPedido&id=<?= $facturaIdPedido ?>&download=1">
+                    <i class="fas fa-file-arrow-down"></i>
+                    <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
+                </a>
+                <a class="modern-invoice-action" href="index.php?action=misPedidos">
+                    <i class="fas fa-receipt"></i>
+                    <?= htmlspecialchars('Ver mis pedidos', ENT_QUOTES, 'UTF-8') ?>
+                </a>
+                <a class="modern-invoice-action" href="index.php?action=tienda">
+                    <i class="fas fa-store"></i>
+                    <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
+                </a>
+            </div>
+        <?php endif; ?>
     </div>
 </<?= $facturaRootTag ?>>

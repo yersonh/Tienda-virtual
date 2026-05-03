@@ -1784,9 +1784,4 @@ if (cancelAddressEdit) {
 }
 </script>
 
-<?php if (!empty($facturaAutoPrint)): ?>
-<script>
-window.addEventListener('load', () => window.print());
-</script>
-<?php endif; ?>
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

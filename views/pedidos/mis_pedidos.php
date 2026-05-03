@@ -431,7 +431,7 @@ function orderProductImage(?string $imagen): ?string {
 }
 .order-mini-item {
     display: grid;
-    grid-template-columns: 58px minmax(0, 1fr) auto;
+    grid-template-columns: 58px minmax(0, 1fr) auto auto;
     gap: 12px;
     align-items: center;
     padding: 12px 0;
@@ -474,6 +474,19 @@ function orderProductImage(?string $imagen): ?string {
     color: var(--secondary);
     font-size: 12px;
 }
+.order-mini-qty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(34,211,238,0.12);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
 .order-mini-total {
     color: var(--accent-strong);
     font-weight: 900;
@@ -483,6 +496,48 @@ function orderProductImage(?string $imagen): ?string {
     margin: 0;
     color: var(--secondary);
     font-size: 13px;
+}
+.order-address-form {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+}
+.order-address-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+.order-address-field {
+    display: grid;
+    gap: 6px;
+}
+.order-address-field.full {
+    grid-column: 1 / -1;
+}
+.order-address-field label {
+    color: var(--secondary);
+    font-size: 12px;
+    font-weight: 900;
+}
+.order-address-field input,
+.order-address-field textarea {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    padding: 0 12px;
+    outline: none;
+}
+.order-address-field textarea {
+    min-height: 78px;
+    padding-top: 10px;
+    resize: vertical;
+}
+[data-theme="light"] .order-address-field input,
+[data-theme="light"] .order-address-field textarea {
+    background: #ffffff;
 }
 @media (max-width: 820px) {
     .orders-head,
@@ -494,6 +549,9 @@ function orderProductImage(?string $imagen): ?string {
         gap: 12px;
     }
     .detail-layout {
+        grid-template-columns: 1fr;
+    }
+    .order-address-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -537,7 +595,16 @@ function orderProductImage(?string $imagen): ?string {
             <div class="orders-toolbar">
                 <?php if ($pedidoDetalle): ?>
                     <a class="orders-btn" href="index.php?action=misPedidos"><i class="fas fa-arrow-left"></i><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
-                    <a class="orders-btn primary" href="index.php?action=facturaPedido&id=<?= (int) $pedidoDetalle['id_pedido'] ?>&print=1"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></a>
+                    <a class="orders-btn primary" href="index.php?action=facturaPedido&id=<?= (int) $pedidoDetalle['id_pedido'] ?>&download=1"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></a>
+                    <?php if (canCancelOrder($pedidoDetalle)): ?>
+                        <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
+                            <input type="hidden" name="id_pedido" value="<?= (int) $pedidoDetalle['id_pedido'] ?>">
+                            <button class="orders-btn danger" type="submit">
+                                <i class="fas fa-ban"></i>
+                                <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <a class="orders-btn primary" href="index.php?action=tienda"><i class="fas fa-store"></i><?= htmlspecialchars('Tienda', ENT_QUOTES, 'UTF-8') ?></a>
             </div>
@@ -609,11 +676,55 @@ function orderProductImage(?string $imagen): ?string {
 
                 <div class="detail-layout" style="margin-top:18px;">
                     <div class="detail-box">
-                        <h2><?= htmlspecialchars('Direccion de entrega', ENT_QUOTES, 'UTF-8') ?></h2>
+                        <h2><?= htmlspecialchars($puedeCancelarDetalle ? 'Direccion de entrega editable' : 'Direccion de entrega', ENT_QUOTES, 'UTF-8') ?></h2>
                         <div class="detail-row"><span><?= htmlspecialchars('Recibe', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars(trim(($pedidoDetalle['nombre_receptor'] ?? '') . ' ' . ($pedidoDetalle['apellido_receptor'] ?? '')) ?: 'Sin receptor', ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['direccion_envio'] ?? 'Sin direccion', ENT_QUOTES, 'UTF-8') ?></strong></div>
+                        <div class="detail-row"><span><?= htmlspecialchars('Barrio', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['barrio'] ?? 'Sin barrio', ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Ciudad', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['ciudad'] ?? 'Sin ciudad', ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Telefono', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['telefono_receptor'] ?? 'Sin telefono', ENT_QUOTES, 'UTF-8') ?></strong></div>
+                        <?php if ($puedeCancelarDetalle): ?>
+                            <form class="order-address-form" method="POST" action="index.php?action=editarDireccionPedidoPendiente">
+                                <input type="hidden" name="id_pedido" value="<?= (int) $pedidoDetalle['id_pedido'] ?>">
+                                <div class="order-address-grid">
+                                    <div class="order-address-field">
+                                        <label for="nombre_receptor"><?= htmlspecialchars('Nombre', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="nombre_receptor" name="nombre_receptor" type="text" value="<?= htmlspecialchars((string) ($pedidoDetalle['nombre_receptor'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="order-address-field">
+                                        <label for="apellido_receptor"><?= htmlspecialchars('Apellido', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="apellido_receptor" name="apellido_receptor" type="text" value="<?= htmlspecialchars((string) ($pedidoDetalle['apellido_receptor'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="order-address-field full">
+                                        <label for="direccion_envio"><?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="direccion_envio" name="direccion_envio" type="text" value="<?= htmlspecialchars((string) ($pedidoDetalle['direccion_envio'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="order-address-field">
+                                        <label for="ciudad"><?= htmlspecialchars('Ciudad', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="ciudad" name="ciudad" type="text" value="<?= htmlspecialchars((string) ($pedidoDetalle['ciudad'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="order-address-field">
+                                        <label for="barrio"><?= htmlspecialchars('Barrio', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="barrio" name="barrio" type="text" value="<?= htmlspecialchars((string) ($pedidoDetalle['barrio'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="order-address-field">
+                                        <label for="telefono_receptor"><?= htmlspecialchars('Telefono', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="telefono_receptor" name="telefono_receptor" type="text" inputmode="numeric" value="<?= htmlspecialchars((string) ($pedidoDetalle['telefono_receptor'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="order-address-field">
+                                        <label for="telefono_alterno"><?= htmlspecialchars('Telefono alterno', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <input id="telefono_alterno" name="telefono_alterno" type="text" inputmode="numeric" value="<?= htmlspecialchars((string) ($pedidoDetalle['telefono_alterno'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                    </div>
+                                    <div class="order-address-field full">
+                                        <label for="informacion_adicional"><?= htmlspecialchars('Informacion adicional', ENT_QUOTES, 'UTF-8') ?></label>
+                                        <textarea id="informacion_adicional" name="informacion_adicional"><?= htmlspecialchars((string) ($pedidoDetalle['informacion_adicional'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+                                    </div>
+                                </div>
+                                <button class="orders-btn primary" type="submit">
+                                    <i class="fas fa-floppy-disk"></i>
+                                    <?= htmlspecialchars('Guardar direccion', ENT_QUOTES, 'UTF-8') ?>
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                     <div class="detail-box">
                         <h2><?= htmlspecialchars('Notas', ENT_QUOTES, 'UTF-8') ?></h2>
@@ -644,8 +755,9 @@ function orderProductImage(?string $imagen): ?string {
                                         </span>
                                         <span>
                                             <span class="order-mini-name"><?= htmlspecialchars($nombreItem, ENT_QUOTES, 'UTF-8') ?></span>
-                                            <span class="order-mini-meta"><?= $cantidadItem ?> x $<?= number_format($precioItem) ?> COP</span>
+                                            <span class="order-mini-meta">$<?= number_format($precioItem) ?> COP por unidad</span>
                                         </span>
+                                        <span class="order-mini-qty"><?= htmlspecialchars('Cantidad: ', ENT_QUOTES, 'UTF-8') ?><?= $cantidadItem ?></span>
                                         <strong class="order-mini-total">$<?= number_format($subtotalItem) ?></strong>
                                     </div>
                                 <?php endforeach; ?>
@@ -708,7 +820,7 @@ function orderProductImage(?string $imagen): ?string {
                                     <i class="fas fa-route"></i>
                                     <?= htmlspecialchars('Ver detalle', ENT_QUOTES, 'UTF-8') ?>
                                 </a>
-                                <a class="orders-btn" href="index.php?action=facturaPedido&id=<?= $idPedido ?>&print=1">
+                                <a class="orders-btn" href="index.php?action=facturaPedido&id=<?= $idPedido ?>&download=1">
                                     <i class="fas fa-file-arrow-down"></i>
                                     <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
                                 </a>
