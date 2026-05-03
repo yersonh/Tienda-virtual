@@ -933,7 +933,27 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 </main>
 
 <script>
+const paymentCompletedKey = 'naylexPaymentCompleted';
+const paymentSubmittedKey = 'naylexPaymentSubmitted';
+const currentNavigation = performance.getEntriesByType('navigation')[0];
+
+function redirectCompletedPaymentFromHistory(event) {
+    const isBackNavigation = event.persisted || currentNavigation?.type === 'back_forward';
+    if (isBackNavigation && sessionStorage.getItem(paymentCompletedKey) === '1') {
+        sessionStorage.removeItem(paymentCompletedKey);
+        sessionStorage.removeItem(paymentSubmittedKey);
+        window.location.replace('index.php?action=verCarrito');
+    }
+}
+
+window.addEventListener('pageshow', redirectCompletedPaymentFromHistory);
+
 document.addEventListener('DOMContentLoaded', function () {
+    if (currentNavigation?.type !== 'back_forward') {
+        sessionStorage.removeItem(paymentCompletedKey);
+        sessionStorage.removeItem(paymentSubmittedKey);
+    }
+
     const metodoInput = document.getElementById('metodo_pago');
     const methodButtons = Array.from(document.querySelectorAll('.payment-method'));
     const efectivo = document.getElementById('efectivo');
@@ -998,6 +1018,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     paymentForm?.addEventListener('submit', () => {
+        sessionStorage.setItem(paymentSubmittedKey, '1');
         const button = document.querySelector('.payment-btn[form="payment-confirm-form"]');
         if (button) {
             button.disabled = true;

@@ -469,6 +469,80 @@ class PedidoController {
         return $pedidos;
     }
 
+    private function adjuntarItemsResumenPedidos(int $idUsuario, array $pedidos): array {
+        if (empty($pedidos)) {
+            return $pedidos;
+        }
+
+        $ids = array_values(array_filter(array_map(fn($pedido) => (int) ($pedido['id_pedido'] ?? 0), $pedidos), fn($id) => $id > 0));
+        if (empty($ids)) {
+            return $pedidos;
+        }
+
+        $placeholders = [];
+        $binds = [];
+        foreach ($ids as $index => $idPedido) {
+            $placeholder = ':pedido' . $index;
+            $placeholders[] = $placeholder;
+            $binds[$placeholder] = $idPedido;
+        }
+
+        $query = "SELECT pe.ID_PEDIDO,
+                         dv.ID_PRODUCTO,
+                         NVL(dv.NOMBRE_PRODUCTO, p.NOMBRE) AS NOMBRE,
+                         dv.CANTIDAD,
+                         (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
+                          FROM PRODUCTO_IMAGEN pi
+                          WHERE pi.ID_PRODUCTO = dv.ID_PRODUCTO) AS IMAGEN
+                  FROM PEDIDO pe
+                  INNER JOIN VENTA v ON v.ID_VENTA = pe.ID_VENTA
+                  INNER JOIN DETALLE_VENTA dv ON dv.ID_VENTA = pe.ID_VENTA
+                  LEFT JOIN PRODUCTO p ON p.ID_PRODUCTO = dv.ID_PRODUCTO
+                  WHERE v.ID_USUARIO = :id_usuario
+                    AND pe.ID_PEDIDO IN (" . implode(', ', $placeholders) . ")
+                  ORDER BY pe.ID_PEDIDO DESC, dv.ID_PRODUCTO";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        foreach ($binds as $placeholder => &$value) {
+            oci_bind_by_name($stmt, $placeholder, $value, -1, SQLT_INT);
+        }
+        unset($value);
+
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            error_log($error['message'] ?? 'No se pudieron consultar las miniaturas de pedidos');
+            return $pedidos;
+        }
+
+        $itemsPorPedido = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $idPedido = (int) $row['ID_PEDIDO'];
+            if (!isset($itemsPorPedido[$idPedido])) {
+                $itemsPorPedido[$idPedido] = [];
+            }
+
+            $itemsPorPedido[$idPedido][] = [
+                'id_producto' => (int) ($row['ID_PRODUCTO'] ?? 0),
+                'nombre' => (string) ($row['NOMBRE'] ?? 'Producto'),
+                'cantidad' => (int) ($row['CANTIDAD'] ?? 0),
+                'imagen' => $row['IMAGEN'] ?? null
+            ];
+        }
+        oci_free_statement($stmt);
+
+        foreach ($pedidos as &$pedido) {
+            $idPedido = (int) ($pedido['id_pedido'] ?? 0);
+            $items = $itemsPorPedido[$idPedido] ?? [];
+            $pedido['items_preview'] = $items;
+            $pedido['cantidad_productos'] = array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $items));
+        }
+        unset($pedido);
+
+        return $pedidos;
+    }
+
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
         $venta = $this->expresionesResumenVenta();
         $estadoSql = $this->estadoPedidoSql();
@@ -520,7 +594,10 @@ class PedidoController {
                          NVL(dv.NOMBRE_PRODUCTO, p.NOMBRE) AS NOMBRE,
                          dv.CANTIDAD,
                          NVL(dv.PRECIO_UNITARIO, p.PRECIO) AS PRECIO,
-                         NVL(dv.SUBTOTAL, NVL(dv.PRECIO_UNITARIO, p.PRECIO) * dv.CANTIDAD) AS SUBTOTAL
+                         NVL(dv.SUBTOTAL, NVL(dv.PRECIO_UNITARIO, p.PRECIO) * dv.CANTIDAD) AS SUBTOTAL,
+                         (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
+                          FROM PRODUCTO_IMAGEN pi
+                          WHERE pi.ID_PRODUCTO = dv.ID_PRODUCTO) AS IMAGEN
                   FROM DETALLE_VENTA dv
                   INNER JOIN PEDIDO pe ON pe.ID_VENTA = dv.ID_VENTA
                   INNER JOIN VENTA v ON v.ID_VENTA = pe.ID_VENTA
@@ -816,6 +893,9 @@ class PedidoController {
 
     public function pago() {
         $this->ensureSession();
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
@@ -885,7 +965,6 @@ class PedidoController {
         $pedidoDetalle = null;
 
         try {
-            $this->actualizarEstadosPedidosUsuario($idUsuario);
             $idPedido = (int) ($_GET['id'] ?? 0);
             if ($idPedido > 0) {
                 $pedidoDetalle = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
@@ -896,6 +975,7 @@ class PedidoController {
                 }
             } else {
                 $pedidos = $this->obtenerPedidosUsuario($idUsuario);
+                $pedidos = $this->adjuntarItemsResumenPedidos($idUsuario, $pedidos);
             }
         } catch (Throwable $e) {
             error_log($e->getMessage());

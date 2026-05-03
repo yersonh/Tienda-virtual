@@ -122,7 +122,6 @@ class PagoModel {
         }
 
         $this->actualizarVentaPagadaTx($idVenta, $idMetodo);
-        $this->actualizarPedidoPagadoTx($idVenta);
     }
 
     private function actualizarVentaPagadaTx(int $idVenta, int $idMetodo): void {
@@ -169,25 +168,4 @@ class PagoModel {
         oci_free_statement($stmt);
     }
 
-    private function actualizarPedidoPagadoTx(int $idVenta): void {
-        $query = "UPDATE PEDIDO
-                  SET ID_ESTADO = 2
-                  WHERE ID_VENTA = :id_venta
-                  AND ID_ESTADO = 1";
-
-        $stmt = oci_parse($this->conn, $query);
-        if (!$stmt) {
-            throw new Exception($this->oracleErrorMessage());
-        }
-
-        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $message = $this->oracleErrorMessage($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($message);
-        }
-
-        oci_free_statement($stmt);
-    }
 }

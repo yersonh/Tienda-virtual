@@ -2,6 +2,22 @@
 require_once __DIR__ . '/../helpers/entrega.php';
 require_once __DIR__ . '/../layouts/navbar.php';
 renderEntregaStyles();
+
+$itemsFactura = isset($pedido['items']) && is_array($pedido['items']) ? $pedido['items'] : [];
+$receptorFactura = isset($pedido['receptor']) && is_array($pedido['receptor']) ? $pedido['receptor'] : [];
+$subtotalFactura = isset($pedido['subtotal']) ? (float) $pedido['subtotal'] : 0;
+
+if ($subtotalFactura <= 0 && !empty($itemsFactura)) {
+    foreach ($itemsFactura as $itemFactura) {
+        $subtotalFactura += (float) ($itemFactura['subtotal'] ?? 0);
+    }
+}
+
+$ivaFactura = (float) ($pedido['iva'] ?? 0);
+$envioFactura = (float) ($pedido['envio'] ?? 0);
+$totalFactura = (float) ($pedido['total'] ?? ($subtotalFactura + $ivaFactura + $envioFactura));
+$metodoFactura = (string) ($pedido['metodo_pago'] ?? 'Pago registrado');
+$fechaEntregaFactura = $pedido['fecha_estimada_entrega'] ?? null;
 ?>
 
 <style>
@@ -103,11 +119,28 @@ renderEntregaStyles();
     padding: 28px;
 }
 
+.invoice-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    color: var(--text);
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.invoice-section-title i {
+    color: var(--accent);
+}
+
 .invoice-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 24px;
+    align-items: stretch;
 }
 
 .invoice-steps {
@@ -142,8 +175,55 @@ renderEntregaStyles();
 }
 
 .invoice-print-btn {
-    border-radius: 8px;
+    min-height: 46px;
+    min-width: 178px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
     font-weight: 800;
+    padding: 0 16px;
+    border-width: 1px;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.invoice-print-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+}
+
+.invoice-actions .btn-success {
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    border-color: #15803d;
+    color: #ffffff;
+}
+
+.invoice-actions .btn-outline-light {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(148,163,184,0.32);
+    color: var(--text);
+}
+
+.invoice-actions .btn-outline-light:hover {
+    background: rgba(34,211,238,0.12);
+    border-color: rgba(34,211,238,0.45);
+    color: var(--text);
+}
+
+[data-theme="light"] .invoice-actions .btn-outline-light {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+[data-theme="light"] .invoice-actions .btn-outline-light:hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #075985;
 }
 
 .invoice-status {
@@ -180,11 +260,150 @@ renderEntregaStyles();
     color: var(--secondary);
 }
 
+.invoice-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 20px;
+}
+
+.invoice-info-card {
+    position: relative;
+    min-height: 154px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background:
+        linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(15, 23, 42, 0.02)),
+        rgba(255,255,255,0.045);
+    overflow: hidden;
+}
+
+.invoice-info-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+}
+
+.invoice-info-card strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 16px;
+}
+
+.invoice-info-card p {
+    margin: 5px 0 0;
+    color: var(--secondary);
+    line-height: 1.45;
+}
+
+.invoice-info-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    margin-top: 10px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: rgba(34, 211, 238, 0.12);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.invoice-products-section {
+    margin-top: 18px;
+}
+
+.invoice-products-wrap {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.035);
+}
+
+.invoice-products-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-products-table th,
+.invoice-products-table td {
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.invoice-products-table th {
+    color: var(--secondary);
+    background: rgba(15, 23, 42, 0.34);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.invoice-products-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.invoice-product-name {
+    color: var(--text);
+    font-weight: 900;
+}
+
+.invoice-product-ref {
+    display: block;
+    margin-top: 4px;
+    color: var(--secondary);
+    font-size: 12px;
+}
+
+.invoice-qty {
+    display: inline-flex;
+    min-width: 42px;
+    min-height: 30px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(34, 211, 238, 0.12);
+    color: var(--accent);
+    font-weight: 900;
+}
+
+.invoice-products-table .money {
+    color: var(--text);
+    font-weight: 900;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.invoice-summary-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+    gap: 18px;
+    align-items: start;
+    margin-top: 18px;
+}
+
+.invoice-note-card {
+    min-height: 100%;
+    margin: 0;
+    padding: 18px;
+    border: 1px solid rgba(34, 211, 238, 0.18);
+    border-radius: 12px;
+    background: rgba(34, 211, 238, 0.07);
+}
+
 .invoice-table {
     border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
-    margin-top: 18px;
+    margin-top: 0;
 }
 
 .invoice-row {
@@ -221,7 +440,10 @@ renderEntregaStyles();
 
 [data-theme="light"] .invoice-meta,
 [data-theme="light"] .invoice-status,
-[data-theme="light"] .invoice-row.total {
+[data-theme="light"] .invoice-row.total,
+[data-theme="light"] .invoice-info-card,
+[data-theme="light"] .invoice-products-wrap,
+[data-theme="light"] .invoice-note-card {
     background: rgba(255,255,255,0.72);
 }
 
@@ -254,6 +476,13 @@ renderEntregaStyles();
     .invoice-row.total .invoice-value {
         color: #0891b2 !important;
     }
+
+    .invoice-info-card,
+    .invoice-products-wrap,
+    .invoice-note-card {
+        box-shadow: none !important;
+        background: #ffffff !important;
+    }
 }
 
 @media (max-width: 720px) {
@@ -262,6 +491,28 @@ renderEntregaStyles();
     }
 
     .invoice-meta {
+        width: 100%;
+    }
+
+    .invoice-info-grid,
+    .invoice-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-products-wrap {
+        overflow-x: auto;
+    }
+
+    .invoice-products-table {
+        min-width: 620px;
+    }
+
+    .invoice-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-print-btn {
         width: 100%;
     }
 }
@@ -307,34 +558,98 @@ renderEntregaStyles();
                 <span class="invoice-step active"><i class="fas fa-circle-check"></i> <?= htmlspecialchars('Confirmacion', ENT_QUOTES, 'UTF-8') ?></span>
             </div>
 
-            <div class="invoice-table">
-                <div class="invoice-row">
-                    <span class="invoice-label"><?= htmlspecialchars('Pedido', ENT_QUOTES, 'UTF-8') ?></span>
-                    <strong class="invoice-value">#<?= (int) $pedido['id_pedido'] ?></strong>
+            <div class="invoice-info-grid">
+                <section class="invoice-info-card">
+                    <h2 class="invoice-section-title"><i class="fas fa-user-check"></i> <?= htmlspecialchars('Facturado a', ENT_QUOTES, 'UTF-8') ?></h2>
+                    <strong>
+                        <?= htmlspecialchars(trim(($receptorFactura['nombre'] ?? '') . ' ' . ($receptorFactura['apellido'] ?? '')) ?: 'Cliente registrado', ENT_QUOTES, 'UTF-8') ?>
+                    </strong>
+                    <p><?= htmlspecialchars($receptorFactura['direccion'] ?? 'Direccion registrada en el pedido', ENT_QUOTES, 'UTF-8') ?></p>
+                    <p><?= htmlspecialchars($receptorFactura['ciudad'] ?? 'Ciudad registrada', ENT_QUOTES, 'UTF-8') ?></p>
+                    <?php if (!empty($receptorFactura['telefono'])): ?>
+                        <p><?= htmlspecialchars('Tel: ' . $receptorFactura['telefono'], ENT_QUOTES, 'UTF-8') ?></p>
+                    <?php endif; ?>
+                </section>
+
+                <section class="invoice-info-card">
+                    <h2 class="invoice-section-title"><i class="fas fa-credit-card"></i> <?= htmlspecialchars('Pago y entrega', ENT_QUOTES, 'UTF-8') ?></h2>
+                    <strong><?= htmlspecialchars($metodoFactura, ENT_QUOTES, 'UTF-8') ?></strong>
+                    <p><?= htmlspecialchars('Pedido #' . (int) $pedido['id_pedido'] . ' asociado a la venta #' . (int) ($pedido['id_venta'] ?? 0), ENT_QUOTES, 'UTF-8') ?></p>
+                    <p><?= htmlspecialchars('Pago confirmado y registrado en la base de datos.', ENT_QUOTES, 'UTF-8') ?></p>
+                    <span class="invoice-info-pill"><i class="fas fa-truck-fast"></i> <?= htmlspecialchars($fechaEntregaFactura ? 'Entrega programada' : 'Entrega por confirmar', ENT_QUOTES, 'UTF-8') ?></span>
+                </section>
+            </div>
+
+            <section class="invoice-products-section">
+                <h2 class="invoice-section-title"><i class="fas fa-boxes-stacked"></i> <?= htmlspecialchars('Productos comprados', ENT_QUOTES, 'UTF-8') ?></h2>
+                <div class="invoice-products-wrap">
+                    <table class="invoice-products-table">
+                        <thead>
+                            <tr>
+                                <th><?= htmlspecialchars('Producto', ENT_QUOTES, 'UTF-8') ?></th>
+                                <th><?= htmlspecialchars('Cant.', ENT_QUOTES, 'UTF-8') ?></th>
+                                <th class="money"><?= htmlspecialchars('Precio unitario', ENT_QUOTES, 'UTF-8') ?></th>
+                                <th class="money"><?= htmlspecialchars('Subtotal', ENT_QUOTES, 'UTF-8') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($itemsFactura)): ?>
+                                <?php foreach ($itemsFactura as $itemFactura): ?>
+                                    <?php
+                                        $cantidadItem = (int) ($itemFactura['cantidad'] ?? 0);
+                                        $precioItem = (float) ($itemFactura['precio_unitario'] ?? $itemFactura['precio'] ?? 0);
+                                        $subtotalItem = (float) ($itemFactura['subtotal'] ?? ($precioItem * $cantidadItem));
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <span class="invoice-product-name"><?= htmlspecialchars($itemFactura['nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="invoice-product-ref"><?= htmlspecialchars('ID producto: ' . (int) ($itemFactura['id_producto'] ?? 0), ENT_QUOTES, 'UTF-8') ?></span>
+                                        </td>
+                                        <td><span class="invoice-qty"><?= $cantidadItem ?></span></td>
+                                        <td class="money">$<?= number_format($precioItem) ?> COP</td>
+                                        <td class="money">$<?= number_format($subtotalItem) ?> COP</td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td>
+                                        <span class="invoice-product-name"><?= htmlspecialchars('Detalle de productos no disponible en esta sesion', ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="invoice-product-ref"><?= htmlspecialchars('El pedido y el pago fueron registrados correctamente.', ENT_QUOTES, 'UTF-8') ?></span>
+                                    </td>
+                                    <td><span class="invoice-qty">1</span></td>
+                                    <td class="money">$<?= number_format($subtotalFactura ?: $totalFactura) ?> COP</td>
+                                    <td class="money">$<?= number_format($subtotalFactura ?: $totalFactura) ?> COP</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="invoice-row">
-                    <span class="invoice-label"><?= htmlspecialchars('Subtotal productos', ENT_QUOTES, 'UTF-8') ?></span>
-                    <strong class="invoice-value">$<?= number_format((float) ($pedido['subtotal'] ?? $pedido['total'] ?? 0)) ?> COP</strong>
-                </div>
-                <?php if (isset($pedido['iva'])): ?>
+            </section>
+
+            <div class="invoice-summary-grid">
+                <p class="invoice-small-note invoice-note-card">
+                    <?= htmlspecialchars('Este documento corresponde al soporte de compra generado por el sistema. Incluye los productos comprados, datos de entrega, metodo de pago y valores finales. Para guardar como PDF, usa el boton Descargar factura y elige Guardar como PDF.', ENT_QUOTES, 'UTF-8') ?>
+                </p>
+                <div class="invoice-table">
+                    <div class="invoice-row">
+                        <span class="invoice-label"><?= htmlspecialchars('Subtotal productos', ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong class="invoice-value">$<?= number_format($subtotalFactura ?: ($totalFactura - $ivaFactura - $envioFactura)) ?> COP</strong>
+                    </div>
                     <div class="invoice-row">
                         <span class="invoice-label"><?= htmlspecialchars('IVA', ENT_QUOTES, 'UTF-8') ?> 19%</span>
-                        <strong class="invoice-value">$<?= number_format((float) $pedido['iva']) ?> COP</strong>
+                        <strong class="invoice-value">$<?= number_format($ivaFactura) ?> COP</strong>
                     </div>
-                <?php endif; ?>
-                <?php if (isset($pedido['envio'])): ?>
                     <div class="invoice-row">
                         <span class="invoice-label"><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span>
-                        <strong class="invoice-value">$<?= number_format((float) $pedido['envio']) ?> COP</strong>
+                        <strong class="invoice-value">$<?= number_format($envioFactura) ?> COP</strong>
                     </div>
-                <?php endif; ?>
-                <div class="invoice-row total">
-                    <span class="invoice-label"><?= htmlspecialchars('Total pagado', ENT_QUOTES, 'UTF-8') ?></span>
-                    <strong class="invoice-value">$<?= number_format((float) $pedido['total']) ?> COP</strong>
+                    <div class="invoice-row total">
+                        <span class="invoice-label"><?= htmlspecialchars('Total pagado', ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong class="invoice-value">$<?= number_format($totalFactura) ?> COP</strong>
+                    </div>
                 </div>
             </div>
             <div class="invoice-delivery"><?php renderEntregaBox($pedido['fecha_estimada_entrega'] ?? null); ?></div>
-            <p class="invoice-small-note"><?= htmlspecialchars('Este documento corresponde al soporte de compra generado por el sistema. Para guardar como PDF, usa el boton Descargar factura y elige Guardar como PDF.', ENT_QUOTES, 'UTF-8') ?></p>
 
             <div class="invoice-actions">
                 <button class="btn btn-success invoice-print-btn" type="button" onclick="window.print()">
@@ -354,5 +669,9 @@ renderEntregaStyles();
         </div>
     </div>
 </main>
+
+<script>
+sessionStorage.setItem('naylexPaymentCompleted', '1');
+</script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

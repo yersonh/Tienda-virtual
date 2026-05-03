@@ -333,7 +333,7 @@ body[data-theme="light"] {
 
 .sales-dashboard {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     gap: 18px;
     margin-bottom: 22px;
     padding: 20px;
@@ -482,15 +482,22 @@ body[data-theme="light"] {
 }
 
 .sales-summary {
-    display: grid;
-    align-content: center;
-    gap: 12px;
-    padding: 16px;
+    position: sticky;
+    top: 92px;
+    min-height: 0;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
     border-radius: 16px;
-    background: rgba(255,255,255,0.055);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-    transition: border-color 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top right, rgba(56,189,248,0.18), transparent 38%),
+        rgba(255,255,255,0.055);
+    border: 1px solid rgba(125,211,252,0.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 16px 34px rgba(2,8,23,0.18);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sales-dashboard:has(.sales-row:hover) .sales-summary,
@@ -498,6 +505,7 @@ body[data-theme="light"] {
 .sales-dashboard:has(.sales-row.is-active) .sales-summary {
     border-color: rgba(56,189,248,0.28);
     transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 20px 42px rgba(56,189,248,0.13);
 }
 
 [data-theme="light"] .sales-summary {
@@ -516,7 +524,7 @@ body[data-theme="light"] {
 .sales-summary strong {
     color: var(--inicio-text);
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
-    font-size: 34px;
+    font-size: 38px;
     line-height: 1;
 }
 
@@ -528,6 +536,88 @@ body[data-theme="light"] {
     color: var(--inicio-muted);
     font-size: 12px;
     line-height: 1.5;
+}
+
+.sales-summary-head {
+    display: grid;
+    gap: 6px;
+    animation: salesResultIn 0.28s ease both;
+}
+
+.sales-ring {
+    --ring-value: 100;
+    width: 116px;
+    aspect-ratio: 1;
+    margin: 2px auto 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at center, rgba(15,23,42,0.9) 0 55%, transparent 57%),
+        conic-gradient(#38bdf8 calc(var(--ring-value) * 1%), rgba(148,163,184,0.18) 0);
+    box-shadow: 0 16px 34px rgba(56,189,248,0.16);
+    transition: background 0.35s ease, transform 0.25s ease;
+}
+
+.sales-summary.is-changing .sales-ring {
+    transform: scale(1.04) rotate(4deg);
+}
+
+.sales-ring span {
+    color: #e0f2fe;
+    font-size: 24px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+[data-theme="light"] .sales-ring {
+    background:
+        radial-gradient(circle at center, rgba(255,255,255,0.96) 0 55%, transparent 57%),
+        conic-gradient(#0284c7 calc(var(--ring-value) * 1%), rgba(148,163,184,0.18) 0);
+}
+
+[data-theme="light"] .sales-ring span {
+    color: #0f172a;
+}
+
+.sales-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.sales-metric {
+    min-width: 0;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(15,23,42,0.28);
+    border: 1px solid rgba(148,163,184,0.13);
+}
+
+[data-theme="light"] .sales-metric {
+    background: rgba(241,245,249,0.78);
+}
+
+.sales-metric span {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 10px;
+}
+
+.sales-metric strong {
+    display: block;
+    font-size: 18px;
+}
+
+@keyframes salesResultIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .models-3d,
@@ -768,6 +858,10 @@ body[data-theme="light"] {
         padding: 14px;
     }
 
+    .sales-summary {
+        position: static;
+    }
+
     .sales-row {
         transform: none;
     }
@@ -986,6 +1080,8 @@ body[data-theme="light"] {
                 $ventaMaxima = max(1, max(array_map(fn($producto) => (int) ($producto['total_vendido'] ?? 0), $masVendidos)));
                 $productoLider = $masVendidos[0] ?? [];
                 $nombreLider = (string) ($productoLider['nombre'] ?? 'Producto lider');
+                $ventasLider = max(0, (int) ($productoLider['total_vendido'] ?? 0));
+                $participacionLider = $ventasTotales > 0 ? round(($ventasLider / $ventasTotales) * 100, 1) : 0;
                 ?>
                 <div class="sales-dashboard" data-sales-dashboard aria-label="<?= htmlspecialchars('Grafica de ventas por producto', ENT_QUOTES, 'UTF-8') ?>">
                     <div class="sales-chart">
@@ -1014,9 +1110,24 @@ body[data-theme="light"] {
                         <?php endforeach; ?>
                     </div>
                     <aside class="sales-summary" aria-label="<?= htmlspecialchars('Resumen de ventas destacadas', ENT_QUOTES, 'UTF-8') ?>">
-                        <span data-sales-summary-label><?= htmlspecialchars('Ventas totales', ENT_QUOTES, 'UTF-8') ?></span>
-                        <strong data-sales-summary-value><?= number_format($ventasTotales) ?></strong>
-                        <small data-sales-summary-detail><?= htmlspecialchars('Producto lider: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars($nombreLider, ENT_QUOTES, 'UTF-8') ?></small>
+                        <div class="sales-summary-head" data-sales-summary-head>
+                            <span data-sales-summary-label><?= htmlspecialchars('Ventas totales', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong data-sales-summary-value><?= number_format($ventasTotales) ?></strong>
+                            <small data-sales-summary-detail><?= htmlspecialchars('Producto lider: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars($nombreLider, ENT_QUOTES, 'UTF-8') ?></small>
+                        </div>
+                        <div class="sales-ring" data-sales-ring style="--ring-value: <?= $participacionLider ?>;">
+                            <span data-sales-ring-value><?= $participacionLider ?>%</span>
+                        </div>
+                        <div class="sales-metrics">
+                            <div class="sales-metric">
+                                <span><?= htmlspecialchars('Participacion', ENT_QUOTES, 'UTF-8') ?></span>
+                                <strong data-sales-share-value><?= $participacionLider ?>%</strong>
+                            </div>
+                            <div class="sales-metric">
+                                <span><?= htmlspecialchars('Total base', ENT_QUOTES, 'UTF-8') ?></span>
+                                <strong data-sales-total-value><?= number_format($ventasTotales) ?></strong>
+                            </div>
+                        </div>
                     </aside>
                 </div>
 
@@ -1111,9 +1222,32 @@ body[data-theme="light"] {
             const label = dashboard.querySelector('[data-sales-summary-label]');
             const value = dashboard.querySelector('[data-sales-summary-value]');
             const detail = dashboard.querySelector('[data-sales-summary-detail]');
+            const summary = dashboard.querySelector('.sales-summary');
+            const summaryHead = dashboard.querySelector('[data-sales-summary-head]');
+            const ring = dashboard.querySelector('[data-sales-ring]');
+            const ringValue = dashboard.querySelector('[data-sales-ring-value]');
+            const shareValue = dashboard.querySelector('[data-sales-share-value]');
+            const totalValue = dashboard.querySelector('[data-sales-total-value]');
             const defaultLabel = label?.textContent || '';
             const defaultValue = value?.textContent || '';
             const defaultDetail = detail?.textContent || '';
+            const defaultRing = ringValue?.textContent || '0%';
+            const defaultShare = shareValue?.textContent || '0%';
+            const defaultTotal = totalValue?.textContent || defaultValue;
+
+            function pulseSummary() {
+                if (!summary) return;
+                summary.classList.remove('is-changing');
+                void summary.offsetWidth;
+                summary.classList.add('is-changing');
+                window.setTimeout(() => summary.classList.remove('is-changing'), 320);
+
+                if (summaryHead) {
+                    summaryHead.style.animation = 'none';
+                    void summaryHead.offsetWidth;
+                    summaryHead.style.animation = '';
+                }
+            }
 
             function activateSalesRow(row) {
                 rows.forEach(item => item.classList.toggle('is-active', item === row));
@@ -1122,6 +1256,10 @@ body[data-theme="light"] {
                 label.textContent = 'Producto seleccionado';
                 value.textContent = row.dataset.salesCount || '0';
                 detail.textContent = `${row.dataset.salesName || 'Producto'} aporta ${row.dataset.salesShare || '0'}% del total destacado`;
+                if (ring) ring.style.setProperty('--ring-value', row.dataset.salesShare || '0');
+                if (ringValue) ringValue.textContent = `${row.dataset.salesShare || '0'}%`;
+                if (shareValue) shareValue.textContent = `${row.dataset.salesShare || '0'}%`;
+                pulseSummary();
             }
 
             function resetSalesSummary() {
@@ -1130,6 +1268,10 @@ body[data-theme="light"] {
                     label.textContent = defaultLabel;
                     value.textContent = defaultValue;
                     detail.textContent = defaultDetail;
+                    if (ring) ring.style.setProperty('--ring-value', parseFloat(defaultRing) || 0);
+                    if (ringValue) ringValue.textContent = defaultRing;
+                    if (shareValue) shareValue.textContent = defaultShare;
+                    if (totalValue) totalValue.textContent = defaultTotal;
                 }
             }
 

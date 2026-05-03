@@ -352,6 +352,38 @@ body[data-theme="light"],
     gap: 12px;
     margin-top: 22px;
 }
+
+.checkout-invoice-card > .checkout-actions {
+    padding: 0 78px 34px;
+    margin-top: 0;
+    align-items: stretch;
+}
+
+.checkout-invoice-card > .checkout-actions .checkout-btn {
+    min-width: 178px;
+    justify-content: center;
+    border-radius: 10px;
+    color: #0f172a;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10);
+}
+
+.checkout-invoice-card > .checkout-actions .checkout-btn.primary {
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    border-color: #15803d;
+    color: #ffffff;
+}
+
+.checkout-invoice-card > .checkout-actions .checkout-btn.secondary {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.checkout-invoice-card > .checkout-actions .checkout-btn.secondary:hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #075985;
+}
 .address-form {
     display: none;
     margin-top: 22px;
@@ -980,7 +1012,8 @@ body[data-theme="light"] .form-control:focus,
     }
 
     .checkout-invoice-body,
-    .checkout-invoice-footer {
+    .checkout-invoice-footer,
+    .checkout-invoice-card > .checkout-actions {
         padding-left: 24px;
         padding-right: 24px;
     }
@@ -989,6 +1022,16 @@ body[data-theme="light"] .form-control:focus,
     .checkout-invoice-summary,
     .checkout-invoice-footer {
         grid-template-columns: 1fr;
+    }
+
+    .checkout-invoice-card > .checkout-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        padding-bottom: 28px;
+    }
+
+    .checkout-invoice-card > .checkout-actions .checkout-btn {
+        width: 100%;
     }
 }
 </style>
@@ -1036,6 +1079,9 @@ body[data-theme="light"] .form-control:focus,
                             <strong><?= htmlspecialchars((string) ($receptorFactura['nombre'] ?? 'Cliente NAYLEX'), ENT_QUOTES, 'UTF-8') ?></strong>
                             <p><?= htmlspecialchars((string) ($receptorFactura['direccion'] ?? 'Direccion registrada'), ENT_QUOTES, 'UTF-8') ?></p>
                             <p><?= htmlspecialchars((string) ($receptorFactura['ciudad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></p>
+                            <?php if (!empty($receptorFactura['telefono'])): ?>
+                                <p><?= htmlspecialchars('Tel: ' . (string) $receptorFactura['telefono'], ENT_QUOTES, 'UTF-8') ?></p>
+                            <?php endif; ?>
                         </div>
                         <div class="checkout-invoice-box">
                             <span class="checkout-invoice-box-title"><?= htmlspecialchars('Entrega y pago', ENT_QUOTES, 'UTF-8') ?></span>

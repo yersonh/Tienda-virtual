@@ -52,6 +52,15 @@ function canCancelOrder(array $pedido): bool {
     $estado = strtolower(trim((string) ($pedido['estado'] ?? '')));
     return str_contains($estado, 'pendiente');
 }
+
+function orderProductImage(?string $imagen): ?string {
+    $imagen = trim((string) $imagen);
+    if ($imagen === '') {
+        return null;
+    }
+
+    return 'image.php?folder=productos&path=' . urlencode(basename($imagen));
+}
 ?>
 
 <style>
@@ -161,7 +170,7 @@ function canCancelOrder(array $pedido): bool {
 }
 .orders-card {
     display: grid;
-    grid-template-columns: 1.1fr 0.8fr 0.8fr auto;
+    grid-template-columns: 0.9fr 0.75fr 0.65fr minmax(320px, auto);
     gap: 16px;
     align-items: center;
     padding: 18px;
@@ -240,6 +249,52 @@ function canCancelOrder(array $pedido): bool {
 }
 .cancel-order-form {
     margin: 0;
+}
+.order-card-actions {
+    justify-content: flex-end;
+}
+.order-products-strip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.045);
+}
+.order-strip-images {
+    display: inline-flex;
+    align-items: center;
+}
+.order-strip-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 2px solid var(--card-bg);
+    background: rgba(148,163,184,0.18);
+    object-fit: cover;
+    margin-left: -9px;
+    box-shadow: 0 8px 16px rgba(15,23,42,0.18);
+}
+.order-strip-thumb:first-child {
+    margin-left: 0;
+}
+.order-strip-empty {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(148,163,184,0.16);
+    color: var(--secondary);
+}
+.order-strip-count {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
 }
 .orders-empty {
     padding: 42px;
@@ -376,11 +431,33 @@ function canCancelOrder(array $pedido): bool {
 }
 .order-mini-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
     gap: 12px;
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px solid var(--border);
+}
+.order-mini-photo {
+    width: 58px;
+    height: 58px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(148,163,184,0.14);
+    overflow: hidden;
+}
+.order-mini-photo img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+.order-mini-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
 }
 .order-mini-item:last-child {
     border-bottom: 0;
@@ -555,8 +632,16 @@ function canCancelOrder(array $pedido): bool {
                                         $cantidadItem = (int) ($itemPedido['cantidad'] ?? 0);
                                         $precioItem = (float) ($itemPedido['precio'] ?? 0);
                                         $subtotalItem = (float) ($itemPedido['subtotal'] ?? ($precioItem * $cantidadItem));
+                                        $imagenItem = orderProductImage($itemPedido['imagen'] ?? null);
                                     ?>
                                     <div class="order-mini-item">
+                                        <span class="order-mini-photo">
+                                            <?php if ($imagenItem): ?>
+                                                <img src="<?= htmlspecialchars($imagenItem, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($nombreItem, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
+                                            <?php else: ?>
+                                                <span class="order-mini-placeholder"><i class="fas fa-box"></i></span>
+                                            <?php endif; ?>
+                                        </span>
                                         <span>
                                             <span class="order-mini-name"><?= htmlspecialchars($nombreItem, ENT_QUOTES, 'UTF-8') ?></span>
                                             <span class="order-mini-meta"><?= $cantidadItem ?> x $<?= number_format($precioItem) ?> COP</span>
@@ -603,6 +688,8 @@ function canCancelOrder(array $pedido): bool {
                         $total = (float) ($pedido['total'] ?? 0);
                         $estado = (string) ($pedido['estado'] ?? 'Pendiente');
                         $puedeCancelar = canCancelOrder($pedido);
+                        $itemsPreview = isset($pedido['items_preview']) && is_array($pedido['items_preview']) ? $pedido['items_preview'] : [];
+                        $cantidadProductos = (int) ($pedido['cantidad_productos'] ?? array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $itemsPreview)));
                         ?>
                         <article class="orders-card">
                             <div>
@@ -616,7 +703,7 @@ function canCancelOrder(array $pedido): bool {
                             <div>
                                 <span class="status-pill <?= statusClass($estado, (int) ($pedido['id_estado'] ?? 0)) ?>"><?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
-                            <div class="orders-toolbar">
+                            <div class="orders-toolbar order-card-actions">
                                 <a class="orders-btn primary" href="index.php?action=misPedidos&id=<?= $idPedido ?>">
                                     <i class="fas fa-route"></i>
                                     <?= htmlspecialchars('Ver detalle', ENT_QUOTES, 'UTF-8') ?>
@@ -634,6 +721,23 @@ function canCancelOrder(array $pedido): bool {
                                         </button>
                                     </form>
                                 <?php endif; ?>
+                                <div class="order-products-strip" aria-label="<?= htmlspecialchars('Productos del pedido', ENT_QUOTES, 'UTF-8') ?>">
+                                    <span class="order-strip-images">
+                                        <?php if (!empty($itemsPreview)): ?>
+                                            <?php foreach (array_slice($itemsPreview, 0, 5) as $itemPreview): ?>
+                                                <?php $imagenPreview = orderProductImage($itemPreview['imagen'] ?? null); ?>
+                                                <?php if ($imagenPreview): ?>
+                                                    <img class="order-strip-thumb" src="<?= htmlspecialchars($imagenPreview, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars((string) ($itemPreview['nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
+                                                <?php else: ?>
+                                                    <span class="order-strip-empty"><i class="fas fa-box"></i></span>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <span class="order-strip-empty"><i class="fas fa-box"></i></span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="order-strip-count"><?= $cantidadProductos ?> <?= htmlspecialchars($cantidadProductos === 1 ? 'producto' : 'productos', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
                             </div>
                         </article>
                     <?php endforeach; ?>
