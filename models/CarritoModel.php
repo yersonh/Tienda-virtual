@@ -341,7 +341,12 @@ class CarritoModel {
     public function vaciarCarritoTx($idUsuario): void {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
 
-        $query = "BEGIN PC_VACIAR_CARRITO(:p_id_usuario); END;";
+        $query = "DELETE FROM DETALLE_CARRITO
+                  WHERE ID_CARRITO IN (
+                      SELECT ID_CARRITO
+                      FROM CARRITO
+                      WHERE ID_USUARIO = :p_id_usuario
+                  )";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {

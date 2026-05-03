@@ -164,7 +164,7 @@ class CheckoutController {
 
             $idVenta = $this->ventaModel->crearVentaCheckoutTx(
                 $idUsuario,
-                $resumen['subtotal'],
+                $resumen['total'],
                 $resumen['iva'],
                 $resumen['envio']
             );
@@ -182,7 +182,7 @@ class CheckoutController {
             $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
             $this->pedidoModel->actualizarDireccionPedidoTx($idPedido, $idDireccionPedido);
 
-            $this->pagoModel->procesarPago($idVenta, $idMetodo);
+            $this->pagoModel->procesarPago($idVenta, $idMetodo, $resumen['total']);
 
             foreach ($items as $item) {
                 $this->ventaModel->descontarStockTx((int) $item['id_producto'], (int) $item['cantidad']);

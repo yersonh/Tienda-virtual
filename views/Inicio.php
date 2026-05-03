@@ -53,8 +53,10 @@ body[data-theme="light"] {
 /* CONTENEDOR TRANSPARENTE */
 .main.container {
     background: transparent;
-    max-width: 1180px;
-    padding: 0 20px 40px;
+    width: calc(100% - 48px);
+    max-width: none;
+    padding: 0 0 40px;
+    box-sizing: border-box;
 }
 
 /* CARD PRINCIPAL */
@@ -133,6 +135,7 @@ body[data-theme="light"] {
 }
 
 .best-panel {
+    width: 100%;
     margin: 0 auto 46px;
     padding: 26px;
     border-radius: 18px;
@@ -141,6 +144,7 @@ body[data-theme="light"] {
     box-shadow: var(--inicio-shadow);
     backdrop-filter: blur(14px);
     color: var(--inicio-text);
+    box-sizing: border-box;
 }
 
 [data-theme="light"] .best-panel {
@@ -329,16 +333,17 @@ body[data-theme="light"] {
 
 .sales-dashboard {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 210px;
+    grid-template-columns: minmax(0, 1fr) 240px;
     gap: 18px;
     margin-bottom: 22px;
-    padding: 18px;
-    border-radius: 16px;
+    padding: 20px;
+    border-radius: 18px;
     background:
-        linear-gradient(135deg, rgba(20,184,166,0.12), transparent 42%),
+        radial-gradient(circle at top left, rgba(56,189,248,0.18), transparent 34%),
+        linear-gradient(135deg, rgba(20,184,166,0.12), transparent 44%),
         rgba(15,23,42,0.42);
     border: 1px solid rgba(125,211,252,0.16);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 42px rgba(2,8,23,0.22);
 }
 
 [data-theme="light"] .sales-dashboard {
@@ -351,14 +356,59 @@ body[data-theme="light"] {
 .sales-chart {
     min-width: 0;
     display: grid;
-    gap: 12px;
+    gap: 10px;
 }
 
 .sales-row {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(120px, 210px) minmax(0, 1fr) 72px;
     align-items: center;
     gap: 12px;
+    min-height: 44px;
+    padding: 5px 6px;
+    border-radius: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sales-row:hover,
+.sales-row:focus-visible,
+.sales-row.is-active {
+    background: rgba(56,189,248,0.08);
+    transform: translateX(3px);
+}
+
+.sales-row:focus-visible {
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.18);
+}
+
+.sales-row::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 78px;
+    bottom: calc(100% + 8px);
+    z-index: 4;
+    max-width: min(320px, 70vw);
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(2,8,23,0.94);
+    border: 1px solid rgba(125,211,252,0.24);
+    color: #e0f2fe;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.sales-row:hover::after,
+.sales-row:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .sales-label {
@@ -377,10 +427,12 @@ body[data-theme="light"] {
 
 .sales-track {
     position: relative;
-    height: 34px;
+    height: 36px;
     overflow: hidden;
-    border-radius: 10px;
-    background: rgba(148,163,184,0.12);
+    border-radius: 12px;
+    background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 18px),
+        rgba(148,163,184,0.12);
     border: 1px solid rgba(148,163,184,0.12);
 }
 
@@ -390,8 +442,31 @@ body[data-theme="light"] {
     width: var(--sales-width);
     min-width: 10px;
     border-radius: inherit;
-    background: linear-gradient(90deg, #14b8a6, #38bdf8 58%, #60a5fa);
+    background: linear-gradient(90deg, #14b8a6, #38bdf8 52%, #60a5fa 100%);
     box-shadow: 0 10px 28px rgba(56,189,248,0.2);
+    transform-origin: left center;
+    transition: width 0.28s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sales-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 0 32%, rgba(255,255,255,0.34) 46%, transparent 60% 100%);
+    transform: translateX(-100%);
+    animation: salesShine 3s ease-in-out infinite;
+}
+
+.sales-row:hover .sales-bar,
+.sales-row:focus-visible .sales-bar,
+.sales-row.is-active .sales-bar {
+    filter: saturate(1.3) brightness(1.08);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.2), 0 14px 32px rgba(56,189,248,0.34);
+}
+
+@keyframes salesShine {
+    0%, 48% { transform: translateX(-100%); }
+    68%, 100% { transform: translateX(120%); }
 }
 
 .sales-value {
@@ -410,10 +485,19 @@ body[data-theme="light"] {
     display: grid;
     align-content: center;
     gap: 12px;
-    padding: 14px;
-    border-radius: 14px;
+    padding: 16px;
+    border-radius: 16px;
     background: rgba(255,255,255,0.055);
     border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.sales-dashboard:has(.sales-row:hover) .sales-summary,
+.sales-dashboard:has(.sales-row:focus-visible) .sales-summary,
+.sales-dashboard:has(.sales-row.is-active) .sales-summary {
+    border-color: rgba(56,189,248,0.28);
+    transform: translateY(-1px);
 }
 
 [data-theme="light"] .sales-summary {
@@ -643,7 +727,8 @@ body[data-theme="light"] {
 
 @media (max-width: 640px) {
     .main.container {
-        padding: 0 14px 30px;
+        width: calc(100% - 24px);
+        padding: 0 0 30px;
     }
 
     .card-inicio {
@@ -677,6 +762,26 @@ body[data-theme="light"] {
     .sales-dashboard,
     .sales-row {
         grid-template-columns: 1fr;
+    }
+
+    .sales-dashboard {
+        padding: 14px;
+    }
+
+    .sales-row {
+        transform: none;
+    }
+
+    .sales-row:hover,
+    .sales-row:focus-visible,
+    .sales-row.is-active {
+        transform: none;
+    }
+
+    .sales-row::after {
+        right: 8px;
+        left: 8px;
+        max-width: none;
     }
 
     .sales-value {
@@ -882,15 +987,24 @@ body[data-theme="light"] {
                 $productoLider = $masVendidos[0] ?? [];
                 $nombreLider = (string) ($productoLider['nombre'] ?? 'Producto lider');
                 ?>
-                <div class="sales-dashboard" aria-label="<?= htmlspecialchars('Grafica de ventas por producto', ENT_QUOTES, 'UTF-8') ?>">
+                <div class="sales-dashboard" data-sales-dashboard aria-label="<?= htmlspecialchars('Grafica de ventas por producto', ENT_QUOTES, 'UTF-8') ?>">
                     <div class="sales-chart">
-                        <?php foreach ($masVendidos as $producto): ?>
+                        <?php foreach ($masVendidos as $index => $producto): ?>
                             <?php
                             $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
                             $ventasProducto = max(0, (int) ($producto['total_vendido'] ?? 0));
                             $porcentajeVenta = max(4, round(($ventasProducto / $ventaMaxima) * 100, 2));
+                            $participacionVenta = $ventasTotales > 0 ? round(($ventasProducto / $ventasTotales) * 100, 1) : 0;
+                            $tooltipVenta = $nombreProducto . ': ' . $ventasProducto . ' ventas, ' . $participacionVenta . '% del total destacado';
                             ?>
-                            <div class="sales-row">
+                            <div
+                                class="sales-row <?= $index === 0 ? 'is-active' : '' ?>"
+                                tabindex="0"
+                                data-sales-name="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>"
+                                data-sales-count="<?= $ventasProducto ?>"
+                                data-sales-share="<?= $participacionVenta ?>"
+                                data-tooltip="<?= htmlspecialchars($tooltipVenta, ENT_QUOTES, 'UTF-8') ?>"
+                            >
                                 <span class="sales-label" title="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></span>
                                 <div class="sales-track" role="img" aria-label="<?= htmlspecialchars($nombreProducto . ': ' . $ventasProducto . ' ventas', ENT_QUOTES, 'UTF-8') ?>">
                                     <span class="sales-bar" style="--sales-width: <?= $porcentajeVenta ?>%;"></span>
@@ -900,9 +1014,9 @@ body[data-theme="light"] {
                         <?php endforeach; ?>
                     </div>
                     <aside class="sales-summary" aria-label="<?= htmlspecialchars('Resumen de ventas destacadas', ENT_QUOTES, 'UTF-8') ?>">
-                        <span><?= htmlspecialchars('Ventas totales', ENT_QUOTES, 'UTF-8') ?></span>
-                        <strong><?= number_format($ventasTotales) ?></strong>
-                        <small><?= htmlspecialchars('Producto lider: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars($nombreLider, ENT_QUOTES, 'UTF-8') ?></small>
+                        <span data-sales-summary-label><?= htmlspecialchars('Ventas totales', ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong data-sales-summary-value><?= number_format($ventasTotales) ?></strong>
+                        <small data-sales-summary-detail><?= htmlspecialchars('Producto lider: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars($nombreLider, ENT_QUOTES, 'UTF-8') ?></small>
                     </aside>
                 </div>
 
@@ -990,6 +1104,42 @@ body[data-theme="light"] {
 
         modelTabs.forEach(tab => {
             tab.addEventListener('click', () => mostrarModelo360(tab.dataset.modelTab));
+        });
+
+        document.querySelectorAll('[data-sales-dashboard]').forEach((dashboard) => {
+            const rows = Array.from(dashboard.querySelectorAll('.sales-row'));
+            const label = dashboard.querySelector('[data-sales-summary-label]');
+            const value = dashboard.querySelector('[data-sales-summary-value]');
+            const detail = dashboard.querySelector('[data-sales-summary-detail]');
+            const defaultLabel = label?.textContent || '';
+            const defaultValue = value?.textContent || '';
+            const defaultDetail = detail?.textContent || '';
+
+            function activateSalesRow(row) {
+                rows.forEach(item => item.classList.toggle('is-active', item === row));
+                if (!label || !value || !detail) return;
+
+                label.textContent = 'Producto seleccionado';
+                value.textContent = row.dataset.salesCount || '0';
+                detail.textContent = `${row.dataset.salesName || 'Producto'} aporta ${row.dataset.salesShare || '0'}% del total destacado`;
+            }
+
+            function resetSalesSummary() {
+                if (!label || !value || !detail) return;
+                if (!rows.some(row => row.matches(':hover') || row === document.activeElement)) {
+                    label.textContent = defaultLabel;
+                    value.textContent = defaultValue;
+                    detail.textContent = defaultDetail;
+                }
+            }
+
+            rows.forEach(row => {
+                row.addEventListener('mouseenter', () => activateSalesRow(row));
+                row.addEventListener('focus', () => activateSalesRow(row));
+                row.addEventListener('click', () => activateSalesRow(row));
+                row.addEventListener('mouseleave', resetSalesSummary);
+                row.addEventListener('blur', resetSalesSummary);
+            });
         });
 
         const sectionByHash = {

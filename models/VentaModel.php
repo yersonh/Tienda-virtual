@@ -4,6 +4,7 @@ class VentaModel {
 
     private $conn;
     private $columnasCache = [];
+    private $secuenciasCache = [];
 
     public function __construct($conn) {
         $this->conn = $conn;
@@ -53,6 +54,11 @@ class VentaModel {
     }
 
     private function secuenciaDisponible(array $candidatas): ?string {
+        $cacheKey = implode('|', array_map('strtoupper', $candidatas));
+        if (array_key_exists($cacheKey, $this->secuenciasCache)) {
+            return $this->secuenciasCache[$cacheKey];
+        }
+
         foreach ($candidatas as $secuencia) {
             $query = "SELECT SEQUENCE_NAME
                       FROM USER_SEQUENCES
@@ -77,11 +83,13 @@ class VentaModel {
             oci_free_statement($stmt);
 
             if ($row && !empty($row['SEQUENCE_NAME'])) {
-                return $row['SEQUENCE_NAME'];
+                $this->secuenciasCache[$cacheKey] = $row['SEQUENCE_NAME'];
+                return $this->secuenciasCache[$cacheKey];
             }
         }
 
-        return null;
+        $this->secuenciasCache[$cacheKey] = null;
+        return $this->secuenciasCache[$cacheKey];
     }
 
     private function numeroOracle(float $valor): string {
@@ -151,12 +159,11 @@ class VentaModel {
         return $idVenta;
     }
 
-    public function crearVentaCheckoutTx(int $idUsuario, float $subtotal, float $iva, float $envio): int {
+    public function crearVentaCheckoutTx(int $idUsuario, float $total, float $iva, float $envio): int {
         $idUsuario = (int) $idUsuario;
-        $subtotal = max(0, $subtotal);
+        $total = round(max(0, $total), 2);
         $iva = max(0, $iva);
         $envio = max(0, $envio);
-        $total = round($subtotal + $iva + $envio, 2);
 
         if ($idUsuario <= 0) {
             throw new InvalidArgumentException('Usuario invalido');
@@ -170,7 +177,6 @@ class VentaModel {
         $valores = [];
         $binds = [
             ':id_usuario' => ['value' => $idUsuario, 'type' => SQLT_INT],
-            ':subtotal' => ['value' => $this->numeroOracle($subtotal), 'type' => SQLT_CHR],
             ':iva' => ['value' => $this->numeroOracle($iva), 'type' => SQLT_CHR],
             ':envio' => ['value' => $this->numeroOracle($envio), 'type' => SQLT_CHR],
             ':total' => ['value' => $this->numeroOracle($total), 'type' => SQLT_CHR],
@@ -182,8 +188,8 @@ class VentaModel {
             $valores[] = $secuenciaVenta . '.NEXTVAL';
         }
 
-        array_push($columnas, 'ID_USUARIO', 'SUBTOTAL', 'IVA', 'ENVIO', 'TOTAL', 'FECHA');
-        array_push($valores, ':id_usuario', ':subtotal', ':iva', ':envio', ':total', 'SYSDATE');
+        array_push($columnas, 'ID_USUARIO', 'IVA', 'ENVIO', 'TOTAL', 'FECHA');
+        array_push($valores, ':id_usuario', ':iva', ':envio', ':total', 'SYSDATE');
 
         if ($this->columnaExiste('VENTA', 'ID_TIPO')) {
             $idTipo = 2;
