@@ -1039,6 +1039,12 @@ body[data-theme="light"] .form-control:focus,
 <main class="checkout-page">
     <div class="checkout-shell">
         <?php if (!empty($pedidoConfirmado)): ?>
+            <?php
+            $facturaPedido = $pedidoConfirmado;
+            $facturaRootTag = 'section';
+            require __DIR__ . '/pedidos/factura_moderna.php';
+            ?>
+            <?php if (false): ?>
             <section class="checkout-panel glass-panel checkout-invoice-card" id="factura-pedido">
                 <header class="checkout-invoice-top">
                     <div>
@@ -1185,6 +1191,7 @@ body[data-theme="light"] .form-control:focus,
                     </a>
                 </div>
             </section>
+            <?php endif; ?>
         <?php else: ?>
             <div class="checkout-head">
                 <div>
