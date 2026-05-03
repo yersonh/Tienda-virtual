@@ -52,15 +52,43 @@ class PedidoController {
     }
 
     private function obtenerProductoResumen(int $idProducto): ?array {
-        $query = "SELECT NOMBRE, PRECIO FROM PRODUCTO WHERE ID_PRODUCTO = :id";
+        $productos = $this->obtenerProductosResumen([$idProducto]);
+        return $productos[$idProducto] ?? null;
+    }
+
+    private function obtenerProductosResumen(array $ids): array {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn($id) => $id > 0)));
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = [];
+        $binds = [];
+        foreach ($ids as $index => $idProducto) {
+            $placeholder = ':id' . $index;
+            $placeholders[] = $placeholder;
+            $binds[$placeholder] = $idProducto;
+        }
+
+        $query = "SELECT ID_PRODUCTO, NOMBRE, PRECIO
+                  FROM PRODUCTO
+                  WHERE ID_PRODUCTO IN (" . implode(', ', $placeholders) . ")";
+
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id', $idProducto, -1, SQLT_INT);
+        foreach ($binds as $placeholder => &$value) {
+            oci_bind_by_name($stmt, $placeholder, $value, -1, SQLT_INT);
+        }
+        unset($value);
+
         oci_execute($stmt);
 
-        $row = oci_fetch_assoc($stmt);
+        $productos = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $productos[(int) $row['ID_PRODUCTO']] = array_change_key_case($row, CASE_LOWER);
+        }
         oci_free_statement($stmt);
 
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+        return $productos;
     }
 
     private function getUsuarioId(): int {
@@ -75,45 +103,16 @@ class PedidoController {
     }
 
     private function calcularTotalCarrito(array $carrito): float {
-        $ids = array_values(array_filter(array_map('intval', array_keys($carrito)), fn($id) => $id > 0));
-        if (empty($ids)) {
-            return 0;
-        }
-
-        $placeholders = [];
-        $binds = [];
-        foreach ($ids as $index => $idProducto) {
-            $placeholder = ':id' . $index;
-            $placeholders[] = $placeholder;
-            $binds[$placeholder] = $idProducto;
-        }
-
-        $query = "SELECT ID_PRODUCTO, PRECIO
-                  FROM PRODUCTO
-                  WHERE ID_PRODUCTO IN (" . implode(', ', $placeholders) . ")";
-
-        $stmt = oci_parse($this->conn, $query);
-        foreach ($binds as $placeholder => &$value) {
-            oci_bind_by_name($stmt, $placeholder, $value, -1, SQLT_INT);
-        }
-        unset($value);
-
-        oci_execute($stmt);
-
-        $precios = [];
-        while ($row = oci_fetch_assoc($stmt)) {
-            $precios[(int) $row['ID_PRODUCTO']] = (float) $row['PRECIO'];
-        }
-        oci_free_statement($stmt);
+        $productos = $this->obtenerProductosResumen(array_keys($carrito));
 
         $total = 0;
         foreach ($carrito as $idProducto => $cantidad) {
             $idProducto = (int) $idProducto;
-            if (!isset($precios[$idProducto])) {
+            if (!isset($productos[$idProducto])) {
                 continue;
             }
 
-            $total += $precios[$idProducto] * (int) $cantidad;
+            $total += (float) $productos[$idProducto]['precio'] * (int) $cantidad;
         }
 
         return $total;
@@ -121,6 +120,7 @@ class PedidoController {
 
     private function obtenerItemsFactura(array $carrito): array {
         $items = [];
+        $productos = $this->obtenerProductosResumen(array_keys($carrito));
 
         foreach ($carrito as $idProducto => $cantidad) {
             $idProducto = (int) $idProducto;
@@ -129,7 +129,7 @@ class PedidoController {
                 continue;
             }
 
-            $producto = $this->obtenerProductoResumen($idProducto);
+            $producto = $productos[$idProducto] ?? null;
             if (!$producto) {
                 continue;
             }
@@ -683,6 +683,7 @@ class PedidoController {
         $carrito = $this->obtenerCarritoSesion();
         $items = [];
         $total = 0;
+        $productos = $this->obtenerProductosResumen(array_keys($carrito));
 
         foreach ($carrito as $idProducto => $cantidad) {
             $idProducto = (int) $idProducto;
@@ -692,7 +693,7 @@ class PedidoController {
                 continue;
             }
 
-            $producto = $this->obtenerProductoResumen($idProducto);
+            $producto = $productos[$idProducto] ?? null;
             if (!$producto) {
                 continue;
             }

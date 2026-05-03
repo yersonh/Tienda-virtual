@@ -1178,6 +1178,16 @@ const precioMin = document.getElementById('price-min');
 const precioMax = document.getElementById('price-max');
 const categoria = document.getElementById('cat-select');
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
+const categorySections = Array.from(document.querySelectorAll('.category-section')).map((section) => ({
+    section,
+    count: section.querySelector('.section-count'),
+    products: Array.from(section.querySelectorAll('.producto')).map((element) => ({
+        element,
+        nombre: element.dataset.nombre || '',
+        precio: parseInt(element.dataset.precio || '0', 10) || 0,
+        categoria: element.dataset.categoria || ''
+    }))
+}));
 const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 let filterTimer = null;
@@ -1208,6 +1218,37 @@ document.querySelectorAll('img[data-src]').forEach((img) => {
 
 // GUARDAR OPCIONES ORIGINALES
 const opcionesOriginales = Array.from(categoria.options);
+let lastCategoryOptionKey = '';
+
+function replaceCategoryOptions(options) {
+    const fragment = document.createDocumentFragment();
+    options.forEach((option) => fragment.appendChild(option.cloneNode(true)));
+    categoria.replaceChildren(fragment);
+}
+
+function syncCategoryOptions(categoriasVisibles, valorActual, hasFilters) {
+    if (!hasFilters) {
+        const key = 'all';
+        if (lastCategoryOptionKey !== key) {
+            replaceCategoryOptions(opcionesOriginales);
+            lastCategoryOptionKey = key;
+        }
+        categoria.value = valorActual;
+        return;
+    }
+
+    const visibleValues = opcionesOriginales
+        .filter((option) => option.value === '' || categoriasVisibles.has(option.value))
+        .map((option) => option.value);
+    const key = visibleValues.join('|');
+
+    if (lastCategoryOptionKey !== key) {
+        replaceCategoryOptions(opcionesOriginales.filter((option) => visibleValues.includes(option.value)));
+        lastCategoryOptionKey = key;
+    }
+
+    categoria.value = visibleValues.includes(valorActual) ? valorActual : '';
+}
 
 function scheduleFilterProducts(){
     clearTimeout(filterTimer);
@@ -1226,10 +1267,12 @@ categoria.addEventListener('change', () => {
 // FUNCION PRINCIPAL (TODO EN UNO)
 function filterProducts(){
 
-    let texto = buscador.value.toLowerCase();
-    let min = precioMin.value.replace(/\D/g,'');
-    let max = precioMax.value.replace(/\D/g,'');
-    let cat = categoria.value || categoriaActiva;
+    const texto = buscador.value.trim().toLowerCase();
+    const min = precioMin.value.replace(/\D/g,'');
+    const max = precioMax.value.replace(/\D/g,'');
+    const minValue = min ? parseInt(min, 10) : null;
+    const maxValue = max ? parseInt(max, 10) : null;
+    const cat = categoria.value || categoriaActiva;
 
     if(detailMode){
         const params = new URLSearchParams();
@@ -1245,22 +1288,18 @@ function filterProducts(){
 
     let categoriasVisibles = new Set();
 
-    document.querySelectorAll('.category-section').forEach(section=>{
-        const productos = section.querySelectorAll('.producto');
+    categorySections.forEach(({ section, count, products }) => {
         let visibles = 0;
 
-        productos.forEach(prod=>{
-            let nombre = prod.dataset.nombre;
-            let precio = parseInt(prod.dataset.precio);
-            let categoriaProd = prod.dataset.categoria;
+        products.forEach(({ element, nombre, precio, categoria: categoriaProd }) => {
             let ok = true;
 
             if(texto && !nombre.includes(texto)) ok = false;
-            if(min && precio < parseInt(min)) ok = false;
-            if(max && precio > parseInt(max)) ok = false;
+            if(minValue !== null && precio < minValue) ok = false;
+            if(maxValue !== null && precio > maxValue) ok = false;
             if(cat && categoriaProd !== cat) ok = false;
 
-            prod.style.display = ok ? "block":"none";
+            element.hidden = !ok;
 
             if(ok){
                 visibles++;
@@ -1268,40 +1307,17 @@ function filterProducts(){
             }
         });
 
-        section.style.display = visibles>0?"block":"none";
-        section.querySelector('.section-count').textContent = visibles + ' ' + i18n.productCount;
+        section.hidden = visibles <= 0;
+        if (count) {
+            count.textContent = visibles + ' ' + i18n.productCount;
+        }
     });
 
     syncCategoryTabs(cat);
     categoriaActiva = cat;
 
     // ACTUALIZAR SELECT SIN ROMPER
-    let valorActual = categoria.value;
-
-    categoria.innerHTML = "";
-
-    let optionTodas = document.createElement('option');
-    optionTodas.value = "";
-    optionTodas.textContent = i18n.allCategories;
-    categoria.appendChild(optionTodas);
-
-    opcionesOriginales.forEach(op=>{
-        if(op.value !== "" && categoriasVisibles.has(op.value)){
-            let nueva = op.cloneNode(true);
-            if(nueva.value === valorActual){
-                nueva.selected = true;
-            }
-            categoria.appendChild(nueva);
-        }
-    });
-
-    // RESTAURAR SI TODO VACIO
-    if(!texto && !min && !max && !cat){
-        categoria.innerHTML = "";
-        opcionesOriginales.forEach(op=>{
-            categoria.appendChild(op.cloneNode(true));
-        });
-    }
+    syncCategoryOptions(categoriasVisibles, categoria.value, Boolean(texto || min || max || cat));
 
 }
 
@@ -1317,10 +1333,8 @@ function clearFilters(){
     precioMax.value="";
     categoria.value="";
 
-    categoria.innerHTML = "";
-    opcionesOriginales.forEach(op=>{
-        categoria.appendChild(op.cloneNode(true));
-    });
+    lastCategoryOptionKey = '';
+    replaceCategoryOptions(opcionesOriginales);
 
     filterProducts();
 }

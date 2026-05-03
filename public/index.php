@@ -11,15 +11,28 @@ if ($action === 'health') {
     exit();
 }
 
-require_once __DIR__ . '/../Controllers/LoginController.php';
-require_once __DIR__ . '/../Controllers/RegistroController.php';
-require_once __DIR__ . '/../Controllers/PerfilController.php';
-require_once __DIR__ . '/../Controllers/ProductoController.php';
-require_once __DIR__ . '/../Controllers/TiendaController.php';
-require_once __DIR__ . '/../Controllers/CarritoController.php';
-require_once __DIR__ . '/../Controllers/PedidoController.php';
-require_once __DIR__ . '/../Controllers/CheckoutController.php';
-require_once __DIR__ . '/../middleware/Auth.php';
+spl_autoload_register(function (string $class): void {
+    $paths = [];
+
+    if (str_ends_with($class, 'Controller')) {
+        $paths[] = __DIR__ . '/../Controllers/' . $class . '.php';
+    }
+
+    if (str_ends_with($class, 'Model')) {
+        $paths[] = __DIR__ . '/../models/' . $class . '.php';
+    }
+
+    if ($class === 'Auth') {
+        $paths[] = __DIR__ . '/../middleware/Auth.php';
+    }
+
+    foreach ($paths as $path) {
+        if (is_file($path)) {
+            require_once $path;
+            return;
+        }
+    }
+});
 
 $publicas = [
     'login',
