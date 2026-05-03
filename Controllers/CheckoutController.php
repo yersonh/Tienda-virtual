@@ -4,6 +4,7 @@ require_once __DIR__ . '/../models/VentaModel.php';
 require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/PedidoModel.php';
+require_once __DIR__ . '/../models/DireccionPedidoModel.php';
 
 class CheckoutController {
 
@@ -12,6 +13,7 @@ class CheckoutController {
     private $pagoModel;
     private $carritoModel;
     private $pedidoModel;
+    private $direccionPedidoModel;
 
     public function __construct() {
         $this->conn = Database::getConnection();
@@ -19,6 +21,7 @@ class CheckoutController {
         $this->pagoModel = new PagoModel($this->conn);
         $this->carritoModel = new CarritoModel($this->conn);
         $this->pedidoModel = new PedidoModel($this->conn);
+        $this->direccionPedidoModel = new DireccionPedidoModel($this->conn);
     }
 
     private function ensureSession(): void {
@@ -48,9 +51,77 @@ class CheckoutController {
             $_SESSION['checkout_direccion_id'],
             $_SESSION['checkout_direccion_snapshot'],
             $_SESSION['checkout_fecha_estimada_entrega'],
+            $_SESSION['checkout_resumen'],
             $_SESSION['payment_old']
         );
         $_SESSION['carrito_count'] = 0;
+    }
+
+    private function resumenCompra(array $items): array {
+        $subtotal = 0;
+        foreach ($items as $item) {
+            $subtotal += (float) ($item['precio'] ?? 0) * (int) ($item['cantidad'] ?? 0);
+        }
+
+        $subtotal = round(max(0, $subtotal), 2);
+        $iva = round($subtotal * 0.19, 2);
+        $envio = 0;
+
+        if (isset($_SESSION['checkout_resumen']) && is_array($_SESSION['checkout_resumen'])) {
+            $envio = max(0, (float) ($_SESSION['checkout_resumen']['envio'] ?? 0));
+        }
+
+        return [
+            'subtotal' => $subtotal,
+            'iva' => $iva,
+            'envio' => $envio,
+            'total' => round($subtotal + $iva + $envio, 2)
+        ];
+    }
+
+    private function validarItemsCheckout(array $items): void {
+        if (empty($items)) {
+            throw new Exception('Tu carrito esta vacio');
+        }
+
+        foreach ($items as $item) {
+            $idProducto = (int) ($item['id_producto'] ?? 0);
+            $cantidad = (int) ($item['cantidad'] ?? 0);
+            $stock = (int) ($item['stock_p'] ?? 0);
+            $precio = (float) ($item['precio'] ?? 0);
+
+            if ($idProducto <= 0 || $cantidad <= 0 || $precio < 0) {
+                throw new Exception('El carrito contiene productos invalidos');
+            }
+
+            if ($stock < $cantidad) {
+                throw new Exception('Stock insuficiente para el producto ' . $idProducto);
+            }
+        }
+    }
+
+    private function itemsConfirmacion(array $items): array {
+        return array_map(function ($item) {
+            $cantidad = (int) ($item['cantidad'] ?? 0);
+            $precio = (float) ($item['precio'] ?? 0);
+
+            return [
+                'id_producto' => (int) ($item['id_producto'] ?? 0),
+                'nombre' => (string) ($item['nombre'] ?? 'Producto'),
+                'cantidad' => $cantidad,
+                'precio' => $precio,
+                'subtotal' => round($cantidad * $precio, 2)
+            ];
+        }, $items);
+    }
+
+    private function receptorConfirmacion(array $direccion): array {
+        return [
+            'nombre' => trim((string) (($direccion['nombre_receptor'] ?? '') . ' ' . ($direccion['apellido_receptor'] ?? ''))),
+            'direccion' => (string) ($direccion['direccion_envio'] ?? ''),
+            'ciudad' => (string) ($direccion['ciudad'] ?? ''),
+            'telefono' => (string) ($direccion['telefono_receptor'] ?? '')
+        ];
     }
 
     public function confirmarPedido(): void {
@@ -70,16 +141,58 @@ class CheckoutController {
             exit();
         }
 
+        $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
+        if ($idDireccion <= 0) {
+            $_SESSION['error'] = 'Selecciona una direccion antes de pagar';
+            header('Location: index.php?action=ConfirmarPedido');
+            exit();
+        }
+
+        $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion, $idUsuario);
+        if (!$direccion) {
+            unset($_SESSION['checkout_direccion_id'], $_SESSION['checkout_direccion_snapshot']);
+            $_SESSION['error'] = 'La direccion seleccionada no esta disponible';
+            header('Location: index.php?action=ConfirmarPedido');
+            exit();
+        }
+
         try {
-            $idVenta = $this->ventaModel->crearVenta($idUsuario);
+            $items = $this->carritoModel->obtenerItemsCheckoutTx($idUsuario);
+            $this->validarItemsCheckout($items);
+            $resumen = $this->resumenCompra($items);
+            $fechaEstimada = $_SESSION['checkout_fecha_estimada_entrega'] ?? null;
+
+            $idVenta = $this->ventaModel->crearVentaCheckoutTx(
+                $idUsuario,
+                $resumen['subtotal'],
+                $resumen['iva'],
+                $resumen['envio']
+            );
+
+            foreach ($items as $item) {
+                $this->ventaModel->insertarDetalleVentaTx(
+                    $idVenta,
+                    (int) $item['id_producto'],
+                    (int) $item['cantidad'],
+                    (float) $item['precio']
+                );
+            }
+
+            $idPedido = $this->pedidoModel->crearPedidoTx($idVenta, $fechaEstimada);
+            $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
+            $this->pedidoModel->actualizarDireccionPedidoTx($idPedido, $idDireccionPedido);
+
             $this->pagoModel->procesarPago($idVenta, $idMetodo);
+
+            foreach ($items as $item) {
+                $this->ventaModel->descontarStockTx((int) $item['id_producto'], (int) $item['cantidad']);
+            }
+
             $this->carritoModel->vaciarCarritoTx($idUsuario);
             $pedido = $this->pedidoModel->obtenerPorVenta($idVenta);
             if (!$pedido) {
                 throw new Exception('No se encontro el pedido creado para la venta');
             }
-
-            $totalVenta = $this->ventaModel->obtenerTotalVenta($idVenta);
 
             oci_commit($this->conn);
             $this->limpiarSesionCheckout();
@@ -87,11 +200,14 @@ class CheckoutController {
             $_SESSION['pedido_confirmado'] = [
                 'id_pedido' => (int) $pedido['id_pedido'],
                 'id_venta' => $idVenta,
-                'total' => $totalVenta,
+                'total' => $resumen['total'],
+                'subtotal' => $resumen['subtotal'],
+                'iva' => $resumen['iva'],
+                'envio' => $resumen['envio'],
                 'fecha_estimada_entrega' => $pedido['fecha_estimada_entrega'] ?? null,
                 'metodo_pago' => $this->nombreMetodoPago($idMetodo),
-                'items' => [],
-                'receptor' => []
+                'items' => $this->itemsConfirmacion($items),
+                'receptor' => $this->receptorConfirmacion($direccion)
             ];
 
             header('Location: index.php?action=confirmacionPedido');

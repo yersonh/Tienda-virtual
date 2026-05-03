@@ -76,13 +76,46 @@ class DireccionPedidoModel {
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':tabla', $tabla);
         oci_bind_by_name($stmt, ':columna', $columna);
-        oci_execute($stmt);
+        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
 
         $existe = (bool) oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
         $_SESSION['schema_column_cache'][$cacheKey] = $existe;
         return $existe;
+    }
+
+    private function secuenciaDisponible(array $candidatas): ?string {
+        foreach ($candidatas as $secuencia) {
+            $query = "SELECT SEQUENCE_NAME
+                      FROM USER_SEQUENCES
+                      WHERE SEQUENCE_NAME = :secuencia
+                      FETCH FIRST 1 ROWS ONLY";
+
+            $stmt = oci_parse($this->conn, $query);
+            if (!$stmt) {
+                $error = oci_error($this->conn);
+                throw new Exception($error['message'] ?? 'No se pudo consultar la secuencia');
+            }
+
+            $secuenciaUpper = strtoupper($secuencia);
+            oci_bind_by_name($stmt, ':secuencia', $secuenciaUpper);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($error['message'] ?? 'No se pudo consultar la secuencia');
+            }
+
+            $row = oci_fetch_assoc($stmt);
+            oci_free_statement($stmt);
+
+            if ($row && !empty($row['SEQUENCE_NAME'])) {
+                return $row['SEQUENCE_NAME'];
+            }
+        }
+
+        return null;
     }
 
     private function validarDireccion(array $data): array {
@@ -111,7 +144,7 @@ class DireccionPedidoModel {
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
+        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
 
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
@@ -169,7 +202,7 @@ class DireccionPedidoModel {
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
+        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
 
         $direcciones = [];
         while ($row = oci_fetch_assoc($stmt)) {
@@ -212,7 +245,7 @@ class DireccionPedidoModel {
             oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
         }
 
-        oci_execute($stmt);
+        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
@@ -450,6 +483,12 @@ class DireccionPedidoModel {
         if ($guardarPredeterminadaPedido) {
             $columnas .= ", ES_PREDETERMINADA";
             $valores .= ", :es_predeterminada";
+        }
+
+        $secuenciaDireccionPedido = $this->secuenciaDisponible(['SEQ_DIRECCION_PEDIDO']);
+        if ($secuenciaDireccionPedido !== null) {
+            $columnas = "ID_DIRECCION_PEDIDO, " . $columnas;
+            $valores = $secuenciaDireccionPedido . ".NEXTVAL, " . $valores;
         }
 
         $queryInsert = "INSERT INTO DIRECCION_PEDIDO

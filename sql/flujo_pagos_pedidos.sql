@@ -110,20 +110,57 @@ BEGIN
 END;
 /
 
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TRIGGER TRG_PAGO_COMPLETADO';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -4080 THEN
+            RAISE;
+        END IF;
+END;
+/
+
 CREATE OR REPLACE PROCEDURE SP_PROCESAR_PAGO (
     p_id_venta IN NUMBER,
-    p_metodo IN NUMBER,
-    p_monto IN NUMBER
+    p_metodo IN NUMBER
 )
 AS
+    v_monto NUMBER(10,2);
+    v_pago_existente NUMBER;
     v_metodo_pago VARCHAR2(50);
 BEGIN
+    IF p_id_venta IS NULL OR p_id_venta <= 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Venta invalida');
+    END IF;
+
+    IF p_metodo IS NULL OR p_metodo NOT IN (1, 2, 3, 4) THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Metodo de pago invalido');
+    END IF;
+
+    SELECT TOTAL
+    INTO v_monto
+    FROM VENTA
+    WHERE ID_VENTA = p_id_venta
+    FOR UPDATE;
+
+    IF NVL(v_monto, 0) <= 0 THEN
+        RAISE_APPLICATION_ERROR(-20003, 'La venta no tiene un total valido');
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_pago_existente
+    FROM PAGO
+    WHERE ID_VENTA = p_id_venta;
+
+    IF v_pago_existente > 0 THEN
+        RAISE_APPLICATION_ERROR(-20004, 'La venta ya tiene un pago registrado');
+    END IF;
+
     v_metodo_pago := CASE p_metodo
-        WHEN 1 THEN 'Tarjeta'
-        WHEN 2 THEN 'PSE'
-        WHEN 3 THEN 'Transferencia'
-        WHEN 4 THEN 'Contraentrega'
-        ELSE 'Otro'
+        WHEN 1 THEN 'Efectivo'
+        WHEN 2 THEN 'Tarjeta debito'
+        WHEN 3 THEN 'Tarjeta credito'
+        WHEN 4 THEN 'Transferencia bancaria'
     END;
 
     INSERT INTO PAGO (
@@ -131,14 +168,16 @@ BEGIN
         ID_VENTA,
         ID_METODO,
         MONTO,
-        FECHA
+        FECHA,
+        ESTADO
     )
     VALUES (
         SEQ_PAGO.NEXTVAL,
         p_id_venta,
         p_metodo,
-        p_monto,
-        SYSTIMESTAMP
+        v_monto,
+        SYSTIMESTAMP,
+        'PAGADO'
     );
 
     UPDATE VENTA
@@ -147,16 +186,9 @@ BEGIN
         FECHA = SYSDATE
     WHERE ID_VENTA = p_id_venta;
 
-END;
-/
-
-CREATE OR REPLACE TRIGGER TRG_PAGO_COMPLETADO
-AFTER INSERT ON PAGO
-FOR EACH ROW
-BEGIN
     UPDATE PEDIDO
     SET ID_ESTADO = 2
-    WHERE ID_VENTA = :NEW.ID_VENTA
+    WHERE ID_VENTA = p_id_venta
     AND ID_ESTADO = 1;
 END;
 /

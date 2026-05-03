@@ -327,6 +327,125 @@ body[data-theme="light"] {
     text-align: center;
 }
 
+.sales-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 18px;
+    margin-bottom: 22px;
+    padding: 18px;
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg, rgba(20,184,166,0.12), transparent 42%),
+        rgba(15,23,42,0.42);
+    border: 1px solid rgba(125,211,252,0.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+[data-theme="light"] .sales-dashboard {
+    background:
+        linear-gradient(135deg, rgba(14,165,233,0.12), transparent 42%),
+        rgba(248,250,252,0.92);
+    border-color: rgba(14,165,233,0.18);
+}
+
+.sales-chart {
+    min-width: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.sales-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 210px) minmax(0, 1fr) 72px;
+    align-items: center;
+    gap: 12px;
+}
+
+.sales-label {
+    min-width: 0;
+    color: var(--inicio-text);
+    font-size: 13px;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[data-theme="light"] .sales-label {
+    color: #0f172a;
+}
+
+.sales-track {
+    position: relative;
+    height: 34px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: rgba(148,163,184,0.12);
+    border: 1px solid rgba(148,163,184,0.12);
+}
+
+.sales-bar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--sales-width);
+    min-width: 10px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #14b8a6, #38bdf8 58%, #60a5fa);
+    box-shadow: 0 10px 28px rgba(56,189,248,0.2);
+}
+
+.sales-value {
+    color: #bae6fd;
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+    white-space: nowrap;
+}
+
+[data-theme="light"] .sales-value {
+    color: #0369a1;
+}
+
+.sales-summary {
+    display: grid;
+    align-content: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] .sales-summary {
+    background: rgba(255,255,255,0.78);
+    border-color: rgba(148,163,184,0.2);
+}
+
+.sales-summary span {
+    color: var(--inicio-muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+}
+
+.sales-summary strong {
+    color: var(--inicio-text);
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 34px;
+    line-height: 1;
+}
+
+[data-theme="light"] .sales-summary strong {
+    color: #0f172a;
+}
+
+.sales-summary small {
+    color: var(--inicio-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
 .models-3d,
 .best-panel {
     content-visibility: auto;
@@ -555,6 +674,15 @@ body[data-theme="light"] {
         grid-template-columns: 1fr;
     }
 
+    .sales-dashboard,
+    .sales-row {
+        grid-template-columns: 1fr;
+    }
+
+    .sales-value {
+        text-align: left;
+    }
+
     .models-3d {
         padding: 20px;
     }
@@ -581,13 +709,14 @@ body[data-theme="light"] {
             </div>
         </div>
 
-        <div class="models-tabs">
-            <button class="models-tab is-active">Repuestos de automovil</button>
-            <button class="models-tab">Repuestos agricolas</button>
-            <button class="models-tab">Vehiculos</button>
+        <div class="models-tabs" role="tablist" aria-label="<?= htmlspecialchars('Categorias de modelos 360', ENT_QUOTES, 'UTF-8') ?>">
+            <button class="models-tab is-active" type="button" role="tab" aria-selected="true" data-model-tab="automovil">Repuestos de automovil</button>
+            <button class="models-tab" type="button" role="tab" aria-selected="false" data-model-tab="agricolas">Repuestos agricolas</button>
+            <button class="models-tab" type="button" role="tab" aria-selected="false" data-model-tab="vehiculos">Vehiculos</button>
         </div>
 
         <!-- REPUETOS AUTOMÓVIL -->
+        <div class="models-panel is-active" data-model-panel="automovil">
         <h4 class="models-section-title">⚙️ Repuestos de automóvil</h4>
         <div class="row text-center">
 
@@ -629,8 +758,10 @@ body[data-theme="light"] {
             </div>
 
         </div>
+        </div>
 
         <!-- AGRÍCOLA -->
+        <div class="models-panel" data-model-panel="agricolas" hidden>
         <h4 class="models-section-title">🌾 Repuestos e implementos agrícolas</h4>
         <div class="row text-center">
 
@@ -653,8 +784,10 @@ body[data-theme="light"] {
             </div>
 
         </div>
+        </div>
 
         <!-- VEHÍCULOS -->
+        <div class="models-panel" data-model-panel="vehiculos" hidden>
         <h4 class="models-section-title">🚗🚜 Vehículos de referencia</h4>
         <div class="row text-center">
 
@@ -676,6 +809,7 @@ body[data-theme="light"] {
             </div>
             </div>
 
+        </div>
         </div>
 
         </div>
@@ -742,6 +876,36 @@ body[data-theme="light"] {
             </div>
 
             <?php if (!empty($masVendidos)): ?>
+                <?php
+                $ventasTotales = array_sum(array_map(fn($producto) => (int) ($producto['total_vendido'] ?? 0), $masVendidos));
+                $ventaMaxima = max(1, max(array_map(fn($producto) => (int) ($producto['total_vendido'] ?? 0), $masVendidos)));
+                $productoLider = $masVendidos[0] ?? [];
+                $nombreLider = (string) ($productoLider['nombre'] ?? 'Producto lider');
+                ?>
+                <div class="sales-dashboard" aria-label="<?= htmlspecialchars('Grafica de ventas por producto', ENT_QUOTES, 'UTF-8') ?>">
+                    <div class="sales-chart">
+                        <?php foreach ($masVendidos as $producto): ?>
+                            <?php
+                            $nombreProducto = (string) ($producto['nombre'] ?? 'Producto');
+                            $ventasProducto = max(0, (int) ($producto['total_vendido'] ?? 0));
+                            $porcentajeVenta = max(4, round(($ventasProducto / $ventaMaxima) * 100, 2));
+                            ?>
+                            <div class="sales-row">
+                                <span class="sales-label" title="<?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($nombreProducto, ENT_QUOTES, 'UTF-8') ?></span>
+                                <div class="sales-track" role="img" aria-label="<?= htmlspecialchars($nombreProducto . ': ' . $ventasProducto . ' ventas', ENT_QUOTES, 'UTF-8') ?>">
+                                    <span class="sales-bar" style="--sales-width: <?= $porcentajeVenta ?>%;"></span>
+                                </div>
+                                <span class="sales-value"><?= $ventasProducto ?> <?= htmlspecialchars('ventas', ENT_QUOTES, 'UTF-8') ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <aside class="sales-summary" aria-label="<?= htmlspecialchars('Resumen de ventas destacadas', ENT_QUOTES, 'UTF-8') ?>">
+                        <span><?= htmlspecialchars('Ventas totales', ENT_QUOTES, 'UTF-8') ?></span>
+                        <strong><?= number_format($ventasTotales) ?></strong>
+                        <small><?= htmlspecialchars('Producto lider: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars($nombreLider, ENT_QUOTES, 'UTF-8') ?></small>
+                    </aside>
+                </div>
+
                 <div class="best-grid">
                     <?php foreach ($masVendidos as $producto): ?>
                         <?php
@@ -807,6 +971,27 @@ body[data-theme="light"] {
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        const modelTabs = Array.from(document.querySelectorAll('[data-model-tab]'));
+        const modelPanels = Array.from(document.querySelectorAll('[data-model-panel]'));
+
+        function mostrarModelo360(modelo) {
+            modelTabs.forEach(tab => {
+                const active = tab.dataset.modelTab === modelo;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            modelPanels.forEach(panel => {
+                const active = panel.dataset.modelPanel === modelo;
+                panel.hidden = !active;
+                panel.classList.toggle('is-active', active);
+            });
+        }
+
+        modelTabs.forEach(tab => {
+            tab.addEventListener('click', () => mostrarModelo360(tab.dataset.modelTab));
+        });
+
         const sectionByHash = {
             '#interaccion-360': 'interaccion-360',
             '#lo-nuevo': 'lo-nuevo',

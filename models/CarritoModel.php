@@ -359,6 +359,42 @@ class CarritoModel {
         oci_free_statement($stmt);
     }
 
+    public function obtenerItemsCheckoutTx($idUsuario): array {
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+
+        $query = "SELECT p.ID_PRODUCTO,
+                         p.NOMBRE,
+                         p.PRECIO,
+                         p.STOCK_P,
+                         dc.CANTIDAD
+                  FROM CARRITO c
+                  INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                  WHERE c.ID_USUARIO = :id_usuario
+                  FOR UPDATE OF p.STOCK_P, dc.CANTIDAD";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $items = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $items[] = array_change_key_case($row, CASE_LOWER);
+        }
+        oci_free_statement($stmt);
+
+        return $items;
+    }
+
     public function obtenerMapaCarritoUsuario($idUsuario) {
         $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
         if (!$idCarrito) {
