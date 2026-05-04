@@ -23,7 +23,7 @@ class Mailer
      */
     public function enviarRecuperacion($nombre, $email, $token)
     {
-        $resetLink = "https://poetic-analysis-production.up.railway.app/restablecer?token=" . $token;
+        $resetLink = "https://tienda-virtual-production-c3df.up.railway.app/index.php?action=restablecer&token=" . $token;
 
         $subject = "Recupera tu acceso - NAYLEX STORE";
 
@@ -146,7 +146,7 @@ class Mailer
             </div>
             
             <div style="text-align: center; margin: 24px 0;">
-                <a href="https://poetic-analysis-production.up.railway.app/login" 
+                <a href="https://tienda-virtual-production-c3df.up.railway.app/index.php?action=login" 
                    style="color: #d4a853; text-decoration: none; font-size: 14px; font-weight: 600;">
                     ← Volver al Login
                 </a>
