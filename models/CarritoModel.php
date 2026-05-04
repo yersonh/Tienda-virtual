@@ -22,24 +22,29 @@ class CarritoModel {
         return ['success' => true];
     }
 
-    private function validarIdsYCantidad($idUsuario, $idProducto = null, $cantidad = 1): array {
+    private function validarIdsYCantidad($idUsuario, $idProducto = null, $cantidad = 1, $idReferencia = null): array {
         $idUsuario = (int) $idUsuario;
         $idProducto = $idProducto === null ? null : (int) $idProducto;
+        $idReferencia = $idReferencia === null ? null : (int) $idReferencia;
         $cantidad = (int) $cantidad;
 
         if ($idUsuario <= 0) {
-            throw new Exception('Usuario inválido');
+            throw new Exception('Usuario invalido');
         }
 
         if ($idProducto !== null && $idProducto <= 0) {
-            throw new Exception('Producto inválido');
+            throw new Exception('Producto invalido');
+        }
+
+        if ($idReferencia !== null && $idReferencia <= 0) {
+            throw new Exception('Referencia invalida');
         }
 
         if ($cantidad <= 0) {
             throw new Exception('La cantidad debe ser mayor a 0');
         }
 
-        return [$idUsuario, $idProducto, $cantidad];
+        return [$idUsuario, $idProducto, $cantidad, $idReferencia];
     }
 
     public function obtenerIdCarritoUsuario($idUsuario) {
@@ -105,7 +110,6 @@ class CarritoModel {
         }
 
         oci_free_statement($stmt);
-
         return (int) $idCarrito;
     }
 
@@ -121,16 +125,18 @@ class CarritoModel {
         }
     }
 
-    private function agregarDetalleEnCarritoTx($idCarrito, $idProducto, $cantidad): void {
+    private function agregarDetalleEnCarritoTx($idCarrito, $idProducto, $idReferencia, $cantidad): void {
         $query = "SELECT ID_DETALLE, CANTIDAD
                   FROM DETALLE_CARRITO
                   WHERE ID_CARRITO = :ID_CARRITO
                   AND ID_PRODUCTO = :ID_PRODUCTO
+                  AND ID_REFERENCIA = :ID_REFERENCIA
                   FOR UPDATE";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ID_REFERENCIA', $idReferencia, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             throw new Exception($this->oracleErrorMessage($stmt));
@@ -141,7 +147,8 @@ class CarritoModel {
 
         if ($detalle) {
             $query = "UPDATE DETALLE_CARRITO
-                      SET CANTIDAD = CANTIDAD + :CANTIDAD
+                      SET CANTIDAD = CANTIDAD + :CANTIDAD,
+                          SELECCIONADO = 1
                       WHERE ID_DETALLE = :ID_DETALLE";
 
             $stmt = oci_parse($this->conn, $query);
@@ -156,48 +163,29 @@ class CarritoModel {
             return;
         }
 
-        $query = "INSERT INTO DETALLE_CARRITO (ID_CARRITO, ID_PRODUCTO, CANTIDAD)
-                  VALUES (:id_carrito, :id_producto, :cantidad)";
+        $query = "INSERT INTO DETALLE_CARRITO (ID_CARRITO, ID_PRODUCTO, ID_REFERENCIA, CANTIDAD, SELECCIONADO)
+                  VALUES (:ID_CARRITO, :ID_PRODUCTO, :ID_REFERENCIA, :CANTIDAD, 1)";
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ID_REFERENCIA', $idReferencia, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':CANTIDAD', $cantidad, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
-
-            if (str_contains($message, 'ORA-00001')) {
-                $query = "UPDATE DETALLE_CARRITO
-                          SET CANTIDAD = CANTIDAD + :CANTIDAD
-                          WHERE ID_CARRITO = :ID_CARRITO
-                          AND ID_PRODUCTO = :ID_PRODUCTO";
-
-                $stmt = oci_parse($this->conn, $query);
-                oci_bind_by_name($stmt, ':CANTIDAD', $cantidad, -1, SQLT_INT);
-                oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
-                oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
-
-                if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-                    throw new Exception($this->oracleErrorMessage($stmt));
-                }
-
-                oci_free_statement($stmt);
-                return;
-            }
-
             throw new Exception($message);
         }
 
         oci_free_statement($stmt);
     }
 
-    public function agregarAlCarrito($idUsuario, $idProducto, $cantidad) {
+    public function agregarAlCarrito($idUsuario, $idProducto, $cantidad, $idReferencia = null) {
         try {
-            [$idUsuario, $idProducto, $cantidad] = $this->validarIdsYCantidad($idUsuario, $idProducto, $cantidad);
+            [$idUsuario, $idProducto, $cantidad, $idReferencia] = $this->validarIdsYCantidad($idUsuario, $idProducto, $cantidad, $idReferencia);
             $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
-            $this->agregarDetalleEnCarritoTx($idCarrito, $idProducto, $cantidad);
+            $this->agregarDetalleEnCarritoTx($idCarrito, $idProducto, $idReferencia, $cantidad);
             oci_commit($this->conn);
             return $this->success();
         } catch (Exception $e) {
@@ -206,107 +194,26 @@ class CarritoModel {
         }
     }
 
-    public function eliminarDelCarrito($idUsuario, $idProducto) {
+    public function agregarProducto($idUsuario, $idProducto, $cantidad, $idReferencia = null) {
+        return $this->agregarAlCarrito($idUsuario, $idProducto, $cantidad, $idReferencia);
+    }
+
+    public function actualizarCantidad($idUsuario, $idProducto, $cantidad, $idReferencia = null) {
         try {
-            [$idUsuario, $idProducto] = $this->validarIdsYCantidad($idUsuario, $idProducto);
-            $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
-
-            $query = "SELECT ID_DETALLE, CANTIDAD
-                      FROM DETALLE_CARRITO
-                      WHERE ID_CARRITO = :ID_CARRITO
-                      AND ID_PRODUCTO = :ID_PRODUCTO
-                      FOR UPDATE";
-
-            $stmt = oci_parse($this->conn, $query);
-            oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
-
-            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-                throw new Exception($this->oracleErrorMessage($stmt));
-            }
-
-            $detalle = oci_fetch_assoc($stmt);
-            oci_free_statement($stmt);
-
-            if (!$detalle) {
-                oci_commit($this->conn);
-                return $this->success();
-            }
-
-            $query = "DELETE FROM DETALLE_CARRITO
-                      WHERE ID_DETALLE = :ID_DETALLE";
-
-            $stmt = oci_parse($this->conn, $query);
-            oci_bind_by_name($stmt, ':ID_DETALLE', $detalle['ID_DETALLE'], -1, SQLT_INT);
-
-            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-                throw new Exception($this->oracleErrorMessage($stmt));
-            }
-
-            oci_free_statement($stmt);
-
-            oci_commit($this->conn);
-            return $this->success();
-        } catch (Exception $e) {
-            oci_rollback($this->conn);
-            return $this->failure($e->getMessage());
-        }
-    }
-
-    public function fusionarCarritoSesion($idUsuario, $carritoSesion) {
-        if (empty($carritoSesion) || !is_array($carritoSesion)) {
-            return $this->success();
-        }
-
-        try {
-            [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-            $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
-
-            foreach ($carritoSesion as $idProducto => $cantidad) {
-                $idProducto = (int) $idProducto;
-                $cantidad = (int) $cantidad;
-
-                if ($idProducto <= 0 || $cantidad <= 0) {
-                    continue;
-                }
-
-                $this->agregarDetalleEnCarritoTx($idCarrito, $idProducto, $cantidad);
-            }
-
-            oci_commit($this->conn);
-            return $this->success();
-        } catch (Exception $e) {
-            oci_rollback($this->conn);
-            return $this->failure($e->getMessage());
-        }
-    }
-
-    public function agregarProducto($idUsuario, $idProducto, $cantidad) {
-        return $this->agregarAlCarrito($idUsuario, $idProducto, $cantidad);
-    }
-
-    public function eliminarProducto($idUsuario, $idProducto) {
-        return $this->eliminarDelCarrito($idUsuario, $idProducto);
-    }
-
-    public function fusionarCarritoInvitado($idUsuario, $carritoInvitado) {
-        return $this->fusionarCarritoSesion($idUsuario, $carritoInvitado);
-    }
-
-    public function actualizarCantidad($idUsuario, $idProducto, $cantidad) {
-        try {
-            [$idUsuario, $idProducto, $cantidad] = $this->validarIdsYCantidad($idUsuario, $idProducto, $cantidad);
+            [$idUsuario, $idProducto, $cantidad, $idReferencia] = $this->validarIdsYCantidad($idUsuario, $idProducto, max(1, (int) $cantidad), $idReferencia);
             $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
 
             $query = "UPDATE DETALLE_CARRITO
                       SET CANTIDAD = :CANTIDAD
                       WHERE ID_CARRITO = :ID_CARRITO
-                      AND ID_PRODUCTO = :ID_PRODUCTO";
+                      AND ID_PRODUCTO = :ID_PRODUCTO
+                      AND ID_REFERENCIA = :ID_REFERENCIA";
 
             $stmt = oci_parse($this->conn, $query);
             oci_bind_by_name($stmt, ':CANTIDAD', $cantidad, -1, SQLT_INT);
             oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
             oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':ID_REFERENCIA', $idReferencia, -1, SQLT_INT);
 
             if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
                 throw new Exception($this->oracleErrorMessage($stmt));
@@ -316,9 +223,70 @@ class CarritoModel {
             oci_free_statement($stmt);
 
             if ($filasActualizadas === 0) {
-                $this->agregarDetalleEnCarritoTx($idCarrito, $idProducto, $cantidad);
+                $this->agregarDetalleEnCarritoTx($idCarrito, $idProducto, $idReferencia, $cantidad);
             }
 
+            oci_commit($this->conn);
+            return $this->success();
+        } catch (Exception $e) {
+            oci_rollback($this->conn);
+            return $this->failure($e->getMessage());
+        }
+    }
+
+    public function eliminarDelCarrito($idUsuario, $idProducto, $idReferencia = null) {
+        try {
+            [$idUsuario, $idProducto,, $idReferencia] = $this->validarIdsYCantidad($idUsuario, $idProducto, 1, $idReferencia);
+            $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
+
+            $query = "DELETE FROM DETALLE_CARRITO
+                      WHERE ID_CARRITO = :ID_CARRITO
+                      AND ID_PRODUCTO = :ID_PRODUCTO
+                      AND ID_REFERENCIA = :ID_REFERENCIA";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':ID_PRODUCTO', $idProducto, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':ID_REFERENCIA', $idReferencia, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                throw new Exception($this->oracleErrorMessage($stmt));
+            }
+
+            oci_free_statement($stmt);
+            oci_commit($this->conn);
+            return $this->success();
+        } catch (Exception $e) {
+            oci_rollback($this->conn);
+            return $this->failure($e->getMessage());
+        }
+    }
+
+    public function eliminarProducto($idUsuario, $idProducto, $idReferencia = null) {
+        return $this->eliminarDelCarrito($idUsuario, $idProducto, $idReferencia);
+    }
+
+    public function actualizarSeleccion($idUsuario, $idReferencia, $seleccionado) {
+        try {
+            [$idUsuario,,, $idReferencia] = $this->validarIdsYCantidad($idUsuario, null, 1, $idReferencia);
+            $seleccionado = (int) $seleccionado === 1 ? 1 : 0;
+            $idCarrito = $this->obtenerOCrearCarritoUsuarioTx($idUsuario);
+
+            $query = "UPDATE DETALLE_CARRITO
+                      SET SELECCIONADO = :SELECCIONADO
+                      WHERE ID_CARRITO = :ID_CARRITO
+                      AND ID_REFERENCIA = :ID_REFERENCIA";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':SELECCIONADO', $seleccionado, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':ID_REFERENCIA', $idReferencia, -1, SQLT_INT);
+
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                throw new Exception($this->oracleErrorMessage($stmt));
+            }
+
+            oci_free_statement($stmt);
             oci_commit($this->conn);
             return $this->success();
         } catch (Exception $e) {
@@ -340,20 +308,16 @@ class CarritoModel {
 
     public function vaciarCarritoTx($idUsuario): void {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-
-        $query = "DELETE FROM DETALLE_CARRITO
-                  WHERE ID_CARRITO IN (
-                      SELECT ID_CARRITO
-                      FROM CARRITO
-                      WHERE ID_USUARIO = :p_id_usuario
-                  )";
-
-        $stmt = oci_parse($this->conn, $query);
-        if (!$stmt) {
-            throw new Exception($this->oracleErrorMessage());
+        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return;
         }
 
-        oci_bind_by_name($stmt, ':p_id_usuario', $idUsuario, -1, SQLT_INT);
+        $query = "DELETE FROM DETALLE_CARRITO
+                  WHERE ID_CARRITO = :ID_CARRITO";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $error = $this->oracleErrorMessage($stmt);
@@ -364,26 +328,93 @@ class CarritoModel {
         oci_free_statement($stmt);
     }
 
+    public function eliminarSeleccionadosTx($idUsuario): void {
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return;
+        }
+
+        $query = "DELETE FROM DETALLE_CARRITO
+                  WHERE ID_CARRITO = :ID_CARRITO
+                  AND NVL(SELECCIONADO, 0) = 1";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error);
+        }
+
+        oci_free_statement($stmt);
+    }
+
+    private function itemsBaseQuery(bool $soloSeleccionados = false, bool $forUpdate = false): string {
+        $whereSeleccion = $soloSeleccionados ? "AND NVL(dc.SELECCIONADO, 0) = 1" : "";
+        $forUpdateSql = $forUpdate ? "FOR UPDATE OF dc.CANTIDAD, dc.SELECCIONADO" : "";
+
+        return "SELECT c.ID_CARRITO,
+                       dc.ID_DETALLE,
+                       dc.ID_PRODUCTO,
+                       dc.ID_REFERENCIA,
+                       dc.CANTIDAD,
+                       NVL(dc.SELECCIONADO, 0) AS SELECCIONADO,
+                       p.NOMBRE,
+                       p.CODIGO,
+                       p.DESCRIPCION,
+                       p.PRECIO,
+                       p.ID_CATEGORIA,
+                       cp.NOMBRE AS CATEGORIA_NOMBRE,
+                       r.NUMERO_REFERENCIA,
+                       r.MARCA,
+                       r.FABRICANTE,
+                       NVL(stk.STOCK_P, 0) AS STOCK_P,
+                       (p.PRECIO * dc.CANTIDAD) AS SUBTOTAL,
+                       img.IMAGEN
+                FROM CARRITO c
+                INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_REFERENCIA = dc.ID_REFERENCIA
+                    AND r.ID_PRODUCTO = p.ID_PRODUCTO
+                INNER JOIN CATEGORIA_PRODUCTO cp ON cp.ID_CATEGORIA = p.ID_CATEGORIA
+                LEFT JOIN (
+                    SELECT x.ID_REFERENCIA,
+                           SUM(x.STOCK_P) AS STOCK_P
+                    FROM (
+                        SELECT cv.ID_REFERENCIA,
+                               NVL(cv.STOCK_P, 0) AS STOCK_P
+                        FROM COMPATIBILIDAD_VEHICULO cv
+                        UNION ALL
+                        SELECT cm.ID_REFERENCIA,
+                               NVL(cm.STOCK_P, 0) AS STOCK_P
+                        FROM COMPATIBILIDAD_MAQUINARIA cm
+                    ) x
+                    GROUP BY x.ID_REFERENCIA
+                ) stk ON stk.ID_REFERENCIA = dc.ID_REFERENCIA
+                LEFT JOIN (
+                    SELECT pi.ID_PRODUCTO,
+                           MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN) AS IMAGEN
+                    FROM PRODUCTO_IMAGEN pi
+                    GROUP BY pi.ID_PRODUCTO
+                ) img ON img.ID_PRODUCTO = p.ID_PRODUCTO
+                WHERE c.ID_USUARIO = :ID_USUARIO
+                $whereSeleccion
+                ORDER BY p.NOMBRE, r.NUMERO_REFERENCIA
+                $forUpdateSql";
+    }
+
     public function obtenerItemsCheckoutTx($idUsuario): array {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-
-        $query = "SELECT p.ID_PRODUCTO,
-                         p.NOMBRE,
-                         p.PRECIO,
-                         p.STOCK_P,
-                         dc.CANTIDAD
-                  FROM CARRITO c
-                  INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
-                  WHERE c.ID_USUARIO = :id_usuario
-                  FOR UPDATE OF p.STOCK_P, dc.CANTIDAD";
+        $query = $this->itemsBaseQuery(true, true);
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
 
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
@@ -400,13 +431,50 @@ class CarritoModel {
         return $items;
     }
 
+    public function obtenerItemsDetallados($idUsuario, bool $soloSeleccionados = false) {
+        return $this->obtenerItemsVisualizacion($idUsuario, $soloSeleccionados);
+    }
+
+    public function obtenerItemsVisualizacion($idUsuario, bool $soloSeleccionados = false) {
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return [];
+        }
+
+        $query = $this->itemsBaseQuery($soloSeleccionados, false);
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $item = array_change_key_case($row, CASE_LOWER);
+            $item['id_detalle'] = (int) $item['id_detalle'];
+            $item['id_producto'] = (int) $item['id_producto'];
+            $item['id_referencia'] = (int) $item['id_referencia'];
+            $item['cantidad'] = (int) $item['cantidad'];
+            $item['seleccionado'] = (int) $item['seleccionado'];
+            $item['precio'] = (float) $item['precio'];
+            $item['stock_p'] = (int) $item['stock_p'];
+            $item['subtotal'] = (float) $item['subtotal'];
+            $item['total_linea'] = (float) $item['subtotal'];
+            $results[] = $item;
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
     public function obtenerMapaCarritoUsuario($idUsuario) {
         $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
         if (!$idCarrito) {
             return [];
         }
 
-        $query = "SELECT ID_PRODUCTO, CANTIDAD
+        $query = "SELECT ID_REFERENCIA,
+                         CANTIDAD
                   FROM DETALLE_CARRITO
                   WHERE ID_CARRITO = :ID_CARRITO";
 
@@ -416,140 +484,37 @@ class CarritoModel {
 
         $mapa = [];
         while ($item = oci_fetch_assoc($stmt)) {
-            $mapa[(int) $item['ID_PRODUCTO']] = (int) $item['CANTIDAD'];
+            $mapa[(int) $item['ID_REFERENCIA']] = (int) $item['CANTIDAD'];
         }
         oci_free_statement($stmt);
 
         return $mapa;
     }
 
-    public function obtenerItemsDetallados($idUsuario) {
-        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
-        if (!$idCarrito) {
-            return [];
-        }
-
-        $query = "SELECT c.ID_CARRITO,
-                         p.ID_PRODUCTO,
-                         p.NOMBRE,
-                         p.CODIGO,
-                         p.DESCRIPCION,
-                         p.PRECIO,
-                         p.STOCK_P,
-                         p.ID_CATEGORIA,
-                         cp.NOMBRE AS CATEGORIA_NOMBRE,
-                         (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
-                          FROM PRODUCTO_IMAGEN pi
-                          WHERE pi.ID_PRODUCTO = p.ID_PRODUCTO) AS IMAGEN,
-                         dc.CANTIDAD
-                  FROM CARRITO c
-                  INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
-                  INNER JOIN CATEGORIA_PRODUCTO cp ON cp.ID_CATEGORIA = p.ID_CATEGORIA
-                  WHERE c.ID_CARRITO = :ID_CARRITO
-                  ORDER BY p.NOMBRE";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
-        oci_execute($stmt);
-
-        $results = [];
-        while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = array_change_key_case($row, CASE_LOWER);
-        }
-        oci_free_statement($stmt);
-
-        return $results;
+    public function obtenerResumenCarrito($idUsuario, bool $soloSeleccionados = false) {
+        $items = $this->obtenerItemsVisualizacion($idUsuario, $soloSeleccionados);
+        return [
+            'id_usuario' => (int) $idUsuario,
+            'total_items' => array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $items)),
+            'total_pagar' => array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $items))
+        ];
     }
 
-    public function obtenerItemsVisualizacion($idUsuario) {
-        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
-        if (!$idCarrito) {
-            return [];
-        }
-
-        $query = "SELECT
-                    dc.ID_DETALLE,
-                    p.ID_PRODUCTO,
-                    p.NOMBRE,
-                    p.PRECIO,
-                    dc.CANTIDAD,
-                    (p.PRECIO * dc.CANTIDAD) AS SUBTOTAL,
-                    (SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
-                     FROM PRODUCTO_IMAGEN pi
-                     WHERE pi.ID_PRODUCTO = p.ID_PRODUCTO) AS IMAGEN
-                  FROM DETALLE_CARRITO dc
-                  JOIN PRODUCTO p ON dc.ID_PRODUCTO = p.ID_PRODUCTO
-                  WHERE dc.ID_CARRITO = :id_carrito";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_carrito', $idCarrito, -1, SQLT_INT);
-        oci_execute($stmt);
-
-        $results = [];
-        while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = [
-                'id_detalle' => (int) $row['ID_DETALLE'],
-                'id_producto' => (int) $row['ID_PRODUCTO'],
-                'nombre' => $row['NOMBRE'],
-                'precio' => (float) $row['PRECIO'],
-                'cantidad' => (int) $row['CANTIDAD'],
-                'subtotal' => (float) $row['SUBTOTAL'],
-                'total_linea' => (float) $row['SUBTOTAL'],
-                'imagen' => $row['IMAGEN'] ?? null
-            ];
-        }
-        oci_free_statement($stmt);
-
-        return $results;
-    }
-
-    public function obtenerResumenCarrito($idUsuario) {
-        $query = "SELECT c.ID_USUARIO,
-                         NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS,
-                         NVL(SUM(dc.CANTIDAD * p.PRECIO), 0) AS TOTAL_PAGAR
-                  FROM CARRITO c
-                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                  LEFT JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
-                  WHERE c.ID_USUARIO = :ID_USUARIO
-                  GROUP BY c.ID_USUARIO";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
-
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
-    }
-
-    public function obtenerTotalCarrito($idUsuario): float {
-        $query = "SELECT NVL(SUM(dc.CANTIDAD * p.PRECIO), 0) AS TOTAL_PAGAR
-                  FROM CARRITO c
-                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                  LEFT JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
-                  WHERE c.ID_USUARIO = :ID_USUARIO";
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return (float) ($row['TOTAL_PAGAR'] ?? 0);
+    public function obtenerTotalCarrito($idUsuario, bool $soloSeleccionados = false): float {
+        $resumen = $this->obtenerResumenCarrito($idUsuario, $soloSeleccionados);
+        return (float) ($resumen['total_pagar'] ?? 0);
     }
 
     public function obtenerTotalItemsCarrito($idUsuario): int {
-        $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS
-                  FROM CARRITO c
-                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                  WHERE c.ID_USUARIO = :ID_USUARIO";
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
+        $resumen = $this->obtenerResumenCarrito($idUsuario, false);
+        return (int) ($resumen['total_items'] ?? 0);
+    }
 
-        return (int) ($row['TOTAL_ITEMS'] ?? 0);
+    public function fusionarCarritoSesion($idUsuario, $carritoSesion) {
+        return $this->success();
+    }
+
+    public function fusionarCarritoInvitado($idUsuario, $carritoInvitado) {
+        return $this->fusionarCarritoSesion($idUsuario, $carritoInvitado);
     }
 }

@@ -680,39 +680,12 @@ class PedidoController {
     public function resumen() {
         $this->ensureSession();
 
-        $carrito = $this->obtenerCarritoSesion();
-        $items = [];
-        $total = 0;
-        $productos = $this->obtenerProductosResumen(array_keys($carrito));
-
-        foreach ($carrito as $idProducto => $cantidad) {
-            $idProducto = (int) $idProducto;
-            $cantidad = (int) $cantidad;
-
-            if ($idProducto <= 0 || $cantidad <= 0) {
-                continue;
-            }
-
-            $producto = $productos[$idProducto] ?? null;
-            if (!$producto) {
-                continue;
-            }
-
-            $precio = (float) $producto['precio'];
-            $subtotal = $precio * $cantidad;
-            $total += $subtotal;
-
-            $items[] = [
-                'id_producto' => $idProducto,
-                'nombre' => $producto['nombre'],
-                'precio' => $precio,
-                'cantidad' => $cantidad,
-                'subtotal' => $subtotal
-            ];
-        }
+        $idUsuario = $this->getUsuarioId();
+        $items = $idUsuario > 0 ? $this->carritoModel->obtenerItemsVisualizacion($idUsuario, true) : [];
+        $total = array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $items));
 
         if (empty($items)) {
-            $_SESSION['error'] = 'Tu carrito esta vacio';
+            $_SESSION['error'] = 'Selecciona al menos un producto para confirmar el pedido';
             header("Location: index.php?action=verCarrito");
             exit();
         }
@@ -740,9 +713,9 @@ class PedidoController {
             exit();
         }
 
-        $carrito = $this->obtenerCarritoSesion();
-        if (empty($carrito)) {
-            $_SESSION['error'] = 'Tu carrito esta vacio';
+        $itemsSeleccionados = $this->carritoModel->obtenerItemsVisualizacion($idUsuario, true);
+        if (empty($itemsSeleccionados)) {
+            $_SESSION['error'] = 'Selecciona al menos un producto para confirmar el pedido';
             header("Location: index.php?action=verCarrito");
             exit();
         }
@@ -751,7 +724,9 @@ class PedidoController {
         $direcciones = $_SESSION['direcciones'] ?? [];
         $direccionInicial = $this->obtenerDireccionInicial($direcciones);
         $envioInicial = $direccionInicial ? $this->calcularEnvio((string) ($direccionInicial['ciudad'] ?? '')) : 0;
-        $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envioInicial);
+        $subtotalSeleccionado = array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $itemsSeleccionados));
+        $itemsCheckout = $itemsSeleccionados;
+        $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envioInicial);
         $total = $resumenCompra['total'];
 
         require_once __DIR__ . '/../views/ConfirmarPedido.php';
@@ -907,15 +882,16 @@ class PedidoController {
             exit();
         }
 
-        $carrito = $this->obtenerCarritoSesion();
-        if (empty($carrito)) {
-            $_SESSION['error'] = 'Tu carrito esta vacio';
+        $itemsSeleccionados = $this->carritoModel->obtenerItemsVisualizacion($idUsuario, true);
+        if (empty($itemsSeleccionados)) {
+            $_SESSION['error'] = 'Selecciona al menos un producto para confirmar el pedido';
             header("Location: index.php?action=verCarrito");
             exit();
         }
 
         $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
-        $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
+        $subtotalSeleccionado = array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $itemsSeleccionados));
+        $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envio);
         $_SESSION['checkout_direccion_id'] = $idDireccion;
         $_SESSION['checkout_direccion_snapshot'] = $direccion;
         $_SESSION['checkout_fecha_estimada_entrega'] = date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
@@ -952,15 +928,16 @@ class PedidoController {
             exit();
         }
 
-        $carrito = $this->obtenerCarritoSesion();
-        if (empty($carrito)) {
-            $_SESSION['error'] = 'Tu carrito esta vacio';
+        $itemsSeleccionados = $this->carritoModel->obtenerItemsVisualizacion($idUsuario, true);
+        if (empty($itemsSeleccionados)) {
+            $_SESSION['error'] = 'Selecciona al menos un producto para pagar';
             header("Location: index.php?action=verCarrito");
             exit();
         }
 
         $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
-        $resumenCompra = $this->calcularResumenCompra($this->calcularTotalCarrito($carrito), $envio);
+        $subtotalSeleccionado = array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $itemsSeleccionados));
+        $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envio);
         $total = $resumenCompra['total'];
         $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
 

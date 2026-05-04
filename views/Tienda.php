@@ -61,7 +61,7 @@
 /* FILTERS */
 .filters {
     display: grid;
-    grid-template-columns: 1fr 140px 140px 200px auto;
+    grid-template-columns: minmax(220px, 1fr) 130px 130px 190px 160px repeat(3, minmax(130px, 1fr)) auto;
     gap: 10px;
     align-items: center;
     padding: 0 32px 28px;
@@ -768,6 +768,17 @@
         <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></option>
         <?php endforeach; ?>
     </select>
+    <select class="filter-input filter-select" id="compatibility-type">
+        <option value="" <?= empty($compatibilidad_tipo) ? 'selected' : '' ?>><?= htmlspecialchars('Compatibilidad', ENT_QUOTES, 'UTF-8') ?></option>
+        <option value="vehiculo" <?= ($compatibilidad_tipo ?? '') === 'vehiculo' ? 'selected' : '' ?>><?= htmlspecialchars('Vehiculo', ENT_QUOTES, 'UTF-8') ?></option>
+        <option value="maquinaria" <?= ($compatibilidad_tipo ?? '') === 'maquinaria' ? 'selected' : '' ?>><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></option>
+    </select>
+    <input class="filter-input compat-field compat-vehiculo" type="text" placeholder="<?= htmlspecialchars('Marca vehiculo', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-brand" value="<?= htmlspecialchars($vehiculo_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-vehiculo" type="text" placeholder="<?= htmlspecialchars('Modelo vehiculo', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-model" value="<?= htmlspecialchars($vehiculo_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-vehiculo" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Ano', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-year" value="<?= htmlspecialchars((string) ($vehiculo_ano ?: ''), ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Tipo maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-type" value="<?= htmlspecialchars($maquinaria_tipo ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Marca maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-brand" value="<?= htmlspecialchars($maquinaria_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Modelo maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-model" value="<?= htmlspecialchars($maquinaria_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars('Limpiar', ENT_QUOTES, 'UTF-8') ?></button>
 </div>
 
@@ -818,7 +829,8 @@
         <div class="product-grid <?= !empty($categoria_filtro) ? 'detail-grid' : '' ?>" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
             <?php foreach($productos as $p): ?>
             <?php
-                $cantidadEnCarrito = isset($carritoVista[$p['id_producto']]) ? (int) $carritoVista[$p['id_producto']] : 0;
+                $idReferencia = (int) ($p['id_referencia'] ?? 0);
+                $cantidadEnCarrito = isset($carritoVista[$idReferencia]) ? (int) $carritoVista[$idReferencia] : 0;
                 $stockProducto = (int) $p['stock_p'];
                 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
                 $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
@@ -828,6 +840,7 @@
                  data-precio="<?= $p['precio'] ?>"
                  data-categoria="<?= $categoria ?>"
                  data-id="<?= $p['id_producto'] ?>"
+                 data-reference="<?= $idReferencia ?>"
                  data-stock="<?= (int) $p['stock_p'] ?>"
                  data-url="index.php?action=productoDetalle&id=<?= $p['id_producto'] ?>&categoria=<?= urlencode($categoria) ?>"
                  onclick="openProductDetail(this, event)"
@@ -875,13 +888,13 @@
                     <div class="card-footer">
                         <?php if($usuarioLogueado): ?>
                             <div class="qty-wrap">
-                                <button class="qty-btn" id="qty-minus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, -1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
-                                <span class="qty-val" id="qty-<?= $p['id_producto'] ?>"><?= $cantidadInicial ?></span>
-                                <button class="qty-btn" id="qty-plus-<?= $p['id_producto'] ?>" onclick="event.stopPropagation(); chgQty(<?= $p['id_producto'] ?>, 1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
+                                <button class="qty-btn" id="qty-minus-<?= $idReferencia ?>" onclick="event.stopPropagation(); chgQty(<?= $idReferencia ?>, -1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>-</button>
+                                <span class="qty-val" id="qty-<?= $idReferencia ?>"><?= $cantidadInicial ?></span>
+                                <button class="qty-btn" id="qty-plus-<?= $idReferencia ?>" onclick="event.stopPropagation(); chgQty(<?= $idReferencia ?>, 1, <?= $stockProducto ?>)" <?= $enLimite ? 'disabled' : '' ?>>+</button>
                             </div>
                             <button class="add-btn <?= $enLimite ? 'limit' : ($cantidadEnCarrito > 0 ? 'added' : '') ?>"
-                                    id="abtn-<?= $p['id_producto'] ?>"
-                                    onclick="event.stopPropagation(); agregarAlCarrito(<?= $p['id_producto'] ?>)"
+                                    id="abtn-<?= $idReferencia ?>"
+                                    onclick="event.stopPropagation(); agregarAlCarrito(<?= $p['id_producto'] ?>, <?= $idReferencia ?>)"
                                     <?= $enLimite ? 'disabled' : '' ?>>
                                 <span class="btn-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24">
@@ -1036,18 +1049,19 @@ function actualizarContadorCarrito(total) {
     }
 }
 
-async function agregarAlCarrito(id_producto, cantidad = null){
+async function agregarAlCarrito(id_producto, id_referencia, cantidad = null){
     const id = parseInt(id_producto, 10);
-    const card = document.querySelector(`.product-card[data-id="${id}"]`);
+    const ref = parseInt(id_referencia || id_producto, 10);
+    const card = document.querySelector(`.product-card[data-reference="${ref}"]`);
     const stock = card ? parseInt(card.dataset.stock, 10) : 0;
-    if (stock <= 0 || cartQty(id) >= stock) {
-        syncProductControls(id, stock);
+    if (stock <= 0 || cartQty(ref) >= stock) {
+        syncProductControls(ref, stock);
         return;
     }
 
-    const qtyEl = document.getElementById('qty-'+id);
+    const qtyEl = document.getElementById('qty-'+ref);
     const qty = cantidad !== null ? parseInt(cantidad, 10) : parseInt(qtyEl ? qtyEl.textContent : '1', 10);
-    const btn = document.getElementById('abtn-'+id);
+    const btn = document.getElementById('abtn-'+ref);
     if (btn) {
         btn.innerHTML = `${checkIconSvg()} ${i18n.adding}`;
         btn.classList.add('added');
@@ -1064,6 +1078,7 @@ async function agregarAlCarrito(id_producto, cantidad = null){
             },
             body: new URLSearchParams({
                 id_producto: id,
+                id_referencia: ref,
                 cantidad: qty
             })
         });
@@ -1071,8 +1086,8 @@ async function agregarAlCarrito(id_producto, cantidad = null){
         const data = await response.json();
         if(!response.ok || !data.success){
             if(data && typeof data.cantidad !== 'undefined'){
-                setCartQty(id, data.cantidad || 0);
-                syncProductControls(id, data.stock || stock);
+                setCartQty(ref, data.cantidad || 0);
+                syncProductControls(ref, data.stock || stock);
             }
             if (response.status === 401) {
                 mostrarMensajeCarrito(data.message || i18n.loginRequired, true);
@@ -1084,23 +1099,24 @@ async function agregarAlCarrito(id_producto, cantidad = null){
             throw new Error((data && data.message) ? data.message : i18n.cartAddError);
         }
 
-        setCartQty(id, data.cantidad || 0);
+        setCartQty(ref, data.cantidad || 0);
         actualizarContadorCarrito(data.carrito_count || 0);
-        syncProductControls(id, data.stock || stock);
+        syncProductControls(ref, data.stock || stock);
         const updatedStock = data.stock || stock;
-        if (qtyEl && cartQty(id) < updatedStock) {
+        if (qtyEl && cartQty(ref) < updatedStock) {
             qtyEl.textContent = '1';
         }
         mostrarMensajeCarrito(data.message || i18n.productAdded);
     } catch (error) {
         console.error(error);
-        syncProductControls(id, stock);
+        syncProductControls(ref, stock);
         mostrarMensajeCarrito(error.message || i18n.cartAddError, true);
     }
 }
 
 function addCart(id) {
-    agregarAlCarrito(id);
+    const card = document.querySelector(`.product-card[data-id="${id}"]`);
+    agregarAlCarrito(id, card ? card.dataset.reference : id);
 }
 
 function setTab(el, val){
@@ -1177,6 +1193,13 @@ const buscador = document.getElementById('search-input');
 const precioMin = document.getElementById('price-min');
 const precioMax = document.getElementById('price-max');
 const categoria = document.getElementById('cat-select');
+const compatibilityType = document.getElementById('compatibility-type');
+const vehicleBrand = document.getElementById('vehicle-brand');
+const vehicleModel = document.getElementById('vehicle-model');
+const vehicleYear = document.getElementById('vehicle-year');
+const machineType = document.getElementById('machine-type');
+const machineBrand = document.getElementById('machine-brand');
+const machineModel = document.getElementById('machine-model');
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 const categorySections = Array.from(document.querySelectorAll('.category-section')).map((section) => ({
     section,
@@ -1263,6 +1286,23 @@ categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
     filterProducts();
 });
+[compatibilityType, vehicleBrand, vehicleModel, vehicleYear, machineType, machineBrand, machineModel].forEach(el => {
+    if (!el) return;
+    el.addEventListener(el === compatibilityType ? 'change' : 'input', () => {
+        syncCompatibilityFields();
+        scheduleFilterProducts();
+    });
+});
+
+function syncCompatibilityFields() {
+    const mode = compatibilityType ? compatibilityType.value : '';
+    document.querySelectorAll('.compat-vehiculo').forEach(el => {
+        el.style.display = mode === 'vehiculo' ? '' : 'none';
+    });
+    document.querySelectorAll('.compat-maquinaria').forEach(el => {
+        el.style.display = mode === 'maquinaria' ? '' : 'none';
+    });
+}
 
 // FUNCION PRINCIPAL (TODO EN UNO)
 function filterProducts(){
@@ -1273,14 +1313,26 @@ function filterProducts(){
     const minValue = min ? parseInt(min, 10) : null;
     const maxValue = max ? parseInt(max, 10) : null;
     const cat = categoria.value || categoriaActiva;
+    const compatMode = compatibilityType ? compatibilityType.value : '';
 
-    if(detailMode){
+    if(detailMode || compatMode){
         const params = new URLSearchParams();
         params.set('action', 'tienda');
         if(texto) params.set('filtro', texto);
         if(min) params.set('precio_min', min);
         if(max) params.set('precio_max', max);
         if(cat) params.set('categoria', cat);
+        if(compatMode) params.set('compatibilidad_tipo', compatMode);
+        if(compatMode === 'vehiculo'){
+            if(vehicleBrand.value.trim()) params.set('vehiculo_marca', vehicleBrand.value.trim());
+            if(vehicleModel.value.trim()) params.set('vehiculo_modelo', vehicleModel.value.trim());
+            if(vehicleYear.value.replace(/\D/g,'')) params.set('vehiculo_ano', vehicleYear.value.replace(/\D/g,''));
+        }
+        if(compatMode === 'maquinaria'){
+            if(machineType.value.trim()) params.set('maquinaria_tipo', machineType.value.trim());
+            if(machineBrand.value.trim()) params.set('maquinaria_marca', machineBrand.value.trim());
+            if(machineModel.value.trim()) params.set('maquinaria_modelo', machineModel.value.trim());
+        }
         const hash = cat ? '#category-detail' : '';
         window.location.href = `index.php?${params.toString()}${hash}`;
         return;
@@ -1332,6 +1384,11 @@ function clearFilters(){
     precioMin.value="";
     precioMax.value="";
     categoria.value="";
+    if (compatibilityType) compatibilityType.value = "";
+    [vehicleBrand, vehicleModel, vehicleYear, machineType, machineBrand, machineModel].forEach(el => {
+        if (el) el.value = "";
+    });
+    syncCompatibilityFields();
 
     lastCategoryOptionKey = '';
     replaceCategoryOptions(opcionesOriginales);
@@ -1355,11 +1412,12 @@ function formatoMiles(input){
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-if (!detailMode) {
+if (!detailMode && !(compatibilityType && compatibilityType.value)) {
     filterProducts();
 } else {
     syncCategoryTabs(categoria.value || categoriaActiva);
 }
+syncCompatibilityFields();
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

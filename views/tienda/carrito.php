@@ -87,12 +87,22 @@
 }
 .cart-item {
     display: grid;
-    grid-template-columns: 112px minmax(0, 1fr) minmax(112px, auto);
+    grid-template-columns: 44px 112px minmax(0, 1fr) minmax(112px, auto);
     gap: 18px;
     padding: 16px;
     border-radius: 8px;
     transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     contain: content;
+}
+.cart-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cart-select input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
 }
 .cart-item:hover {
     background: rgba(255,255,255,0.045);
@@ -420,8 +430,13 @@
                         $stockParam = $stockDisponible ?? 0;
                         $deshabilitarMas = $stockDisponible !== null && (int) $item['cantidad'] >= $stockDisponible;
                         $subtotalLinea = $item['subtotal'] ?? $item['total_linea'] ?? 0;
+                        $idReferencia = (int) ($item['id_referencia'] ?? 0);
+                        $seleccionado = (int) ($item['seleccionado'] ?? 1) === 1;
                         ?>
-                        <article class="cart-item" id="cart-item-<?= (int) $item['id_producto'] ?>">
+                        <article class="cart-item" id="cart-item-<?= $idReferencia ?>">
+                            <label class="cart-select" title="<?= htmlspecialchars('Seleccionar para confirmar', ENT_QUOTES, 'UTF-8') ?>">
+                                <input type="checkbox" <?= $seleccionado ? 'checked' : '' ?> onchange="toggleCartSelection(<?= $idReferencia ?>, this.checked)">
+                            </label>
                             <div class="cart-item-media">
                                 <?php if ($imagen): ?>
                                     <img src="<?= $imagen ?>" alt="<?= htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
@@ -439,6 +454,9 @@
                                 </div>
                                 <div class="cart-item-meta">
                                     <span class="cart-pill">#<?= (int) $item['id_producto'] ?></span>
+                                    <?php if ($idReferencia > 0): ?>
+                                        <span class="cart-pill"><?= htmlspecialchars('Ref.', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars((string) ($item['numero_referencia'] ?? $idReferencia), ENT_QUOTES, 'UTF-8') ?></span>
+                                    <?php endif; ?>
                                     <?php if (!empty($item['categoria_nombre'])): ?>
                                         <span class="cart-pill"><?= htmlspecialchars((string) $item['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></span>
                                     <?php endif; ?>
@@ -449,11 +467,11 @@
                                 <div class="cart-item-price"><?= htmlspecialchars('Precio unitario', ENT_QUOTES, 'UTF-8') ?>: <strong>$<?= number_format((float) $item['precio']) ?></strong> COP</div>
                                 <div class="cart-controls">
                                     <div class="cart-qty">
-                                        <button type="button" id="cart-minus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, -1, <?= $stockParam ?>)">-</button>
-                                        <span id="cart-qty-<?= (int) $item['id_producto'] ?>"><?= (int) $item['cantidad'] ?></span>
-                                        <button type="button" id="cart-plus-<?= (int) $item['id_producto'] ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, 1, <?= $stockParam ?>)" <?= $deshabilitarMas ? 'disabled' : '' ?>>+</button>
+                                        <button type="button" id="cart-minus-<?= $idReferencia ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, <?= $idReferencia ?>, -1, <?= $stockParam ?>)">-</button>
+                                        <span id="cart-qty-<?= $idReferencia ?>"><?= (int) $item['cantidad'] ?></span>
+                                        <button type="button" id="cart-plus-<?= $idReferencia ?>" onclick="changeCartQty(<?= (int) $item['id_producto'] ?>, <?= $idReferencia ?>, 1, <?= $stockParam ?>)" <?= $deshabilitarMas ? 'disabled' : '' ?>>+</button>
                                     </div>
-                                    <button class="cart-remove" type="button" onclick="removeCartItem(<?= (int) $item['id_producto'] ?>)">
+                                    <button class="cart-remove" type="button" onclick="removeCartItem(<?= (int) $item['id_producto'] ?>, <?= $idReferencia ?>)">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
                                         <?= htmlspecialchars('Quitar', ENT_QUOTES, 'UTF-8') ?>
                                     </button>
@@ -461,7 +479,7 @@
                             </div>
                             <div class="cart-line-total">
                                 <span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span>
-                                <strong id="cart-line-total-<?= (int) $item['id_producto'] ?>">$<?= number_format((float) $subtotalLinea) ?></strong>
+                                <strong id="cart-line-total-<?= $idReferencia ?>">$<?= number_format((float) $subtotalLinea) ?></strong>
                             </div>
                         </article>
                     <?php endforeach; ?>
@@ -489,7 +507,7 @@
                         </p>
                         <a class="cart-checkout" href="index.php?action=ConfirmarPedido">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
-                            <?= htmlspecialchars('Continuar compra', ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars('Confirmar Pedido', ENT_QUOTES, 'UTF-8') ?>
                         </a>
                         <div class="cart-status" id="cart-status" role="status" aria-live="polite"></div>
                     </section>
@@ -509,10 +527,10 @@
 </main>
 
 <script>
-function syncCartQtyButtons(id, stock) {
-    const qtyEl = document.getElementById('cart-qty-' + id);
-    const minus = document.getElementById('cart-minus-' + id);
-    const plus = document.getElementById('cart-plus-' + id);
+function syncCartQtyButtons(ref, stock) {
+    const qtyEl = document.getElementById('cart-qty-' + ref);
+    const minus = document.getElementById('cart-minus-' + ref);
+    const plus = document.getElementById('cart-plus-' + ref);
     if (!qtyEl) return;
 
     const qty = parseInt(qtyEl.textContent, 10) || 0;
@@ -520,20 +538,20 @@ function syncCartQtyButtons(id, stock) {
     if (plus) plus.disabled = stock <= 0 || qty >= stock;
 }
 
-function changeCartQty(id, delta, stock) {
-    const el = document.getElementById('cart-qty-' + id);
+function changeCartQty(id, ref, delta, stock) {
+    const el = document.getElementById('cart-qty-' + ref);
     if (!el) return;
     let value = parseInt(el.textContent, 10) + delta;
     if (value < 0) value = 0;
     if (stock && value > stock) value = stock;
     if (value === parseInt(el.textContent, 10)) return;
     el.textContent = value;
-    syncCartQtyButtons(id, stock);
-    updateCartItem(id);
+    syncCartQtyButtons(ref, stock);
+    updateCartItem(id, ref);
 }
 
-function removeCartRow(id) {
-    const row = document.getElementById('cart-item-' + id);
+function removeCartRow(ref) {
+    const row = document.getElementById('cart-item-' + ref);
     if (row) {
         row.remove();
     }
@@ -575,9 +593,9 @@ async function readCartJson(response) {
     return response.json();
 }
 
-async function updateCartItem(id) {
+async function updateCartItem(id, ref) {
     try {
-        const qty = parseInt(document.getElementById('cart-qty-' + id).textContent, 10);
+        const qty = parseInt(document.getElementById('cart-qty-' + ref).textContent, 10);
         const response = await fetch('index.php?action=actualizarCarrito', {
             method: 'POST',
             headers: {
@@ -587,6 +605,7 @@ async function updateCartItem(id) {
             },
             body: new URLSearchParams({
                 id_producto: id,
+                id_referencia: ref,
                 cantidad: qty
             })
         });
@@ -598,19 +617,19 @@ async function updateCartItem(id) {
             return;
         }
 
-        const qtyEl = document.getElementById('cart-qty-' + id);
+        const qtyEl = document.getElementById('cart-qty-' + ref);
         if (qtyEl && typeof data.cantidad !== 'undefined') {
             qtyEl.textContent = data.cantidad;
         }
 
         syncCartSummary(data);
         if (typeof data.cantidad !== 'undefined' && data.cantidad <= 0) {
-            removeCartRow(id);
+            removeCartRow(ref);
             return;
         }
 
-        syncCartQtyButtons(id, data.stock || 0);
-        const lineTotal = document.getElementById('cart-line-total-' + id);
+        syncCartQtyButtons(ref, data.stock || 0);
+        const lineTotal = document.getElementById('cart-line-total-' + ref);
         if (lineTotal) {
             lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');
         }
@@ -620,7 +639,7 @@ async function updateCartItem(id) {
     }
 }
 
-async function removeCartItem(id) {
+async function removeCartItem(id, ref) {
     try {
         const response = await fetch('index.php?action=eliminarCarrito', {
             method: 'POST',
@@ -629,7 +648,7 @@ async function removeCartItem(id) {
                 'X-Requested-With': 'fetch',
                 'Accept': 'application/json'
             },
-            body: new URLSearchParams({ id_producto: id })
+            body: new URLSearchParams({ id_producto: id, id_referencia: ref })
         });
 
         if (handleCartAuthError(response)) return;
@@ -642,13 +661,13 @@ async function removeCartItem(id) {
         syncCartSummary(data);
 
         if (typeof data.cantidad !== 'undefined' && data.cantidad > 0) {
-            const qtyEl = document.getElementById('cart-qty-' + id);
+            const qtyEl = document.getElementById('cart-qty-' + ref);
             if (qtyEl) {
                 qtyEl.textContent = data.cantidad;
             }
 
-            syncCartQtyButtons(id, data.stock || 0);
-            const lineTotal = document.getElementById('cart-line-total-' + id);
+            syncCartQtyButtons(ref, data.stock || 0);
+            const lineTotal = document.getElementById('cart-line-total-' + ref);
             if (lineTotal) {
                 lineTotal.textContent = '$' + Number(data.linea_total).toLocaleString('es-CO');
             }
@@ -657,9 +676,38 @@ async function removeCartItem(id) {
         }
 
         showCartStatus('Producto quitado');
-        removeCartRow(id);
+        removeCartRow(ref);
     } catch (error) {
         showCartStatus(error.message || 'No se pudo quitar el producto', true);
+    }
+}
+
+async function toggleCartSelection(ref, selected) {
+    try {
+        const response = await fetch('index.php?action=seleccionarCarrito', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json'
+            },
+            body: new URLSearchParams({
+                id_referencia: ref,
+                seleccionado: selected ? 1 : 0
+            })
+        });
+
+        if (handleCartAuthError(response)) return;
+        const data = await readCartJson(response);
+        if (!response.ok || !data.ok) {
+            showCartStatus(data.message || 'No se pudo actualizar la seleccion', true);
+            return;
+        }
+
+        syncCartSummary(data);
+        showCartStatus(selected ? 'Producto seleccionado' : 'Producto fuera del pedido');
+    } catch (error) {
+        showCartStatus(error.message || 'No se pudo actualizar la seleccion', true);
     }
 }
 

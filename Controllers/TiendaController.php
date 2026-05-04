@@ -152,8 +152,21 @@ class TiendaController {
         $precio_min = preg_replace('/\D/', '', $_GET['precio_min'] ?? '');
         $precio_max = preg_replace('/\D/', '', $_GET['precio_max'] ?? '');
         $categoria_filtro = $_GET['categoria'] ?? '';
+        $compatibilidad_tipo = $_GET['compatibilidad_tipo'] ?? '';
+        $vehiculo_marca = trim((string) ($_GET['vehiculo_marca'] ?? ''));
+        $vehiculo_modelo = trim((string) ($_GET['vehiculo_modelo'] ?? ''));
+        $vehiculo_ano = (int) preg_replace('/\D/', '', $_GET['vehiculo_ano'] ?? '');
+        $maquinaria_tipo = trim((string) ($_GET['maquinaria_tipo'] ?? ''));
+        $maquinaria_marca = trim((string) ($_GET['maquinaria_marca'] ?? ''));
+        $maquinaria_modelo = trim((string) ($_GET['maquinaria_modelo'] ?? ''));
 
-        $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
+        if ($compatibilidad_tipo === 'vehiculo' && $vehiculo_marca !== '' && $vehiculo_modelo !== '' && $vehiculo_ano > 0) {
+            $productos = $this->productoModel()->filtrarCompatibilidadVehiculo($vehiculo_marca, $vehiculo_modelo, $vehiculo_ano);
+        } elseif ($compatibilidad_tipo === 'maquinaria' && $maquinaria_tipo !== '' && $maquinaria_marca !== '' && $maquinaria_modelo !== '') {
+            $productos = $this->productoModel()->filtrarCompatibilidadMaquinaria($maquinaria_tipo, $maquinaria_marca, $maquinaria_modelo);
+        } else {
+            $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
+        }
 
         $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
 

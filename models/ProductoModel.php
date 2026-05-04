@@ -31,17 +31,25 @@ class ProductoModel {
         bool $includeTotalVendido = false,
         string $categoriaAlias = 'c',
         string $imagenAlias = 'img',
-        bool $includeDescripcion = true
+        bool $includeDescripcion = true,
+        string $referenciaAlias = 'r',
+        string $stockAlias = 'stk'
     ): string {
         $prefix = $alias !== '' ? $alias . '.' : '';
         $categoriaPrefix = $categoriaAlias !== '' ? $categoriaAlias . '.' : '';
         $imagenPrefix = $imagenAlias !== '' ? $imagenAlias . '.' : '';
+        $referenciaPrefix = $referenciaAlias !== '' ? $referenciaAlias . '.' : '';
+        $stockPrefix = $stockAlias !== '' ? $stockAlias . '.' : '';
         $columns = [
             "{$prefix}id_producto",
+            "{$referenciaPrefix}id_referencia",
+            "{$referenciaPrefix}numero_referencia",
+            "{$referenciaPrefix}marca",
+            "{$referenciaPrefix}fabricante",
             "{$prefix}nombre",
             "{$prefix}codigo",
             "{$prefix}precio",
-            "{$prefix}stock_p",
+            "NVL({$stockPrefix}stock_p, 0) AS stock_p",
             "{$prefix}estado",
             "{$prefix}id_categoria",
             "{$categoriaPrefix}nombre AS categoria_nombre",
@@ -59,6 +67,28 @@ class ProductoModel {
         return implode(",\n                         ", $columns);
     }
 
+    private function referenciaJoin(): string {
+        return "INNER JOIN referencia_producto r ON r.id_producto = p.id_producto
+                AND UPPER(NVL(r.estado, 'ACTIVO')) = 'ACTIVO'";
+    }
+
+    private function stockReferenciaJoin(string $alias = 'stk'): string {
+        return "LEFT JOIN (
+                    SELECT x.id_referencia,
+                           SUM(x.stock_p) AS stock_p
+                    FROM (
+                        SELECT cv.id_referencia,
+                               NVL(cv.stock_p, 0) AS stock_p
+                        FROM compatibilidad_vehiculo cv
+                        UNION ALL
+                        SELECT cm.id_referencia,
+                               NVL(cm.stock_p, 0) AS stock_p
+                        FROM compatibilidad_maquinaria cm
+                    ) x
+                    GROUP BY x.id_referencia
+                ) {$alias} ON {$alias}.id_referencia = r.id_referencia";
+    }
+
     private function primeraImagenJoin(string $alias = 'img'): string {
         return "LEFT JOIN (
                     SELECT id_producto,
@@ -72,10 +102,16 @@ class ProductoModel {
     public function obtenerCatalogo(bool $includeDescripcion = true) {
     $columns = $this->productoColumns('p', false, 'c', 'img', $includeDescripcion);
     $imageJoin = $this->primeraImagenJoin();
+    $referenciaJoin = $this->referenciaJoin();
+    $stockJoin = $this->stockReferenciaJoin();
     $query = "SELECT $columns
               FROM producto p
               INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+              $referenciaJoin
+              $stockJoin
               $imageJoin
+              WHERE UPPER(NVL(p.estado, 'ACTIVO')) = 'ACTIVO'
+              AND NVL(stk.stock_p, 0) > 0
               ORDER BY c.nombre, p.nombre";
 
     $stmt = oci_parse($this->conn, $query);
@@ -93,9 +129,13 @@ class ProductoModel {
     public function obtenerTodos() {
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
                   ORDER BY p.id_producto DESC";
         $stmt = oci_parse($this->conn, $query);
@@ -113,13 +153,45 @@ class ProductoModel {
     public function obtenerPorId($id) {
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
                   WHERE p.id_producto = :id";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? $this->normalizeRow($row) : null;
+    }
+
+    public function obtenerPorReferencia($idReferencia) {
+        $idReferencia = (int) $idReferencia;
+        if ($idReferencia <= 0) {
+            return null;
+        }
+
+        $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
+        $query = "SELECT $columns
+                  FROM producto p
+                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $referenciaJoin
+                  $stockJoin
+                  $imageJoin
+                  WHERE r.id_referencia = :id_referencia";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_referencia', $idReferencia, -1, SQLT_INT);
         oci_execute($stmt);
 
         $row = oci_fetch_assoc($stmt);
@@ -167,9 +239,13 @@ class ProductoModel {
 
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
                   WHERE p.id_producto IN ($placeholdersStr)
                   ORDER BY p.nombre";
@@ -195,11 +271,15 @@ class ProductoModel {
         $limite = max(1, min(10, (int) $limite));
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
 
         $query = "SELECT $columns,
                          ventas.total_vendido
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
                   INNER JOIN (
                       SELECT id_producto, SUM(cantidad) AS total_vendido
@@ -227,11 +307,16 @@ class ProductoModel {
         $limite = max(1, min(10, (int) $limite));
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
 
         $query = "SELECT $columns
                   FROM producto p
                   INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
+                  WHERE NVL(stk.stock_p, 0) > 0
                   ORDER BY p.id_producto DESC
                   FETCH FIRST :limite ROWS ONLY";
 
@@ -248,11 +333,110 @@ class ProductoModel {
         return $results;
     }
 
+    public function filtrarCompatibilidadVehiculo(string $marca, string $modelo, int $ano): array {
+        $marca = strtoupper(trim($marca));
+        $modelo = strtoupper(trim($modelo));
+        if ($marca === '' || $modelo === '' || $ano <= 0) {
+            return [];
+        }
+
+        $imageJoin = $this->primeraImagenJoin();
+        $query = "SELECT p.ID_PRODUCTO,
+                         r.ID_REFERENCIA,
+                         r.NUMERO_REFERENCIA,
+                         r.MARCA,
+                         r.FABRICANTE,
+                         p.NOMBRE,
+                         p.CODIGO,
+                         p.DESCRIPCION,
+                         p.PRECIO,
+                         NVL(vc.STOCK_P, 0) AS STOCK_P,
+                         p.ESTADO,
+                         p.ID_CATEGORIA,
+                         c.NOMBRE AS CATEGORIA_NOMBRE,
+                         img.IMAGEN
+                  FROM V_COMPATIBILIDADES_VEHICULO vc
+                  INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_REFERENCIA = vc.ID_REFERENCIA
+                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = r.ID_PRODUCTO
+                  INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
+                  $imageJoin
+                  WHERE UPPER(vc.MARCA_VEHICULO) = :marca
+                  AND UPPER(vc.MODELO_VEHICULO) = :modelo
+                  AND :ano BETWEEN vc.ANO_INICIO AND vc.ANO_FIN
+                  AND NVL(vc.STOCK_P, 0) > 0
+                  AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+                  ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':marca', $marca);
+        oci_bind_by_name($stmt, ':modelo', $modelo);
+        oci_bind_by_name($stmt, ':ano', $ano, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
+    public function filtrarCompatibilidadMaquinaria(string $tipo, string $marca, string $modelo): array {
+        $tipo = strtoupper(trim($tipo));
+        $marca = strtoupper(trim($marca));
+        $modelo = strtoupper(trim($modelo));
+        if ($tipo === '' || $marca === '' || $modelo === '') {
+            return [];
+        }
+
+        $imageJoin = $this->primeraImagenJoin();
+        $query = "SELECT p.ID_PRODUCTO,
+                         r.ID_REFERENCIA,
+                         r.NUMERO_REFERENCIA,
+                         r.MARCA,
+                         r.FABRICANTE,
+                         p.NOMBRE,
+                         p.CODIGO,
+                         p.DESCRIPCION,
+                         p.PRECIO,
+                         NVL(vg.STOCK_P, 0) AS STOCK_P,
+                         p.ESTADO,
+                         p.ID_CATEGORIA,
+                         c.NOMBRE AS CATEGORIA_NOMBRE,
+                         img.IMAGEN
+                  FROM V_COMPATIBILIDAD_GENERAL vg
+                  INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_REFERENCIA = vg.ID_REFERENCIA
+                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = r.ID_PRODUCTO
+                  INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
+                  $imageJoin
+                  WHERE UPPER(vg.TIPO_MAQUINARIA) = :tipo
+                  AND UPPER(vg.MARCA_MAQUINARIA) = :marca
+                  AND UPPER(vg.MODELO_MAQUINARIA) = :modelo
+                  AND NVL(vg.STOCK_P, 0) > 0
+                  AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+                  ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':tipo', $tipo);
+        oci_bind_by_name($stmt, ':marca', $marca);
+        oci_bind_by_name($stmt, ':modelo', $modelo);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
     public function crear($datos) {
         $estadoBool = ($datos['estado'] === 'Activo' || $datos['estado'] === '1' || $datos['estado'] === true);
 
-        $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, stock_p, estado, id_categoria) 
-                  VALUES (:nombre, :codigo, :descripcion, :precio, :stock, :estado, :id_categoria)
+        $query = "INSERT INTO producto (nombre, codigo, descripcion, precio, estado, id_categoria) 
+                  VALUES (:nombre, :codigo, :descripcion, :precio, :estado, :id_categoria)
                   RETURNING id_producto INTO :id";
         
         $estado = $estadoBool ? 'Activo' : 'Inactivo';
@@ -263,7 +447,6 @@ class ProductoModel {
         oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
         $precio = number_format((float) $datos['precio'], 2, '.', '');
         oci_bind_by_name($stmt, ':precio', $precio, -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':estado', $estado);
         oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
         $id = null;
@@ -295,7 +478,6 @@ class ProductoModel {
                   codigo = :codigo,
                   descripcion = :descripcion,
                   precio = :precio,
-                  stock_p = :stock,
                   estado = :estado,
                   id_categoria = :id_categoria
                   WHERE id_producto = :id";
@@ -309,7 +491,6 @@ class ProductoModel {
         oci_bind_by_name($stmt, ':descripcion', $datos['descripcion']);
         $precio = number_format((float) $datos['precio'], 2, '.', '');
         oci_bind_by_name($stmt, ':precio', $precio, -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':stock', $datos['stock'], -1, SQLT_INT);
         oci_bind_by_name($stmt, ':estado', $estado);
         oci_bind_by_name($stmt, ':id_categoria', $datos['id_categoria'], -1, SQLT_INT);
         oci_execute($stmt);

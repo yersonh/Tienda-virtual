@@ -564,6 +564,27 @@ body[data-theme="light"] .form-control:focus,
         width: 100%;
     }
 }
+.checkout-items {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+.checkout-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.08);
+}
+.checkout-item strong {
+    color: var(--checkout-strong);
+}
+.checkout-item span {
+    color: var(--checkout-muted);
+    font-size: 0.86rem;
+}
 
 .checkout-invoice-card {
     max-width: 920px;
@@ -1240,6 +1261,25 @@ body[data-theme="light"] .form-control:focus,
 
             <div class="checkout-grid">
                 <section class="checkout-panel glass-panel">
+                    <?php if (!empty($itemsCheckout)): ?>
+                        <div class="section-title">
+                            <div>
+                                <h2><?= htmlspecialchars('Productos seleccionados', ENT_QUOTES, 'UTF-8') ?></h2>
+                                <p class="section-kicker"><?= htmlspecialchars('Solo estos productos se enviaran al checkout.', ENT_QUOTES, 'UTF-8') ?></p>
+                            </div>
+                        </div>
+                        <div class="checkout-items">
+                            <?php foreach ($itemsCheckout as $checkoutItem): ?>
+                                <div class="checkout-item">
+                                    <div>
+                                        <strong><?= htmlspecialchars((string) ($checkoutItem['nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <span><?= htmlspecialchars('Ref.', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars((string) ($checkoutItem['numero_referencia'] ?? $checkoutItem['id_referencia'] ?? ''), ENT_QUOTES, 'UTF-8') ?> · <?= (int) ($checkoutItem['cantidad'] ?? 0) ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
+                                    </div>
+                                    <strong>$<?= number_format((float) ($checkoutItem['total_linea'] ?? 0)) ?></strong>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                     <div class="section-title">
                         <div>
                             <h2><?= htmlspecialchars('Direccion de envio', ENT_QUOTES, 'UTF-8') ?></h2>

@@ -54,7 +54,6 @@ class CheckoutController {
             $_SESSION['checkout_resumen'],
             $_SESSION['payment_old']
         );
-        $_SESSION['carrito_count'] = 0;
     }
 
     private function resumenCompra(array $items): array {
@@ -94,8 +93,12 @@ class CheckoutController {
                 throw new Exception('El carrito contiene productos invalidos');
             }
 
+            if ((int) ($item['id_referencia'] ?? 0) <= 0) {
+                throw new Exception('El carrito contiene referencias invalidas');
+            }
+
             if ($stock < $cantidad) {
-                throw new Exception('Stock insuficiente para el producto ' . $idProducto);
+                throw new Exception('Stock insuficiente para la referencia ' . (int) ($item['id_referencia'] ?? 0));
             }
         }
     }
@@ -107,6 +110,8 @@ class CheckoutController {
 
             return [
                 'id_producto' => (int) ($item['id_producto'] ?? 0),
+                'id_referencia' => (int) ($item['id_referencia'] ?? 0),
+                'numero_referencia' => (string) ($item['numero_referencia'] ?? ''),
                 'nombre' => (string) ($item['nombre'] ?? 'Producto'),
                 'cantidad' => $cantidad,
                 'precio' => $precio,
@@ -162,41 +167,33 @@ class CheckoutController {
             $resumen = $this->resumenCompra($items);
             $fechaEstimada = $_SESSION['checkout_fecha_estimada_entrega'] ?? null;
 
-            $idVenta = $this->ventaModel->crearVentaCheckoutTx(
+            $resultadoPedido = $this->pedidoModel->crearPedidoCompletoTx(
                 $idUsuario,
-                $resumen['total'],
-                $resumen['iva'],
-                $resumen['envio']
+                $idDireccion,
+                $idMetodo,
+                $fechaEstimada,
+                $resumen
             );
 
-            foreach ($items as $item) {
-                $this->ventaModel->insertarDetalleVentaTx(
-                    $idVenta,
-                    (int) $item['id_producto'],
-                    (int) $item['cantidad'],
-                    (float) $item['precio']
-                );
-            }
-
-            $idPedido = $this->pedidoModel->crearPedidoTx($idVenta, $fechaEstimada);
-            $idDireccionPedido = $this->direccionPedidoModel->copiarDireccionParaPedido($idPedido, $idDireccion, $idUsuario, $direccion, false);
-            $this->pedidoModel->actualizarDireccionPedidoTx($idPedido, $idDireccionPedido);
-
-            $this->pagoModel->procesarPago($idVenta, $idMetodo, $resumen['total']);
-            $this->pedidoModel->mantenerPendienteTx($idPedido);
-
-            foreach ($items as $item) {
-                $this->ventaModel->descontarStockTx((int) $item['id_producto'], (int) $item['cantidad']);
-            }
-
-            $this->carritoModel->vaciarCarritoTx($idUsuario);
-            $pedido = $this->pedidoModel->obtenerPorVenta($idVenta);
+            $idPedido = (int) ($resultadoPedido['id_pedido'] ?? 0);
+            $idVenta = (int) ($resultadoPedido['id_venta'] ?? 0);
+            $pedido = $idPedido > 0 ? $this->pedidoModel->obtenerPorId($idPedido) : ($idVenta > 0 ? $this->pedidoModel->obtenerPorVenta($idVenta) : null);
             if (!$pedido) {
-                throw new Exception('No se encontro el pedido creado para la venta');
+                throw new Exception('No se encontro el pedido creado por SP_CREAR_PEDIDO_COMPLETO');
             }
+            $idPedido = (int) ($pedido['id_pedido'] ?? $idPedido);
+            $idVenta = (int) ($pedido['id_venta'] ?? $idVenta);
+
+            if ($idVenta > 0) {
+                $this->pagoModel->procesarPago($idVenta, $idMetodo, $resumen['total']);
+                $this->pedidoModel->mantenerPendienteTx($idPedido);
+            }
+
+            $this->carritoModel->eliminarSeleccionadosTx($idUsuario);
 
             oci_commit($this->conn);
             $this->limpiarSesionCheckout();
+            $_SESSION['carrito_count'] = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
 
             $_SESSION['pedido_confirmado'] = [
                 'id_pedido' => (int) $pedido['id_pedido'],

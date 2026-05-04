@@ -49,7 +49,7 @@ $publicas = [
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
-    if (in_array($action, ['agregarCarrito', 'agregarAjax', 'verCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito'], true)) {
+    if (in_array($action, ['agregarCarrito', 'agregarAjax', 'verCarrito', 'actualizarCarrito', 'eliminarCarrito', 'vaciarCarrito', 'seleccionarCarrito'], true)) {
         if (
             (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
             (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch')
@@ -140,6 +140,10 @@ switch ($action) {
 
     case 'vaciarCarrito':
         (new CarritoController())->vaciar();
+        break;
+
+    case 'seleccionarCarrito':
+        (new CarritoController())->seleccionar();
         break;
 
     case 'resumenCompra':

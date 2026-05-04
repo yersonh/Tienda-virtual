@@ -247,7 +247,7 @@ class VentaModel {
         return $idVenta;
     }
 
-    public function insertarDetalleVentaTx(int $idVenta, int $idProducto, int $cantidad, float $precioUnitario): void {
+    public function insertarDetalleVentaTx(int $idVenta, int $idProducto, int $cantidad, float $precioUnitario, ?int $idReferencia = null): void {
         if ($idVenta <= 0 || $idProducto <= 0 || $cantidad <= 0 || $precioUnitario < 0) {
             throw new InvalidArgumentException('Detalle de venta invalido');
         }
@@ -258,6 +258,10 @@ class VentaModel {
 
         $columnas = ['ID_VENTA', 'ID_PRODUCTO', 'CANTIDAD', 'PRECIO_UNITARIO', 'SUBTOTAL'];
         $valores = [':id_venta', ':id_producto', ':cantidad', ':precio_unitario', ':subtotal'];
+        if ($idReferencia !== null && $idReferencia > 0) {
+            $columnas[] = 'ID_REFERENCIA';
+            $valores[] = ':id_referencia';
+        }
 
         $secuenciaDetalle = $this->secuenciaDisponible(['SEQ_DETALLE_VENTA', 'SEQ_DETALLE']);
         if ($secuenciaDetalle !== null) {
@@ -278,6 +282,9 @@ class VentaModel {
         oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':precio_unitario', $precio, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':subtotal', $subtotalLinea, -1, SQLT_CHR);
+        if ($idReferencia !== null && $idReferencia > 0) {
+            oci_bind_by_name($stmt, ':id_referencia', $idReferencia, -1, SQLT_INT);
+        }
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
@@ -286,38 +293,6 @@ class VentaModel {
         }
 
         oci_free_statement($stmt);
-    }
-
-    public function descontarStockTx(int $idProducto, int $cantidad): void {
-        if ($idProducto <= 0 || $cantidad <= 0) {
-            throw new InvalidArgumentException('Producto o cantidad invalida');
-        }
-
-        $query = "UPDATE PRODUCTO
-                  SET STOCK_P = STOCK_P - :cantidad
-                  WHERE ID_PRODUCTO = :id_producto
-                  AND STOCK_P >= :cantidad";
-
-        $stmt = oci_parse($this->conn, $query);
-        if (!$stmt) {
-            throw new Exception($this->oracleErrorMessage());
-        }
-
-        oci_bind_by_name($stmt, ':cantidad', $cantidad, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $message = $this->oracleErrorMessage($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($message);
-        }
-
-        $filas = oci_num_rows($stmt);
-        oci_free_statement($stmt);
-
-        if ($filas < 1) {
-            throw new Exception('Stock insuficiente para el producto ' . $idProducto);
-        }
     }
 
     public function obtenerTotalVenta($idVenta): float {
