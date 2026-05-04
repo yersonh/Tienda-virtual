@@ -2,27 +2,33 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-class UsuarioModel {
+class UsuarioModel
+{
 
     private $conn;
 
-    public function __construct($pdo = null) {
+    public function __construct($pdo = null)
+    {
         $this->conn = $pdo ?? Database::getConnection();
     }
 
-    private function normalizarCorreo($correo) {
+    private function normalizarCorreo($correo)
+    {
         return strtolower(trim((string) $correo));
     }
 
-    private function normalizarUsername($username) {
+    private function normalizarUsername($username)
+    {
         return strtolower(trim((string) $username));
     }
 
-    private function normalizarTelefono($telefono) {
+    private function normalizarTelefono($telefono)
+    {
         return preg_replace('/\D/', '', (string) $telefono);
     }
 
-    private function oracleErrorResponse($error): array {
+    private function oracleErrorResponse($error): array
+    {
         $message = strtoupper(trim($error['message'] ?? ''));
 
         if (str_contains($message, 'ORA-00001')) {
@@ -56,7 +62,8 @@ class UsuarioModel {
         return ['success' => false, 'error' => 'Error en base de datos'];
     }
 
-    private function asegurarClientePorPersona(int $idPersona): ?int {
+    private function asegurarClientePorPersona(int $idPersona): ?int
+    {
         $query = "SELECT ID_CLIENTE
                   FROM CLIENTE
                   WHERE ID_PERSONA = :id_persona";
@@ -97,7 +104,8 @@ class UsuarioModel {
         return (int) $idCliente;
     }
 
-    public function validarCredenciales($username, $password) {
+    public function validarCredenciales($username, $password)
+    {
         $username = $this->normalizarUsername($username);
 
         $query = "SELECT id_usuario,
@@ -143,7 +151,8 @@ class UsuarioModel {
         ];
     }
 
-    public function usernameExiste($username): bool {
+    public function usernameExiste($username): bool
+    {
         $username = $this->normalizarUsername($username);
 
         $query = "SELECT COUNT(*) AS total
@@ -160,7 +169,8 @@ class UsuarioModel {
         return (int) ($row['TOTAL'] ?? 0) > 0;
     }
 
-    public function correoExisteEmail($correo): bool {
+    public function correoExisteEmail($correo): bool
+    {
         $correo = $this->normalizarCorreo($correo);
 
         $query = "SELECT COUNT(*) AS total
@@ -177,7 +187,8 @@ class UsuarioModel {
         return (int) ($row['TOTAL'] ?? 0) > 0;
     }
 
-    public function correoExiste($correo, $id_persona): bool {
+    public function correoExiste($correo, $id_persona): bool
+    {
         $correo = $this->normalizarCorreo($correo);
         $id_persona = (int) $id_persona;
 
@@ -197,7 +208,8 @@ class UsuarioModel {
         return (int) ($row['TOTAL'] ?? 0) > 0;
     }
 
-    public function telefonoExiste($telefono, $id_persona = null): bool {
+    public function telefonoExiste($telefono, $id_persona = null): bool
+    {
         $telefono = $this->normalizarTelefono($telefono);
 
         $query = "SELECT COUNT(*) AS total
@@ -223,7 +235,8 @@ class UsuarioModel {
         return (int) ($row['TOTAL'] ?? 0) > 0;
     }
 
-    public function obtenerPorId($id_usuario) {
+    public function obtenerPorId($id_usuario)
+    {
         $id_usuario = (int) $id_usuario;
 
         $query = "SELECT id_usuario,
@@ -249,7 +262,8 @@ class UsuarioModel {
         return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
-    public function crearConPersona($data) {
+    public function crearConPersona($data)
+    {
         try {
             $data['correo'] = $this->normalizarCorreo($data['correo'] ?? '');
             $data['username'] = $this->normalizarUsername($data['username'] ?? '');
@@ -325,7 +339,8 @@ class UsuarioModel {
         }
     }
 
-    public function actualizarPerfil($id_usuario, $data) {
+    public function actualizarPerfil($id_usuario, $data)
+    {
         try {
             $id_usuario = (int) $id_usuario;
             $nombres = trim($data['nombres'] ?? '');
@@ -405,5 +420,108 @@ class UsuarioModel {
             error_log($e->getMessage());
             return ['success' => false, 'message' => 'Error al actualizar el perfil'];
         }
+    }
+    //Metodos para recuperar contraseña
+    /**
+     * Buscar usuario por email
+     */
+    public function buscarPorEmail($email)
+    {
+        $email = $this->normalizarCorreo($email);
+
+        $query = "SELECT u.id_usuario, u.username, p.nombres, p.correo
+                  FROM usuario u
+                  JOIN persona p ON u.id_persona = p.id_persona
+                  WHERE LOWER(TRIM(p.correo)) = :correo";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ":correo", $email);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Generar token de recuperación
+     */
+    public function generarTokenRecuperacion($usuario_id)
+    {
+        $token = bin2hex(random_bytes(32));
+        $usuario_id = (int) $usuario_id;
+
+        $sql = "INSERT INTO password_resets (usuario_id, token, expires_at) 
+                VALUES (:usuario_id, :token, CURRENT_TIMESTAMP + INTERVAL '1' DAY)";
+
+        $stmt = oci_parse($this->conn, $sql);
+        oci_bind_by_name($stmt, ":usuario_id", $usuario_id, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ":token", $token);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
+
+        return $token;
+    }
+
+    /**
+     * Validar token de recuperación
+     */
+    public function validarToken($token)
+    {
+        $sql = "SELECT pr.usuario_id, u.username, p.nombres, p.correo
+                FROM password_resets pr
+                JOIN usuario u ON pr.usuario_id = u.id_usuario
+                JOIN persona p ON u.id_persona = p.id_persona
+                WHERE pr.token = :token 
+                AND pr.used = 0 
+                AND pr.expires_at > CURRENT_TIMESTAMP";
+
+        $stmt = oci_parse($this->conn, $sql);
+        oci_bind_by_name($stmt, ":token", $token);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ?: null;
+    }
+
+    /**
+     * Marcar token como usado
+     */
+    public function marcarTokenUsado($token)
+    {
+        $sql = "UPDATE password_resets 
+                SET used = 1 
+                WHERE token = :token";
+
+        $stmt = oci_parse($this->conn, $sql);
+        oci_bind_by_name($stmt, ":token", $token);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
+
+        return true;
+    }
+
+    /**
+     * Actualizar contraseña del usuario
+     */
+    public function actualizarPassword($id_usuario, $password)
+    {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $id_usuario = (int) $id_usuario;
+
+        $sql = "UPDATE usuario 
+                SET password = :password 
+                WHERE id_usuario = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $sql);
+        oci_bind_by_name($stmt, ":password", $hash);
+        oci_bind_by_name($stmt, ":id_usuario", $id_usuario, -1, SQLT_INT);
+        oci_execute($stmt);
+        oci_free_statement($stmt);
+
+        return true;
     }
 }

@@ -2,23 +2,31 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-?>
 
+$token = $_GET['token'] ?? '';
+$tokenValido = false;
+
+if (!empty($token)) {
+    require_once __DIR__ . '/../models/UsuarioModel.php';
+    $usuarioModel = new UsuarioModel();
+    $datos = $usuarioModel->validarToken($token);
+    if ($datos) {
+        $tokenValido = true;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <title>Recuperar Contraseña - NAYLEX Store</title>
+    <title>Restablecer Contraseña - NAYLEX Store</title>
     <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
-    <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Copiar los mismos estilos de Recuperar.php */
         :root {
             --bg-overlay-1: rgba(7, 11, 20, 0.64);
             --bg-overlay-2: rgba(8, 13, 24, 0.78);
@@ -30,9 +38,7 @@ if (session_status() === PHP_SESSION_NONE) {
             --body-text: #eaf2ff;
             --accent: #38bdf8;
             --accent-2: #2563eb;
-            --success: #16a34a;
             --shadow: 0 24px 70px rgba(2, 6, 23, 0.46);
-            --page-bg-image: url('imagenes/Fondo.png');
         }
 
         [data-theme="light"] {
@@ -256,100 +262,60 @@ if (session_status() === PHP_SESSION_NONE) {
     </style>
 </head>
 
-<body data-theme="dark">
-
-    <button type="button" class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?>">
-        <i class="fas fa-moon"></i>
-    </button>
-
+<body>
     <div class="recovery-container">
-
-        <div class="logo-section">
-            <a href="index.php?action=tienda">
-                <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store" decoding="async">
-            </a>
-        </div>
-
-        <h2>Recuperar Contraseña</h2>
-        <p class="description">
-            Ingresa tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.
-        </p>
-
-        <!-- MENSAJES -->
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="error-message">
-                <?= $_SESSION['error'];
-                unset($_SESSION['error']); ?>
+        <?php if ($tokenValido): ?>
+            <div class="logo-section">
+                <a href="index.php?action=tienda">
+                    <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store">
+                </a>
             </div>
-        <?php endif; ?>
 
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="success-message" id="success-message">
-                <?= $_SESSION['success'];
-                unset($_SESSION['success']); ?>
-            </div>
-        <?php endif; ?>
+            <h2>Nueva Contraseña</h2>
+            <p class="description">Elegí una contraseña segura para tu cuenta.</p>
 
-        <!-- FORM -->
-        <form method="POST" action="index.php?action=solicitarRecuperacion">
-
-            <div class="form-group">
-                <div class="input-with-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" placeholder="<?= htmlspecialchars('Correo electrónico', ENT_QUOTES, 'UTF-8') ?>" required>
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="error-message">
+                    <?= $_SESSION['error'];
+                    unset($_SESSION['error']); ?>
                 </div>
-            </div>
+            <?php endif; ?>
 
-            <button type="submit" class="recovery-btn">
-                <i class="fas fa-paper-plane"></i> Enviar Instrucciones
-            </button>
+            <form method="POST" action="index.php?action=cambiarPassword">
+                <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" placeholder="Nueva contraseña" required minlength="8">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="confirmar" placeholder="Confirmar contraseña" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="recovery-btn">
+                    <i class="fas fa-save"></i> Guardar Contraseña
+                </button>
+            </form>
 
             <a href="index.php?action=login" class="back-link">
                 <i class="fas fa-arrow-left"></i> Volver al Login
             </a>
 
-        </form>
-
-        <div style="text-align:center; margin-top:20px;">
-            <a href="index.php?action=tienda" style="color:var(--muted); font-size:12px; text-decoration:none;">
-                Ir a la tienda principal
+        <?php else: ?>
+            <div class="error-message">
+                ❌ El enlace es inválido o expiró.
+            </div>
+            <a href="index.php?action=recuperar" class="recovery-btn" style="display:block;text-align:center;text-decoration:none;">
+                Solicitar nuevo enlace
             </a>
-        </div>
-
+        <?php endif; ?>
     </div>
-
-    <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        function applyTheme(theme) {
-            body.setAttribute('data-theme', theme);
-            themeToggle.innerHTML = theme === 'dark' ?
-                '<i class="fas fa-moon"></i>' :
-                '<i class="fas fa-sun"></i>';
-        }
-
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'dark');
-
-        const successMessage = document.getElementById('success-message');
-        if (successMessage) {
-            setTimeout(() => {
-                successMessage.style.opacity = '0';
-                successMessage.style.transition = 'opacity 0.4s ease';
-
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 400);
-            }, 5000);
-        }
-    </script>
-
 </body>
 
 </html>
