@@ -114,7 +114,7 @@ class ProductoModel {
                 $referenciaJoin
                 $stockJoin
                 $imageJoin
-                WHERE UPPER(NVL(p.estado, 'ACTIVO')) = 'ACTIVO'
+                WHERE NVL(p.estado, 'false') = 'true'
                 ORDER BY c.nombre, p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
@@ -374,7 +374,7 @@ class ProductoModel {
                   AND UPPER(vc.MODELO_VEHICULO) = :modelo
                   AND :ano BETWEEN vc.ANO_INICIO AND vc.ANO_FIN
                   AND NVL(vc.STOCK_P, 0) > 0
-                  AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+                  AND NVL(p.ESTADO, 'false') = 'true'
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
@@ -424,7 +424,7 @@ class ProductoModel {
                   AND UPPER(vg.MARCA_MAQUINARIA) = :marca
                   AND UPPER(vg.MODELO_MAQUINARIA) = :modelo
                   AND NVL(vg.STOCK_P, 0) > 0
-                  AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+                  AND NVL(p.ESTADO, 'false') = 'true'
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);

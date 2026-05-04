@@ -204,7 +204,7 @@ class TiendaController {
         $categorias = [];
         $todasCategorias = array_map(function($cat) {
             return $cat['nombre'];
-        }, $this->obtenerCategoriasCacheadas());
+        }, $this->obtenerCategoriasCacheadas() ?? []);
 
         foreach ($productos as $p) {
             $cat = $p['categoria_nombre'] ?? 'Sin categoria';
