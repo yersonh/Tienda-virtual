@@ -54,7 +54,7 @@ if (!empty($token)) {
             --accent-2: #2563eb;
             --success: #15803d;
             --shadow: 0 24px 60px rgba(100, 116, 139, 0.2);
-            --page-bg-image: url('../public/imagenes/Fondoclaro.png');
+            --page-bg-image: url('imagenes/Fondoclaro.png');
         }
 
         * {
@@ -267,7 +267,7 @@ if (!empty($token)) {
         <?php if ($tokenValido): ?>
             <div class="logo-section">
                 <a href="index.php?action=tienda">
-                    <img src="../public/imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store">
+                    <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store">
                 </a>
             </div>
 
