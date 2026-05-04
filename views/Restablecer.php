@@ -22,11 +22,14 @@ if (!empty($token)) {
     <meta charset="UTF-8">
     <title>Restablecer Contraseña - NAYLEX Store</title>
     <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+    <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Copiar los mismos estilos de Recuperar.php */
         :root {
             --bg-overlay-1: rgba(7, 11, 20, 0.64);
             --bg-overlay-2: rgba(8, 13, 24, 0.78);
@@ -38,7 +41,9 @@ if (!empty($token)) {
             --body-text: #eaf2ff;
             --accent: #38bdf8;
             --accent-2: #2563eb;
+            --success: #16a34a;
             --shadow: 0 24px 70px rgba(2, 6, 23, 0.46);
+            --page-bg-image: url('../imagenes/Fondo.png');
         }
 
         [data-theme="light"] {
@@ -54,7 +59,7 @@ if (!empty($token)) {
             --accent-2: #2563eb;
             --success: #15803d;
             --shadow: 0 24px 60px rgba(100, 116, 139, 0.2);
-            --page-bg-image: url('imagenes/Fondoclaro.png');
+            --page-bg-image: url('../imagenes/Fondoclaro.png');
         }
 
         * {
@@ -262,12 +267,17 @@ if (!empty($token)) {
     </style>
 </head>
 
-<body>
+<body data-theme="dark">
+
+    <button type="button" class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?>">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <div class="recovery-container">
         <?php if ($tokenValido): ?>
             <div class="logo-section">
                 <a href="index.php?action=tienda">
-                    <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store">
+                    <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store" decoding="async">
                 </a>
             </div>
 
@@ -287,14 +297,14 @@ if (!empty($token)) {
                 <div class="form-group">
                     <div class="input-with-icon">
                         <i class="fas fa-lock"></i>
-                        <input type="password" name="password" placeholder="Nueva contraseña" required minlength="8">
+                        <input type="password" name="password" placeholder="<?= htmlspecialchars('Nueva contraseña', ENT_QUOTES, 'UTF-8') ?>" required minlength="8">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-with-icon">
                         <i class="fas fa-lock"></i>
-                        <input type="password" name="confirmar" placeholder="Confirmar contraseña" required>
+                        <input type="password" name="confirmar" placeholder="<?= htmlspecialchars('Confirmar contraseña', ENT_QUOTES, 'UTF-8') ?>" required>
                     </div>
                 </div>
 
@@ -316,6 +326,27 @@ if (!empty($token)) {
             </a>
         <?php endif; ?>
     </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        function applyTheme(theme) {
+            body.setAttribute('data-theme', theme);
+            themeToggle.innerHTML = theme === 'dark' ?
+                '<i class="fas fa-moon"></i>' :
+                '<i class="fas fa-sun"></i>';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            applyTheme(nextTheme);
+            localStorage.setItem('theme', nextTheme);
+        });
+
+        applyTheme(localStorage.getItem('theme') || 'dark');
+    </script>
+
 </body>
 
 </html>
