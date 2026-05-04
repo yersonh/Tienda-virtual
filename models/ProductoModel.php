@@ -60,16 +60,19 @@ class ProductoModel {
             array_splice($columns, 3, 0, "{$prefix}descripcion");
         }
 
-        if ($includeTotalVendido) {
-            $columns[] = "0 AS total_vendido";
-        }
-
         return implode(",\n                         ", $columns);
     }
 
     private function referenciaJoin(): string {
-        return "INNER JOIN referencia_producto r ON r.id_producto = p.id_producto
-                AND UPPER(NVL(r.estado, 'ACTIVO')) = 'ACTIVO'";
+        return "LEFT JOIN (
+                    SELECT id_producto,
+                        MIN(id_referencia) KEEP (DENSE_RANK FIRST ORDER BY id_referencia) AS id_referencia,
+                        MIN(numero_referencia) KEEP (DENSE_RANK FIRST ORDER BY id_referencia) AS numero_referencia,
+                        MIN(marca) KEEP (DENSE_RANK FIRST ORDER BY id_referencia) AS marca,
+                        MIN(fabricante) KEEP (DENSE_RANK FIRST ORDER BY id_referencia) AS fabricante
+                    FROM referencia_producto
+                    GROUP BY id_producto
+                ) r ON r.id_producto = p.id_producto";
     }
 
     private function stockReferenciaJoin(string $alias = 'stk'): string {
@@ -100,31 +103,31 @@ class ProductoModel {
 
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
     public function obtenerCatalogo(bool $includeDescripcion = true) {
-    $columns = $this->productoColumns('p', false, 'c', 'img', $includeDescripcion);
-    $imageJoin = $this->primeraImagenJoin();
-    $referenciaJoin = $this->referenciaJoin();
-    $stockJoin = $this->stockReferenciaJoin();
-    $query = "SELECT $columns
-              FROM producto p
-              INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
-              $referenciaJoin
-              $stockJoin
-              $imageJoin
-              WHERE UPPER(NVL(p.estado, 'ACTIVO')) = 'ACTIVO'
-              AND NVL(stk.stock_p, 0) > 0
-              ORDER BY c.nombre, p.nombre";
+        $columns = $this->productoColumns('p', false, 'c', 'img', $includeDescripcion);
+        $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
 
-    $stmt = oci_parse($this->conn, $query);
-    oci_execute($stmt);
+        $query = "SELECT $columns
+                FROM producto p
+                INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                $referenciaJoin
+                $stockJoin
+                $imageJoin
+                WHERE UPPER(NVL(p.estado, 'ACTIVO')) = 'ACTIVO'
+                ORDER BY c.nombre, p.nombre";
 
-    $results = [];
-    while ($row = oci_fetch_assoc($stmt)) {
-        $results[] = $this->normalizeRow($row);
+        $stmt = oci_parse($this->conn, $query);
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
     }
-    oci_free_statement($stmt);
-
-    return $results;
-}
 
     public function obtenerTodos() {
         $columns = $this->productoColumns('p');
@@ -269,26 +272,31 @@ class ProductoModel {
 
     public function obtenerMasVendidos($limite = 5) {
         $limite = max(1, min(10, (int) $limite));
+
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
         $referenciaJoin = $this->referenciaJoin();
         $stockJoin = $this->stockReferenciaJoin();
 
         $query = "SELECT $columns,
-                         ventas.total_vendido
-                  FROM producto p
-                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
-                  $referenciaJoin
-                  $stockJoin
-                  $imageJoin
-                  INNER JOIN (
-                      SELECT id_producto, SUM(cantidad) AS total_vendido
-                      FROM detalle_venta
-                      GROUP BY id_producto
-                  ) ventas ON ventas.id_producto = p.id_producto
-                  WHERE ventas.total_vendido > 0
-                  ORDER BY ventas.total_vendido DESC, p.id_producto DESC
-                  FETCH FIRST :limite ROWS ONLY";
+                        ventas.total_vendido
+                FROM producto p
+                INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                $referenciaJoin
+                $stockJoin
+                $imageJoin
+                INNER JOIN (
+                    SELECT r.id_producto, SUM(dv.cantidad) AS total_vendido
+                    FROM detalle_venta dv
+                    INNER JOIN referencia_producto r 
+                        ON r.id_referencia = dv.id_referencia
+                    INNER JOIN venta v 
+                        ON v.id_venta = dv.id_venta
+                    WHERE UPPER(TRIM(v.estado)) = 'COMPLETADO'
+                    GROUP BY r.id_producto
+                ) ventas ON ventas.id_producto = p.id_producto
+                ORDER BY ventas.total_vendido DESC, p.id_producto DESC
+                FETCH FIRST :limite ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':limite', $limite, -1, SQLT_INT);
@@ -298,27 +306,27 @@ class ProductoModel {
         while ($row = oci_fetch_assoc($stmt)) {
             $results[] = $this->normalizeRow($row);
         }
-        oci_free_statement($stmt);
 
+        oci_free_statement($stmt);
         return $results;
     }
 
     public function obtenerProductosNuevos($limite = 10) {
         $limite = max(1, min(10, (int) $limite));
+
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
         $referenciaJoin = $this->referenciaJoin();
         $stockJoin = $this->stockReferenciaJoin();
 
         $query = "SELECT $columns
-                  FROM producto p
-                  INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
-                  $referenciaJoin
-                  $stockJoin
-                  $imageJoin
-                  WHERE NVL(stk.stock_p, 0) > 0
-                  ORDER BY p.id_producto DESC
-                  FETCH FIRST :limite ROWS ONLY";
+                FROM producto p
+                INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
+                $referenciaJoin
+                $stockJoin
+                $imageJoin
+                ORDER BY p.id_producto DESC
+                FETCH FIRST :limite ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':limite', $limite, -1, SQLT_INT);
@@ -328,8 +336,8 @@ class ProductoModel {
         while ($row = oci_fetch_assoc($stmt)) {
             $results[] = $this->normalizeRow($row);
         }
-        oci_free_statement($stmt);
 
+        oci_free_statement($stmt);
         return $results;
     }
 
