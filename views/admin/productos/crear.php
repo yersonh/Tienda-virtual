@@ -28,9 +28,11 @@
                     <label for="id_categoria"><?= htmlspecialchars('Categoria', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="id_categoria" name="id_categoria" required>
                         <option value=""><?= htmlspecialchars('Seleccione una categoria', ENT_QUOTES, 'UTF-8') ?></option>
-                        <?php foreach($categorias as $categoria): ?>
-                            <option value="<?= $categoria['id_categoria'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-                        <?php endforeach; ?>
+                        <?php if (isset($categorias) && is_array($categorias)): ?>
+                            <?php foreach($categorias as $categoria): ?>
+                                <option value="<?= $categoria['id_categoria'] ?? '' ?>"><?= htmlspecialchars($categoria['nombre'] ?? '') ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
 

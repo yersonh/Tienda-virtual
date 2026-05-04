@@ -3,7 +3,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h1 style="color: white; margin: 0;"><?= htmlspecialchars('Ver Producto', ENT_QUOTES, 'UTF-8') ?></h1>
         <div style="display: flex; gap: 10px;">
-            <a href="index.php?action=productos_editar&id=<?= $producto['id_producto'] ?>" class="btn-editar">
+            <a href="index.php?action=productos_editar&id=<?= (int) ($producto['id_producto'] ?? 0) ?>" class="btn-editar">
                 <i class="fas fa-edit"></i> Editar
             </a>
             <a href="index.php?action=productos" class="btn-volver">
@@ -16,10 +16,10 @@
         <div class="producto-imagenes">
             <h3><?= htmlspecialchars('Galeria de Imagenes', ENT_QUOTES, 'UTF-8') ?></h3>
             <div class="galeria">
-                <?php if(!empty($imagenes)): ?>
+                <?php if(isset($imagenes) && is_array($imagenes) && !empty($imagenes)): ?>
                     <?php foreach($imagenes as $index => $img): ?>
                         <?php
-                        $nombreArchivo = basename($img['url']);
+                        $nombreArchivo = basename($img['url'] ?? '');
                         ?>
                         <div class="galeria-item" onclick="openLightbox(<?= $index ?>)">
                             <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto" loading="lazy" decoding="async">
@@ -36,52 +36,56 @@
 
         <div class="producto-info">
             <h3><?= htmlspecialchars('Informacion del Producto', ENT_QUOTES, 'UTF-8') ?></h3>
+            <?php if (isset($producto) && is_array($producto)): ?>
             <table class="info-table">
                 <tr>
                     <th>ID:</th>
-                    <td><?= $producto['id_producto'] ?></td>
+                    <td><?= (int) ($producto['id_producto'] ?? 0) ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Codigo', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= htmlspecialchars($producto['codigo']) ?></td>
+                    <td><?= htmlspecialchars($producto['codigo'] ?? '') ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Nombre del producto', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= htmlspecialchars($producto['nombre']) ?></td>
+                    <td><?= htmlspecialchars($producto['nombre'] ?? '') ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Categoria', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= htmlspecialchars($producto['categoria_nombre']) ?></td>
+                    <td><?= htmlspecialchars($producto['categoria_nombre'] ?? '') ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Precio', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td>$<?= number_format($producto['precio'], 2) ?></td>
+                    <td>$<?= number_format((float) ($producto['precio'] ?? 0), 2) ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= $producto['stock_p'] ?></td>
+                    <td><?= (int) ($producto['stock_p'] ?? 0) ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?>:</th>
                     <td>
-                        <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
-                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'Activo' : 'Inactivo' ?>
+                        <span class="badge <?= ($producto['estado'] ?? 'false') === 'true' ? 'badge-success' : 'badge-danger' ?>">
+                            <?= ($producto['estado'] ?? 'false') === 'true' ? 'Activo' : 'Inactivo' ?>
                         </span>
                     </td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= nl2br(htmlspecialchars($producto['descripcion'])) ?></td>
+                    <td><?= nl2br(htmlspecialchars($producto['descripcion'] ?? '')) ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Fecha Creacion', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= date('d/m/Y H:i', strtotime($producto['created_at'])) ?></td>
+                    <td><?= (isset($producto['created_at']) && $producto['created_at']) ? date('d/m/Y H:i', strtotime($producto['created_at'])) : 'N/A' ?></td>
                 </tr>
                 <tr>
                     <th><?= htmlspecialchars('Ultima Actualizacion', ENT_QUOTES, 'UTF-8') ?>:</th>
-                    <td><?= date('d/m/Y H:i', strtotime($producto['updated_at'])) ?></td>
+                    <td><?= (isset($producto['updated_at']) && $producto['updated_at']) ? date('d/m/Y H:i', strtotime($producto['updated_at'])) : 'N/A' ?></td>
                 </tr>
             </table>
+            <?php else: ?>
+                <p style="color: #94a3b8; text-align: center; padding: 20px;">Producto no disponible</p>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -338,13 +342,15 @@
 
 <script>
     // Array de imágenes usando json_encode (más seguro)
-    const imagenes = <?php 
+    const imagenes = <?php
         $imagenesArray = [];
-        foreach($imagenes as $img) {
-            $nombreArchivo = basename($img['url']);
-            $imagenesArray[] = [
-                'url' => "image.php?folder=productos&path=" . urlencode($nombreArchivo)
-            ];
+        if (isset($imagenes) && is_array($imagenes)) {
+            foreach($imagenes as $img) {
+                $nombreArchivo = basename($img['url'] ?? '');
+                $imagenesArray[] = [
+                    'url' => "image.php?folder=productos&path=" . urlencode($nombreArchivo)
+                ];
+            }
         }
         echo json_encode($imagenesArray);
     ?>;

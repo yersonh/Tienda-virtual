@@ -23,30 +23,31 @@ class ProductoController {
     // Listar productos
     public function index() {
         Auth::soloAdmin();
-        $productos = $this->model->obtenerTodos();
+        $productos = $this->model->obtenerTodos() ?? [];
 
         foreach ($productos as $key => $producto) {
-            $productos[$key]['imagenes'] = !empty($producto['imagen'])
-                ? [['url' => $producto['imagen']]]
+            $imagen = $producto['imagen'] ?? null;
+            $productos[$key]['imagenes'] = !empty($imagen)
+                ? [['url' => $imagen]]
                 : [];
         }
-        
+
         ob_start();
         require_once __DIR__ . '/../views/admin/productos/index.php';
         $contenido = ob_get_clean();
-        
+
         require_once __DIR__ . '/../views/admin/nav.php';
     }
 
     // Mostrar formulario crear
     public function crear() {
         Auth::soloAdmin();
-        $categorias = $this->model->obtenerCategorias();
-        
+        $categorias = $this->model->obtenerCategorias() ?? [];
+
         ob_start();
         require_once __DIR__ . '/../views/admin/productos/crear.php';
         $contenido = ob_get_clean();
-        
+
         require_once __DIR__ . '/../views/admin/nav.php';
     }
 
@@ -84,13 +85,20 @@ class ProductoController {
         Auth::soloAdmin();
         $id = $_GET['id'] ?? 0;
         $producto = $this->model->obtenerPorId($id);
-        $imagenes = $this->model->obtenerImagenes($id);
-        $categorias = $this->model->obtenerCategorias();
-        
+
+        if (!$producto) {
+            $_SESSION['error'] = 'Producto no encontrado';
+            header('Location: index.php?action=productos');
+            exit();
+        }
+
+        $imagenes = $this->model->obtenerImagenes($id) ?? [];
+        $categorias = $this->model->obtenerCategorias() ?? [];
+
         ob_start();
         require_once __DIR__ . '/../views/admin/productos/editar.php';
         $contenido = ob_get_clean();
-        
+
         require_once __DIR__ . '/../views/admin/nav.php';
     }
 
@@ -128,12 +136,19 @@ class ProductoController {
         Auth::soloAdmin();
         $id = $_GET['id'] ?? 0;
         $producto = $this->model->obtenerPorId($id);
-        $imagenes = $this->model->obtenerImagenes($id);
-        
+
+        if (!$producto) {
+            $_SESSION['error'] = 'Producto no encontrado';
+            header('Location: index.php?action=productos');
+            exit();
+        }
+
+        $imagenes = $this->model->obtenerImagenes($id) ?? [];
+
         ob_start();
         require_once __DIR__ . '/../views/admin/productos/ver.php';
         $contenido = ob_get_clean();
-        
+
         require_once __DIR__ . '/../views/admin/nav.php';
     }
     // Eliminar producto COMPLETO (con todas sus imágenes)
