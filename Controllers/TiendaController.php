@@ -170,32 +170,31 @@ class TiendaController {
 
         $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
 
-            // Ã°Å¸â€Â TEXTO
             $match_texto = true;
             if (!empty($filtro)) {
                 $f = strtolower($filtro);
 
                 $match_texto =
-                    str_contains(strtolower($p['nombre']), $f) ||
-                    str_contains(strtolower($p['codigo']), $f) ||
-                    str_contains(strtolower((string) ($p['descripcion'] ?? '')), $f);
+                    str_contains(strtolower((string)$p['nombre']), $f) ||
+                    str_contains(strtolower((string)$p['codigo']), $f) ||
+                    str_contains(strtolower((string)($p['descripcion'] ?? '')), $f);
             }
 
-            // Ã°Å¸â€™Â° PRECIO
             $match_precio = true;
 
-           if ($precio_min !== '') {
-                $match_precio = $p['precio'] >= (int) $precio_min;
+            if ($precio_min !== '') {
+                $match_precio = (int)$p['precio'] >= (int)$precio_min;
             }
 
             if ($precio_max !== '') {
-                $match_precio = $match_precio && $p['precio'] <= (int) $precio_max;
+                $match_precio = $match_precio && (int)$p['precio'] <= (int)$precio_max;
             }
 
-            // Ã°Å¸â€œÂ¦ CATEGORIA
             $match_categoria = true;
             if (!empty($categoria_filtro)) {
-                $match_categoria = $p['categoria_nombre'] === $categoria_filtro;
+                $match_categoria =
+                    strtolower(trim((string)$p['categoria_nombre'])) ===
+                    strtolower(trim((string)$categoria_filtro));
             }
 
             return $match_texto && $match_precio && $match_categoria;
