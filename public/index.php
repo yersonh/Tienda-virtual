@@ -45,6 +45,7 @@ $publicas = [
     'inicio',
     'tienda',
     'productoDetalle',
+    'recuperar'
   
 ];
 
@@ -76,6 +77,10 @@ if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
 switch ($action) {
     case 'login':
         require_once __DIR__ . '/../views/Login.php';
+        break;
+
+    case 'recuperar':
+        require_once __DIR__ . '/../views/Recuperar.php';
         break;
 
     case 'iniciarSesion':
