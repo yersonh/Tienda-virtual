@@ -279,25 +279,26 @@ class ProductoModel {
         $stockJoin = $this->stockReferenciaJoin();
 
         $query = "SELECT $columns,
-                        ventas.total_vendido
+                        NVL(ventas.total_vendido, 0) AS total_vendido
                 FROM producto p
                 INNER JOIN categoria_producto c ON c.id_categoria = p.id_categoria
                 $referenciaJoin
                 $stockJoin
                 $imageJoin
-                INNER JOIN (
+                LEFT JOIN (
                     SELECT r.id_producto, SUM(dv.cantidad) AS total_vendido
                     FROM detalle_venta dv
-                    INNER JOIN referencia_producto r 
+                    INNER JOIN referencia_producto r
                         ON r.id_referencia = dv.id_referencia
-                    INNER JOIN venta v 
+                    INNER JOIN venta v
                         ON v.id_venta = dv.id_venta
                     INNER JOIN pago p
                         ON p.id_venta = v.id_venta
                     WHERE UPPER(TRIM(p.estado)) = 'COMPLETADO'
                     GROUP BY r.id_producto
                 ) ventas ON ventas.id_producto = p.id_producto
-                ORDER BY ventas.total_vendido DESC, p.id_producto DESC
+                WHERE NVL(p.estado, 'false') = 'true'
+                ORDER BY NVL(ventas.total_vendido, 0) DESC, p.id_producto DESC
                 FETCH FIRST :limite ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
