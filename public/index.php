@@ -284,6 +284,10 @@ switch ($action) {
         (new AdminPedidoController())->mapa();
         break;
 
+    case 'admin_pedidos_json':
+        (new AdminPedidoController())->obtenerPedidosJson();
+        break;
+
     default:
         header("Location: index.php?action=login");
         exit();

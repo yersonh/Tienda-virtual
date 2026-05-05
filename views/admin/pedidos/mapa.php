@@ -15,11 +15,11 @@
             <label for="estado-mapa" style="color: #38bdf8; font-weight: 600;">Filtrar por estado:</label>
             <select id="estado-mapa" style="padding: 8px 12px; background: rgba(15,23,42,0.8); border: 1px solid rgba(56,189,248,0.2); border-radius: 8px; color: white; cursor: pointer;">
                 <option value="">Todos los estados</option>
-                <?php foreach($estados as $est): ?>
-                    <option value="<?= (int)$est['id_estado'] ?>">
-                        <?= htmlspecialchars($est['nombre'], ENT_QUOTES, 'UTF-8') ?>
-                    </option>
-                <?php endforeach; ?>
+                <option value="1">Pendiente</option>
+                <option value="2">Procesado</option>
+                <option value="3">Enviado</option>
+                <option value="4">Entregado</option>
+                <option value="5">Cancelado</option>
             </select>
         </div>
         <div style="color: #94a3b8; font-size: 14px;">
@@ -28,6 +28,7 @@
     </div>
 
     <div id="map" style="height: 600px; border-radius: 12px; border: 1px solid rgba(56,189,248,0.2); margin-bottom: 20px;"></div>
+    <div id="debug" style="background: rgba(15,23,42,0.8); color: #94a3b8; padding: 10px; border-radius: 8px; font-size: 12px; margin-top: 10px; max-height: 200px; overflow-y: auto;"></div>
 </div>
 
 <style>
@@ -120,7 +121,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     className: 'map-tile'
 }).addTo(mapa);
 
-const pedidos = <?= json_encode($pedidosConDireccion) ?>;
 const estadoColores = {
     1: { color: '#fac275', nombre: 'Pendiente' },
     2: { color: '#3b82f6', nombre: 'Procesado' },
@@ -132,6 +132,33 @@ const estadoColores = {
 const marcadores = [];
 let geocodificacionEnCurso = 0;
 let geocodificacionTotal = 0;
+let pedidos = [];
+
+function debugLog(msg) {
+    const debugDiv = document.getElementById('debug');
+    const timestamp = new Date().toLocaleTimeString();
+    debugDiv.innerHTML += `[${timestamp}] ${msg}<br>`;
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+}
+
+async function cargarPedidos() {
+    debugLog('Iniciando carga de pedidos...');
+    try {
+        const response = await fetch('index.php?action=admin_pedidos_json');
+        const data = await response.json();
+        debugLog(`Respuesta recibida: ${data.count} pedidos con dirección`);
+        debugLog(`JSON: ${JSON.stringify(data).substring(0, 200)}...`);
+        pedidos = data.pedidos || [];
+        if (pedidos.length === 0) {
+            debugLog('⚠️ No hay pedidos con dirección');
+        } else {
+            debugLog(`✓ Cargados ${pedidos.length} pedidos`);
+            procesarPedidos();
+        }
+    } catch (error) {
+        debugLog(`❌ Error al cargar: ${error.message}`);
+    }
+}
 
 async function geocodificar(direccion) {
     const cacheKey = 'geo_' + btoa(direccion);
@@ -237,5 +264,5 @@ function actualizarContador() {
 
 document.getElementById('estado-mapa').addEventListener('change', actualizarContador);
 
-procesarPedidos();
+cargarPedidos();
 </script>

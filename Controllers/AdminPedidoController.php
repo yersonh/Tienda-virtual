@@ -31,16 +31,28 @@ class AdminPedidoController {
     public function mapa() {
         Auth::soloAdmin();
 
-        $pedidos = $this->model->obtenerTodos(null, null, null) ?? [];
         $estados = $this->model->obtenerEstados() ?? [];
-
-        $pedidosConDireccion = array_values(array_filter($pedidos, fn($p) => !empty($p['ciudad'])));
 
         ob_start();
         require_once __DIR__ . '/../views/admin/pedidos/mapa.php';
         $contenido = ob_get_clean();
 
         require_once __DIR__ . '/../views/admin/nav.php';
+    }
+
+    public function obtenerPedidosJson() {
+        Auth::soloAdmin();
+        header('Content-Type: application/json; charset=utf-8');
+
+        $pedidos = $this->model->obtenerTodos(null, null, null) ?? [];
+        $pedidosConDireccion = array_values(array_filter($pedidos, fn($p) => !empty($p['ciudad'])));
+
+        echo json_encode([
+            'success' => true,
+            'count' => count($pedidosConDireccion),
+            'pedidos' => $pedidosConDireccion
+        ]);
+        exit();
     }
 }
 ?>
