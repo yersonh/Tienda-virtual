@@ -153,6 +153,7 @@ class TiendaController {
         $precio_max = preg_replace('/\D/', '', $_GET['precio_max'] ?? '');
         $categoria_filtro = $_GET['categoria'] ?? '';
         $compatibilidad_tipo = $_GET['compatibilidad_tipo'] ?? '';
+        $compatibilidad_tipo = in_array($compatibilidad_tipo, ['vehiculo', 'maquinaria'], true) ? $compatibilidad_tipo : '';
         $vehiculo_marca = trim((string) ($_GET['vehiculo_marca'] ?? ''));
         $vehiculo_modelo = trim((string) ($_GET['vehiculo_modelo'] ?? ''));
         $vehiculo_ano = (int) preg_replace('/\D/', '', $_GET['vehiculo_ano'] ?? '');
@@ -160,10 +161,18 @@ class TiendaController {
         $maquinaria_marca = trim((string) ($_GET['maquinaria_marca'] ?? ''));
         $maquinaria_modelo = trim((string) ($_GET['maquinaria_modelo'] ?? ''));
 
-        if ($compatibilidad_tipo === 'vehiculo' && $vehiculo_marca !== '' && $vehiculo_modelo !== '' && $vehiculo_ano > 0) {
-            $productos = $this->productoModel()->filtrarCompatibilidadVehiculo($vehiculo_marca, $vehiculo_modelo, $vehiculo_ano);
-        } elseif ($compatibilidad_tipo === 'maquinaria' && $maquinaria_tipo !== '' && $maquinaria_marca !== '' && $maquinaria_modelo !== '') {
-            $productos = $this->productoModel()->filtrarCompatibilidadMaquinaria($maquinaria_tipo, $maquinaria_marca, $maquinaria_modelo);
+        if ($compatibilidad_tipo === 'vehiculo') {
+            $productos = $this->productoModel()->filtrarVehiculo(
+                $vehiculo_marca !== '' ? $vehiculo_marca : null,
+                $vehiculo_modelo !== '' ? $vehiculo_modelo : null,
+                $vehiculo_ano > 0 ? $vehiculo_ano : null
+            );
+        } elseif ($compatibilidad_tipo === 'maquinaria') {
+            $productos = $this->productoModel()->filtrarMaquinaria(
+                $maquinaria_tipo !== '' ? $maquinaria_tipo : null,
+                $maquinaria_marca !== '' ? $maquinaria_marca : null,
+                $maquinaria_modelo !== '' ? $maquinaria_modelo : null
+            );
         } else {
             $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
         }

@@ -343,44 +343,35 @@ class ProductoModel {
         return $results;
     }
 
-    public function filtrarCompatibilidadVehiculo(string $marca, string $modelo, int $ano): array {
-        $marca = strtoupper(trim($marca));
-        $modelo = strtoupper(trim($modelo));
-        if ($marca === '' || $modelo === '' || $ano <= 0) {
-            return [];
-        }
+    public function filtrarVehiculo(?string $marca, ?string $modelo, ?int $ano): array {
+        $marca = $marca !== null && trim($marca) !== '' ? trim($marca) : null;
+        $modelo = $modelo !== null && trim($modelo) !== '' ? trim($modelo) : null;
+        $ano = $ano !== null && $ano > 0 ? $ano : null;
 
+        $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
-        $query = "SELECT p.ID_PRODUCTO,
-                         r.ID_REFERENCIA,
-                         r.NUMERO_REFERENCIA,
-                         r.MARCA,
-                         r.FABRICANTE,
-                         p.NOMBRE,
-                         p.CODIGO,
-                         p.DESCRIPCION,
-                         p.PRECIO,
-                         NVL(vc.STOCK_P, 0) AS STOCK_P,
-                         p.ESTADO,
-                         p.ID_CATEGORIA,
-                         c.NOMBRE AS CATEGORIA_NOMBRE,
-                         img.IMAGEN
-                  FROM V_COMPATIBILIDADES_VEHICULO vc
-                  INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_REFERENCIA = vc.ID_REFERENCIA
-                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = r.ID_PRODUCTO
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
+        $query = "SELECT $columns
+                  FROM PRODUCTO p
                   INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
-                  WHERE UPPER(vc.MARCA_VEHICULO) = :marca
-                  AND UPPER(vc.MODELO_VEHICULO) = :modelo
-                  AND :ano BETWEEN vc.ANO_INICIO AND vc.ANO_FIN
-                  AND NVL(vc.STOCK_P, 0) > 0
+                  WHERE p.ID_PRODUCTO IN (
+                      SELECT DISTINCT ID_PRODUCTO
+                      FROM V_COMPATIBILIDADES_VEHICULO
+                      WHERE (:marca IS NULL OR MARCA_VEHICULO = :marca)
+                      AND (:modelo IS NULL OR MODELO_VEHICULO = :modelo)
+                      AND (:anio IS NULL OR :anio BETWEEN ANO_INICIO AND ANO_FIN)
+                  )
                   AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':marca', $marca);
         oci_bind_by_name($stmt, ':modelo', $modelo);
-        oci_bind_by_name($stmt, ':ano', $ano, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':anio', $ano, -1, SQLT_INT);
         oci_execute($stmt);
 
         $results = [];
@@ -392,38 +383,28 @@ class ProductoModel {
         return $results;
     }
 
-    public function filtrarCompatibilidadMaquinaria(string $tipo, string $marca, string $modelo): array {
-        $tipo = strtoupper(trim($tipo));
-        $marca = strtoupper(trim($marca));
-        $modelo = strtoupper(trim($modelo));
-        if ($tipo === '' || $marca === '' || $modelo === '') {
-            return [];
-        }
+    public function filtrarMaquinaria(?string $tipo, ?string $marca, ?string $modelo): array {
+        $tipo = $tipo !== null && trim($tipo) !== '' ? trim($tipo) : null;
+        $marca = $marca !== null && trim($marca) !== '' ? trim($marca) : null;
+        $modelo = $modelo !== null && trim($modelo) !== '' ? trim($modelo) : null;
 
+        $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
-        $query = "SELECT p.ID_PRODUCTO,
-                         r.ID_REFERENCIA,
-                         r.NUMERO_REFERENCIA,
-                         r.MARCA,
-                         r.FABRICANTE,
-                         p.NOMBRE,
-                         p.CODIGO,
-                         p.DESCRIPCION,
-                         p.PRECIO,
-                         NVL(vg.STOCK_P, 0) AS STOCK_P,
-                         p.ESTADO,
-                         p.ID_CATEGORIA,
-                         c.NOMBRE AS CATEGORIA_NOMBRE,
-                         img.IMAGEN
-                  FROM V_COMPATIBILIDAD_GENERAL vg
-                  INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_REFERENCIA = vg.ID_REFERENCIA
-                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = r.ID_PRODUCTO
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
+        $query = "SELECT $columns
+                  FROM PRODUCTO p
                   INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
+                  $referenciaJoin
+                  $stockJoin
                   $imageJoin
-                  WHERE UPPER(vg.TIPO_MAQUINARIA) = :tipo
-                  AND UPPER(vg.MARCA_MAQUINARIA) = :marca
-                  AND UPPER(vg.MODELO_MAQUINARIA) = :modelo
-                  AND NVL(vg.STOCK_P, 0) > 0
+                  WHERE p.ID_PRODUCTO IN (
+                      SELECT DISTINCT ID_PRODUCTO
+                      FROM V_COMPATIBILIDADES_MAQUINARIA
+                      WHERE (:tipo IS NULL OR TIPO_MAQUINARIA = :tipo)
+                      AND (:marca IS NULL OR MARCA_MAQUINA = :marca)
+                      AND (:modelo IS NULL OR MODELO_MAQUINA = :modelo)
+                  )
                   AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
@@ -440,6 +421,14 @@ class ProductoModel {
         oci_free_statement($stmt);
 
         return $results;
+    }
+
+    public function filtrarCompatibilidadVehiculo(string $marca, string $modelo, int $ano): array {
+        return $this->filtrarVehiculo($marca, $modelo, $ano);
+    }
+
+    public function filtrarCompatibilidadMaquinaria(string $tipo, string $marca, string $modelo): array {
+        return $this->filtrarMaquinaria($tipo, $marca, $modelo);
     }
 
     public function crear($datos) {
