@@ -1297,11 +1297,11 @@ categoria.addEventListener('change', () => {
     if (el === compatibilityType) {
         el.addEventListener('change', () => {
             syncCompatibilityFields();
-            scheduleFilterProducts();
+            if (detailMode) filterProducts();
         });
     } else {
-        el.addEventListener('blur', () => {
-            scheduleFilterProducts();
+        el.addEventListener('input', () => {
+            if (detailMode) scheduleFilterProducts();
         });
     }
 });
