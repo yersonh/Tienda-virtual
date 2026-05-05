@@ -13,66 +13,68 @@
 
     <div class="form-container">
         <form method="POST" action="index.php?action=productos_actualizar" enctype="multipart/form-data">
-            <input type="hidden" name="id_producto" value="<?= $producto['id_producto'] ?>">
-            
+            <input type="hidden" name="id_producto" value="<?= (int) ($producto['id_producto'] ?? 0) ?>">
+
             <div class="form-grid">
                 <div class="form-group">
                     <label for="codigo"><?= htmlspecialchars('Codigo del producto', ENT_QUOTES, 'UTF-8') ?> *</label>
-                    <input type="text" id="codigo" name="codigo" required value="<?= htmlspecialchars($producto['codigo']) ?>">
+                    <input type="text" id="codigo" name="codigo" required value="<?= htmlspecialchars($producto['codigo'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">
                     <label for="nombre"><?= htmlspecialchars('Nombre del producto', ENT_QUOTES, 'UTF-8') ?> *</label>
-                    <input type="text" id="nombre" name="nombre" required value="<?= htmlspecialchars($producto['nombre']) ?>">
+                    <input type="text" id="nombre" name="nombre" required value="<?= htmlspecialchars($producto['nombre'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">
                     <label for="id_categoria"><?= htmlspecialchars('Categoria', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="id_categoria" name="id_categoria" required>
                         <option value=""><?= htmlspecialchars('Seleccione una categoria', ENT_QUOTES, 'UTF-8') ?></option>
-                        <?php foreach($categorias as $categoria): ?>
-                            <option value="<?= $categoria['id_categoria'] ?>" <?= $categoria['id_categoria'] == $producto['id_categoria'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($categoria['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php if (isset($categorias) && is_array($categorias)): ?>
+                            <?php foreach($categorias as $categoria): ?>
+                                <option value="<?= $categoria['id_categoria'] ?? '' ?>" <?= ($categoria['id_categoria'] ?? 0) == ($producto['id_categoria'] ?? 0) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($categoria['nombre'] ?? '') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="precio"><?= htmlspecialchars('Precio', ENT_QUOTES, 'UTF-8') ?> *</label>
-                    <input type="number" id="precio" name="precio" step="0.01" required value="<?= $producto['precio'] ?>">
+                    <input type="number" id="precio" name="precio" step="0.01" required value="<?= (float) ($producto['precio'] ?? 0) ?>">
                 </div>
 
                 <div class="form-group">
                     <label for="stock"><?= htmlspecialchars('Stock', ENT_QUOTES, 'UTF-8') ?> *</label>
-                    <input type="number" id="stock" name="stock" required value="<?= $producto['stock_p'] ?>">
+                    <input type="number" id="stock" name="stock" required value="<?= (int) ($producto['stock_p'] ?? 0) ?>">
                 </div>
 
                 <div class="form-group">
                     <label for="estado"><?= htmlspecialchars('Estado', ENT_QUOTES, 'UTF-8') ?> *</label>
                     <select id="estado" name="estado" required>
-                        <option value="1" <?= ($producto['estado'] == '1' || $producto['estado'] === true || $producto['estado'] === 't') ? 'selected' : '' ?>><?= htmlspecialchars('Activo', ENT_QUOTES, 'UTF-8') ?></option>
-                        <option value="0" <?= ($producto['estado'] == '0' || $producto['estado'] === false || $producto['estado'] === 'f') ? 'selected' : '' ?>><?= htmlspecialchars('Inactivo', ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="true" <?= ($producto['estado'] ?? 'false') === 'true' ? 'selected' : '' ?>><?= htmlspecialchars('Activo', ENT_QUOTES, 'UTF-8') ?></option>
+                        <option value="false" <?= ($producto['estado'] ?? 'false') === 'false' ? 'selected' : '' ?>><?= htmlspecialchars('Inactivo', ENT_QUOTES, 'UTF-8') ?></option>
                     </select>
                 </div>
 
                 <div class="form-group full-width">
                     <label for="descripcion"><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?></label>
-                    <textarea id="descripcion" name="descripcion" rows="4"><?= htmlspecialchars($producto['descripcion']) ?></textarea>
+                    <textarea id="descripcion" name="descripcion" rows="4"><?= htmlspecialchars($producto['descripcion'] ?? '') ?></textarea>
                 </div>
 
                 <!-- Imágenes existentes -->
-                <?php if(!empty($imagenes)): ?>
+                <?php if(isset($imagenes) && is_array($imagenes) && !empty($imagenes)): ?>
                 <div class="form-group full-width">
                     <label><?= htmlspecialchars('Imagenes actuales', ENT_QUOTES, 'UTF-8') ?></label>
                     <div class="imagenes-existentes">
                         <?php foreach($imagenes as $img): ?>
                             <?php
-                            $nombreArchivo = basename($img['url']);
+                            $nombreArchivo = basename($img['url'] ?? '');
                             ?>
-                            <div class="imagen-item" data-id="<?= $img['id_imagen'] ?>" data-producto="<?= $producto['id_producto'] ?>">
+                            <div class="imagen-item" data-id="<?= $img['id_imagen'] ?? '' ?>" data-producto="<?= $producto['id_producto'] ?? '' ?>">
                                 <img src="image.php?folder=productos&path=<?= urlencode($nombreArchivo) ?>" alt="Producto" loading="lazy" decoding="async">
-                                <button type="button" class="btn-eliminar-img" onclick="showDeleteModal(<?= $img['id_imagen'] ?>, <?= $producto['id_producto'] ?>)">
+                                <button type="button" class="btn-eliminar-img" onclick="showDeleteModal(<?= $img['id_imagen'] ?? 0 ?>, <?= $producto['id_producto'] ?? 0 ?>)">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>

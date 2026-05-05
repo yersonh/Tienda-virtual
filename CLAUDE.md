@@ -4,161 +4,112 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Tienda Virtual** is a custom PHP MVC e-commerce application built for a database management course. It features user authentication, product management, shopping carts, and an admin panel. The application uses PostgreSQL for data persistence and is designed to run on PHP's built-in server.
+**Tienda Virtual** (NAYLEX STORE / NAVI FLEX) is a custom PHP MVC e-commerce application built for a database management course. It features user authentication, product management, shopping carts, full checkout flow, order management, and an admin panel. The application uses Oracle Autonomous Database for persistence.
 
 ## Technology Stack
 
 - **Language**: PHP 8.1+
-- **Database**: PostgreSQL
-- **Required PHP Extensions**: pdo_pgsql, pdo, mbstring, gd, curl, xml, zip
-- **Deployment**: Railway (using Nixpacks build system)
-- **Database Credentials**: Hardcoded in `config/database.php` (for Railway PostgreSQL instance)
-
-## Architecture
-
-### Directory Structure
-
-- **Controllers/** - Business logic layer. Each controller handles a specific feature area:
-  - `LoginController.php` - User authentication
-  - `RegistroController.php` - User registration
-  - `ProductoController.php` - Product CRUD operations (admin only)
-  - `TiendaController.php` - Store front and product listings
-  - `CarritoController.php` - Shopping cart operations
-  - `PerfilController.php` - User profile management
-  - `AdminController.php` - Admin dashboard
-
-- **models/** - Database access layer using PDO prepared statements:
-  - Each model class wraps database operations for its entity
-  - Constructor receives PDO connection instance
-  - Methods use parameterized queries with named placeholders (`:id` syntax)
-  - Returns associative arrays via PDO::FETCH_ASSOC
-
-- **views/** - PHP templates with output buffering:
-  - Split between public views (`Inicio.php`, `Login.php`, `Tienda.php`, etc.)
-  - Admin views in `views/admin/` subdirectory
-  - Shared layouts in `views/layouts/` (navbar, footer)
-  - Controllers use `ob_start()`/`ob_get_clean()` to buffer view output
-  - Views are wrapped in admin navigation template for admin pages
-
-- **middleware/** - `Auth.php` provides access control:
-  - `Auth::soloAdmin()` - Restricts actions to admin users (type 'Admin')
-  - Checks `$_SESSION['id_usuario']` for authentication state
-
-- **config/** - Configuration and helpers:
-  - `database.php` - Database singleton using PDO with Railway PostgreSQL
-  - `UploadHelper.php` - File upload utilities for product images
-
-- **public/** - Web-accessible entry point:
-  - `index.php` - Simple router using GET `?action=` parameter
-  - `image.php` - Image serving helper
-  - All requests route through `index.php`
-
-- **init.sql** - Database schema initialization with tables: persona, usuario, tipo_usuario, proveedor, categoria_producto, producto, producto_imagen, carrito, detalle_carrito
-
-### Routing Pattern
-
-The application uses a simple query-string based router in `public/index.php`:
-
-```
-/?action=tienda           # Store front
-/?action=productos        # Admin product list
-/?action=login            # Login form
-/?action=iniciarSesion    # POST login handler
-/?action=agregarCarrito   # Add to cart (AJAX)
-/?action=verCarrito       # View cart
-/?action=perfil           # User profile
-```
-
-Public actions (no login required): login, registro, tienda, productoDetalle, carrito operations, email/username verification
-Protected actions: All admin routes, profile, and other authenticated features
+- **Database**: Oracle Autonomous Database via OCI8 extension
+- **Email**: Brevo (Sendinblue) API for transactional email
+- **Deployment**: Railway (Nixpacks)
 
 ## Running the Application
 
-### Local Development
-
-**Start the PHP built-in server** (runs on http://localhost:8080):
 ```bash
 php -S localhost:8080 -t public
 ```
 
-The server automatically uses `public/index.php` as the entry point for all requests.
+### Required Environment Variables
 
-### Database Setup
+| Variable | Purpose |
+|---|---|
+| `ORACLE_USER` | Oracle DB username |
+| `ORACLE_PASSWORD` | Oracle DB password |
+| `ORACLE_TNS` | TNS alias (e.g. `mydb_high`) |
+| `WALLET_CWALLET_B64` | Base64 of `cwallet.sso` (binary, not PEM) |
+| `WALLET_EWALLET_B64` | Base64 of `ewallet.pem` or `ewallet.p12` |
+| `WALLET_SQLNET_B64` | Base64 of `sqlnet.ora` |
+| `WALLET_TNSNAMES_B64` | Base64 of `tnsnames.ora` |
+| `BREVO_API_KEY` | Brevo API key for password-recovery emails |
+| `SMTP_FROM` | Sender email address |
+| `SMTP_FROM_NAME` | Sender display name |
 
-**Initialize the PostgreSQL database schema**:
-```bash
-psql -U postgres -d railway -f init.sql
+The wallet files are written to `/tmp/wallet` at runtime by `Database::getConnection()`.
+
+## Architecture
+
+### Routing
+
+All requests enter through `public/index.php` via `?action=<name>`. The router uses `spl_autoload_register` to load classes by suffix (`*Controller` → `Controllers/`, `*Model` → `models/`, `Auth` → `middleware/`).
+
+Public actions (no login required): `login`, `registro`, `guardarRegistro`, `verificarCorreo`, `verificarUsername`, `verificarTelefono`, `iniciarSesion`, `inicio`, `tienda`, `productoDetalle`, `recuperar`, `solicitarRecuperacion`, `restablecer`, `cambiarPassword`
+
+Cart actions redirect to login if unauthenticated; JSON-accepting requests get a 401 JSON response instead of a redirect.
+
+### Database Layer
+
+`config/database.php` is a singleton that connects via `oci_pconnect()` and returns an `OCI8Connection` instance (defined in `config/OCI8Wrapper.php`).
+
+`OCI8Wrapper.php` provides a PDO-like interface over OCI8:
+- `OCI8Connection::prepare(string $sql)` → `OCI8Statement`
+- `OCI8Statement::execute(array $params)` — binds `:name` placeholders via `oci_bind_by_name`
+- `OCI8Statement::fetch()` / `fetchAll()` — returns lowercase-keyed associative arrays
+- `lastInsertId()` is not supported; use `RETURNING id INTO :out_var` Oracle syntax
+
+Transactions must be managed manually with `oci_commit($conn)` / `oci_rollback($conn)` — the wrapper uses `OCI_COMMIT_ON_SUCCESS` by default for single statements, but multi-step flows use `OCI_NO_AUTO_COMMIT` + explicit commit/rollback.
+
+### Oracle SQL Patterns
+
+Use Oracle-specific syntax:
+```sql
+-- Pagination
+SELECT * FROM producto FETCH FIRST 10 ROWS ONLY
+SELECT * FROM producto OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY
+
+-- Sequence-based IDs (no auto-increment)
+INSERT INTO pedido (id_pedido, ...) VALUES (seq_pedido.NEXTVAL, ...)
+
+-- Get ID after insert
+INSERT INTO pedido (...) VALUES (...) RETURNING id_pedido INTO :out_id
+
+-- Check sequence existence
+SELECT SEQUENCE_NAME FROM USER_SEQUENCES WHERE SEQUENCE_NAME = :name
 ```
-
-Update `config/database.php` with your local database credentials to develop locally.
-
-### Testing the Application
-
-Manual testing workflow:
-1. Start the server: `php -S localhost:8080 -t public`
-2. Test public routes: registration, login, product browsing
-3. Create test users with different roles (Admin, Vendedor, ClienteTiendaV)
-4. Test admin-protected routes as Admin user
-5. Test shopping cart and user profile flows
-6. Verify authentication redirects for protected pages
-
-## Code Patterns and Conventions
-
-### Database Queries
-
-Models use PDO prepared statements with named parameters:
-```php
-$query = "SELECT * FROM usuario WHERE id_usuario = :id";
-$stmt = $this->conn->prepare($query);
-$stmt->execute([':id' => $id]);
-```
-
-Always use parameterized queries to prevent SQL injection.
 
 ### Controller Structure
 
-Controllers:
-1. Require model and config files at the top
-2. Instantiate model in `__construct()` with PDO connection
-3. Each public method corresponds to a router action
-4. Use output buffering with `ob_start()` / `ob_get_clean()` for views
-5. Call `Auth::soloAdmin()` at the start of protected methods
-6. Render views within the admin navigation template for admin pages
-
-### View Pattern
-
-Views are PHP templates with access to variables from the controller:
-```php
-// In Controller:
-$productos = $this->model->obtenerTodos();
-ob_start();
-require_once __DIR__ . '/../views/admin/productos/index.php';
-```
-
-Views render HTML and expect variables to be in scope.
+Controllers follow a consistent pattern:
+1. `require_once` model and config files at top (autoloader handles class loading in router, but controllers load their direct dependencies)
+2. `__construct()` calls `Database::getConnection()` and instantiates models
+3. Protected methods call `Auth::soloAdmin()` as first line
+4. Views rendered with `ob_start()` / `ob_get_clean()` and then wrapped in layout
 
 ### User Roles
 
-Three user types in `tipo_usuario`:
-- **Admin** - Full system access, product management
-- **Vendedor** - Seller role (setup exists but may not be fully implemented)
-- **ClienteTiendaV** - Customer role (default for registrations)
+Three roles in `tipo_usuario`: **Admin** (full access), **Vendedor** (seller, partial implementation), **ClienteTiendaV** (default for new registrations).
 
-## Important Implementation Details
+Session key `$_SESSION['logueado']` is a boolean derived from `isset($_SESSION['id_usuario'])` and re-evaluated on every request.
 
-- **Session Management**: Uses native PHP sessions (`$_SESSION`). Session must be started in `public/index.php` before any routing logic.
-- **Image Handling**: Product images stored in file system with database references in `producto_imagen` table. Upload helper manages file operations.
-- **Cart Storage**: Shopping cart in `carrito` and `detalle_carrito` tables (not session-based).
-- **No Framework**: This is a custom MVC implementation without using Laravel, Symfony, or similar frameworks.
+### Password Recovery Flow
+
+1. User submits email → `RecuperarController::solicitarRecuperacion()` generates a token stored in DB
+2. `Mailer::enviarRecuperacion()` sends HTML email via Brevo REST API
+3. Token link hits `?action=restablecer` → `RecuperarController::mostrarRestablecer()`
+4. Form submission hits `?action=cambiarPassword` → `RecuperarController::cambiarPassword()`
+
+### Checkout Flow
+
+`?action=ConfirmarPedido` → select/save delivery address → `?action=pago` → `?action=procesarPago` (POST) → `CheckoutController::confirmarPedido()` → calls `PedidoModel::crearPedidoCompletoTx()` (Oracle stored procedure `SP_CREAR_PEDIDO_COMPLETO`) → `PagoModel::procesarPago()` → explicit `oci_commit` → redirect to `?action=confirmacionPedido`.
+
+On any exception: `oci_rollback` and redirect back to payment page.
+
+### Image Handling
+
+Product images are stored in the filesystem; `config/UploadHelper.php` manages uploads. Database references are stored in the `producto_imagen` table. `public/image.php` serves images.
 
 ## Deployment (Railway)
 
-The application is configured for Railway deployment:
-- **Build**: Uses Nixpacks (defined in `nixpacks.toml`) with PHP 8.1 and required extensions
-- **Start Command**: `php -S 0.0.0.0:${PORT:-8080} -t public`
-- **Health Check**: Monitors `/` endpoint
-- **Restart Policy**: Auto-restarts on failure (max 10 retries)
-
-Configuration files:
-- `railway.json` - Railway-specific build and deploy settings
-- `nixpacks.toml` - Build environment specification (PHP version, extensions, env vars)
+- **Build**: Nixpacks (`nixpacks.toml`) — PHP 8.1 + OCI8 extension
+- **Start**: `php -S 0.0.0.0:${PORT:-8080} -t public`
+- **Health check**: `GET /?action=health` → `200 ok`
+- Config: `railway.json`, `nixpacks.toml`

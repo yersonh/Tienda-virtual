@@ -924,8 +924,7 @@ body[data-theme="light"] {
                 <h5>Car Engine</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
-                allow="autoplay; fullscreen; xr-spatial-tracking"
-                allowfullscreen></iframe>
+                allow="autoplay; fullscreen; xr-spatial-tracking"></iframe>
             </div>
             </div>
 
@@ -934,7 +933,7 @@ body[data-theme="light"] {
                 <h5>V8 Engine</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 
@@ -943,7 +942,7 @@ body[data-theme="light"] {
                 <h5>V8 Twin Turbo</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 
@@ -952,7 +951,7 @@ body[data-theme="light"] {
                 <h5>Brake Disc</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 
@@ -969,7 +968,7 @@ body[data-theme="light"] {
                 <h5>Tractor Wheel</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 
@@ -978,7 +977,7 @@ body[data-theme="light"] {
                 <h5>Full Tractor Wheel</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 
@@ -995,7 +994,7 @@ body[data-theme="light"] {
                 <h5>Ford Mustang 1965</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 
@@ -1004,7 +1003,7 @@ body[data-theme="light"] {
                 <h5>Old Farm Tractor</h5>
                 <iframe class="sketchfab-frame"
                 src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
-                allowfullscreen></iframe>
+                allow="fullscreen"></iframe>
             </div>
             </div>
 

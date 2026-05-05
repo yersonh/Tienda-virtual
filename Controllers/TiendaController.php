@@ -136,6 +136,7 @@ class TiendaController {
     }
 
     public function inicio() {
+        unset($_SESSION['tienda_cache']['mas_vendidos'], $_SESSION['tienda_cache']['productos_nuevos']);
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
         $masVendidos = $this->obtenerMasVendidosCacheados();
@@ -213,7 +214,7 @@ class TiendaController {
         $categorias = [];
         $todasCategorias = array_map(function($cat) {
             return $cat['nombre'];
-        }, $this->obtenerCategoriasCacheadas());
+        }, $this->obtenerCategoriasCacheadas() ?? []);
 
         foreach ($productos as $p) {
             $cat = $p['categoria_nombre'] ?? 'Sin categoria';

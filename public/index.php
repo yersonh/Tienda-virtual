@@ -45,7 +45,10 @@ $publicas = [
     'inicio',
     'tienda',
     'productoDetalle',
-  
+    'recuperar',
+    'solicitarRecuperacion',
+    'restablecer',
+    'cambiarPassword'
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
@@ -78,6 +81,20 @@ switch ($action) {
         require_once __DIR__ . '/../views/Login.php';
         break;
 
+    case 'recuperar':
+        require_once __DIR__ . '/../views/Recuperar.php';
+        break;
+    case 'solicitarRecuperacion':
+        (new RecuperarController())->solicitarRecuperacion();
+        break;
+
+    case 'restablecer':
+        (new RecuperarController())->mostrarRestablecer();
+        break;
+
+    case 'cambiarPassword':
+        (new RecuperarController())->cambiarPassword();
+        break;
     case 'iniciarSesion':
         (new LoginController())->iniciarSesion();
         break;
@@ -125,7 +142,7 @@ switch ($action) {
     case 'agregarAjax':
         (new CarritoController())->agregarAjax();
         break;
-        
+
     case 'verCarrito':
         (new CarritoController())->ver();
         break;
@@ -257,6 +274,18 @@ switch ($action) {
     case 'productos_ver':
         Auth::soloAdmin();
         (new ProductoController())->ver();
+        break;
+
+    case 'admin_pedidos':
+        (new AdminPedidoController())->index();
+        break;
+
+    case 'admin_pedidos_mapa':
+        (new AdminPedidoController())->mapa();
+        break;
+
+    case 'admin_pedidos_json':
+        (new AdminPedidoController())->obtenerPedidosJson();
         break;
 
     default:

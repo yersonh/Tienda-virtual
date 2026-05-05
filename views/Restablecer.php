@@ -1,16 +1,26 @@
 <?php
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-?>
 
+$token = $_GET['token'] ?? '';
+$tokenValido = false;
+
+if (!empty($token)) {
+    require_once __DIR__ . '/../models/UsuarioModel.php';
+    $usuarioModel = new UsuarioModel();
+    $datos = $usuarioModel->validarToken($token);
+    if ($datos) {
+        $tokenValido = true;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <title>NAYLEX Store</title>
+    <title>Restablecer Contraseña - NAYLEX Store</title>
     <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
     <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
@@ -33,7 +43,7 @@ if (session_status() === PHP_SESSION_NONE) {
             --accent-2: #2563eb;
             --success: #16a34a;
             --shadow: 0 24px 70px rgba(2, 6, 23, 0.46);
-            --page-bg-image: url('imagenes/Fondo.png');
+            --page-bg-image: url('../imagenes/Fondo.png');
         }
 
         [data-theme="light"] {
@@ -49,7 +59,7 @@ if (session_status() === PHP_SESSION_NONE) {
             --accent-2: #2563eb;
             --success: #15803d;
             --shadow: 0 24px 60px rgba(100, 116, 139, 0.2);
-            --page-bg-image: url('imagenes/Fondoclaro.png');
+            --page-bg-image: url('../imagenes/Fondoclaro.png');
         }
 
         * {
@@ -73,8 +83,7 @@ if (session_status() === PHP_SESSION_NONE) {
             padding: 28px 16px;
         }
 
-        /* 🔥 CONTENEDOR */
-        .login-container {
+        .recovery-container {
             background:
                 linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 38%),
                 var(--card-bg);
@@ -88,7 +97,6 @@ if (session_status() === PHP_SESSION_NONE) {
             border: 1px solid var(--card-border);
         }
 
-        /* LOGO */
         .logo-section {
             text-align: center;
             margin-bottom: 28px;
@@ -99,16 +107,25 @@ if (session_status() === PHP_SESSION_NONE) {
             filter: drop-shadow(0 16px 26px rgba(2, 6, 23, 0.22));
         }
 
-        .logo-section p {
-            color: var(--muted) !important;
-            font-size: 14px !important;
-            line-height: 1.65;
-            margin-top: 10px;
+        h2 {
+            text-align: center;
+            margin-bottom: 12px;
+            color: var(--accent);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 26px;
+            letter-spacing: -0.02em;
         }
 
-        /* INPUTS */
+        .description {
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         .input-with-icon {
@@ -127,14 +144,14 @@ if (session_status() === PHP_SESSION_NONE) {
 
         .input-with-icon input {
             width: 100%;
-            padding: 14px 44px 14px 44px;
+            padding: 14px 14px 14px 44px;
             border-radius: 14px;
             border: 1px solid var(--card-border);
             background: var(--input-bg);
             color: var(--input-text);
             font-weight: 700;
             outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .input-with-icon input::placeholder {
@@ -145,26 +162,6 @@ if (session_status() === PHP_SESSION_NONE) {
         .input-with-icon input:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16);
-        }
-
-        /* 👁️ */
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--muted);
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-        }
-
-        .toggle-password:hover {
-            color: var(--accent);
-            background: rgba(56, 189, 248, 0.1);
         }
 
         .theme-toggle {
@@ -181,7 +178,7 @@ if (session_status() === PHP_SESSION_NONE) {
             font-size: 18px;
             backdrop-filter: blur(14px);
             box-shadow: 0 12px 28px rgba(2, 6, 23, 0.2);
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .theme-toggle:hover {
@@ -189,8 +186,7 @@ if (session_status() === PHP_SESSION_NONE) {
             border-color: var(--accent);
         }
 
-        /* BOTONES */
-        .login-btn {
+        .recovery-btn {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -199,46 +195,35 @@ if (session_status() === PHP_SESSION_NONE) {
             font-weight: 800;
             cursor: pointer;
             color: white;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            transition: all 0.2s ease;
             box-shadow: 0 16px 34px rgba(37, 99, 235, 0.28);
+            margin-bottom: 15px;
         }
 
-        .login-btn:hover {
+        .recovery-btn:hover {
             transform: translateY(-2px);
             filter: brightness(1.04);
             box-shadow: 0 20px 42px rgba(37, 99, 235, 0.36);
         }
 
-        .register-btn {
-            display: block;
-            text-align: center;
-            margin-top: 12px;
-            background: linear-gradient(135deg, #34d399, var(--success));
-            padding: 14px;
-            border-radius: 14px;
-            color: white;
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--accent);
             text-decoration: none;
+            font-size: 14px;
             font-weight: 800;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-            box-shadow: 0 14px 30px rgba(22, 163, 74, 0.24);
+            transition: all 0.2s ease;
+            margin-top: 10px;
         }
 
-        .register-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.04);
+        .back-link:hover {
+            opacity: 0.8;
+            transform: translateX(-4px);
         }
 
-        /* LINKS */
-        a {
-            transition: color 0.2s ease, transform 0.2s ease;
-            font-weight: 800;
-        }
-
-        a:hover {
-            color: var(--accent) !important;
-        }
-
-        /* MENSAJES */
         .error-message {
             background: rgba(220, 38, 38, 0.16);
             color: #fecaca;
@@ -248,6 +233,7 @@ if (session_status() === PHP_SESSION_NONE) {
             text-align: center;
             border: 1px solid rgba(248, 113, 113, 0.28);
             font-weight: 700;
+            font-size: 13px;
         }
 
         .success-message {
@@ -259,6 +245,7 @@ if (session_status() === PHP_SESSION_NONE) {
             text-align: center;
             border: 1px solid rgba(74, 222, 128, 0.28);
             font-weight: 700;
+            font-size: 13px;
         }
 
         [data-theme="light"] .error-message {
@@ -272,7 +259,7 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         @media (max-width: 480px) {
-            .login-container {
+            .recovery-container {
                 padding: 30px 22px;
                 border-radius: 22px;
             }
@@ -286,103 +273,63 @@ if (session_status() === PHP_SESSION_NONE) {
         <i class="fas fa-moon"></i>
     </button>
 
-    <div class="login-container">
+    <div class="recovery-container">
+        <?php if ($tokenValido): ?>
+            <div class="logo-section">
+                <a href="index.php?action=tienda">
+                    <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store" decoding="async">
+                </a>
+            </div>
 
-        <div class="logo-section">
-            <img src="../imagenes/logosinfondo.png" class="logo-img" alt="NAYLEX Store" decoding="async">
-            <p style="color:#ccc; font-size:14px;">
-                <?= htmlspecialchars('Tienda virtual para la comercializacion de maquinaria agricola, repuestos automotrices y productos de iluminacion.', ENT_QUOTES, 'UTF-8') ?>
-            </p>
-        </div>
+            <h2>Nueva Contraseña</h2>
+            <p class="description">Elegí una contraseña segura para tu cuenta.</p>
 
-        <!-- MENSAJES -->
-        <?php if (isset($_SESSION['error'])): ?>
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="error-message">
+                    <?= $_SESSION['error'];
+                    unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="index.php?action=cambiarPassword">
+                <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" placeholder="<?= htmlspecialchars('Nueva contraseña', ENT_QUOTES, 'UTF-8') ?>" required minlength="8">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="confirmar" placeholder="<?= htmlspecialchars('Confirmar contraseña', ENT_QUOTES, 'UTF-8') ?>" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="recovery-btn">
+                    <i class="fas fa-save"></i> Guardar Contraseña
+                </button>
+            </form>
+
+            <a href="index.php?action=login" class="back-link">
+                <i class="fas fa-arrow-left"></i> Volver al Login
+            </a>
+
+        <?php else: ?>
             <div class="error-message">
-                <?= $_SESSION['error'];
-                unset($_SESSION['error']); ?>
+                ❌ El enlace es inválido o expiró.
             </div>
+            <a href="index.php?action=recuperar" class="recovery-btn" style="display:block;text-align:center;text-decoration:none;">
+                Solicitar nuevo enlace
+            </a>
         <?php endif; ?>
-
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="success-message" id="success-message">
-                <?= $_SESSION['success'];
-                unset($_SESSION['success']); ?>
-            </div>
-        <?php endif; ?>
-
-        <!-- FORM -->
-        <form method="POST" action="index.php?action=iniciarSesion">
-
-            <div class="form-group">
-                <div class="input-with-icon">
-                    <i class="fas fa-user"></i>
-                    <input type="text" name="nickname" placeholder="<?= htmlspecialchars('Usuario', ENT_QUOTES, 'UTF-8') ?>" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <div class="input-with-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" name="password" id="password" placeholder="<?= htmlspecialchars('Contrasena', ENT_QUOTES, 'UTF-8') ?>" required>
-
-                    <button type="button" class="toggle-password" id="togglePassword" title="<?= htmlspecialchars('Mostrar contrasena', ENT_QUOTES, 'UTF-8') ?>">
-                        <i class="fas fa-eye" id="iconEye"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt"></i> <?= htmlspecialchars('Iniciar Sesion', ENT_QUOTES, 'UTF-8') ?>
-            </button>
-
-            <a href="index.php?action=registro" class="register-btn">
-                <i class="fas fa-user-plus"></i> <?= htmlspecialchars('Registro', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-
-        </form>
-
-        <!-- LINKS -->
-        <div style="text-align:center; margin-top:15px;">
-            <a href="index.php?action=recuperar" style="color:#38bdf8; font-size:13px;">
-                <?= htmlspecialchars('¿Olvido su contrasena?', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-        </div>
-
-        <div style="text-align:center; margin-top:5px;">
-            <a href="#" style="color:#facc15; font-size:13px;">
-                <?= htmlspecialchars('¿Quieres reactivar tu cuenta?', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-        </div>
-
-        <!-- VOLVER -->
-        <div style="text-align:center; margin-top:10px;">
-            <a href="index.php?action=tienda" style="color:#38bdf8;">
-                <i class="fas fa-arrow-left"></i> <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
-            </a>
-        </div>
-
     </div>
 
     <script>
-        const toggle = document.getElementById('togglePassword');
-        const password = document.getElementById('password');
-        const icon = document.getElementById('iconEye');
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
-
-        toggle.addEventListener('click', () => {
-
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                password.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-
-        });
 
         function applyTheme(theme) {
             body.setAttribute('data-theme', theme);
@@ -398,18 +345,6 @@ if (session_status() === PHP_SESSION_NONE) {
         });
 
         applyTheme(localStorage.getItem('theme') || 'dark');
-
-        const successMessage = document.getElementById('success-message');
-        if (successMessage) {
-            setTimeout(() => {
-                successMessage.style.opacity = '0';
-                successMessage.style.transition = 'opacity 0.4s ease';
-
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 400);
-            }, 3000);
-        }
     </script>
 
 </body>

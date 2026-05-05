@@ -3,9 +3,11 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 
-class LoginController {
+class LoginController
+{
 
-    public function iniciarSesion() {
+    public function iniciarSesion()
+    {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -79,7 +81,8 @@ class LoginController {
         exit();
     }
 
-    public function logout() {
+    public function logout()
+    {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }

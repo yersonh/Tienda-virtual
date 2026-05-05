@@ -918,11 +918,14 @@
     <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio min', ENT_QUOTES, 'UTF-8') ?>" id="price-min" value="<?= htmlspecialchars($precio_min ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <input class="filter-input" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Precio max', ENT_QUOTES, 'UTF-8') ?>" id="price-max" value="<?= htmlspecialchars($precio_max ?? '', ENT_QUOTES, 'UTF-8') ?>">
     <select class="filter-input filter-select" id="cat-select">
-        <option value="" <?= empty($categoria_filtro) ? 'selected' : '' ?>><?= htmlspecialchars('Todas las categorias', ENT_QUOTES, 'UTF-8') ?></option>
-        <?php foreach($todasCategorias as $cat): ?>
-        <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= $categoria_filtro === $cat ? 'selected' : '' ?>><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></option>
-        <?php endforeach; ?>
+        <option value="" <?= empty($categoria_filtro ?? '') ? 'selected' : '' ?>><?= htmlspecialchars('Todas las categorias', ENT_QUOTES, 'UTF-8') ?></option>
+        <?php if(isset($todasCategorias) && is_array($todasCategorias)): ?>
+            <?php foreach($todasCategorias as $cat): ?>
+            <option value="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" <?= ($categoria_filtro ?? '') === $cat ? 'selected' : '' ?>><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></option>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </select>
+<<<<<<< HEAD
     <button class="btn-filter <?= !empty($compatibilidad_tipo) ? 'active' : '' ?>" type="button" id="open-filters">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5h18"></path>
@@ -931,6 +934,19 @@
         </svg>
         <?= htmlspecialchars('Filtros', ENT_QUOTES, 'UTF-8') ?>
     </button>
+=======
+    <select class="filter-input filter-select" id="compatibility-type">
+        <option value="" <?= empty($compatibilidad_tipo ?? '') ? 'selected' : '' ?>><?= htmlspecialchars('Compatibilidad', ENT_QUOTES, 'UTF-8') ?></option>
+        <option value="vehiculo" <?= ($compatibilidad_tipo ?? '') === 'vehiculo' ? 'selected' : '' ?>><?= htmlspecialchars('Vehiculo', ENT_QUOTES, 'UTF-8') ?></option>
+        <option value="maquinaria" <?= ($compatibilidad_tipo ?? '') === 'maquinaria' ? 'selected' : '' ?>><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></option>
+    </select>
+    <input class="filter-input compat-field compat-vehiculo" type="text" placeholder="<?= htmlspecialchars('Marca vehiculo', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-brand" value="<?= htmlspecialchars($vehiculo_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-vehiculo" type="text" placeholder="<?= htmlspecialchars('Modelo vehiculo', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-model" value="<?= htmlspecialchars($vehiculo_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-vehiculo" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Ano', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-year" value="<?= htmlspecialchars((string) ($vehiculo_ano ?? 0), ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Tipo maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-type" value="<?= htmlspecialchars($maquinaria_tipo ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Marca maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-brand" value="<?= htmlspecialchars($maquinaria_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Modelo maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-model" value="<?= htmlspecialchars($maquinaria_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
+>>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
     <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars('Limpiar', ENT_QUOTES, 'UTF-8') ?></button>
 </div>
 
@@ -992,13 +1008,15 @@
 </aside>
 
 <div class="cat-tabs">
-    <button class="cat-tab <?= empty($categoria_filtro) ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars('Todo', ENT_QUOTES, 'UTF-8') ?></button>
-    <?php foreach($todasCategorias as $cat): ?>
-    <button class="cat-tab <?= $categoria_filtro === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this,'<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>')"><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></button>
-    <?php endforeach; ?>
+    <button class="cat-tab <?= empty($categoria_filtro ?? '') ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars('Todo', ENT_QUOTES, 'UTF-8') ?></button>
+    <?php if(isset($todasCategorias) && is_array($todasCategorias)): ?>
+        <?php foreach($todasCategorias as $cat): ?>
+        <button class="cat-tab <?= ($categoria_filtro ?? '') === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this,'<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>')"><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></button>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </div>
 
-<?php if(!empty($categoria_filtro)): ?>
+<?php if(!empty($categoria_filtro ?? '')): ?>
 <a class="detail-back" href="index.php?action=tienda">
     <span class="see-all-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24">
@@ -1010,8 +1028,9 @@
 </a>
 <?php endif; ?>
 
+<?php if(isset($categorias) && is_array($categorias)): ?>
 <?php foreach($categorias as $categoria => $productos): ?>
-<div id="<?= !empty($categoria_filtro) ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
+<div id="<?= !empty($categoria_filtro ?? '') ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
         <div class="section-title"><?= htmlspecialchars((string) $categoria, ENT_QUOTES, 'UTF-8') ?> <span class="section-count" id="count-<?= strtolower(str_replace(' ', '-', $categoria)) ?>"><?= count($productos) ?> <?= htmlspecialchars('productos', ENT_QUOTES, 'UTF-8') ?></span></div>
         <div class="section-actions">
@@ -1026,7 +1045,7 @@
                     </span>
                 </span>
             </a>
-            <?php if(empty($categoria_filtro)): ?>
+            <?php if(empty($categoria_filtro ?? '')): ?>
             <div class="carousel-nav">
                 <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', -1)" aria-label="<?= htmlspecialchars('Desplazar productos a la izquierda', ENT_QUOTES, 'UTF-8') ?>">&#8249;</button>
                 <button class="carousel-btn" type="button" onclick="scrollProducts('grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>', 1)" aria-label="<?= htmlspecialchars('Desplazar productos a la derecha', ENT_QUOTES, 'UTF-8') ?>">&#8250;</button>
@@ -1127,6 +1146,7 @@
     </div>
 </div>
 <?php endforeach; ?>
+<?php endif; ?>
 </div>
 
 <script>
@@ -1436,8 +1456,12 @@ const categorySections = Array.from(document.querySelectorAll('.category-section
         categoria: element.dataset.categoria || ''
     }))
 }));
+<<<<<<< HEAD
 const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
 const compatibilityServerMode = <?= !empty($compatibilidad_tipo) ? 'true' : 'false' ?>;
+=======
+const detailMode = <?= !empty($categoria_filtro ?? '') ? 'true' : 'false' ?>;
+>>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 let filterTimer = null;
 
@@ -1512,6 +1536,7 @@ categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
     filterProducts();
 });
+<<<<<<< HEAD
 if (compatibilityType) {
     compatibilityType.addEventListener('change', syncCompatibilityFields);
 }
@@ -1522,6 +1547,20 @@ if (applySidebarFiltersBtn) applySidebarFiltersBtn.addEventListener('click', app
 if (clearSidebarFiltersBtn) clearSidebarFiltersBtn.addEventListener('click', clearFilters);
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeFilterSidebar();
+=======
+[compatibilityType, vehicleBrand, vehicleModel, vehicleYear, machineType, machineBrand, machineModel].forEach(el => {
+    if (!el) return;
+    if (el === compatibilityType) {
+        el.addEventListener('change', () => {
+            syncCompatibilityFields();
+            if (detailMode) filterProducts();
+        });
+    } else {
+        el.addEventListener('input', () => {
+            if (detailMode) scheduleFilterProducts();
+        });
+    }
+>>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
 });
 
 function syncCompatibilityFields() {

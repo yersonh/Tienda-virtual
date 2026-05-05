@@ -26,8 +26,9 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach($productos as $producto): ?>
-                <tr style="height: 70px;">
+                <?php if (isset($productos) && is_array($productos)): ?>
+                    <?php foreach($productos as $producto): ?>
+                    <tr style="height: 70px;">
                     <td style="vertical-align: middle;">
                         <?php 
                         $primeraImagen = !empty($producto['imagenes']) ? $producto['imagenes'][0] : null;
@@ -41,14 +42,14 @@
                             </div>
                         <?php endif; ?>
                     </td>
-                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['codigo']) ?></td>
-                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['nombre']) ?></td>
-                    <td style="vertical-align: middle;"><?= htmlspecialchars((string) $producto['categoria_nombre'], ENT_QUOTES, 'UTF-8') ?></td>
-                    <td style="vertical-align: middle;">$<?= number_format($producto['precio'], 2) ?></td>
-                    <td style="vertical-align: middle;"><?= $producto['stock_p'] ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['codigo'] ?? '') ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars($producto['nombre'] ?? '') ?></td>
+                    <td style="vertical-align: middle;"><?= htmlspecialchars((string) ($producto['categoria_nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                    <td style="vertical-align: middle;">$<?= number_format((float) ($producto['precio'] ?? 0), 2) ?></td>
+                    <td style="vertical-align: middle;"><?= (int) ($producto['stock_p'] ?? 0) ?></td>
                     <td style="vertical-align: middle;">
-                        <span class="badge <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? 'badge-success' : 'badge-danger' ?>">
-                            <?= ($producto['estado'] == '1' || $producto['estado'] === true) ? htmlspecialchars('Activo', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Inactivo', ENT_QUOTES, 'UTF-8') ?>
+                        <span class="badge <?= ($producto['estado'] ?? 'false') === 'true' ? 'badge-success' : 'badge-danger' ?>">
+                            <?= ($producto['estado'] ?? 'false') === 'true' ? htmlspecialchars('Activo', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Inactivo', ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </td>
                     <td style="vertical-align: middle;">
@@ -64,8 +65,11 @@
                             </a>
                         </div>
                     </td>
-                </tr>
-                <?php endforeach; ?>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">No hay productos disponibles</td></tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>

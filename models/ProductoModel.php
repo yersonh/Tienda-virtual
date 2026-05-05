@@ -114,7 +114,7 @@ class ProductoModel {
                 $referenciaJoin
                 $stockJoin
                 $imageJoin
-                WHERE UPPER(NVL(p.estado, 'ACTIVO')) = 'ACTIVO'
+                WHERE NVL(p.estado, 'false') = 'true'
                 ORDER BY c.nombre, p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
@@ -286,16 +286,12 @@ class ProductoModel {
                 $stockJoin
                 $imageJoin
                 INNER JOIN (
-                    SELECT r.id_producto, SUM(dv.cantidad) AS total_vendido
+                    SELECT dv.id_producto, SUM(dv.cantidad) AS total_vendido
                     FROM detalle_venta dv
-                    INNER JOIN referencia_producto r 
-                        ON r.id_referencia = dv.id_referencia
-                    INNER JOIN venta v 
-                        ON v.id_venta = dv.id_venta
-                    INNER JOIN pago p
-                        ON p.id_venta = v.id_venta
-                    WHERE UPPER(TRIM(p.estado)) = 'COMPLETADO'
-                    GROUP BY r.id_producto
+                    INNER JOIN venta v ON v.id_venta = dv.id_venta
+                    INNER JOIN pago pg ON pg.id_venta = v.id_venta
+                    WHERE UPPER(TRIM(pg.estado)) = 'COMPLETADO'
+                    GROUP BY dv.id_producto
                 ) ventas ON ventas.id_producto = p.id_producto
                 ORDER BY ventas.total_vendido DESC, p.id_producto DESC
                 FETCH FIRST :limite ROWS ONLY";
@@ -358,6 +354,7 @@ class ProductoModel {
                   $referenciaJoin
                   $stockJoin
                   $imageJoin
+<<<<<<< HEAD
                   WHERE p.ID_PRODUCTO IN (
                       SELECT DISTINCT ID_PRODUCTO
                       FROM V_COMPATIBILIDADES_VEHICULO
@@ -366,6 +363,13 @@ class ProductoModel {
                       AND (:anio IS NULL OR :anio BETWEEN ANO_INICIO AND ANO_FIN)
                   )
                   AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+=======
+                  WHERE UPPER(vc.MARCA_VEHICULO) = :marca
+                  AND UPPER(vc.MODELO_VEHICULO) = :modelo
+                  AND :ano BETWEEN vc.ANO_INICIO AND vc.ANO_FIN
+                  AND NVL(vc.STOCK_P, 0) > 0
+                  AND NVL(p.ESTADO, 'false') = 'true'
+>>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
@@ -398,6 +402,7 @@ class ProductoModel {
                   $referenciaJoin
                   $stockJoin
                   $imageJoin
+<<<<<<< HEAD
                   WHERE p.ID_PRODUCTO IN (
                       SELECT DISTINCT ID_PRODUCTO
                       FROM V_COMPATIBILIDADES_MAQUINARIA
@@ -406,6 +411,13 @@ class ProductoModel {
                       AND (:modelo IS NULL OR MODELO_MAQUINA = :modelo)
                   )
                   AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+=======
+                  WHERE UPPER(vg.TIPO_MAQUINARIA) = :tipo
+                  AND UPPER(vg.MARCA_MAQUINARIA) = :marca
+                  AND UPPER(vg.MODELO_MAQUINARIA) = :modelo
+                  AND NVL(vg.STOCK_P, 0) > 0
+                  AND NVL(p.ESTADO, 'false') = 'true'
+>>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
