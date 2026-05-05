@@ -386,7 +386,7 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
 
             <div class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="index.php?action=admin_pedidos" class="nav-link">
                     <i class="fas fa-shopping-cart"></i>
                     <span><?= htmlspecialchars('Pedidos', ENT_QUOTES, 'UTF-8') ?></span>
                 </a>

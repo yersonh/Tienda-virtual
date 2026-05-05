@@ -276,6 +276,14 @@ switch ($action) {
         (new ProductoController())->ver();
         break;
 
+    case 'admin_pedidos':
+        (new AdminPedidoController())->index();
+        break;
+
+    case 'admin_pedidos_mapa':
+        (new AdminPedidoController())->mapa();
+        break;
+
     default:
         header("Location: index.php?action=login");
         exit();

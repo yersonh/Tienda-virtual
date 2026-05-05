@@ -96,7 +96,7 @@ class Mailer
         <!-- Cabecera con gradiente navy/dorado -->
         <div style="background: linear-gradient(135deg, #0a1628 0%, #1a2744 100%); padding: 32px 24px; text-align: center;">
             <h1 style="color: #d4a853; font-size: 24px; margin: 0; font-weight: 700; letter-spacing: 0.5px;">
-                NAVI FLEX
+                NAYLEX STORE
             </h1>
             <p style="color: #ffffff; margin-top: 8px; font-size: 14px; opacity: 0.9;">
                 Recuperación de Contraseña
