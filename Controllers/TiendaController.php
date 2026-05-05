@@ -136,6 +136,7 @@ class TiendaController {
     }
 
     public function inicio() {
+        unset($_SESSION['tienda_cache']['mas_vendidos'], $_SESSION['tienda_cache']['productos_nuevos']);
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
         $masVendidos = $this->obtenerMasVendidosCacheados();
