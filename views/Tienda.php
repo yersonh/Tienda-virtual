@@ -1294,10 +1294,16 @@ categoria.addEventListener('change', () => {
 });
 [compatibilityType, vehicleBrand, vehicleModel, vehicleYear, machineType, machineBrand, machineModel].forEach(el => {
     if (!el) return;
-    el.addEventListener(el === compatibilityType ? 'change' : 'input', () => {
-        syncCompatibilityFields();
-        scheduleFilterProducts();
-    });
+    if (el === compatibilityType) {
+        el.addEventListener('change', () => {
+            syncCompatibilityFields();
+            scheduleFilterProducts();
+        });
+    } else {
+        el.addEventListener('blur', () => {
+            scheduleFilterProducts();
+        });
+    }
 });
 
 function syncCompatibilityFields() {
