@@ -430,8 +430,8 @@ class ProductoModel {
     public function obtenerOpcionesCompatibilidadMaquinaria(): array {
         return [
             'tipos' => $this->obtenerValoresDistinct("SELECT DISTINCT TIPO_MAQUINARIA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE TIPO_MAQUINARIA IS NOT NULL ORDER BY TIPO_MAQUINARIA"),
-            'marcas' => $this->obtenerValoresDistinct("SELECT DISTINCT MARCA_MAQUINA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE MARCA_MAQUINA IS NOT NULL ORDER BY MARCA_MAQUINA"),
-            'modelos' => $this->obtenerValoresDistinct("SELECT DISTINCT MODELO_MAQUINA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE MODELO_MAQUINA IS NOT NULL ORDER BY MODELO_MAQUINA")
+            'marcas' => $this->obtenerValoresDistinct("SELECT DISTINCT MARCA_MAQUINARIA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE MARCA_MAQUINARIA IS NOT NULL ORDER BY MARCA_MAQUINARIA"),
+            'modelos' => $this->obtenerValoresDistinct("SELECT DISTINCT MODELO_MAQUINARIA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE MODELO_MAQUINARIA IS NOT NULL ORDER BY MODELO_MAQUINARIA")
         ];
     }
 
@@ -503,8 +503,8 @@ class ProductoModel {
         $referenciaJoin = $this->referenciaJoin();
         $stockJoin = $this->stockReferenciaJoin();
         $tipoCondition = $this->buildInCondition('TIPO_MAQUINARIA', 'maq_tipo', $tipos, $binds);
-        $marcaCondition = $this->buildInCondition('MARCA_MAQUINA', 'maq_marca', $marcas, $binds);
-        $modeloCondition = $this->buildInCondition('MODELO_MAQUINA', 'maq_modelo', $modelos, $binds);
+        $marcaCondition = $this->buildInCondition('MARCA_MAQUINARIA', 'maq_marca', $marcas, $binds);
+        $modeloCondition = $this->buildInCondition('MODELO_MAQUINARIA', 'maq_modelo', $modelos, $binds);
         $query = "SELECT $columns
                   FROM PRODUCTO p
                   INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
