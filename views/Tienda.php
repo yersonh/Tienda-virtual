@@ -925,7 +925,6 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </select>
-<<<<<<< HEAD
     <button class="btn-filter <?= !empty($compatibilidad_tipo) ? 'active' : '' ?>" type="button" id="open-filters">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5h18"></path>
@@ -934,19 +933,6 @@
         </svg>
         <?= htmlspecialchars('Filtros', ENT_QUOTES, 'UTF-8') ?>
     </button>
-=======
-    <select class="filter-input filter-select" id="compatibility-type">
-        <option value="" <?= empty($compatibilidad_tipo ?? '') ? 'selected' : '' ?>><?= htmlspecialchars('Compatibilidad', ENT_QUOTES, 'UTF-8') ?></option>
-        <option value="vehiculo" <?= ($compatibilidad_tipo ?? '') === 'vehiculo' ? 'selected' : '' ?>><?= htmlspecialchars('Vehiculo', ENT_QUOTES, 'UTF-8') ?></option>
-        <option value="maquinaria" <?= ($compatibilidad_tipo ?? '') === 'maquinaria' ? 'selected' : '' ?>><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></option>
-    </select>
-    <input class="filter-input compat-field compat-vehiculo" type="text" placeholder="<?= htmlspecialchars('Marca vehiculo', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-brand" value="<?= htmlspecialchars($vehiculo_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
-    <input class="filter-input compat-field compat-vehiculo" type="text" placeholder="<?= htmlspecialchars('Modelo vehiculo', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-model" value="<?= htmlspecialchars($vehiculo_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
-    <input class="filter-input compat-field compat-vehiculo" type="text" inputmode="numeric" placeholder="<?= htmlspecialchars('Ano', ENT_QUOTES, 'UTF-8') ?>" id="vehicle-year" value="<?= htmlspecialchars((string) ($vehiculo_ano ?? 0), ENT_QUOTES, 'UTF-8') ?>">
-    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Tipo maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-type" value="<?= htmlspecialchars($maquinaria_tipo ?? '', ENT_QUOTES, 'UTF-8') ?>">
-    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Marca maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-brand" value="<?= htmlspecialchars($maquinaria_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
-    <input class="filter-input compat-field compat-maquinaria" type="text" placeholder="<?= htmlspecialchars('Modelo maquinaria', ENT_QUOTES, 'UTF-8') ?>" id="machine-model" value="<?= htmlspecialchars($maquinaria_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
->>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
     <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars('Limpiar', ENT_QUOTES, 'UTF-8') ?></button>
 </div>
 
@@ -1456,12 +1442,8 @@ const categorySections = Array.from(document.querySelectorAll('.category-section
         categoria: element.dataset.categoria || ''
     }))
 }));
-<<<<<<< HEAD
-const detailMode = <?= !empty($categoria_filtro) ? 'true' : 'false' ?>;
-const compatibilityServerMode = <?= !empty($compatibilidad_tipo) ? 'true' : 'false' ?>;
-=======
 const detailMode = <?= !empty($categoria_filtro ?? '') ? 'true' : 'false' ?>;
->>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
+const compatibilityServerMode = <?= !empty($compatibilidad_tipo ?? '') ? 'true' : 'false' ?>;
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 let filterTimer = null;
 
@@ -1536,7 +1518,6 @@ categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
     filterProducts();
 });
-<<<<<<< HEAD
 if (compatibilityType) {
     compatibilityType.addEventListener('change', syncCompatibilityFields);
 }
@@ -1547,20 +1528,6 @@ if (applySidebarFiltersBtn) applySidebarFiltersBtn.addEventListener('click', app
 if (clearSidebarFiltersBtn) clearSidebarFiltersBtn.addEventListener('click', clearFilters);
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeFilterSidebar();
-=======
-[compatibilityType, vehicleBrand, vehicleModel, vehicleYear, machineType, machineBrand, machineModel].forEach(el => {
-    if (!el) return;
-    if (el === compatibilityType) {
-        el.addEventListener('change', () => {
-            syncCompatibilityFields();
-            if (detailMode) filterProducts();
-        });
-    } else {
-        el.addEventListener('input', () => {
-            if (detailMode) scheduleFilterProducts();
-        });
-    }
->>>>>>> b5b608ea9d2b305b21126293b2abc14e8c789e29
 });
 
 function syncCompatibilityFields() {
