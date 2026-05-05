@@ -263,6 +263,52 @@
     display: grid;
     gap: 12px;
 }
+.option-picker {
+    display: grid;
+    gap: 8px;
+}
+.option-search {
+    width: 100%;
+}
+.option-list {
+    max-height: 168px;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 6px;
+    display: grid;
+    gap: 2px;
+}
+[data-theme="light"] .option-list {
+    background: #f8fafc;
+    border-color: #d6dee8;
+}
+.option-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 34px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+}
+.option-row:hover {
+    background: rgba(34,211,238,0.08);
+}
+.option-row input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    flex: 0 0 auto;
+}
+.option-empty {
+    color: var(--secondary);
+    font-size: 13px;
+    padding: 10px 8px;
+}
 .sidebar-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -936,6 +982,39 @@
     <button class="btn-clear" onclick="clearFilters()"><?= htmlspecialchars('Limpiar', ENT_QUOTES, 'UTF-8') ?></button>
 </div>
 
+<?php
+$vehiculo_marcas = isset($vehiculo_marcas) && is_array($vehiculo_marcas) ? $vehiculo_marcas : [];
+$vehiculo_modelos = isset($vehiculo_modelos) && is_array($vehiculo_modelos) ? $vehiculo_modelos : [];
+$vehiculo_anos = isset($vehiculo_anos) && is_array($vehiculo_anos) ? array_map('strval', $vehiculo_anos) : [];
+$maquinaria_tipos = isset($maquinaria_tipos) && is_array($maquinaria_tipos) ? $maquinaria_tipos : [];
+$maquinaria_marcas = isset($maquinaria_marcas) && is_array($maquinaria_marcas) ? $maquinaria_marcas : [];
+$maquinaria_modelos = isset($maquinaria_modelos) && is_array($maquinaria_modelos) ? $maquinaria_modelos : [];
+$opcionesVehiculo = isset($opcionesVehiculo) && is_array($opcionesVehiculo) ? $opcionesVehiculo : ['marcas' => [], 'modelos' => [], 'anos' => []];
+$opcionesMaquinaria = isset($opcionesMaquinaria) && is_array($opcionesMaquinaria) ? $opcionesMaquinaria : ['tipos' => [], 'marcas' => [], 'modelos' => []];
+$renderOptionPicker = function(string $id, string $label, string $name, array $options, array $selected): void {
+    $selected = array_map('strval', $selected);
+    ?>
+    <div class="filter-group option-picker" data-option-picker>
+        <label class="filter-label" for="<?= htmlspecialchars($id, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
+        <input class="filter-input option-search" type="text" id="<?= htmlspecialchars($id, ENT_QUOTES, 'UTF-8') ?>" placeholder="<?= htmlspecialchars('Buscar...', ENT_QUOTES, 'UTF-8') ?>" data-option-search>
+        <div class="option-list">
+            <?php if(empty($options)): ?>
+                <div class="option-empty"><?= htmlspecialchars('Sin opciones disponibles', ENT_QUOTES, 'UTF-8') ?></div>
+            <?php else: ?>
+                <?php foreach($options as $option): ?>
+                    <?php $value = (string) $option; ?>
+                    <label class="option-row" data-option-row data-label="<?= htmlspecialchars(strtolower($value), ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="checkbox" name="<?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>[]" value="<?= htmlspecialchars($value, ENT_QUOTES, 'UTF-8') ?>" <?= in_array($value, $selected, true) ? 'checked' : '' ?>>
+                        <span><?= htmlspecialchars($value, ENT_QUOTES, 'UTF-8') ?></span>
+                    </label>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+};
+?>
+
 <div class="filter-overlay" id="filter-overlay"></div>
 <aside class="filter-sidebar" id="filter-sidebar" aria-hidden="true" aria-labelledby="filter-sidebar-title">
     <div class="sidebar-head">
@@ -958,33 +1037,15 @@
         </div>
 
         <div class="compat-fields compat-vehiculo">
-            <div class="filter-group">
-                <label class="filter-label" for="vehicle-brand"><?= htmlspecialchars('Marca vehiculo', ENT_QUOTES, 'UTF-8') ?></label>
-                <input class="filter-input" type="text" id="vehicle-brand" value="<?= htmlspecialchars($vehiculo_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="vehicle-model"><?= htmlspecialchars('Modelo vehiculo', ENT_QUOTES, 'UTF-8') ?></label>
-                <input class="filter-input" type="text" id="vehicle-model" value="<?= htmlspecialchars($vehiculo_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="vehicle-year"><?= htmlspecialchars('Ano', ENT_QUOTES, 'UTF-8') ?></label>
-                <input class="filter-input" type="text" inputmode="numeric" id="vehicle-year" value="<?= htmlspecialchars((string) ($vehiculo_ano ?: ''), ENT_QUOTES, 'UTF-8') ?>">
-            </div>
+            <?php $renderOptionPicker('vehicle-brand', 'Marca vehiculo', 'vehiculo_marca', $opcionesVehiculo['marcas'] ?? [], $vehiculo_marcas); ?>
+            <?php $renderOptionPicker('vehicle-model', 'Modelo vehiculo', 'vehiculo_modelo', $opcionesVehiculo['modelos'] ?? [], $vehiculo_modelos); ?>
+            <?php $renderOptionPicker('vehicle-year', 'Ano', 'vehiculo_ano', $opcionesVehiculo['anos'] ?? [], $vehiculo_anos); ?>
         </div>
 
         <div class="compat-fields compat-maquinaria">
-            <div class="filter-group">
-                <label class="filter-label" for="machine-type"><?= htmlspecialchars('Tipo maquinaria', ENT_QUOTES, 'UTF-8') ?></label>
-                <input class="filter-input" type="text" id="machine-type" value="<?= htmlspecialchars($maquinaria_tipo ?? '', ENT_QUOTES, 'UTF-8') ?>">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="machine-brand"><?= htmlspecialchars('Marca maquinaria', ENT_QUOTES, 'UTF-8') ?></label>
-                <input class="filter-input" type="text" id="machine-brand" value="<?= htmlspecialchars($maquinaria_marca ?? '', ENT_QUOTES, 'UTF-8') ?>">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="machine-model"><?= htmlspecialchars('Modelo maquinaria', ENT_QUOTES, 'UTF-8') ?></label>
-                <input class="filter-input" type="text" id="machine-model" value="<?= htmlspecialchars($maquinaria_modelo ?? '', ENT_QUOTES, 'UTF-8') ?>">
-            </div>
+            <?php $renderOptionPicker('machine-type', 'Tipo maquinaria', 'maquinaria_tipo', $opcionesMaquinaria['tipos'] ?? [], $maquinaria_tipos); ?>
+            <?php $renderOptionPicker('machine-brand', 'Marca maquinaria', 'maquinaria_marca', $opcionesMaquinaria['marcas'] ?? [], $maquinaria_marcas); ?>
+            <?php $renderOptionPicker('machine-model', 'Modelo maquinaria', 'maquinaria_modelo', $opcionesMaquinaria['modelos'] ?? [], $maquinaria_modelos); ?>
         </div>
     </div>
     <div class="sidebar-actions">
@@ -1382,6 +1443,12 @@ function syncCategoryTabs(cat){
     });
 }
 
+function appendCheckedValues(params, name) {
+    document.querySelectorAll(`input[name="${name}[]"]:checked`).forEach((input) => {
+        params.append(`${name}[]`, input.value);
+    });
+}
+
 function buildFilterParams(catOverride = null, includeCompatibility = true){
     const texto = buscador.value.trim();
     const min = precioMin.value.replace(/\D/g,'').trim();
@@ -1396,14 +1463,14 @@ function buildFilterParams(catOverride = null, includeCompatibility = true){
     if(cat) params.set('categoria', cat);
     if(compatMode) params.set('compatibilidad_tipo', compatMode);
     if(compatMode === 'vehiculo'){
-        if(vehicleBrand.value.trim()) params.set('vehiculo_marca', vehicleBrand.value.trim());
-        if(vehicleModel.value.trim()) params.set('vehiculo_modelo', vehicleModel.value.trim());
-        if(vehicleYear.value.replace(/\D/g,'')) params.set('vehiculo_ano', vehicleYear.value.replace(/\D/g,''));
+        appendCheckedValues(params, 'vehiculo_marca');
+        appendCheckedValues(params, 'vehiculo_modelo');
+        appendCheckedValues(params, 'vehiculo_ano');
     }
     if(compatMode === 'maquinaria'){
-        if(machineType.value.trim()) params.set('maquinaria_tipo', machineType.value.trim());
-        if(machineBrand.value.trim()) params.set('maquinaria_marca', machineBrand.value.trim());
-        if(machineModel.value.trim()) params.set('maquinaria_modelo', machineModel.value.trim());
+        appendCheckedValues(params, 'maquinaria_tipo');
+        appendCheckedValues(params, 'maquinaria_marca');
+        appendCheckedValues(params, 'maquinaria_modelo');
     }
     return params;
 }
@@ -1419,18 +1486,13 @@ const precioMin = document.getElementById('price-min');
 const precioMax = document.getElementById('price-max');
 const categoria = document.getElementById('cat-select');
 const compatibilityType = document.getElementById('compatibility-type');
-const vehicleBrand = document.getElementById('vehicle-brand');
-const vehicleModel = document.getElementById('vehicle-model');
-const vehicleYear = document.getElementById('vehicle-year');
-const machineType = document.getElementById('machine-type');
-const machineBrand = document.getElementById('machine-brand');
-const machineModel = document.getElementById('machine-model');
 const openFiltersBtn = document.getElementById('open-filters');
 const closeFiltersBtn = document.getElementById('close-filters');
 const filterSidebar = document.getElementById('filter-sidebar');
 const filterOverlay = document.getElementById('filter-overlay');
 const applySidebarFiltersBtn = document.getElementById('apply-sidebar-filters');
 const clearSidebarFiltersBtn = document.getElementById('clear-sidebar-filters');
+const optionSearchInputs = Array.from(document.querySelectorAll('[data-option-search]'));
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 const categorySections = Array.from(document.querySelectorAll('.category-section')).map((section) => ({
     section,
@@ -1526,6 +1588,9 @@ if (closeFiltersBtn) closeFiltersBtn.addEventListener('click', closeFilterSideba
 if (filterOverlay) filterOverlay.addEventListener('click', closeFilterSidebar);
 if (applySidebarFiltersBtn) applySidebarFiltersBtn.addEventListener('click', applySidebarFilters);
 if (clearSidebarFiltersBtn) clearSidebarFiltersBtn.addEventListener('click', clearFilters);
+optionSearchInputs.forEach((input) => {
+    input.addEventListener('input', () => filterOptionList(input));
+});
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeFilterSidebar();
 });
@@ -1537,6 +1602,15 @@ function syncCompatibilityFields() {
     });
     document.querySelectorAll('.compat-maquinaria').forEach(el => {
         el.style.display = mode === 'maquinaria' ? '' : 'none';
+    });
+}
+
+function filterOptionList(input) {
+    const picker = input.closest('[data-option-picker]');
+    if (!picker) return;
+    const text = input.value.trim().toLowerCase();
+    picker.querySelectorAll('[data-option-row]').forEach((row) => {
+        row.hidden = text !== '' && !(row.dataset.label || '').includes(text);
     });
 }
 
@@ -1625,9 +1699,13 @@ function clearFilters(){
     precioMax.value="";
     categoria.value="";
     if (compatibilityType) compatibilityType.value = "";
-    [vehicleBrand, vehicleModel, vehicleYear, machineType, machineBrand, machineModel].forEach(el => {
+    optionSearchInputs.forEach(el => {
         if (el) el.value = "";
     });
+    document.querySelectorAll('.option-row input[type="checkbox"]').forEach((input) => {
+        input.checked = false;
+    });
+    optionSearchInputs.forEach(filterOptionList);
     syncCompatibilityFields();
 
     lastCategoryOptionKey = '';

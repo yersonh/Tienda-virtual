@@ -135,6 +135,21 @@ class TiendaController {
         return $productosNuevos;
     }
 
+    private function obtenerValoresGet(string $key, bool $soloNumeros = false): array {
+        $value = $_GET[$key] ?? [];
+        $values = is_array($value) ? $value : [$value];
+        $clean = [];
+
+        foreach ($values as $item) {
+            $item = $soloNumeros ? preg_replace('/\D/', '', (string) $item) : trim((string) $item);
+            if ($item !== '') {
+                $clean[] = $soloNumeros ? (int) $item : $item;
+            }
+        }
+
+        return array_values(array_unique($clean));
+    }
+
     public function inicio() {
         unset($_SESSION['tienda_cache']['mas_vendidos'], $_SESSION['tienda_cache']['productos_nuevos']);
         $carritoVista = $this->obtenerCarritoVista();
@@ -155,24 +170,26 @@ class TiendaController {
         $categoria_filtro = $_GET['categoria'] ?? '';
         $compatibilidad_tipo = $_GET['compatibilidad_tipo'] ?? '';
         $compatibilidad_tipo = in_array($compatibilidad_tipo, ['vehiculo', 'maquinaria'], true) ? $compatibilidad_tipo : '';
-        $vehiculo_marca = trim((string) ($_GET['vehiculo_marca'] ?? ''));
-        $vehiculo_modelo = trim((string) ($_GET['vehiculo_modelo'] ?? ''));
-        $vehiculo_ano = (int) preg_replace('/\D/', '', $_GET['vehiculo_ano'] ?? '');
-        $maquinaria_tipo = trim((string) ($_GET['maquinaria_tipo'] ?? ''));
-        $maquinaria_marca = trim((string) ($_GET['maquinaria_marca'] ?? ''));
-        $maquinaria_modelo = trim((string) ($_GET['maquinaria_modelo'] ?? ''));
+        $vehiculo_marcas = $this->obtenerValoresGet('vehiculo_marca');
+        $vehiculo_modelos = $this->obtenerValoresGet('vehiculo_modelo');
+        $vehiculo_anos = $this->obtenerValoresGet('vehiculo_ano', true);
+        $maquinaria_tipos = $this->obtenerValoresGet('maquinaria_tipo');
+        $maquinaria_marcas = $this->obtenerValoresGet('maquinaria_marca');
+        $maquinaria_modelos = $this->obtenerValoresGet('maquinaria_modelo');
+        $opcionesVehiculo = $this->productoModel()->obtenerOpcionesCompatibilidadVehiculo();
+        $opcionesMaquinaria = $this->productoModel()->obtenerOpcionesCompatibilidadMaquinaria();
 
         if ($compatibilidad_tipo === 'vehiculo') {
             $productos = $this->productoModel()->filtrarVehiculo(
-                $vehiculo_marca !== '' ? $vehiculo_marca : null,
-                $vehiculo_modelo !== '' ? $vehiculo_modelo : null,
-                $vehiculo_ano > 0 ? $vehiculo_ano : null
+                $vehiculo_marcas,
+                $vehiculo_modelos,
+                $vehiculo_anos
             );
         } elseif ($compatibilidad_tipo === 'maquinaria') {
             $productos = $this->productoModel()->filtrarMaquinaria(
-                $maquinaria_tipo !== '' ? $maquinaria_tipo : null,
-                $maquinaria_marca !== '' ? $maquinaria_marca : null,
-                $maquinaria_modelo !== '' ? $maquinaria_modelo : null
+                $maquinaria_tipos,
+                $maquinaria_marcas,
+                $maquinaria_modelos
             );
         } else {
             $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
