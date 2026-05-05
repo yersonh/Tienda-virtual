@@ -30,7 +30,7 @@ class AdminPedidoModel {
                 LEFT JOIN ESTADO_PEDIDO ep ON ep.ID_ESTADO = p.ID_ESTADO
                 LEFT JOIN USUARIO u ON u.ID_USUARIO = v.ID_USUARIO
                 LEFT JOIN PERSONA per ON per.ID_PERSONA = u.ID_PERSONA
-                LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_DIRECCION_PEDIDO = p.ID_DIRECCION_PEDIDO";
+                LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_PEDIDO = p.ID_PEDIDO";
 
         $where = [];
         $params = [];
