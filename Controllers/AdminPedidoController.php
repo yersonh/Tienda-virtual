@@ -34,7 +34,7 @@ class AdminPedidoController {
         $pedidos = $this->model->obtenerTodos(null, null, null) ?? [];
         $estados = $this->model->obtenerEstados() ?? [];
 
-        $pedidosConDireccion = array_filter($pedidos, fn($p) => !empty($p['ciudad']));
+        $pedidosConDireccion = array_values(array_filter($pedidos, fn($p) => !empty($p['ciudad'])));
 
         ob_start();
         require_once __DIR__ . '/../views/admin/pedidos/mapa.php';
