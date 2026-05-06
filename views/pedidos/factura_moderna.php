@@ -15,6 +15,7 @@ $facturaMetodo = (string) ($facturaPedido['metodo_pago'] ?? 'Registrado');
 $facturaSubtotal = (float) ($facturaPedido['subtotal'] ?? 0);
 $facturaRootTag = isset($facturaRootTag) && in_array($facturaRootTag, ['main', 'section'], true) ? $facturaRootTag : 'main';
 $facturaDownloadMode = !empty($facturaDownloadMode);
+$facturaHideActions = !empty($facturaHideActions);
 
 if ($facturaSubtotal <= 0 && !empty($facturaItems)) {
     foreach ($facturaItems as $facturaItem) {
@@ -483,7 +484,6 @@ if (is_file($facturaLogoPath)) {
                         <p class="modern-detail-line"><span>Pedido #</span><b>PED-<?= str_pad((string) $facturaIdPedido, 5, '0', STR_PAD_LEFT) ?></b></p>
                         <p class="modern-detail-line"><span>Venta #</span><b><?= $facturaIdVenta > 0 ? $facturaIdVenta : 'Registrada' ?></b></p>
                         <p class="modern-detail-line"><span>Forma de pago</span><b><?= htmlspecialchars($facturaMetodo, ENT_QUOTES, 'UTF-8') ?></b></p>
-                        <p class="modern-detail-line"><span>Condicion</span><b>Contado</b></p>
                         <p class="modern-detail-line"><span>Entrega</span><b><?= htmlspecialchars((string) ($facturaEntrega['mensaje'] ?? 'Programada'), ENT_QUOTES, 'UTF-8') ?></b></p>
                     </div>
                 </section>
@@ -548,7 +548,6 @@ if (is_file($facturaLogoPath)) {
                     </div>
                     <div class="modern-totals">
                         <div class="modern-total-row"><span>Subtotal productos</span><strong><?= facturaMoney($facturaSubtotal ?: ($facturaTotal - $facturaIva - $facturaEnvio)) ?></strong></div>
-                        <div class="modern-total-row discount"><span>Descuentos aplicados</span><strong><?= facturaMoney(0) ?></strong></div>
                         <div class="modern-total-row"><span>IVA 19%</span><strong><?= facturaMoney($facturaIva) ?></strong></div>
                         <div class="modern-total-row"><span>Envio</span><strong><?= $facturaEnvio > 0 ? facturaMoney($facturaEnvio) : 'Incluido' ?></strong></div>
                         <div class="modern-grand-total">
@@ -568,7 +567,7 @@ if (is_file($facturaLogoPath)) {
             </footer>
         </article>
 
-        <?php if (!$facturaDownloadMode): ?>
+        <?php if (!$facturaDownloadMode && !$facturaHideActions): ?>
             <div class="modern-invoice-actions">
                 <a class="modern-invoice-action primary" href="index.php?action=facturaPedido&id=<?= $facturaIdPedido ?>&download=1">
                     <i class="fas fa-file-arrow-down"></i>

@@ -10,6 +10,7 @@ $metodoConfirmado = (string) ($facturaPedido['metodo_pago'] ?? 'Registrado');
 $entregaConfirmada = function_exists('obtenerMensajeEntrega') ? obtenerMensajeEntrega($facturaPedido['fecha_estimada_entrega'] ?? null) : [];
 $mensajeEntrega = (string) ($entregaConfirmada['mensaje'] ?? 'Tu pedido ya esta en preparacion.');
 $facturaRootTag = 'section';
+$facturaHideActions = true;
 ?>
 
 <style>
@@ -187,10 +188,43 @@ $facturaRootTag = 'section';
     margin-bottom: 4px;
 }
 .confirmed-invoice-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
     display: none;
+    padding: 74px 18px 28px;
+    background: rgba(2, 8, 23, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    overflow-y: auto;
 }
 .confirmed-invoice-wrap.is-visible {
     display: block;
+}
+.confirmed-invoice-close {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 10001;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(125,211,252,0.34);
+    background: rgba(7, 13, 26, 0.9);
+    color: #e9f2ff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.confirmed-invoice-close:hover {
+    color: var(--accent);
+    border-color: rgba(34,211,238,0.52);
+}
+.confirmed-invoice-wrap .modern-invoice-page {
+    padding: 0 0 36px;
 }
 @keyframes confirmPulse {
     0%, 100% { transform: scale(0.8); opacity: 0.75; }
@@ -266,6 +300,7 @@ $facturaRootTag = 'section';
 </main>
 
 <div class="confirmed-invoice-wrap" id="factura-pedido-confirmado" hidden>
+    <button class="confirmed-invoice-close" type="button" id="close-confirmed-invoice" aria-label="<?= htmlspecialchars('Cerrar factura', ENT_QUOTES, 'UTF-8') ?>">&times;</button>
     <?php require_once __DIR__ . '/factura_moderna.php'; ?>
 </div>
 
@@ -286,16 +321,30 @@ if (confirmationPage) {
 const invoiceWrap = document.getElementById('factura-pedido-confirmado');
 const invoiceToggle = document.getElementById('toggle-confirmed-invoice');
 const invoiceToggleLabel = document.getElementById('toggle-confirmed-invoice-label');
+const invoiceClose = document.getElementById('close-confirmed-invoice');
 if (invoiceWrap && invoiceToggle) {
-    invoiceToggle.addEventListener('click', () => {
-        const showInvoice = invoiceWrap.hidden;
+    const setInvoiceVisible = (showInvoice) => {
         invoiceWrap.hidden = !showInvoice;
         invoiceWrap.classList.toggle('is-visible', showInvoice);
+        document.body.classList.toggle('is-submitting', showInvoice);
         if (invoiceToggleLabel) {
-            invoiceToggleLabel.textContent = showInvoice ? 'Ocultar factura' : 'Visualizar factura';
+            invoiceToggleLabel.textContent = 'Visualizar factura';
         }
-        if (showInvoice) {
-            invoiceWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    invoiceToggle.addEventListener('click', () => {
+        setInvoiceVisible(true);
+    });
+
+    invoiceClose?.addEventListener('click', () => setInvoiceVisible(false));
+    invoiceWrap.addEventListener('click', (event) => {
+        if (event.target === invoiceWrap) {
+            setInvoiceVisible(false);
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !invoiceWrap.hidden) {
+            setInvoiceVisible(false);
         }
     });
 }
