@@ -178,7 +178,10 @@
 }
 .filter-overlay {
     position: fixed;
-    inset: 0;
+    top: var(--filter-sidebar-top, 72px);
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 9990;
     background: rgba(2, 6, 23, 0.56);
     opacity: 0;
@@ -191,13 +194,15 @@
 }
 .filter-sidebar {
     position: fixed;
-    top: 0;
+    top: var(--filter-sidebar-top, 72px);
     right: 0;
     z-index: 9991;
-    width: min(300px, 100vw);
-    height: 100vh;
+    width: min(320px, 88vw);
+    height: calc(100vh - var(--filter-sidebar-top, 72px));
+    height: calc(100dvh - var(--filter-sidebar-top, 72px));
     background: rgba(13, 20, 35, 0.72);
     border-left: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid rgba(255,255,255,0.08);
     box-shadow: -26px 0 60px rgba(0,0,0,0.36);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -212,6 +217,7 @@
 [data-theme="light"] .filter-sidebar {
     background: rgba(255,255,255,0.78);
     border-left-color: #d6dee8;
+    border-top-color: #d6dee8;
     box-shadow: -22px 0 48px rgba(15,23,42,0.14);
 }
 .sidebar-head {
@@ -1623,6 +1629,16 @@ optionSearchInputs.forEach((input) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeFilterSidebar();
 });
+window.addEventListener('resize', updateFilterSidebarBounds);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateFilterSidebarBounds);
+}
+
+function updateFilterSidebarBounds() {
+    const nav = document.querySelector('.nav');
+    const top = nav ? Math.max(0, Math.round(nav.getBoundingClientRect().bottom)) : 72;
+    document.documentElement.style.setProperty('--filter-sidebar-top', `${top}px`);
+}
 
 function filterOptionList(input) {
     const picker = input.closest('[data-option-picker]');
@@ -1635,6 +1651,7 @@ function filterOptionList(input) {
 
 function openFilterSidebar() {
     if (!filterSidebar || !filterOverlay) return;
+    updateFilterSidebarBounds();
     filterSidebar.classList.add('open');
     filterOverlay.classList.add('open');
     filterSidebar.setAttribute('aria-hidden', 'false');
