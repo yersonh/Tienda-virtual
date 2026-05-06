@@ -407,7 +407,7 @@ class ProductoModel {
         }
 
         oci_free_statement($stmt);
-        return $results;
+        return $this->anexarCompatibilidades($results);
     }
 
     public function obtenerProductosNuevos($limite = 10) {

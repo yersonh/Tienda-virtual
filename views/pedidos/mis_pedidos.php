@@ -319,6 +319,10 @@ function orderProductImage(?string $imagen): ?string {
     border-radius: 12px;
     background: rgba(255,255,255,0.045);
 }
+.order-products-strip.is-static {
+    grid-template-columns: 48px minmax(78px, auto);
+    width: 136px;
+}
 .order-strip-nav {
     width: 28px;
     height: 34px;
@@ -957,6 +961,20 @@ function orderProductImage(?string $imagen): ?string {
                         $estado = (string) ($pedido['estado'] ?? 'Pendiente');
                         $puedeCancelar = canCancelOrder($pedido);
                         $itemsPreview = isset($pedido['items_preview']) && is_array($pedido['items_preview']) ? $pedido['items_preview'] : [];
+                        $itemsCarrusel = [];
+                        $clavesCarrusel = [];
+                        foreach ($itemsPreview as $itemPreview) {
+                            $idProductoPreview = (int) ($itemPreview['id_producto'] ?? 0);
+                            $clavePreview = $idProductoPreview > 0
+                                ? 'producto-' . $idProductoPreview
+                                : 'producto-' . strtolower(trim((string) ($itemPreview['nombre'] ?? ''))) . '-' . trim((string) ($itemPreview['imagen'] ?? ''));
+                            if (isset($clavesCarrusel[$clavePreview])) {
+                                continue;
+                            }
+                            $clavesCarrusel[$clavePreview] = true;
+                            $itemsCarrusel[] = $itemPreview;
+                        }
+                        $hayCarrusel = count($itemsCarrusel) > 1;
                         $cantidadProductos = (int) ($pedido['cantidad_productos'] ?? array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $itemsPreview)));
                         ?>
                         <article class="orders-card" data-order-date="<?= htmlspecialchars($fechaFiltro, ENT_QUOTES, 'UTF-8') ?>">
@@ -987,13 +1005,15 @@ function orderProductImage(?string $imagen): ?string {
                                         <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
                                     </button>
                                 </form>
-                                <div class="order-products-strip" data-order-strip aria-label="<?= htmlspecialchars('Productos del pedido', ENT_QUOTES, 'UTF-8') ?>">
-                                    <button class="order-strip-nav" type="button" data-strip-prev aria-label="<?= htmlspecialchars('Producto anterior', ENT_QUOTES, 'UTF-8') ?>" <?= count($itemsPreview) <= 1 ? 'disabled' : '' ?>>
-                                        <i class="fas fa-chevron-left"></i>
-                                    </button>
+                                <div class="order-products-strip <?= $hayCarrusel ? '' : 'is-static' ?>" data-order-strip aria-label="<?= htmlspecialchars('Productos del pedido', ENT_QUOTES, 'UTF-8') ?>">
+                                    <?php if ($hayCarrusel): ?>
+                                        <button class="order-strip-nav" type="button" data-strip-prev aria-label="<?= htmlspecialchars('Producto anterior', ENT_QUOTES, 'UTF-8') ?>">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                    <?php endif; ?>
                                     <span class="order-strip-frame">
-                                        <?php if (!empty($itemsPreview)): ?>
-                                            <?php foreach ($itemsPreview as $previewIndex => $itemPreview): ?>
+                                        <?php if (!empty($itemsCarrusel)): ?>
+                                            <?php foreach ($itemsCarrusel as $previewIndex => $itemPreview): ?>
                                                 <?php $imagenPreview = orderProductImage($itemPreview['imagen'] ?? null); ?>
                                                 <?php if ($imagenPreview): ?>
                                                     <img class="order-strip-thumb <?= $previewIndex === 0 ? 'is-active' : '' ?>" src="<?= htmlspecialchars($imagenPreview, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars((string) ($itemPreview['nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async">
@@ -1006,9 +1026,11 @@ function orderProductImage(?string $imagen): ?string {
                                         <?php endif; ?>
                                     </span>
                                     <span class="order-strip-count"><?= $cantidadProductos ?> <?= htmlspecialchars($cantidadProductos === 1 ? 'producto' : 'productos', ENT_QUOTES, 'UTF-8') ?></span>
-                                    <button class="order-strip-nav" type="button" data-strip-next aria-label="<?= htmlspecialchars('Producto siguiente', ENT_QUOTES, 'UTF-8') ?>" <?= count($itemsPreview) <= 1 ? 'disabled' : '' ?>>
-                                        <i class="fas fa-chevron-right"></i>
-                                    </button>
+                                    <?php if ($hayCarrusel): ?>
+                                        <button class="order-strip-nav" type="button" data-strip-next aria-label="<?= htmlspecialchars('Producto siguiente', ENT_QUOTES, 'UTF-8') ?>">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </article>
