@@ -1046,6 +1046,32 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
 };
 ?>
 
+<div class="cat-tabs">
+    <button class="cat-tab <?= empty($categoria_filtro ?? '') ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars('Todo', ENT_QUOTES, 'UTF-8') ?></button>
+    <?php if(isset($todasCategorias) && is_array($todasCategorias)): ?>
+        <?php foreach($todasCategorias as $cat): ?>
+        <button class="cat-tab <?= ($categoria_filtro ?? '') === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this, <?= htmlspecialchars(json_encode((string) $cat), ENT_QUOTES, 'UTF-8') ?>)"><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></button>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
+
+<?php if(!empty($categoria_filtro ?? '')): ?>
+<a class="detail-back" href="index.php?action=tienda">
+    <span class="see-all-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+            <path d="M19 12H5"></path>
+            <path d="m11 18-6-6 6-6"></path>
+        </svg>
+    </span>
+    <?= htmlspecialchars('Volver a productos', ENT_QUOTES, 'UTF-8') ?>
+</a>
+<?php endif; ?>
+
+<div id="store-results">
+    <?php require __DIR__ . '/partials/tienda_productos.php'; ?>
+</div>
+</div>
+
 <div class="filter-overlay" id="filter-overlay"></div>
 <aside class="filter-sidebar" id="filter-sidebar" aria-hidden="true" aria-labelledby="filter-sidebar-title">
     <div class="sidebar-head">
@@ -1082,32 +1108,6 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
         <button class="btn-apply" type="button" id="apply-sidebar-filters"><?= htmlspecialchars('Aplicar filtros', ENT_QUOTES, 'UTF-8') ?></button>
     </div>
 </aside>
-
-<div class="cat-tabs">
-    <button class="cat-tab <?= empty($categoria_filtro ?? '') ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars('Todo', ENT_QUOTES, 'UTF-8') ?></button>
-    <?php if(isset($todasCategorias) && is_array($todasCategorias)): ?>
-        <?php foreach($todasCategorias as $cat): ?>
-        <button class="cat-tab <?= ($categoria_filtro ?? '') === $cat ? 'active' : '' ?>" data-cat="<?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?>" onclick="setTab(this, <?= htmlspecialchars(json_encode((string) $cat), ENT_QUOTES, 'UTF-8') ?>)"><?= htmlspecialchars((string) $cat, ENT_QUOTES, 'UTF-8') ?></button>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</div>
-
-<?php if(!empty($categoria_filtro ?? '')): ?>
-<a class="detail-back" href="index.php?action=tienda">
-    <span class="see-all-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-            <path d="M19 12H5"></path>
-            <path d="m11 18-6-6 6-6"></path>
-        </svg>
-    </span>
-    <?= htmlspecialchars('Volver a productos', ENT_QUOTES, 'UTF-8') ?>
-</a>
-<?php endif; ?>
-
-<div id="store-results">
-    <?php require __DIR__ . '/partials/tienda_productos.php'; ?>
-</div>
-</div>
 
 <script>
 let cart = {};
