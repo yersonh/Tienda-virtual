@@ -1,0 +1,199 @@
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_TABLES
+    WHERE TABLE_NAME = 'METODO_PAGO_USUARIO';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE '
+            CREATE TABLE METODO_PAGO_USUARIO (
+                ID_METODO_PAGO_USUARIO NUMBER NOT NULL,
+                ID_USUARIO NUMBER NOT NULL,
+                ID_METODO NUMBER NOT NULL,
+                TITULAR VARCHAR2(120) NOT NULL,
+                ULTIMOS_4 CHAR(4) NOT NULL,
+                FRANQUICIA VARCHAR2(20) NOT NULL,
+                TOKEN_PAGO VARCHAR2(80) NOT NULL,
+                FECHA_EXPIRACION DATE NOT NULL,
+                ES_PREDETERMINADO NUMBER(1) DEFAULT 0 NOT NULL,
+                ACTIVO NUMBER(1) DEFAULT 1 NOT NULL,
+                FECHA_CREACION TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+                CONSTRAINT PK_METODO_PAGO_USUARIO PRIMARY KEY (ID_METODO_PAGO_USUARIO),
+                CONSTRAINT CK_MPU_METODO_TARJETA CHECK (ID_METODO IN (2, 3)),
+                CONSTRAINT CK_MPU_PREDET CHECK (ES_PREDETERMINADO IN (0, 1)),
+                CONSTRAINT CK_MPU_ACTIVO CHECK (ACTIVO IN (0, 1)),
+                CONSTRAINT UK_MPU_TOKEN UNIQUE (TOKEN_PAGO),
+                CONSTRAINT FK_MPU_USUARIO FOREIGN KEY (ID_USUARIO) REFERENCES USUARIO(ID_USUARIO),
+                CONSTRAINT FK_MPU_METODO FOREIGN KEY (ID_METODO) REFERENCES METODO_PAGO(ID_METODO)
+            )';
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_SEQUENCES
+    WHERE SEQUENCE_NAME = 'SEQ_METODO_PAGO_USUARIO';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE SEQUENCE SEQ_METODO_PAGO_USUARIO START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE';
+    END IF;
+END;
+/
+
+CREATE OR REPLACE TRIGGER TRG_MPU_BI
+BEFORE INSERT ON METODO_PAGO_USUARIO
+FOR EACH ROW
+BEGIN
+    IF :NEW.ID_METODO_PAGO_USUARIO IS NULL THEN
+        SELECT SEQ_METODO_PAGO_USUARIO.NEXTVAL
+        INTO :NEW.ID_METODO_PAGO_USUARIO
+        FROM DUAL;
+    END IF;
+
+    IF :NEW.FECHA_CREACION IS NULL THEN
+        :NEW.FECHA_CREACION := SYSTIMESTAMP;
+    END IF;
+
+    :NEW.ACTIVO := NVL(:NEW.ACTIVO, 1);
+    :NEW.ES_PREDETERMINADO := NVL(:NEW.ES_PREDETERMINADO, 0);
+END;
+/
+
+CREATE OR REPLACE TRIGGER TRG_MPU_UNICO_PREDET
+FOR INSERT OR UPDATE OF ES_PREDETERMINADO, ACTIVO ON METODO_PAGO_USUARIO
+COMPOUND TRIGGER
+    TYPE t_ids IS TABLE OF METODO_PAGO_USUARIO.ID_METODO_PAGO_USUARIO%TYPE INDEX BY PLS_INTEGER;
+    TYPE t_users IS TABLE OF METODO_PAGO_USUARIO.ID_USUARIO%TYPE INDEX BY PLS_INTEGER;
+    g_ids t_ids;
+    g_users t_users;
+    g_count PLS_INTEGER := 0;
+
+    AFTER EACH ROW IS
+    BEGIN
+        IF :NEW.ES_PREDETERMINADO = 1 AND :NEW.ACTIVO = 1 THEN
+            g_count := g_count + 1;
+            g_ids(g_count) := :NEW.ID_METODO_PAGO_USUARIO;
+            g_users(g_count) := :NEW.ID_USUARIO;
+        END IF;
+    END AFTER EACH ROW;
+
+    AFTER STATEMENT IS
+    BEGIN
+        FOR i IN 1 .. g_count LOOP
+            UPDATE METODO_PAGO_USUARIO
+            SET ES_PREDETERMINADO = 0
+            WHERE ID_USUARIO = g_users(i)
+              AND ID_METODO_PAGO_USUARIO <> g_ids(i)
+              AND ES_PREDETERMINADO = 1
+              AND ACTIVO = 1;
+        END LOOP;
+    END AFTER STATEMENT;
+END;
+/
+
+CREATE OR REPLACE VIEW V_METODOS_PAGO_USUARIO AS
+SELECT
+    mpu.ID_METODO_PAGO_USUARIO,
+    mpu.ID_USUARIO,
+    mpu.ID_METODO,
+    mp.FORMA_PAGO,
+    mpu.TITULAR,
+    mpu.ULTIMOS_4,
+    mpu.FRANQUICIA,
+    mpu.TOKEN_PAGO,
+    mpu.FECHA_EXPIRACION,
+    TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
+    mpu.ES_PREDETERMINADO,
+    mpu.ACTIVO,
+    mpu.FECHA_CREACION
+FROM METODO_PAGO_USUARIO mpu
+INNER JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
+WHERE mpu.ACTIVO = 1;
+/
+
+CREATE OR REPLACE PROCEDURE SP_GUARDAR_METODO_PAGO (
+    p_id_usuario IN NUMBER,
+    p_id_metodo IN NUMBER,
+    p_titular IN VARCHAR2,
+    p_ultimos_4 IN VARCHAR2,
+    p_franquicia IN VARCHAR2,
+    p_token_pago IN VARCHAR2,
+    p_fecha_expiracion IN DATE,
+    p_es_predeterminado IN NUMBER,
+    p_id_metodo_pago_usuario OUT NUMBER
+)
+AS
+    v_predeterminado NUMBER(1);
+    v_total_activos NUMBER;
+BEGIN
+    IF p_id_usuario IS NULL OR p_id_usuario <= 0 THEN
+        RAISE_APPLICATION_ERROR(-20501, 'Usuario invalido');
+    END IF;
+
+    IF p_id_metodo NOT IN (2, 3) THEN
+        RAISE_APPLICATION_ERROR(-20502, 'Solo se guardan tarjetas debito o credito');
+    END IF;
+
+    SELECT COUNT(*)
+    INTO v_total_activos
+    FROM METODO_PAGO_USUARIO
+    WHERE ID_USUARIO = p_id_usuario
+      AND ACTIVO = 1;
+
+    v_predeterminado := CASE
+        WHEN NVL(p_es_predeterminado, 0) = 1 OR v_total_activos = 0 THEN 1
+        ELSE 0
+    END;
+
+    INSERT INTO METODO_PAGO_USUARIO (
+        ID_USUARIO,
+        ID_METODO,
+        TITULAR,
+        ULTIMOS_4,
+        FRANQUICIA,
+        TOKEN_PAGO,
+        FECHA_EXPIRACION,
+        ES_PREDETERMINADO,
+        ACTIVO
+    )
+    VALUES (
+        p_id_usuario,
+        p_id_metodo,
+        SUBSTR(TRIM(p_titular), 1, 120),
+        SUBSTR(TRIM(p_ultimos_4), 1, 4),
+        UPPER(SUBSTR(TRIM(p_franquicia), 1, 20)),
+        p_token_pago,
+        p_fecha_expiracion,
+        v_predeterminado,
+        1
+    )
+    RETURNING ID_METODO_PAGO_USUARIO INTO p_id_metodo_pago_usuario;
+END;
+/
+
+CREATE OR REPLACE FUNCTION FN_METODO_PREDETERMINADO (
+    p_id_usuario IN NUMBER
+) RETURN NUMBER
+AS
+    v_id METODO_PAGO_USUARIO.ID_METODO_PAGO_USUARIO%TYPE;
+BEGIN
+    SELECT ID_METODO_PAGO_USUARIO
+    INTO v_id
+    FROM V_METODOS_PAGO_USUARIO
+    WHERE ID_USUARIO = p_id_usuario
+      AND ES_PREDETERMINADO = 1
+    ORDER BY ID_METODO_PAGO_USUARIO DESC
+    FETCH FIRST 1 ROWS ONLY;
+
+    RETURN v_id;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+END;
+/

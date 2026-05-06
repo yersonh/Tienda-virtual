@@ -13,6 +13,7 @@ $inicialNombre = !empty($nombresArray[0]) ? strtoupper(substr($nombresArray[0], 
 $inicialApellido = !empty($apellidosArray[0]) ? strtoupper(substr($apellidosArray[0], 0, 1)) : '';
 
 $iniciales = $inicialNombre . $inicialApellido;
+$metodosPagoUsuario = isset($metodosPagoUsuario) && is_array($metodosPagoUsuario) ? $metodosPagoUsuario : [];
 ?>
 
 <div class="container-perfil">
@@ -110,6 +111,28 @@ $iniciales = $inicialNombre . $inicialApellido;
         </button>
 
     </form>
+
+    <section class="perfil-payments">
+        <div class="perfil-payments-head">
+            <h3><?= htmlspecialchars('Metodos de pago guardados', ENT_QUOTES, 'UTF-8') ?></h3>
+            <a href="index.php?action=pago"><?= htmlspecialchars('Gestionar en checkout', ENT_QUOTES, 'UTF-8') ?></a>
+        </div>
+        <?php if (!empty($metodosPagoUsuario)): ?>
+            <div class="perfil-payment-list">
+                <?php foreach ($metodosPagoUsuario as $metodoPerfil): ?>
+                    <div class="perfil-payment-card">
+                        <strong><?= htmlspecialchars((string) ($metodoPerfil['franquicia'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> **** <?= htmlspecialchars((string) ($metodoPerfil['ultimos_4'] ?? '0000'), ENT_QUOTES, 'UTF-8') ?></strong>
+                        <span><?= htmlspecialchars((string) ($metodoPerfil['forma_pago'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars('Expira ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoPerfil['fecha_expiracion_texto'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+                        <?php if ((int) ($metodoPerfil['es_predeterminado'] ?? 0) === 1): ?>
+                            <em><?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></em>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p class="perfil-payment-empty"><?= htmlspecialchars('Aun no tienes tarjetas guardadas. Podras guardar una tarjeta debito o credito al pagar.', ENT_QUOTES, 'UTF-8') ?></p>
+        <?php endif; ?>
+    </section>
 
 </div>
 
@@ -256,6 +279,82 @@ button i {
 button:hover {
     transform:scale(1.03);
     box-shadow:0 0 20px rgba(56,189,248,0.6);
+}
+
+.perfil-payments {
+    margin-top:26px;
+    padding-top:22px;
+    border-top:1px solid rgba(148,163,184,0.22);
+}
+
+.perfil-payments-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+}
+
+.perfil-payments-head h3 {
+    margin:0;
+    font-size:17px;
+    color:#e2e8f0;
+}
+
+[data-theme="light"] .perfil-payments-head h3 {
+    color:#0f172a;
+}
+
+.perfil-payments-head a {
+    color:#38bdf8;
+    font-size:12px;
+    font-weight:800;
+    text-decoration:none;
+}
+
+.perfil-payment-list {
+    display:grid;
+    gap:10px;
+}
+
+.perfil-payment-card {
+    display:grid;
+    gap:4px;
+    padding:12px;
+    border:1px solid rgba(56,189,248,0.18);
+    border-radius:12px;
+    background:rgba(15,23,42,0.35);
+}
+
+[data-theme="light"] .perfil-payment-card {
+    background:#f8fafc;
+    border-color:#d6dee8;
+}
+
+.perfil-payment-card strong {
+    color:#f8fafc;
+}
+
+[data-theme="light"] .perfil-payment-card strong {
+    color:#0f172a;
+}
+
+.perfil-payment-card span,
+.perfil-payment-empty {
+    margin:0;
+    color:#94a3b8;
+    font-size:13px;
+}
+
+.perfil-payment-card em {
+    width:fit-content;
+    padding:3px 8px;
+    border-radius:999px;
+    background:rgba(56,189,248,0.13);
+    color:#38bdf8;
+    font-size:11px;
+    font-style:normal;
+    font-weight:900;
 }
 
 /* MENSAJES */

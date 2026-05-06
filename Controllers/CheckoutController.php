@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/PedidoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
+require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
 
 class CheckoutController {
 
@@ -14,6 +15,7 @@ class CheckoutController {
     private $carritoModel;
     private $pedidoModel;
     private $direccionPedidoModel;
+    private $metodoPagoUsuarioModel;
 
     public function __construct() {
         $this->conn = Database::getConnection();
@@ -22,6 +24,7 @@ class CheckoutController {
         $this->carritoModel = new CarritoModel($this->conn);
         $this->pedidoModel = new PedidoModel($this->conn);
         $this->direccionPedidoModel = new DireccionPedidoModel($this->conn);
+        $this->metodoPagoUsuarioModel = new MetodoPagoUsuarioModel($this->conn);
     }
 
     private function ensureSession(): void {
@@ -129,6 +132,94 @@ class CheckoutController {
         ];
     }
 
+    private function detectarFranquicia(string $numero): string {
+        $numero = preg_replace('/\D+/', '', $numero);
+        if (preg_match('/^4\d{12}(\d{3})?(\d{3})?$/', $numero)) {
+            return 'VISA';
+        }
+        if (preg_match('/^(5[1-5]\d{14}|2(2[2-9]\d{12}|[3-6]\d{13}|7[01]\d{12}|720\d{12}))$/', $numero)) {
+            return 'MASTERCARD';
+        }
+        return 'DESCONOCIDA';
+    }
+
+    private function fechaExpiracionIso(string $vencimiento): string {
+        if (!preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', trim($vencimiento), $matches)) {
+            throw new InvalidArgumentException('Ingresa el vencimiento en formato MM/AA');
+        }
+
+        $mes = (int) $matches[1];
+        $anio = 2000 + (int) $matches[2];
+        return sprintf('%04d-%02d-01', $anio, $mes);
+    }
+
+    private function validarPagoEntrada(int $idUsuario, int &$idMetodo, array $data): ?array {
+        if (!in_array($idMetodo, [1, 2, 3, 4], true)) {
+            throw new InvalidArgumentException('Selecciona un metodo de pago valido');
+        }
+
+        if ($idMetodo === 1) {
+            if (trim((string) ($data['nombre_pagador'] ?? '')) === '' || trim((string) ($data['documento_pagador'] ?? '')) === '') {
+                throw new InvalidArgumentException('Completa los datos del pago en efectivo');
+            }
+            return null;
+        }
+
+        if ($idMetodo === 4) {
+            if (trim((string) ($data['banco_origen'] ?? '')) === '' || trim((string) ($data['referencia_transferencia'] ?? '')) === '') {
+                throw new InvalidArgumentException('Completa los datos de transferencia');
+            }
+            return null;
+        }
+
+        $idMetodoGuardado = (int) ($data['id_metodo_pago_usuario'] ?? 0);
+        $cvv = preg_replace('/\D+/', '', (string) ($data['cvv_tarjeta'] ?? ''));
+        if (strlen($cvv) < 3 || strlen($cvv) > 4) {
+            throw new InvalidArgumentException('Ingresa un CVV valido');
+        }
+
+        if ($idMetodoGuardado > 0) {
+            $metodoGuardado = $this->metodoPagoUsuarioModel->obtenerPorIdUsuario($idMetodoGuardado, $idUsuario);
+            if (!$metodoGuardado) {
+                throw new InvalidArgumentException('La tarjeta guardada seleccionada no esta disponible');
+            }
+            $idMetodo = (int) ($metodoGuardado['id_metodo'] ?? $idMetodo);
+            return null;
+        }
+
+        $numero = preg_replace('/\D+/', '', (string) ($data['numero_tarjeta'] ?? ''));
+        $titular = trim((string) ($data['titular_tarjeta'] ?? ''));
+        $vencimiento = trim((string) ($data['vencimiento_tarjeta'] ?? ''));
+        $franquicia = $this->detectarFranquicia($numero);
+
+        if (strlen($numero) < 13 || strlen($numero) > 19 || $franquicia === 'DESCONOCIDA') {
+            throw new InvalidArgumentException('Ingresa una tarjeta Visa o Mastercard valida');
+        }
+        if ($titular === '') {
+            throw new InvalidArgumentException('Ingresa el nombre del titular');
+        }
+
+        $fechaExpiracion = $this->fechaExpiracionIso($vencimiento);
+        if (strtotime($fechaExpiracion . ' +1 month -1 day') < strtotime(date('Y-m-d'))) {
+            throw new InvalidArgumentException('La tarjeta esta vencida');
+        }
+
+        if (empty($data['guardar_metodo_pago'])) {
+            return null;
+        }
+
+        return [
+            'id_usuario' => $idUsuario,
+            'id_metodo' => $idMetodo,
+            'titular' => $titular,
+            'ultimos_4' => substr($numero, -4),
+            'franquicia' => $franquicia,
+            'token_pago' => 'tok_' . uniqid('', true),
+            'fecha_expiracion' => $fechaExpiracion,
+            'es_predeterminado' => !empty($data['es_predeterminado_pago']) ? 1 : 0
+        ];
+    }
+
     public function confirmarPedido(): void {
         $this->ensureSession();
 
@@ -140,11 +231,6 @@ class CheckoutController {
         }
 
         $idMetodo = (int) ($_POST['metodo_pago'] ?? 0);
-        if (!in_array($idMetodo, [1, 2, 3, 4], true)) {
-            $_SESSION['error'] = 'Selecciona un metodo de pago valido';
-            header('Location: index.php?action=pago');
-            exit();
-        }
 
         $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
         if ($idDireccion <= 0) {
@@ -162,10 +248,15 @@ class CheckoutController {
         }
 
         try {
+            $metodoParaGuardar = $this->validarPagoEntrada($idUsuario, $idMetodo, $_POST);
             $items = $this->carritoModel->obtenerItemsCheckoutTx($idUsuario);
             $this->validarItemsCheckout($items);
             $resumen = $this->resumenCompra($items);
             $fechaEstimada = $_SESSION['checkout_fecha_estimada_entrega'] ?? null;
+
+            if ($metodoParaGuardar !== null) {
+                $this->metodoPagoUsuarioModel->guardar($metodoParaGuardar);
+            }
 
             $resultadoPedido = $this->pedidoModel->crearPedidoCompletoTx(
                 $idUsuario,
@@ -216,9 +307,16 @@ class CheckoutController {
             error_log($e->getMessage());
 
             $_SESSION['payment_old'] = [
-                'metodo_pago' => $idMetodo > 0 ? $idMetodo : 1
+                'metodo_pago' => $idMetodo > 0 ? $idMetodo : 1,
+                'id_metodo_pago_usuario' => (int) ($_POST['id_metodo_pago_usuario'] ?? 0),
+                'titular_tarjeta' => trim((string) ($_POST['titular_tarjeta'] ?? '')),
+                'vencimiento_tarjeta' => trim((string) ($_POST['vencimiento_tarjeta'] ?? '')),
+                'nombre_pagador' => trim((string) ($_POST['nombre_pagador'] ?? '')),
+                'documento_pagador' => trim((string) ($_POST['documento_pagador'] ?? '')),
+                'banco_origen' => trim((string) ($_POST['banco_origen'] ?? '')),
+                'referencia_transferencia' => trim((string) ($_POST['referencia_transferencia'] ?? ''))
             ];
-            $_SESSION['error'] = 'No se pudo procesar el pago. Verifica la informacion e intenta de nuevo.';
+            $_SESSION['error'] = $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo procesar el pago. Verifica la informacion e intenta de nuevo.';
             header('Location: index.php?action=pago');
             exit();
         }

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
+require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
 
 class PerfilController {
 
@@ -11,10 +12,12 @@ class PerfilController {
             exit();
         }
 
-        $pdo = Database::getConnection();
-        $model = new UsuarioModel($pdo);
+        $conn = Database::getConnection();
+        $model = new UsuarioModel($conn);
+        $metodoPagoUsuarioModel = new MetodoPagoUsuarioModel($conn);
 
         $usuario = $model->obtenerPorId($_SESSION['id_usuario']);
+        $metodosPagoUsuario = $metodoPagoUsuarioModel->obtenerPorUsuario((int) $_SESSION['id_usuario']);
 
         require_once __DIR__ . '/../views/Perfil.php';
     }
@@ -38,8 +41,8 @@ class PerfilController {
             exit();
         }
 
-        $pdo = Database::getConnection();
-        $model = new UsuarioModel($pdo);
+        $conn = Database::getConnection();
+        $model = new UsuarioModel($conn);
 
         $data = [
             'nombres' => trim($_POST['nombres']),

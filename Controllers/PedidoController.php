@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
+require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
 require_once __DIR__ . '/CheckoutController.php';
 
 class PedidoController {
@@ -9,12 +10,14 @@ class PedidoController {
     private $conn;
     private $carritoModel;
     private $direccionPedidoModel;
+    private $metodoPagoUsuarioModel;
     private $ventaColumnasCache = null;
 
     public function __construct() {
         $this->conn = Database::getConnection();
         $this->carritoModel = new CarritoModel($this->conn);
         $this->direccionPedidoModel = new DireccionPedidoModel($this->conn);
+        $this->metodoPagoUsuarioModel = new MetodoPagoUsuarioModel($this->conn);
     }
 
     private function ensureSession() {
@@ -970,8 +973,109 @@ class PedidoController {
         $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envio);
         $total = $resumenCompra['total'];
         $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
+        $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario);
+        $metodoPagoPredeterminado = $this->metodoPagoUsuarioModel->obtenerPredeterminado($idUsuario);
 
         require_once __DIR__ . '/../views/pagos/pago.php';
+    }
+
+    public function eliminarMetodoPagoUsuario(): void {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+        $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion';
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        try {
+            $ok = $this->metodoPagoUsuarioModel->eliminar($idMetodo, $idUsuario);
+            oci_commit($this->conn);
+            $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago eliminado correctamente' : 'No se pudo eliminar el metodo de pago';
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No se pudo eliminar el metodo de pago';
+        }
+
+        header('Location: index.php?action=pago');
+        exit();
+    }
+
+    private function fechaExpiracionMetodoPago(string $vencimiento): string {
+        $vencimiento = trim($vencimiento);
+        if (preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', $vencimiento, $matches)) {
+            return sprintf('%04d-%02d-01', 2000 + (int) $matches[2], (int) $matches[1]);
+        }
+        if (preg_match('/^\d{4}-\d{2}$/', $vencimiento)) {
+            return $vencimiento . '-01';
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimiento)) {
+            return substr($vencimiento, 0, 7) . '-01';
+        }
+
+        throw new InvalidArgumentException('Ingresa el vencimiento en formato MM/AA');
+    }
+
+    public function actualizarMetodoPagoUsuario(): void {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+        $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion';
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        try {
+            $fechaExpiracion = $this->fechaExpiracionMetodoPago((string) ($_POST['fecha_expiracion'] ?? ''));
+            if (strtotime($fechaExpiracion . ' +1 month -1 day') < strtotime(date('Y-m-d'))) {
+                throw new InvalidArgumentException('La tarjeta esta vencida');
+            }
+
+            $ok = $this->metodoPagoUsuarioModel->actualizar($idMetodo, $idUsuario, [
+                'titular' => $_POST['titular'] ?? '',
+                'fecha_expiracion' => $fechaExpiracion,
+                'es_predeterminado' => $_POST['es_predeterminado'] ?? 0
+            ]);
+            oci_commit($this->conn);
+            $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago actualizado correctamente' : 'No se pudo actualizar el metodo de pago';
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['error'] = $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar el metodo de pago';
+        }
+
+        header('Location: index.php?action=pago');
+        exit();
+    }
+
+    public function predeterminarMetodoPagoUsuario(): void {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+        $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion';
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        try {
+            $ok = $this->metodoPagoUsuarioModel->establecerPredeterminado($idMetodo, $idUsuario);
+            oci_commit($this->conn);
+            $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago predeterminado actualizado' : 'No se pudo actualizar el metodo de pago';
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No se pudo actualizar el metodo de pago';
+        }
+
+        header('Location: index.php?action=pago');
+        exit();
     }
 
     public function procesarPago() {

@@ -208,6 +208,18 @@ switch ($action) {
         (new CheckoutController())->confirmarPedido();
         break;
 
+    case 'eliminarMetodoPagoUsuario':
+        (new PedidoController())->eliminarMetodoPagoUsuario();
+        break;
+
+    case 'actualizarMetodoPagoUsuario':
+        (new PedidoController())->actualizarMetodoPagoUsuario();
+        break;
+
+    case 'predeterminarMetodoPagoUsuario':
+        (new PedidoController())->predeterminarMetodoPagoUsuario();
+        break;
+
     case 'confirmarPedido':
         (new CheckoutController())->confirmarPedido();
         break;
