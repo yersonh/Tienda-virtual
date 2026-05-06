@@ -29,18 +29,18 @@ class ProductoModel {
     }
 
     private function anexarCompatibilidades(array $productos): array {
-        $referencias = array_values(array_unique(array_filter(array_map(
-            fn($producto) => (int) ($producto['id_referencia'] ?? 0),
+        $productosIds = array_values(array_unique(array_filter(array_map(
+            fn($producto) => (int) ($producto['id_producto'] ?? 0),
             $productos
         ), fn($id) => $id > 0)));
 
-        if (empty($referencias)) {
+        if (empty($productosIds)) {
             return $productos;
         }
 
         $compatibilidades = [];
-        foreach ($referencias as $idReferencia) {
-            $compatibilidades[$idReferencia] = [
+        foreach ($productosIds as $idProducto) {
+            $compatibilidades[$idProducto] = [
                 'vehiculos' => [],
                 'maquinarias' => []
             ];
@@ -48,21 +48,25 @@ class ProductoModel {
 
         $placeholders = [];
         $bindValues = [];
-        foreach ($referencias as $index => $idReferencia) {
-            $param = ':ref' . $index;
+        foreach ($productosIds as $index => $idProducto) {
+            $param = ':prod' . $index;
             $placeholders[] = $param;
-            $bindValues[$param] = $idReferencia;
+            $bindValues[$param] = $idProducto;
         }
         $placeholdersSql = implode(',', $placeholders);
 
-        $vehiculoQuery = "SELECT id_referencia,
-                                 marca_vehiculo,
-                                 modelo_vehiculo,
-                                 ano_inicio,
-                                 ano_fin
-                          FROM compatibilidad_vehiculo
-                          WHERE id_referencia IN ($placeholdersSql)
-                          ORDER BY marca_vehiculo, modelo_vehiculo, ano_inicio";
+        $referenciaActiva = $this->activeReferenciaCondition('r');
+        $vehiculoQuery = "SELECT r.id_producto,
+                                 cv.id_referencia,
+                                 cv.marca_vehiculo,
+                                 cv.modelo_vehiculo,
+                                 cv.ano_inicio,
+                                 cv.ano_fin
+                          FROM referencia_producto r
+                          INNER JOIN compatibilidad_vehiculo cv ON cv.id_referencia = r.id_referencia
+                          WHERE r.id_producto IN ($placeholdersSql)
+                          AND $referenciaActiva
+                          ORDER BY cv.marca_vehiculo, cv.modelo_vehiculo, cv.ano_inicio";
         $stmt = oci_parse($this->conn, $vehiculoQuery);
         foreach ($bindValues as $param => $value) {
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
@@ -70,20 +74,23 @@ class ProductoModel {
         oci_execute($stmt);
         while ($row = oci_fetch_assoc($stmt)) {
             $item = $this->normalizeRow($row);
-            $idReferencia = (int) ($item['id_referencia'] ?? 0);
-            if (isset($compatibilidades[$idReferencia])) {
-                $compatibilidades[$idReferencia]['vehiculos'][] = $item;
+            $idProducto = (int) ($item['id_producto'] ?? 0);
+            if (isset($compatibilidades[$idProducto])) {
+                $compatibilidades[$idProducto]['vehiculos'][] = $item;
             }
         }
         oci_free_statement($stmt);
 
-        $maquinariaQuery = "SELECT id_referencia,
-                                   tipo_maquinaria,
-                                   marca_maquinaria,
-                                   modelo_maquinaria
-                            FROM compatibilidad_maquinaria
-                            WHERE id_referencia IN ($placeholdersSql)
-                            ORDER BY tipo_maquinaria, marca_maquinaria, modelo_maquinaria";
+        $maquinariaQuery = "SELECT r.id_producto,
+                                   cm.id_referencia,
+                                   cm.tipo_maquinaria,
+                                   cm.marca_maquinaria,
+                                   cm.modelo_maquinaria
+                            FROM referencia_producto r
+                            INNER JOIN compatibilidad_maquinaria cm ON cm.id_referencia = r.id_referencia
+                            WHERE r.id_producto IN ($placeholdersSql)
+                            AND $referenciaActiva
+                            ORDER BY cm.tipo_maquinaria, cm.marca_maquinaria, cm.modelo_maquinaria";
         $stmt = oci_parse($this->conn, $maquinariaQuery);
         foreach ($bindValues as $param => $value) {
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
@@ -91,16 +98,16 @@ class ProductoModel {
         oci_execute($stmt);
         while ($row = oci_fetch_assoc($stmt)) {
             $item = $this->normalizeRow($row);
-            $idReferencia = (int) ($item['id_referencia'] ?? 0);
-            if (isset($compatibilidades[$idReferencia])) {
-                $compatibilidades[$idReferencia]['maquinarias'][] = $item;
+            $idProducto = (int) ($item['id_producto'] ?? 0);
+            if (isset($compatibilidades[$idProducto])) {
+                $compatibilidades[$idProducto]['maquinarias'][] = $item;
             }
         }
         oci_free_statement($stmt);
 
         foreach ($productos as &$producto) {
-            $idReferencia = (int) ($producto['id_referencia'] ?? 0);
-            $producto['compatibilidades'] = $compatibilidades[$idReferencia] ?? [
+            $idProducto = (int) ($producto['id_producto'] ?? 0);
+            $producto['compatibilidades'] = $compatibilidades[$idProducto] ?? [
                 'vehiculos' => [],
                 'maquinarias' => []
             ];

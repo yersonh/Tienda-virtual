@@ -90,7 +90,7 @@ class TiendaController {
     }
 
     private function obtenerCatalogoCacheado(bool $incluirDescripcion = true): array {
-        $cacheKey = $incluirDescripcion ? 'catalogo_full_compat' : 'catalogo_ligero_compat';
+        $cacheKey = $incluirDescripcion ? 'catalogo_full_compat_v2' : 'catalogo_ligero_compat_v2';
         $productos = $this->getCache($cacheKey);
         if ($productos !== null) {
             return $productos;
@@ -150,6 +150,186 @@ class TiendaController {
         return array_values(array_unique($clean));
     }
 
+    private function filtrarProductosGenerales(array $productos, string $filtro, string $precio_min, string $precio_max, string $categoria_filtro): array {
+        return array_values(array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
+            $match_texto = true;
+            if ($filtro !== '') {
+                $f = strtolower($filtro);
+                $match_texto =
+                    str_contains(strtolower((string) ($p['nombre'] ?? '')), $f) ||
+                    str_contains(strtolower((string) ($p['codigo'] ?? '')), $f) ||
+                    str_contains(strtolower((string) ($p['descripcion'] ?? '')), $f);
+            }
+
+            $match_precio = true;
+            if ($precio_min !== '') {
+                $match_precio = (int) ($p['precio'] ?? 0) >= (int) $precio_min;
+            }
+            if ($precio_max !== '') {
+                $match_precio = $match_precio && (int) ($p['precio'] ?? 0) <= (int) $precio_max;
+            }
+
+            $match_categoria = true;
+            if ($categoria_filtro !== '') {
+                $match_categoria = strtolower(trim((string) ($p['categoria_nombre'] ?? ''))) === strtolower(trim($categoria_filtro));
+            }
+
+            return $match_texto && $match_precio && $match_categoria;
+        }));
+    }
+
+    private function normalizarTexto(string $value): string {
+        return strtoupper(trim($value));
+    }
+
+    private function valorEnSeleccion(string $value, array $selected): bool {
+        if (empty($selected)) {
+            return true;
+        }
+
+        $normalized = $this->normalizarTexto($value);
+        foreach ($selected as $item) {
+            if ($normalized === $this->normalizarTexto((string) $item)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function vehiculoCumple(array $vehiculo, array $marcas, array $modelos, array $anos): bool {
+        if (!$this->valorEnSeleccion((string) ($vehiculo['marca_vehiculo'] ?? ''), $marcas)) {
+            return false;
+        }
+        if (!$this->valorEnSeleccion((string) ($vehiculo['modelo_vehiculo'] ?? ''), $modelos)) {
+            return false;
+        }
+        if (!empty($anos)) {
+            $inicio = (int) ($vehiculo['ano_inicio'] ?? 0);
+            $fin = (int) ($vehiculo['ano_fin'] ?? 0);
+            $coincideAno = false;
+            foreach ($anos as $ano) {
+                $ano = (int) $ano;
+                if ($inicio > 0 && $fin > 0 && $ano >= $inicio && $ano <= $fin) {
+                    $coincideAno = true;
+                    break;
+                }
+            }
+            if (!$coincideAno) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function maquinariaCumple(array $maquinaria, array $tipos, array $marcas, array $modelos): bool {
+        return $this->valorEnSeleccion((string) ($maquinaria['tipo_maquinaria'] ?? ''), $tipos)
+            && $this->valorEnSeleccion((string) ($maquinaria['marca_maquinaria'] ?? ''), $marcas)
+            && $this->valorEnSeleccion((string) ($maquinaria['modelo_maquinaria'] ?? ''), $modelos);
+    }
+
+    private function filtrarPorCompatibilidad(array $productos, string $compatibilidad_tipo, array $vehiculo_marcas, array $vehiculo_modelos, array $vehiculo_anos, array $maquinaria_tipos, array $maquinaria_marcas, array $maquinaria_modelos): array {
+        if ($compatibilidad_tipo === 'vehiculo') {
+            return array_values(array_filter($productos, function($producto) use ($vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos) {
+                foreach (($producto['compatibilidades']['vehiculos'] ?? []) as $vehiculo) {
+                    if ($this->vehiculoCumple($vehiculo, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }));
+        }
+
+        if ($compatibilidad_tipo === 'maquinaria') {
+            return array_values(array_filter($productos, function($producto) use ($maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos) {
+                foreach (($producto['compatibilidades']['maquinarias'] ?? []) as $maquinaria) {
+                    if ($this->maquinariaCumple($maquinaria, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }));
+        }
+
+        return $productos;
+    }
+
+    private function agregarOpcion(array &$values, $value): void {
+        $value = trim((string) $value);
+        if ($value !== '') {
+            $values[$value] = $value;
+        }
+    }
+
+    private function construirOpcionesCompatibilidadVehiculo(array $productos, array $marcasSeleccionadas, array $modelosSeleccionados, array $anosSeleccionados): array {
+        $marcas = [];
+        $modelos = [];
+        $anos = [];
+
+        foreach ($productos as $producto) {
+            foreach (($producto['compatibilidades']['vehiculos'] ?? []) as $vehiculo) {
+                if ($this->vehiculoCumple($vehiculo, [], $modelosSeleccionados, $anosSeleccionados)) {
+                    $this->agregarOpcion($marcas, $vehiculo['marca_vehiculo'] ?? '');
+                }
+                if ($this->vehiculoCumple($vehiculo, $marcasSeleccionadas, [], $anosSeleccionados)) {
+                    $this->agregarOpcion($modelos, $vehiculo['modelo_vehiculo'] ?? '');
+                }
+                if ($this->vehiculoCumple($vehiculo, $marcasSeleccionadas, $modelosSeleccionados, [])) {
+                    $inicio = (int) ($vehiculo['ano_inicio'] ?? 0);
+                    $fin = (int) ($vehiculo['ano_fin'] ?? 0);
+                    if ($inicio > 0 && $fin >= $inicio && ($fin - $inicio) <= 120) {
+                        foreach (range($inicio, $fin) as $ano) {
+                            $anos[(string) $ano] = (string) $ano;
+                        }
+                    }
+                }
+            }
+        }
+
+        natcasesort($marcas);
+        natcasesort($modelos);
+        ksort($anos, SORT_NUMERIC);
+
+        return [
+            'marcas' => array_values($marcas),
+            'modelos' => array_values($modelos),
+            'anos' => array_values($anos)
+        ];
+    }
+
+    private function construirOpcionesCompatibilidadMaquinaria(array $productos, array $tiposSeleccionados, array $marcasSeleccionadas, array $modelosSeleccionados): array {
+        $tipos = [];
+        $marcas = [];
+        $modelos = [];
+
+        foreach ($productos as $producto) {
+            foreach (($producto['compatibilidades']['maquinarias'] ?? []) as $maquinaria) {
+                if ($this->maquinariaCumple($maquinaria, [], $marcasSeleccionadas, $modelosSeleccionados)) {
+                    $this->agregarOpcion($tipos, $maquinaria['tipo_maquinaria'] ?? '');
+                }
+                if ($this->maquinariaCumple($maquinaria, $tiposSeleccionados, [], $modelosSeleccionados)) {
+                    $this->agregarOpcion($marcas, $maquinaria['marca_maquinaria'] ?? '');
+                }
+                if ($this->maquinariaCumple($maquinaria, $tiposSeleccionados, $marcasSeleccionadas, [])) {
+                    $this->agregarOpcion($modelos, $maquinaria['modelo_maquinaria'] ?? '');
+                }
+            }
+        }
+
+        natcasesort($tipos);
+        natcasesort($marcas);
+        natcasesort($modelos);
+
+        return [
+            'tipos' => array_values($tipos),
+            'marcas' => array_values($marcas),
+            'modelos' => array_values($modelos)
+        ];
+    }
+
     private function obtenerDatosTienda(bool $incluirOpcionesVehiculo = true): array {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
@@ -180,52 +360,30 @@ class TiendaController {
             $compatibilidad_tipo = 'maquinaria';
         }
 
+        $productosBase = $this->obtenerCatalogoCacheado(!empty($filtro));
+        $productosFiltradosBase = $this->filtrarProductosGenerales($productosBase, trim((string) $filtro), $precio_min, $precio_max, trim((string) $categoria_filtro));
+
         $opcionesVehiculo = ($incluirOpcionesVehiculo || $compatibilidad_tipo === 'vehiculo')
-            ? $this->productoModel()->obtenerOpcionesCompatibilidadVehiculo()
+            ? $this->construirOpcionesCompatibilidadVehiculo($productosFiltradosBase, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos)
             : ['marcas' => [], 'modelos' => [], 'anos' => []];
         $opcionesMaquinaria = $compatibilidad_tipo === 'maquinaria'
-            ? [
-                'tipos' => $this->productoModel()->obtenerTipos($maquinaria_marcas, $maquinaria_modelos),
-                'marcas' => $this->productoModel()->obtenerMarcas($maquinaria_modelos, $maquinaria_tipos),
-                'modelos' => $this->productoModel()->obtenerModelos($maquinaria_marcas, $maquinaria_tipos)
-            ]
+            ? $this->construirOpcionesCompatibilidadMaquinaria($productosFiltradosBase, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos)
             : ['tipos' => [], 'marcas' => [], 'modelos' => []];
 
-        if ($compatibilidad_tipo === 'vehiculo' && $hayFiltroVehiculo) {
+        $productos = $productosFiltradosBase;
+        if (($compatibilidad_tipo === 'vehiculo' && $hayFiltroVehiculo) || ($compatibilidad_tipo === 'maquinaria' && $hayFiltroMaquinaria)) {
             $compatibilidad_activa = true;
-            $productos = $this->productoModel()->filtrarVehiculo($vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
-        } elseif ($compatibilidad_tipo === 'maquinaria' && $hayFiltroMaquinaria) {
-            $compatibilidad_activa = true;
-            $productos = $this->productoModel()->filtrarProductos($maquinaria_marcas, $maquinaria_modelos, $maquinaria_tipos);
-        } else {
-            $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
+            $productos = $this->filtrarPorCompatibilidad(
+                $productosFiltradosBase,
+                $compatibilidad_tipo,
+                $vehiculo_marcas,
+                $vehiculo_modelos,
+                $vehiculo_anos,
+                $maquinaria_tipos,
+                $maquinaria_marcas,
+                $maquinaria_modelos
+            );
         }
-
-        $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
-            $match_texto = true;
-            if (!empty($filtro)) {
-                $f = strtolower($filtro);
-                $match_texto =
-                    str_contains(strtolower((string)$p['nombre']), $f) ||
-                    str_contains(strtolower((string)$p['codigo']), $f) ||
-                    str_contains(strtolower((string)($p['descripcion'] ?? '')), $f);
-            }
-
-            $match_precio = true;
-            if ($precio_min !== '') {
-                $match_precio = (int)$p['precio'] >= (int)$precio_min;
-            }
-            if ($precio_max !== '') {
-                $match_precio = $match_precio && (int)$p['precio'] <= (int)$precio_max;
-            }
-
-            $match_categoria = true;
-            if (!empty($categoria_filtro)) {
-                $match_categoria = strtolower(trim((string)$p['categoria_nombre'])) === strtolower(trim((string)$categoria_filtro));
-            }
-
-            return $match_texto && $match_precio && $match_categoria;
-        });
 
         $categorias = [];
         $todasCategorias = array_map(function($cat) {
