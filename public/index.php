@@ -44,6 +44,7 @@ $publicas = [
     'iniciarSesion',
     'inicio',
     'tienda',
+    'tiendaFiltros',
     'productoDetalle',
     'recuperar',
     'solicitarRecuperacion',
@@ -129,6 +130,10 @@ switch ($action) {
 
     case 'tienda':
         (new TiendaController())->index();
+        break;
+
+    case 'tiendaFiltros':
+        (new TiendaController())->filtrosAjax();
         break;
 
     case 'productoDetalle':
