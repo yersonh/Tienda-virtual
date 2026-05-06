@@ -1384,20 +1384,11 @@ const applySidebarFiltersBtn = document.getElementById('apply-sidebar-filters');
 const clearSidebarFiltersBtn = document.getElementById('clear-sidebar-filters');
 const optionSearchInputs = Array.from(document.querySelectorAll('[data-option-search]'));
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
-const categorySections = Array.from(document.querySelectorAll('.category-section')).map((section) => ({
-    section,
-    count: section.querySelector('.section-count'),
-    products: Array.from(section.querySelectorAll('.producto')).map((element) => ({
-        element,
-        nombre: element.dataset.nombre || '',
-        precio: parseInt(element.dataset.precio || '0', 10) || 0,
-        categoria: element.dataset.categoria || ''
-    }))
-}));
-const detailMode = <?= !empty($categoria_filtro ?? '') ? 'true' : 'false' ?>;
-const compatibilityServerMode = <?= !empty($compatibilidad_tipo ?? '') ? 'true' : 'false' ?>;
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 let filterTimer = null;
+let filterAbortController = null;
+let filterRequestId = 0;
+const filterResponseCache = new Map();
 
 const productImageObserver = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries, observer) => {
@@ -1485,10 +1476,23 @@ async function fetchFilteredStore() {
     const viewParams = buildFilterParams(cat);
     const requestParams = new URLSearchParams(viewParams);
     requestParams.set('action', 'tiendaFiltros');
+    const requestKey = requestParams.toString();
+    const currentRequestId = ++filterRequestId;
 
     setFilterLoading(true);
     try {
+        if (filterResponseCache.has(requestKey)) {
+            applyFilteredStoreResponse(filterResponseCache.get(requestKey), viewParams, cat);
+            return;
+        }
+
+        if (filterAbortController) {
+            filterAbortController.abort();
+        }
+        filterAbortController = new AbortController();
+
         const response = await fetch(`index.php?${requestParams.toString()}`, {
+            signal: filterAbortController.signal,
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'fetch'
@@ -1499,64 +1503,45 @@ async function fetchFilteredStore() {
             throw new Error(data.message || 'No se pudieron actualizar los filtros');
         }
 
-        const results = document.getElementById('store-results');
-        if (results) {
-            results.innerHTML = data.productos_html || '';
-            observeLazyImages(results);
+        if (currentRequestId !== filterRequestId) {
+            return;
         }
 
-        renderOptionList('tipo', data.opciones?.tipos || [], data.seleccion?.tipos || []);
-        renderOptionList('marca', data.opciones?.marcas || [], data.seleccion?.marcas || []);
-        renderOptionList('modelo', data.opciones?.modelos || [], data.seleccion?.modelos || []);
-        bindDynamicFilterCheckboxes();
-        refreshOptionSearches();
-        syncCategoryTabs(cat);
-        if (openFiltersBtn) {
-            openFiltersBtn.classList.toggle('active', Boolean(data.seleccion?.tipos?.length || data.seleccion?.marcas?.length || data.seleccion?.modelos?.length));
+        filterResponseCache.set(requestKey, data);
+        if (filterResponseCache.size > 20) {
+            filterResponseCache.delete(filterResponseCache.keys().next().value);
         }
-
-        const urlParams = new URLSearchParams(viewParams);
-        urlParams.set('action', 'tienda');
-        window.history.replaceState({}, '', `index.php?${urlParams.toString()}${cat ? '#category-detail' : ''}`);
+        applyFilteredStoreResponse(data, viewParams, cat);
     } catch (error) {
+        if (error.name === 'AbortError') return;
         console.error(error);
     } finally {
-        setFilterLoading(false);
-    }
-}
-
-// GUARDAR OPCIONES ORIGINALES
-const opcionesOriginales = Array.from(categoria.options);
-let lastCategoryOptionKey = '';
-
-function replaceCategoryOptions(options) {
-    const fragment = document.createDocumentFragment();
-    options.forEach((option) => fragment.appendChild(option.cloneNode(true)));
-    categoria.replaceChildren(fragment);
-}
-
-function syncCategoryOptions(categoriasVisibles, valorActual, hasFilters) {
-    if (!hasFilters) {
-        const key = 'all';
-        if (lastCategoryOptionKey !== key) {
-            replaceCategoryOptions(opcionesOriginales);
-            lastCategoryOptionKey = key;
+        if (currentRequestId === filterRequestId) {
+            setFilterLoading(false);
         }
-        categoria.value = valorActual;
-        return;
+    }
+}
+
+function applyFilteredStoreResponse(data, viewParams, cat) {
+    const results = document.getElementById('store-results');
+    if (results) {
+        results.innerHTML = data.productos_html || '';
+        observeLazyImages(results);
     }
 
-    const visibleValues = opcionesOriginales
-        .filter((option) => option.value === '' || categoriasVisibles.has(option.value))
-        .map((option) => option.value);
-    const key = visibleValues.join('|');
-
-    if (lastCategoryOptionKey !== key) {
-        replaceCategoryOptions(opcionesOriginales.filter((option) => visibleValues.includes(option.value)));
-        lastCategoryOptionKey = key;
+    renderOptionList('tipo', data.opciones?.tipos || [], data.seleccion?.tipos || []);
+    renderOptionList('marca', data.opciones?.marcas || [], data.seleccion?.marcas || []);
+    renderOptionList('modelo', data.opciones?.modelos || [], data.seleccion?.modelos || []);
+    bindDynamicFilterCheckboxes();
+    refreshOptionSearches();
+    syncCategoryTabs(cat);
+    if (openFiltersBtn) {
+        openFiltersBtn.classList.toggle('active', Boolean(data.seleccion?.tipos?.length || data.seleccion?.marcas?.length || data.seleccion?.modelos?.length));
     }
 
-    categoria.value = visibleValues.includes(valorActual) ? valorActual : '';
+    const urlParams = new URLSearchParams(viewParams);
+    urlParams.set('action', 'tienda');
+    window.history.replaceState({}, '', `index.php?${urlParams.toString()}${cat ? '#category-detail' : ''}`);
 }
 
 function scheduleFilterProducts(){
@@ -1622,54 +1607,6 @@ function autoApplySidebarFilters() {
 // FUNCION PRINCIPAL (TODO EN UNO)
 function filterProducts(){
     fetchFilteredStore();
-    return;
-
-    const texto = buscador.value.trim().toLowerCase();
-    const min = precioMin.value.replace(/\D/g,'');
-    const max = precioMax.value.replace(/\D/g,'');
-    const minValue = min ? parseInt(min, 10) : null;
-    const maxValue = max ? parseInt(max, 10) : null;
-    const cat = categoria.value || categoriaActiva;
-    const compatMode = compatibilityType ? compatibilityType.value : '';
-
-    if(detailMode || compatMode){
-        fetchFilteredStore();
-        return;
-    }
-
-    let categoriasVisibles = new Set();
-
-    categorySections.forEach(({ section, count, products }) => {
-        let visibles = 0;
-
-        products.forEach(({ element, nombre, precio, categoria: categoriaProd }) => {
-            let ok = true;
-
-            if(texto && !nombre.includes(texto)) ok = false;
-            if(minValue !== null && precio < minValue) ok = false;
-            if(maxValue !== null && precio > maxValue) ok = false;
-            if(cat && categoriaProd !== cat) ok = false;
-
-            element.hidden = !ok;
-
-            if(ok){
-                visibles++;
-                categoriasVisibles.add(categoriaProd);
-            }
-        });
-
-        section.hidden = visibles <= 0;
-        if (count) {
-            count.textContent = visibles + ' ' + i18n.productCount;
-        }
-    });
-
-    syncCategoryTabs(cat);
-    categoriaActiva = cat;
-
-    // ACTUALIZAR SELECT SIN ROMPER
-    syncCategoryOptions(categoriasVisibles, categoria.value, Boolean(texto || min || max || cat));
-
 }
 
 // LIMPIAR
@@ -1688,9 +1625,6 @@ function clearFilters(){
         input.checked = false;
     });
     optionSearchInputs.forEach(filterOptionList);
-
-    lastCategoryOptionKey = '';
-    replaceCategoryOptions(opcionesOriginales);
 
     fetchFilteredStore();
 }

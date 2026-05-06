@@ -3,6 +3,7 @@ class ProductoModel {
 
     private $conn;
     private $dynamicBindValues = [];
+    private $filterOptionCache = [];
 
     public function __construct($conn) {
         $this->conn = $conn;
@@ -426,6 +427,11 @@ class ProductoModel {
     }
 
     private function obtenerValoresMaquinaria(string $column, string $alias, array $marcas = [], array $modelos = [], array $tipos = []): array {
+        $cacheKey = $column . '|' . implode('~', $marcas) . '|' . implode('~', $modelos) . '|' . implode('~', $tipos);
+        if (array_key_exists($cacheKey, $this->filterOptionCache)) {
+            return $this->filterOptionCache[$cacheKey];
+        }
+
         $binds = [];
         $conditions = $this->buildMaquinariaFilterConditions($marcas, $modelos, $tipos, $binds);
         $productoActivo = $this->activeProductoCondition('p');
@@ -455,10 +461,13 @@ class ProductoModel {
         oci_free_statement($stmt);
 
         if (!empty($values) || (empty($marcas) && empty($modelos) && empty($tipos))) {
+            $this->filterOptionCache[$cacheKey] = $values;
             return $values;
         }
 
-        return $this->obtenerValoresMaquinaria($column, $alias);
+        $values = $this->obtenerValoresMaquinaria($column, $alias);
+        $this->filterOptionCache[$cacheKey] = $values;
+        return $values;
     }
 
     private function obtenerValoresDistinct(string $query): array {

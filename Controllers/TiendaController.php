@@ -150,7 +150,7 @@ class TiendaController {
         return array_values(array_unique($clean));
     }
 
-    private function obtenerDatosTienda(): array {
+    private function obtenerDatosTienda(bool $incluirOpcionesVehiculo = true): array {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
 
@@ -174,7 +174,9 @@ class TiendaController {
             $compatibilidad_tipo = 'maquinaria';
         }
 
-        $opcionesVehiculo = $this->productoModel()->obtenerOpcionesCompatibilidadVehiculo();
+        $opcionesVehiculo = $incluirOpcionesVehiculo
+            ? $this->productoModel()->obtenerOpcionesCompatibilidadVehiculo()
+            : ['marcas' => [], 'modelos' => [], 'anos' => []];
         $opcionesMaquinaria = [
             'tipos' => $this->productoModel()->obtenerTipos($maquinaria_marcas, $maquinaria_modelos),
             'marcas' => $this->productoModel()->obtenerMarcas($maquinaria_modelos, $maquinaria_tipos),
@@ -257,6 +259,10 @@ class TiendaController {
     }
 
     public function index() {
+        extract($this->obtenerDatosTienda());
+        require_once __DIR__ . '/../views/Tienda.php';
+        return;
+
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
 
@@ -358,7 +364,7 @@ class TiendaController {
 
     // Ã°Å¸â€Â DETALLE
     public function filtrosAjax() {
-        extract($this->obtenerDatosTienda());
+        extract($this->obtenerDatosTienda(false));
         $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 
         ob_start();
