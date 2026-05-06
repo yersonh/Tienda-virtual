@@ -28,6 +28,88 @@ class ProductoModel {
         return $normalized;
     }
 
+    private function anexarCompatibilidades(array $productos): array {
+        $referencias = array_values(array_unique(array_filter(array_map(
+            fn($producto) => (int) ($producto['id_referencia'] ?? 0),
+            $productos
+        ), fn($id) => $id > 0)));
+
+        if (empty($referencias)) {
+            return $productos;
+        }
+
+        $compatibilidades = [];
+        foreach ($referencias as $idReferencia) {
+            $compatibilidades[$idReferencia] = [
+                'vehiculos' => [],
+                'maquinarias' => []
+            ];
+        }
+
+        $placeholders = [];
+        $bindValues = [];
+        foreach ($referencias as $index => $idReferencia) {
+            $param = ':ref' . $index;
+            $placeholders[] = $param;
+            $bindValues[$param] = $idReferencia;
+        }
+        $placeholdersSql = implode(',', $placeholders);
+
+        $vehiculoQuery = "SELECT id_referencia,
+                                 marca_vehiculo,
+                                 modelo_vehiculo,
+                                 ano_inicio,
+                                 ano_fin
+                          FROM compatibilidad_vehiculo
+                          WHERE id_referencia IN ($placeholdersSql)
+                          ORDER BY marca_vehiculo, modelo_vehiculo, ano_inicio";
+        $stmt = oci_parse($this->conn, $vehiculoQuery);
+        foreach ($bindValues as $param => $value) {
+            oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
+        }
+        oci_execute($stmt);
+        while ($row = oci_fetch_assoc($stmt)) {
+            $item = $this->normalizeRow($row);
+            $idReferencia = (int) ($item['id_referencia'] ?? 0);
+            if (isset($compatibilidades[$idReferencia])) {
+                $compatibilidades[$idReferencia]['vehiculos'][] = $item;
+            }
+        }
+        oci_free_statement($stmt);
+
+        $maquinariaQuery = "SELECT id_referencia,
+                                   tipo_maquinaria,
+                                   marca_maquinaria,
+                                   modelo_maquinaria
+                            FROM compatibilidad_maquinaria
+                            WHERE id_referencia IN ($placeholdersSql)
+                            ORDER BY tipo_maquinaria, marca_maquinaria, modelo_maquinaria";
+        $stmt = oci_parse($this->conn, $maquinariaQuery);
+        foreach ($bindValues as $param => $value) {
+            oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
+        }
+        oci_execute($stmt);
+        while ($row = oci_fetch_assoc($stmt)) {
+            $item = $this->normalizeRow($row);
+            $idReferencia = (int) ($item['id_referencia'] ?? 0);
+            if (isset($compatibilidades[$idReferencia])) {
+                $compatibilidades[$idReferencia]['maquinarias'][] = $item;
+            }
+        }
+        oci_free_statement($stmt);
+
+        foreach ($productos as &$producto) {
+            $idReferencia = (int) ($producto['id_referencia'] ?? 0);
+            $producto['compatibilidades'] = $compatibilidades[$idReferencia] ?? [
+                'vehiculos' => [],
+                'maquinarias' => []
+            ];
+        }
+        unset($producto);
+
+        return $productos;
+    }
+
     private function productoColumns(
         string $alias = 'p',
         bool $includeTotalVendido = false,
@@ -128,7 +210,7 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        return $results;
+        return $this->anexarCompatibilidades($results);
     }
 
     public function obtenerTodos() {
@@ -152,7 +234,7 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        return $results;
+        return $this->anexarCompatibilidades($results);
     }
 
     public function obtenerPorId($id) {
@@ -338,7 +420,7 @@ class ProductoModel {
         }
 
         oci_free_statement($stmt);
-        return $results;
+        return $this->anexarCompatibilidades($results);
     }
 
     private function normalizeFilterList($values, bool $numeric = false): array {
@@ -596,7 +678,7 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        return $results;
+        return $this->anexarCompatibilidades($results);
     }
 
     public function filtrarMaquinaria($tipo = null, $marca = null, $modelo = null): array {
@@ -642,7 +724,7 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        return $results;
+        return $this->anexarCompatibilidades($results);
     }
 
     public function filtrarProductos($marcas = [], $modelos = [], $tipos = []): array {

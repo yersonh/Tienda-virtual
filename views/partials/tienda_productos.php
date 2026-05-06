@@ -32,6 +32,10 @@
                 $stockProducto = (int) $p['stock_p'];
                 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
                 $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
+                $compatibilidades = isset($p['compatibilidades']) && is_array($p['compatibilidades']) ? $p['compatibilidades'] : [];
+                $vehiculosCompatibles = isset($compatibilidades['vehiculos']) && is_array($compatibilidades['vehiculos']) ? $compatibilidades['vehiculos'] : [];
+                $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($compatibilidades['maquinarias']) ? $compatibilidades['maquinarias'] : [];
+                $limiteCompatibilidad = 2;
             ?>
             <div class="product-card producto-card producto"
                  data-nombre="<?= htmlspecialchars(strtolower((string) $p['nombre']), ENT_QUOTES, 'UTF-8') ?>"
@@ -82,6 +86,58 @@
                             <?= $p['stock_p'] <= 4 ? htmlspecialchars('Bajo', ENT_QUOTES, 'UTF-8') . ' ' : htmlspecialchars('Disponible', ENT_QUOTES, 'UTF-8') . ' ' ?><?= (int) $p['stock_p'] ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?>
                         </span>
                     </div>
+                    <?php if(!empty($vehiculosCompatibles) || !empty($maquinariasCompatibles)): ?>
+                    <div class="card-compat">
+                        <?php if(!empty($vehiculosCompatibles)): ?>
+                        <div class="compat-block">
+                            <span class="compat-title"><?= htmlspecialchars('Vehiculo', ENT_QUOTES, 'UTF-8') ?></span>
+                            <div class="compat-list">
+                                <?php foreach(array_slice($vehiculosCompatibles, 0, $limiteCompatibilidad) as $vehiculo): ?>
+                                    <?php
+                                        $marcaVehiculo = trim((string) ($vehiculo['marca_vehiculo'] ?? ''));
+                                        $modeloVehiculo = trim((string) ($vehiculo['modelo_vehiculo'] ?? ''));
+                                        $anoInicio = (int) ($vehiculo['ano_inicio'] ?? 0);
+                                        $anoFin = (int) ($vehiculo['ano_fin'] ?? 0);
+                                        $rangoAno = $anoInicio > 0 && $anoFin > 0
+                                            ? ($anoInicio === $anoFin ? (string) $anoInicio : $anoInicio . '-' . $anoFin)
+                                            : 'Ano no registrado';
+                                    ?>
+                                    <div class="compat-line">
+                                        <strong><?= htmlspecialchars($marcaVehiculo !== '' ? $marcaVehiculo : 'Marca no registrada', ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <?= htmlspecialchars($modeloVehiculo !== '' ? $modeloVehiculo : 'Modelo no registrado', ENT_QUOTES, 'UTF-8') ?>
+                                        | <?= htmlspecialchars($rangoAno, ENT_QUOTES, 'UTF-8') ?>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if(count($vehiculosCompatibles) > $limiteCompatibilidad): ?>
+                                <div class="compat-more">+<?= count($vehiculosCompatibles) - $limiteCompatibilidad ?> <?= htmlspecialchars('vehiculos mas', ENT_QUOTES, 'UTF-8') ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if(!empty($maquinariasCompatibles)): ?>
+                        <div class="compat-block">
+                            <span class="compat-title"><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></span>
+                            <div class="compat-list">
+                                <?php foreach(array_slice($maquinariasCompatibles, 0, $limiteCompatibilidad) as $maquinaria): ?>
+                                    <?php
+                                        $tipoMaquinaria = trim((string) ($maquinaria['tipo_maquinaria'] ?? ''));
+                                        $marcaMaquinaria = trim((string) ($maquinaria['marca_maquinaria'] ?? ''));
+                                        $modeloMaquinaria = trim((string) ($maquinaria['modelo_maquinaria'] ?? ''));
+                                    ?>
+                                    <div class="compat-line">
+                                        <strong><?= htmlspecialchars($tipoMaquinaria !== '' ? $tipoMaquinaria : 'Tipo no registrado', ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <?= htmlspecialchars($marcaMaquinaria !== '' ? $marcaMaquinaria : 'Marca no registrada', ENT_QUOTES, 'UTF-8') ?>
+                                        | <?= htmlspecialchars($modeloMaquinaria !== '' ? $modeloMaquinaria : 'Modelo no registrado', ENT_QUOTES, 'UTF-8') ?>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if(count($maquinariasCompatibles) > $limiteCompatibilidad): ?>
+                                <div class="compat-more">+<?= count($maquinariasCompatibles) - $limiteCompatibilidad ?> <?= htmlspecialchars('maquinarias mas', ENT_QUOTES, 'UTF-8') ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                     <div class="card-price">$<?= number_format((float) $p['precio']) ?> <span>COP</span></div>
                     <div class="card-footer">
                         <?php if($usuarioLogueado): ?>

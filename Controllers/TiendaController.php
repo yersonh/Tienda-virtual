@@ -90,7 +90,7 @@ class TiendaController {
     }
 
     private function obtenerCatalogoCacheado(bool $incluirDescripcion = true): array {
-        $cacheKey = $incluirDescripcion ? 'catalogo_full' : 'catalogo_ligero';
+        $cacheKey = $incluirDescripcion ? 'catalogo_full_compat' : 'catalogo_ligero_compat';
         $productos = $this->getCache($cacheKey);
         if ($productos !== null) {
             return $productos;
@@ -169,11 +169,14 @@ class TiendaController {
         $maquinaria_tipos = array_values(array_unique($maquinaria_tipos));
         $maquinaria_marcas = array_values(array_unique($maquinaria_marcas));
         $maquinaria_modelos = array_values(array_unique($maquinaria_modelos));
+        $hayFiltroVehiculo = !empty($vehiculo_marcas) || !empty($vehiculo_modelos) || !empty($vehiculo_anos);
+        $hayFiltroMaquinaria = !empty($maquinaria_tipos) || !empty($maquinaria_marcas) || !empty($maquinaria_modelos);
+        $compatibilidad_activa = false;
 
-        if ($compatibilidad_tipo === '' && (!empty($vehiculo_marcas) || !empty($vehiculo_modelos) || !empty($vehiculo_anos))) {
+        if ($compatibilidad_tipo === '' && $hayFiltroVehiculo) {
             $compatibilidad_tipo = 'vehiculo';
         }
-        if ($compatibilidad_tipo === '' && (!empty($maquinaria_tipos) || !empty($maquinaria_marcas) || !empty($maquinaria_modelos))) {
+        if ($compatibilidad_tipo === '' && $hayFiltroMaquinaria) {
             $compatibilidad_tipo = 'maquinaria';
         }
 
@@ -188,9 +191,11 @@ class TiendaController {
             ]
             : ['tipos' => [], 'marcas' => [], 'modelos' => []];
 
-        if ($compatibilidad_tipo === 'vehiculo') {
+        if ($compatibilidad_tipo === 'vehiculo' && $hayFiltroVehiculo) {
+            $compatibilidad_activa = true;
             $productos = $this->productoModel()->filtrarVehiculo($vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
-        } elseif ($compatibilidad_tipo === 'maquinaria') {
+        } elseif ($compatibilidad_tipo === 'maquinaria' && $hayFiltroMaquinaria) {
+            $compatibilidad_activa = true;
             $productos = $this->productoModel()->filtrarProductos($maquinaria_marcas, $maquinaria_modelos, $maquinaria_tipos);
         } else {
             $productos = $this->obtenerCatalogoCacheado(!empty($filtro));
@@ -240,6 +245,7 @@ class TiendaController {
             'precio_max',
             'categoria_filtro',
             'compatibilidad_tipo',
+            'compatibilidad_activa',
             'vehiculo_marcas',
             'vehiculo_modelos',
             'vehiculo_anos',
@@ -382,6 +388,7 @@ class TiendaController {
             'success' => true,
             'productos_html' => $productosHtml,
             'compatibilidad_tipo' => $compatibilidad_tipo,
+            'compatibilidad_activa' => $compatibilidad_activa,
             'opciones' => [
                 'vehiculo' => $opcionesVehiculo,
                 'maquinaria' => $opcionesMaquinaria

@@ -331,25 +331,9 @@
     background: #f8fafc;
 }
 .sidebar-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    display: flex;
     padding: 18px 24px 24px;
     border-top: 1px solid var(--border);
-}
-.btn-apply {
-    background: rgba(34,211,238,0.14);
-    border: 1px solid rgba(34,211,238,0.32);
-    color: var(--accent);
-    padding: 11px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    font-family: 'Manrope', sans-serif;
-}
-.btn-apply:hover {
-    background: rgba(34,211,238,0.24);
 }
 .filter-sidebar.loading::after {
     content: '';
@@ -700,6 +684,55 @@
     border-color: #f4d59b;
     color: #b7791f;
 }
+.card-compat {
+    display: grid;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+.compat-block {
+    display: grid;
+    gap: 5px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+}
+[data-theme="light"] .compat-block {
+    background: #f8fafc;
+    border-color: #d6dee8;
+}
+.compat-title {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 22px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(34,211,238,0.1);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+.compat-list {
+    display: grid;
+    gap: 4px;
+}
+.compat-line {
+    color: var(--secondary);
+    font-size: 11px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.compat-line strong {
+    color: var(--text);
+    font-weight: 800;
+}
+.compat-more {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+}
 .card-price {
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 20px;
@@ -1002,7 +1035,7 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </select>
-    <button class="btn-filter <?= !empty($compatibilidad_tipo) ? 'active' : '' ?>" type="button" id="open-filters">
+    <button class="btn-filter <?= !empty($compatibilidad_activa) ? 'active' : '' ?>" type="button" id="open-filters">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5h18"></path>
             <path d="M6 12h12"></path>
@@ -1105,7 +1138,6 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
     </div>
     <div class="sidebar-actions">
         <button class="btn-clear" type="button" id="clear-sidebar-filters"><?= htmlspecialchars('Limpiar filtros', ENT_QUOTES, 'UTF-8') ?></button>
-        <button class="btn-apply" type="button" id="apply-sidebar-filters"><?= htmlspecialchars('Aplicar filtros', ENT_QUOTES, 'UTF-8') ?></button>
     </div>
 </aside>
 
@@ -1402,7 +1434,6 @@ const openFiltersBtn = document.getElementById('open-filters');
 const closeFiltersBtn = document.getElementById('close-filters');
 const filterSidebar = document.getElementById('filter-sidebar');
 const filterOverlay = document.getElementById('filter-overlay');
-const applySidebarFiltersBtn = document.getElementById('apply-sidebar-filters');
 const clearSidebarFiltersBtn = document.getElementById('clear-sidebar-filters');
 const optionSearchInputs = Array.from(document.querySelectorAll('[data-option-search]'));
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
@@ -1581,7 +1612,7 @@ function applyFilteredStoreResponse(data, viewParams, cat) {
         refreshOptionSearches();
         syncCategoryTabs(cat);
         if (openFiltersBtn) {
-            openFiltersBtn.classList.toggle('active', Boolean(data.compatibilidad_tipo));
+            openFiltersBtn.classList.toggle('active', Boolean(data.compatibilidad_activa));
         }
 
     const urlParams = new URLSearchParams(viewParams);
@@ -1620,7 +1651,6 @@ if (compatibilityType) {
 if (openFiltersBtn) openFiltersBtn.addEventListener('click', openFilterSidebar);
 if (closeFiltersBtn) closeFiltersBtn.addEventListener('click', closeFilterSidebar);
 if (filterOverlay) filterOverlay.addEventListener('click', closeFilterSidebar);
-if (applySidebarFiltersBtn) applySidebarFiltersBtn.addEventListener('click', applySidebarFilters);
 if (clearSidebarFiltersBtn) clearSidebarFiltersBtn.addEventListener('click', clearFilters);
 bindDynamicFilterCheckboxes();
 optionSearchInputs.forEach((input) => {
@@ -1664,11 +1694,6 @@ function closeFilterSidebar() {
     filterOverlay.classList.remove('open');
     filterSidebar.setAttribute('aria-hidden', 'true');
     sessionStorage.removeItem('tiendaFilterSidebarOpen');
-}
-
-function applySidebarFilters() {
-    sessionStorage.setItem('tiendaFilterSidebarOpen', '1');
-    fetchFilteredStore();
 }
 
 function autoApplySidebarFilters() {
