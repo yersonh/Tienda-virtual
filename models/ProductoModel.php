@@ -384,6 +384,83 @@ class ProductoModel {
         }
     }
 
+    private function activeProductoCondition(string $alias = 'p'): string {
+        return "UPPER(TRIM(NVL({$alias}.ESTADO, ''))) IN ('ACTIVO', 'TRUE')";
+    }
+
+    private function activeReferenciaCondition(string $alias = 'r'): string {
+        return "UPPER(TRIM(NVL({$alias}.ESTADO, ''))) IN ('ACTIVO', 'TRUE')";
+    }
+
+    private function buildUpperInCondition(string $column, string $prefix, array $values, array &$binds): string {
+        if (empty($values)) {
+            return '';
+        }
+
+        $placeholders = [];
+        foreach ($values as $index => $value) {
+            $param = ':' . $prefix . $index;
+            $placeholders[] = "UPPER(TRIM($param))";
+            $binds[] = [
+                'param' => $param,
+                'value' => (string) $value,
+                'type' => SQLT_CHR
+            ];
+        }
+
+        return " AND UPPER(TRIM($column)) IN (" . implode(',', $placeholders) . ")";
+    }
+
+    private function bindArray($stmt, array $values, string $prefix): void {
+        foreach (array_values($values) as $index => $value) {
+            $param = ':' . $prefix . $index;
+            $this->dynamicBindValues[$param] = (string) $value;
+            oci_bind_by_name($stmt, $param, $this->dynamicBindValues[$param], -1, SQLT_CHR);
+        }
+    }
+
+    private function buildMaquinariaFilterConditions(array $marcas, array $modelos, array $tipos, array &$binds): string {
+        return $this->buildUpperInCondition('cm.MARCA_MAQUINARIA', 'maq_marca', $marcas, $binds)
+            . $this->buildUpperInCondition('cm.MODELO_MAQUINARIA', 'maq_modelo', $modelos, $binds)
+            . $this->buildUpperInCondition('cm.TIPO_MAQUINARIA', 'maq_tipo', $tipos, $binds);
+    }
+
+    private function obtenerValoresMaquinaria(string $column, string $alias, array $marcas = [], array $modelos = [], array $tipos = []): array {
+        $binds = [];
+        $conditions = $this->buildMaquinariaFilterConditions($marcas, $modelos, $tipos, $binds);
+        $productoActivo = $this->activeProductoCondition('p');
+        $referenciaActiva = $this->activeReferenciaCondition('r');
+        $query = "SELECT DISTINCT $column AS VALOR
+                  FROM PRODUCTO p
+                  INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_PRODUCTO = p.ID_PRODUCTO
+                  INNER JOIN COMPATIBILIDAD_MAQUINARIA cm ON cm.ID_REFERENCIA = r.ID_REFERENCIA
+                  WHERE $productoActivo
+                  AND $referenciaActiva
+                  AND $column IS NOT NULL
+                  $conditions
+                  ORDER BY $alias";
+
+        $stmt = oci_parse($this->conn, $query);
+        $this->bindDynamicValues($stmt, $binds);
+        oci_execute($stmt);
+
+        $values = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $row = $this->normalizeRow($row);
+            $value = trim((string) ($row['valor'] ?? ''));
+            if ($value !== '') {
+                $values[] = $value;
+            }
+        }
+        oci_free_statement($stmt);
+
+        if (!empty($values) || (empty($marcas) && empty($modelos) && empty($tipos))) {
+            return $values;
+        }
+
+        return $this->obtenerValoresMaquinaria($column, $alias);
+    }
+
     private function obtenerValoresDistinct(string $query): array {
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
@@ -429,10 +506,31 @@ class ProductoModel {
 
     public function obtenerOpcionesCompatibilidadMaquinaria(): array {
         return [
-            'tipos' => $this->obtenerValoresDistinct("SELECT DISTINCT TIPO_MAQUINARIA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE TIPO_MAQUINARIA IS NOT NULL ORDER BY TIPO_MAQUINARIA"),
-            'marcas' => $this->obtenerValoresDistinct("SELECT DISTINCT MARCA_MAQUINARIA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE MARCA_MAQUINARIA IS NOT NULL ORDER BY MARCA_MAQUINARIA"),
-            'modelos' => $this->obtenerValoresDistinct("SELECT DISTINCT MODELO_MAQUINARIA AS VALOR FROM V_COMPATIBILIDADES_MAQUINARIA WHERE MODELO_MAQUINARIA IS NOT NULL ORDER BY MODELO_MAQUINARIA")
+            'tipos' => $this->obtenerTipos([], []),
+            'marcas' => $this->obtenerMarcas([], []),
+            'modelos' => $this->obtenerModelos([], [])
         ];
+    }
+
+    public function obtenerMarcas($modelos = [], $tipos = []): array {
+        $modelos = $this->normalizeFilterList($modelos);
+        $tipos = $this->normalizeFilterList($tipos);
+
+        return $this->obtenerValoresMaquinaria('cm.MARCA_MAQUINARIA', 'VALOR', [], $modelos, $tipos);
+    }
+
+    public function obtenerModelos($marcas = [], $tipos = []): array {
+        $marcas = $this->normalizeFilterList($marcas);
+        $tipos = $this->normalizeFilterList($tipos);
+
+        return $this->obtenerValoresMaquinaria('cm.MODELO_MAQUINARIA', 'VALOR', $marcas, [], $tipos);
+    }
+
+    public function obtenerTipos($marcas = [], $modelos = []): array {
+        $marcas = $this->normalizeFilterList($marcas);
+        $modelos = $this->normalizeFilterList($modelos);
+
+        return $this->obtenerValoresMaquinaria('cm.TIPO_MAQUINARIA', 'VALOR', $marcas, $modelos, []);
     }
 
     public function filtrarVehiculo($marca = null, $modelo = null, $ano = null): array {
@@ -502,9 +600,10 @@ class ProductoModel {
         $imageJoin = $this->primeraImagenJoin();
         $referenciaJoin = $this->referenciaJoin();
         $stockJoin = $this->stockReferenciaJoin();
-        $tipoCondition = $this->buildInCondition('TIPO_MAQUINARIA', 'maq_tipo', $tipos, $binds);
-        $marcaCondition = $this->buildInCondition('MARCA_MAQUINARIA', 'maq_marca', $marcas, $binds);
-        $modeloCondition = $this->buildInCondition('MODELO_MAQUINARIA', 'maq_modelo', $modelos, $binds);
+        $maquinariaConditions = $this->buildMaquinariaFilterConditions($marcas, $modelos, $tipos, $binds);
+        $productoActivo = $this->activeProductoCondition('p');
+        $productoFiltroActivo = $this->activeProductoCondition('p2');
+        $referenciaActiva = $this->activeReferenciaCondition('r');
         $query = "SELECT $columns
                   FROM PRODUCTO p
                   INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
@@ -512,14 +611,16 @@ class ProductoModel {
                   $stockJoin
                   $imageJoin
                   WHERE p.ID_PRODUCTO IN (
-                      SELECT DISTINCT ID_PRODUCTO
-                      FROM V_COMPATIBILIDADES_MAQUINARIA
+                      SELECT DISTINCT p2.ID_PRODUCTO
+                      FROM PRODUCTO p2
+                      INNER JOIN REFERENCIA_PRODUCTO r ON r.ID_PRODUCTO = p2.ID_PRODUCTO
+                      INNER JOIN COMPATIBILIDAD_MAQUINARIA cm ON cm.ID_REFERENCIA = r.ID_REFERENCIA
                       WHERE 1 = 1
-                      $tipoCondition
-                      $marcaCondition
-                      $modeloCondition
+                      AND $productoFiltroActivo
+                      AND $referenciaActiva
+                      $maquinariaConditions
                   )
-                  AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
+                  AND $productoActivo
                   ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
@@ -533,6 +634,10 @@ class ProductoModel {
         oci_free_statement($stmt);
 
         return $results;
+    }
+
+    public function filtrarProductos($marcas = [], $modelos = [], $tipos = []): array {
+        return $this->filtrarMaquinaria($tipos, $marcas, $modelos);
     }
 
     public function filtrarCompatibilidadVehiculo(string $marca, string $modelo, int $ano): array {

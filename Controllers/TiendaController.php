@@ -173,11 +173,30 @@ class TiendaController {
         $vehiculo_marcas = $this->obtenerValoresGet('vehiculo_marca');
         $vehiculo_modelos = $this->obtenerValoresGet('vehiculo_modelo');
         $vehiculo_anos = $this->obtenerValoresGet('vehiculo_ano', true);
-        $maquinaria_tipos = $this->obtenerValoresGet('maquinaria_tipo');
-        $maquinaria_marcas = $this->obtenerValoresGet('maquinaria_marca');
-        $maquinaria_modelos = $this->obtenerValoresGet('maquinaria_modelo');
+        $maquinaria_tipos = array_merge(
+            $this->obtenerValoresGet('tipo'),
+            $this->obtenerValoresGet('maquinaria_tipo')
+        );
+        $maquinaria_marcas = array_merge(
+            $this->obtenerValoresGet('marca'),
+            $this->obtenerValoresGet('maquinaria_marca')
+        );
+        $maquinaria_modelos = array_merge(
+            $this->obtenerValoresGet('modelo'),
+            $this->obtenerValoresGet('maquinaria_modelo')
+        );
+        $maquinaria_tipos = array_values(array_unique($maquinaria_tipos));
+        $maquinaria_marcas = array_values(array_unique($maquinaria_marcas));
+        $maquinaria_modelos = array_values(array_unique($maquinaria_modelos));
+        if ($compatibilidad_tipo === '' && (!empty($maquinaria_tipos) || !empty($maquinaria_marcas) || !empty($maquinaria_modelos))) {
+            $compatibilidad_tipo = 'maquinaria';
+        }
         $opcionesVehiculo = $this->productoModel()->obtenerOpcionesCompatibilidadVehiculo();
-        $opcionesMaquinaria = $this->productoModel()->obtenerOpcionesCompatibilidadMaquinaria();
+        $opcionesMaquinaria = [
+            'tipos' => $this->productoModel()->obtenerTipos($maquinaria_marcas, $maquinaria_modelos),
+            'marcas' => $this->productoModel()->obtenerMarcas($maquinaria_modelos, $maquinaria_tipos),
+            'modelos' => $this->productoModel()->obtenerModelos($maquinaria_marcas, $maquinaria_tipos)
+        ];
 
         if ($compatibilidad_tipo === 'vehiculo') {
             $productos = $this->productoModel()->filtrarVehiculo(
@@ -186,10 +205,10 @@ class TiendaController {
                 $vehiculo_anos
             );
         } elseif ($compatibilidad_tipo === 'maquinaria') {
-            $productos = $this->productoModel()->filtrarMaquinaria(
-                $maquinaria_tipos,
+            $productos = $this->productoModel()->filtrarProductos(
                 $maquinaria_marcas,
-                $maquinaria_modelos
+                $maquinaria_modelos,
+                $maquinaria_tipos
             );
         } else {
             $productos = $this->obtenerCatalogoCacheado(!empty($filtro));

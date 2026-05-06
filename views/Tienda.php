@@ -194,11 +194,13 @@
     top: 0;
     right: 0;
     z-index: 9991;
-    width: min(420px, 100vw);
+    width: min(300px, 100vw);
     height: 100vh;
-    background: rgba(13, 20, 35, 0.98);
+    background: rgba(13, 20, 35, 0.72);
     border-left: 1px solid rgba(255,255,255,0.1);
     box-shadow: -26px 0 60px rgba(0,0,0,0.36);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     transform: translateX(100%);
     transition: transform 0.28s ease;
     display: flex;
@@ -208,7 +210,7 @@
     transform: translateX(0);
 }
 [data-theme="light"] .filter-sidebar {
-    background: rgba(255,255,255,0.98);
+    background: rgba(255,255,255,0.78);
     border-left-color: #d6dee8;
     box-shadow: -22px 0 48px rgba(15,23,42,0.14);
 }
@@ -247,6 +249,7 @@
     overflow-y: auto;
     display: grid;
     gap: 16px;
+    overscroll-behavior: contain;
 }
 .filter-group {
     display: grid;
@@ -309,6 +312,18 @@
     font-size: 13px;
     padding: 10px 8px;
 }
+.store-empty {
+    margin: 0 32px 28px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--secondary);
+    background: rgba(255,255,255,0.04);
+    text-align: center;
+}
+[data-theme="light"] .store-empty {
+    background: #f8fafc;
+}
 .sidebar-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -329,6 +344,16 @@
 }
 .btn-apply:hover {
     background: rgba(34,211,238,0.24);
+}
+.filter-sidebar.loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.28);
+    pointer-events: none;
+}
+.filter-sidebar.loading .sidebar-body {
+    opacity: 0.62;
 }
 
 /* CATEGORY TABS */
@@ -971,7 +996,7 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </select>
-    <button class="btn-filter <?= !empty($compatibilidad_tipo) ? 'active' : '' ?>" type="button" id="open-filters">
+    <button class="btn-filter <?= !empty($compatibilidad_tipo) || !empty($maquinaria_tipos ?? []) || !empty($maquinaria_marcas ?? []) || !empty($maquinaria_modelos ?? []) ? 'active' : '' ?>" type="button" id="open-filters">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5h18"></path>
             <path d="M6 12h12"></path>
@@ -1027,25 +1052,11 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
         </button>
     </div>
     <div class="sidebar-body">
-        <div class="filter-group">
-            <label class="filter-label" for="compatibility-type"><?= htmlspecialchars('Compatibilidad', ENT_QUOTES, 'UTF-8') ?></label>
-            <select class="filter-input filter-select" id="compatibility-type">
-                <option value="" <?= empty($compatibilidad_tipo) ? 'selected' : '' ?>><?= htmlspecialchars('Sin compatibilidad', ENT_QUOTES, 'UTF-8') ?></option>
-                <option value="vehiculo" <?= ($compatibilidad_tipo ?? '') === 'vehiculo' ? 'selected' : '' ?>><?= htmlspecialchars('Vehiculo', ENT_QUOTES, 'UTF-8') ?></option>
-                <option value="maquinaria" <?= ($compatibilidad_tipo ?? '') === 'maquinaria' ? 'selected' : '' ?>><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></option>
-            </select>
-        </div>
-
-        <div class="compat-fields compat-vehiculo">
-            <?php $renderOptionPicker('vehicle-brand', 'Marca vehiculo', 'vehiculo_marca', $opcionesVehiculo['marcas'] ?? [], $vehiculo_marcas); ?>
-            <?php $renderOptionPicker('vehicle-model', 'Modelo vehiculo', 'vehiculo_modelo', $opcionesVehiculo['modelos'] ?? [], $vehiculo_modelos); ?>
-            <?php $renderOptionPicker('vehicle-year', 'Ano', 'vehiculo_ano', $opcionesVehiculo['anos'] ?? [], $vehiculo_anos); ?>
-        </div>
-
+        <input type="hidden" id="compatibility-type" value="<?= !empty($compatibilidad_tipo) ? htmlspecialchars($compatibilidad_tipo, ENT_QUOTES, 'UTF-8') : '' ?>">
         <div class="compat-fields compat-maquinaria">
-            <?php $renderOptionPicker('machine-type', 'Tipo maquinaria', 'maquinaria_tipo', $opcionesMaquinaria['tipos'] ?? [], $maquinaria_tipos); ?>
-            <?php $renderOptionPicker('machine-brand', 'Marca maquinaria', 'maquinaria_marca', $opcionesMaquinaria['marcas'] ?? [], $maquinaria_marcas); ?>
-            <?php $renderOptionPicker('machine-model', 'Modelo maquinaria', 'maquinaria_modelo', $opcionesMaquinaria['modelos'] ?? [], $maquinaria_modelos); ?>
+            <?php $renderOptionPicker('machine-type', 'Tipo maquinaria', 'tipo', $opcionesMaquinaria['tipos'] ?? [], $maquinaria_tipos); ?>
+            <?php $renderOptionPicker('machine-brand', 'Marca', 'marca', $opcionesMaquinaria['marcas'] ?? [], $maquinaria_marcas); ?>
+            <?php $renderOptionPicker('machine-model', 'Modelo', 'modelo', $opcionesMaquinaria['modelos'] ?? [], $maquinaria_modelos); ?>
         </div>
     </div>
     <div class="sidebar-actions">
@@ -1075,7 +1086,7 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
 </a>
 <?php endif; ?>
 
-<?php if(isset($categorias) && is_array($categorias)): ?>
+<?php if(isset($categorias) && is_array($categorias) && !empty($categorias)): ?>
 <?php foreach($categorias as $categoria => $productos): ?>
 <div id="<?= !empty($categoria_filtro ?? '') ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
     <div class="section-header">
@@ -1193,6 +1204,8 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
     </div>
 </div>
 <?php endforeach; ?>
+<?php else: ?>
+<div class="store-empty"><?= htmlspecialchars('No encontramos productos con esa combinacion de filtros.', ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
 </div>
 
@@ -1449,12 +1462,17 @@ function appendCheckedValues(params, name) {
     });
 }
 
+function hasCheckedValues(name) {
+    return document.querySelector(`input[name="${name}[]"]:checked`) !== null;
+}
+
 function buildFilterParams(catOverride = null, includeCompatibility = true){
     const texto = buscador.value.trim();
     const min = precioMin.value.replace(/\D/g,'').trim();
     const max = precioMax.value.replace(/\D/g,'').trim();
     const cat = catOverride !== null ? catOverride : (categoria.value || categoriaActiva);
-    const compatMode = includeCompatibility && compatibilityType ? compatibilityType.value : '';
+    const hasMachineFilters = hasCheckedValues('marca') || hasCheckedValues('modelo') || hasCheckedValues('tipo');
+    const compatMode = includeCompatibility && (hasMachineFilters || (compatibilityType && compatibilityType.value === 'maquinaria')) ? 'maquinaria' : '';
     const params = new URLSearchParams();
     params.set('action', 'tienda');
     if(texto) params.set('filtro', texto);
@@ -1462,15 +1480,10 @@ function buildFilterParams(catOverride = null, includeCompatibility = true){
     if(max) params.set('precio_max', max);
     if(cat) params.set('categoria', cat);
     if(compatMode) params.set('compatibilidad_tipo', compatMode);
-    if(compatMode === 'vehiculo'){
-        appendCheckedValues(params, 'vehiculo_marca');
-        appendCheckedValues(params, 'vehiculo_modelo');
-        appendCheckedValues(params, 'vehiculo_ano');
-    }
     if(compatMode === 'maquinaria'){
-        appendCheckedValues(params, 'maquinaria_tipo');
-        appendCheckedValues(params, 'maquinaria_marca');
-        appendCheckedValues(params, 'maquinaria_modelo');
+        appendCheckedValues(params, 'tipo');
+        appendCheckedValues(params, 'marca');
+        appendCheckedValues(params, 'modelo');
     }
     return params;
 }
@@ -1580,30 +1593,20 @@ categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
     filterProducts();
 });
-if (compatibilityType) {
-    compatibilityType.addEventListener('change', syncCompatibilityFields);
-}
 if (openFiltersBtn) openFiltersBtn.addEventListener('click', openFilterSidebar);
 if (closeFiltersBtn) closeFiltersBtn.addEventListener('click', closeFilterSidebar);
 if (filterOverlay) filterOverlay.addEventListener('click', closeFilterSidebar);
 if (applySidebarFiltersBtn) applySidebarFiltersBtn.addEventListener('click', applySidebarFilters);
 if (clearSidebarFiltersBtn) clearSidebarFiltersBtn.addEventListener('click', clearFilters);
+document.querySelectorAll('.option-row input[type="checkbox"]').forEach((input) => {
+    input.addEventListener('change', autoApplySidebarFilters);
+});
 optionSearchInputs.forEach((input) => {
     input.addEventListener('input', () => filterOptionList(input));
 });
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeFilterSidebar();
 });
-
-function syncCompatibilityFields() {
-    const mode = compatibilityType ? compatibilityType.value : '';
-    document.querySelectorAll('.compat-vehiculo').forEach(el => {
-        el.style.display = mode === 'vehiculo' ? '' : 'none';
-    });
-    document.querySelectorAll('.compat-maquinaria').forEach(el => {
-        el.style.display = mode === 'maquinaria' ? '' : 'none';
-    });
-}
 
 function filterOptionList(input) {
     const picker = input.closest('[data-option-picker]');
@@ -1619,6 +1622,7 @@ function openFilterSidebar() {
     filterSidebar.classList.add('open');
     filterOverlay.classList.add('open');
     filterSidebar.setAttribute('aria-hidden', 'false');
+    sessionStorage.setItem('tiendaFilterSidebarOpen', '1');
 }
 
 function closeFilterSidebar() {
@@ -1626,12 +1630,19 @@ function closeFilterSidebar() {
     filterSidebar.classList.remove('open');
     filterOverlay.classList.remove('open');
     filterSidebar.setAttribute('aria-hidden', 'true');
+    sessionStorage.removeItem('tiendaFilterSidebarOpen');
 }
 
 function applySidebarFilters() {
     const cat = categoria.value || categoriaActiva;
     const params = buildFilterParams(cat);
+    sessionStorage.setItem('tiendaFilterSidebarOpen', '1');
+    if (filterSidebar) filterSidebar.classList.add('loading');
     window.location.href = `index.php?${params.toString()}${cat ? '#category-detail' : ''}`;
+}
+
+function autoApplySidebarFilters() {
+    applySidebarFilters();
 }
 
 // FUNCION PRINCIPAL (TODO EN UNO)
@@ -1689,6 +1700,7 @@ function filterProducts(){
 
 // LIMPIAR
 function clearFilters(){
+    sessionStorage.removeItem('tiendaFilterSidebarOpen');
     if(detailMode || compatibilityServerMode){
         window.location.href = 'index.php?action=tienda';
         return;
@@ -1706,7 +1718,6 @@ function clearFilters(){
         input.checked = false;
     });
     optionSearchInputs.forEach(filterOptionList);
-    syncCompatibilityFields();
 
     lastCategoryOptionKey = '';
     replaceCategoryOptions(opcionesOriginales);
@@ -1735,7 +1746,9 @@ if (!detailMode && !(compatibilityType && compatibilityType.value)) {
 } else {
     syncCategoryTabs(categoria.value || categoriaActiva);
 }
-syncCompatibilityFields();
+if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
+    openFilterSidebar();
+}
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
