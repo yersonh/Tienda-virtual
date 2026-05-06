@@ -257,7 +257,7 @@ class DireccionPedidoModel {
             $this->desactivarDmlParalelo();
             $d = $this->validarDireccion($data);
             $tieneDirecciones = $this->usuarioTieneDirecciones($d['idUsuario']);
-            $d['predeterminada'] = ($d['predeterminada'] === 1 || !$tieneDirecciones) ? 1 : 0;
+            $d['predeterminada'] = $d['predeterminada'] === 1 ? 1 : 0;
 
             if ($d['predeterminada'] === 1 && $tieneDirecciones) {
                 $this->quitarPredeterminada($d['idUsuario']);

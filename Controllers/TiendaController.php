@@ -396,12 +396,8 @@ class TiendaController {
         $productosBase = $this->obtenerCatalogoCacheado(!empty($filtro));
         $productosFiltradosBase = $this->filtrarProductosGenerales($productosBase, trim((string) $filtro), $precio_min, $precio_max, trim((string) $categoria_filtro));
 
-        $opcionesVehiculo = ($incluirOpcionesVehiculo || $compatibilidad_tipo === 'vehiculo')
-            ? $this->construirOpcionesCompatibilidadVehiculo($productosFiltradosBase, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos)
-            : ['marcas' => [], 'modelos' => [], 'anos' => []];
-        $opcionesMaquinaria = $compatibilidad_tipo === 'maquinaria'
-            ? $this->construirOpcionesCompatibilidadMaquinaria($productosFiltradosBase, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos)
-            : ['tipos' => [], 'marcas' => [], 'modelos' => []];
+        $opcionesVehiculo = $this->construirOpcionesCompatibilidadVehiculo($productosFiltradosBase, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
+        $opcionesMaquinaria = $this->construirOpcionesCompatibilidadMaquinaria($productosFiltradosBase, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos);
 
         $opcionesVehiculo = $this->conservarSeleccionesEnOpcionesVehiculo($opcionesVehiculo, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
         $opcionesMaquinaria = $this->conservarSeleccionesEnOpcionesMaquinaria($opcionesMaquinaria, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos);

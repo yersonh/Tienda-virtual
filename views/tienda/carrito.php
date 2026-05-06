@@ -516,10 +516,6 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
                         <?= !empty($_SESSION['logueado']) ? htmlspecialchars('Seguir comprando', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Seguir viendo', ENT_QUOTES, 'UTF-8') ?>
                     </a>
-                    <a class="cart-continue" href="index.php?action=inicio">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                        <?= htmlspecialchars('Continuar luego', ENT_QUOTES, 'UTF-8') ?>
-                    </a>
                 </aside>
             </div>
         <?php endif; ?>

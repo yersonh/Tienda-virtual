@@ -1664,6 +1664,7 @@ function resetAddressForm() {
     addressForm.reset();
     addressForm.action = 'index.php?action=guardarDireccionPedido';
     addressForm.querySelector('#id_direccion').value = '';
+    addressForm.querySelector('#es_predeterminada').checked = false;
     if (addressFormTitle) {
         addressFormTitle.textContent = checkoutMessages.newAddress;
     }

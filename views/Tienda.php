@@ -1392,6 +1392,14 @@ function hasCheckedValues(name) {
     return document.querySelector(`input[name="${name}[]"]:checked`) !== null;
 }
 
+function hasVehicleCompatibilityFilters() {
+    return hasCheckedValues('vehiculo_marca') || hasCheckedValues('vehiculo_modelo') || hasCheckedValues('vehiculo_ano');
+}
+
+function hasMachineCompatibilityFilters() {
+    return hasCheckedValues('tipo') || hasCheckedValues('marca') || hasCheckedValues('modelo');
+}
+
 function buildFilterParams(catOverride = null, includeCompatibility = true){
     const texto = buscador.value.trim();
     const min = precioMin.value.replace(/\D/g,'').trim();
@@ -1654,6 +1662,9 @@ categoria.addEventListener('change', () => {
 });
 if (compatibilityType) {
     compatibilityType.addEventListener('change', () => {
+        const hadVehicleFilters = hasVehicleCompatibilityFilters();
+        const hadMachineFilters = hasMachineCompatibilityFilters();
+
         if (compatibilityType.value === 'vehiculo') {
             clearGroupCheckboxes('.compat-maquinaria');
         } else if (compatibilityType.value === 'maquinaria') {
@@ -1663,7 +1674,18 @@ if (compatibilityType) {
             clearGroupCheckboxes('.compat-maquinaria');
         }
         syncCompatibilityFields();
-        fetchFilteredStore();
+
+        const mustRefreshProducts =
+            hadVehicleFilters ||
+            hadMachineFilters ||
+            hasVehicleCompatibilityFilters() ||
+            hasMachineCompatibilityFilters();
+
+        if (mustRefreshProducts) {
+            fetchFilteredStore();
+        } else if (openFiltersBtn) {
+            openFiltersBtn.classList.remove('active');
+        }
     });
 }
 if (openFiltersBtn) openFiltersBtn.addEventListener('click', openFilterSidebar);
