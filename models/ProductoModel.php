@@ -263,7 +263,12 @@ class ProductoModel {
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        return $row ? $this->normalizeRow($row) : null;
+        if (!$row) {
+            return null;
+        }
+
+        $productos = $this->anexarCompatibilidades([$this->normalizeRow($row)]);
+        return $productos[0] ?? null;
     }
 
     public function obtenerPorReferencia($idReferencia) {
@@ -291,7 +296,12 @@ class ProductoModel {
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
-        return $row ? $this->normalizeRow($row) : null;
+        if (!$row) {
+            return null;
+        }
+
+        $productos = $this->anexarCompatibilidades([$this->normalizeRow($row)]);
+        return $productos[0] ?? null;
     }
 
     public function obtenerImagenes($id_producto) {

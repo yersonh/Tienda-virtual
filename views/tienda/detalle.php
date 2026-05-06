@@ -20,6 +20,9 @@ $stockProducto = (int) ($producto['stock_p'] ?? 0);
 $cantidadEnCarrito = isset($carritoVista[$producto['id_producto']]) ? (int) $carritoVista[$producto['id_producto']] : 0;
 $enLimite = $stockProducto <= 0 || $cantidadEnCarrito >= $stockProducto;
 $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
+$compatibilidades = isset($producto['compatibilidades']) && is_array($producto['compatibilidades']) ? $producto['compatibilidades'] : [];
+$vehiculosCompatibles = isset($compatibilidades['vehiculos']) && is_array($compatibilidades['vehiculos']) ? $compatibilidades['vehiculos'] : [];
+$maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($compatibilidades['maquinarias']) ? $compatibilidades['maquinarias'] : [];
 ?>
 
 <style>
@@ -258,6 +261,57 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
     color: var(--text);
     line-height: 1.75;
     white-space: pre-line;
+}
+.detail-compat {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+}
+.detail-compat h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--secondary);
+    margin-bottom: 14px;
+}
+.detail-compat-grid {
+    display: grid;
+    gap: 12px;
+}
+.detail-compat-block {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.035);
+}
+[data-theme="light"] .detail-compat-block {
+    background: rgba(255,255,255,0.86);
+}
+.detail-compat-title {
+    display: inline-flex;
+    width: fit-content;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(34,211,238,0.1);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+.detail-compat-list {
+    display: grid;
+    gap: 8px;
+}
+.detail-compat-line {
+    color: var(--secondary);
+    font-size: 13px;
+    line-height: 1.45;
+}
+.detail-compat-line strong {
+    color: var(--text);
+    font-weight: 800;
 }
 .detail-actions {
     display: flex;
@@ -687,6 +741,57 @@ $cantidadInicial = $enLimite ? max(0, $stockProducto) : 1;
                     <h2><?= htmlspecialchars('Descripcion', ENT_QUOTES, 'UTF-8') ?></h2>
                     <p><?= !empty($producto['descripcion']) ? nl2br(htmlspecialchars($producto['descripcion'], ENT_QUOTES, 'UTF-8')) : htmlspecialchars('Este producto no tiene una descripcion registrada todavia.', ENT_QUOTES, 'UTF-8') ?></p>
                 </div>
+
+                <?php if(!empty($vehiculosCompatibles) || !empty($maquinariasCompatibles)): ?>
+                <div class="detail-compat">
+                    <h2><?= htmlspecialchars('Compatibilidad', ENT_QUOTES, 'UTF-8') ?></h2>
+                    <div class="detail-compat-grid">
+                        <?php if(!empty($vehiculosCompatibles)): ?>
+                        <div class="detail-compat-block">
+                            <span class="detail-compat-title"><?= htmlspecialchars('Vehiculos', ENT_QUOTES, 'UTF-8') ?></span>
+                            <div class="detail-compat-list">
+                                <?php foreach($vehiculosCompatibles as $vehiculo): ?>
+                                    <?php
+                                        $marcaVehiculo = trim((string) ($vehiculo['marca_vehiculo'] ?? ''));
+                                        $modeloVehiculo = trim((string) ($vehiculo['modelo_vehiculo'] ?? ''));
+                                        $anoInicio = (int) ($vehiculo['ano_inicio'] ?? 0);
+                                        $anoFin = (int) ($vehiculo['ano_fin'] ?? 0);
+                                        $rangoAno = $anoInicio > 0 && $anoFin > 0
+                                            ? ($anoInicio === $anoFin ? (string) $anoInicio : $anoInicio . '-' . $anoFin)
+                                            : 'Ano no registrado';
+                                    ?>
+                                    <div class="detail-compat-line">
+                                        <strong><?= htmlspecialchars($marcaVehiculo !== '' ? $marcaVehiculo : 'Marca no registrada', ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <?= htmlspecialchars($modeloVehiculo !== '' ? $modeloVehiculo : 'Modelo no registrado', ENT_QUOTES, 'UTF-8') ?>
+                                        | <?= htmlspecialchars($rangoAno, ENT_QUOTES, 'UTF-8') ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if(!empty($maquinariasCompatibles)): ?>
+                        <div class="detail-compat-block">
+                            <span class="detail-compat-title"><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></span>
+                            <div class="detail-compat-list">
+                                <?php foreach($maquinariasCompatibles as $maquinaria): ?>
+                                    <?php
+                                        $tipoMaquinaria = trim((string) ($maquinaria['tipo_maquinaria'] ?? ''));
+                                        $marcaMaquinaria = trim((string) ($maquinaria['marca_maquinaria'] ?? ''));
+                                        $modeloMaquinaria = trim((string) ($maquinaria['modelo_maquinaria'] ?? ''));
+                                    ?>
+                                    <div class="detail-compat-line">
+                                        <strong><?= htmlspecialchars($tipoMaquinaria !== '' ? $tipoMaquinaria : 'Tipo no registrado', ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <?= htmlspecialchars($marcaMaquinaria !== '' ? $marcaMaquinaria : 'Marca no registrada', ENT_QUOTES, 'UTF-8') ?>
+                                        | <?= htmlspecialchars($modeloMaquinaria !== '' ? $modeloMaquinaria : 'Modelo no registrado', ENT_QUOTES, 'UTF-8') ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <div class="detail-cart-row">
                     <?php if($usuarioLogueado): ?>

@@ -330,6 +330,39 @@ class TiendaController {
         ];
     }
 
+    private function mezclarOpcionesSeleccionadas(array $opciones, array $seleccionadas, bool $numeric = false): array {
+        foreach ($seleccionadas as $value) {
+            $value = trim((string) $value);
+            if ($value !== '') {
+                $opciones[$value] = $value;
+            }
+        }
+
+        if ($numeric) {
+            ksort($opciones, SORT_NUMERIC);
+        } else {
+            natcasesort($opciones);
+        }
+
+        return array_values($opciones);
+    }
+
+    private function conservarSeleccionesEnOpcionesVehiculo(array $opciones, array $marcas, array $modelos, array $anos): array {
+        return [
+            'marcas' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['marcas'] ?? [], $opciones['marcas'] ?? []) ?: [], $marcas),
+            'modelos' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['modelos'] ?? [], $opciones['modelos'] ?? []) ?: [], $modelos),
+            'anos' => $this->mezclarOpcionesSeleccionadas(array_combine(array_map('strval', $opciones['anos'] ?? []), array_map('strval', $opciones['anos'] ?? [])) ?: [], array_map('strval', $anos), true)
+        ];
+    }
+
+    private function conservarSeleccionesEnOpcionesMaquinaria(array $opciones, array $tipos, array $marcas, array $modelos): array {
+        return [
+            'tipos' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['tipos'] ?? [], $opciones['tipos'] ?? []) ?: [], $tipos),
+            'marcas' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['marcas'] ?? [], $opciones['marcas'] ?? []) ?: [], $marcas),
+            'modelos' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['modelos'] ?? [], $opciones['modelos'] ?? []) ?: [], $modelos)
+        ];
+    }
+
     private function obtenerDatosTienda(bool $incluirOpcionesVehiculo = true): array {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
@@ -369,6 +402,9 @@ class TiendaController {
         $opcionesMaquinaria = $compatibilidad_tipo === 'maquinaria'
             ? $this->construirOpcionesCompatibilidadMaquinaria($productosFiltradosBase, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos)
             : ['tipos' => [], 'marcas' => [], 'modelos' => []];
+
+        $opcionesVehiculo = $this->conservarSeleccionesEnOpcionesVehiculo($opcionesVehiculo, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
+        $opcionesMaquinaria = $this->conservarSeleccionesEnOpcionesMaquinaria($opcionesMaquinaria, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos);
 
         $productos = $productosFiltradosBase;
         if (($compatibilidad_tipo === 'vehiculo' && $hayFiltroVehiculo) || ($compatibilidad_tipo === 'maquinaria' && $hayFiltroMaquinaria)) {

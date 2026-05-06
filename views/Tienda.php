@@ -1441,7 +1441,10 @@ let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
 let filterTimer = null;
 let filterAbortController = null;
 let filterRequestId = 0;
-const filterResponseCache = new Map();
+let lastAppliedRequestKey = '';
+let lastSearchValue = buscador ? buscador.value : '';
+let lastMinValue = precioMin ? precioMin.value : '';
+let lastMaxValue = precioMax ? precioMax.value : '';
 
 const productImageObserver = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries, observer) => {
@@ -1548,16 +1551,16 @@ async function fetchFilteredStore() {
     const requestKey = requestParams.toString();
     const currentRequestId = ++filterRequestId;
 
+    if (filterAbortController) {
+        filterAbortController.abort();
+    }
+
+    if (requestKey === lastAppliedRequestKey) {
+        return;
+    }
+
     setFilterLoading(true);
     try {
-        if (filterResponseCache.has(requestKey)) {
-            applyFilteredStoreResponse(filterResponseCache.get(requestKey), viewParams, cat);
-            return;
-        }
-
-        if (filterAbortController) {
-            filterAbortController.abort();
-        }
         filterAbortController = new AbortController();
 
         const response = await fetch(`index.php?${requestParams.toString()}`, {
@@ -1576,11 +1579,7 @@ async function fetchFilteredStore() {
             return;
         }
 
-        filterResponseCache.set(requestKey, data);
-        if (filterResponseCache.size > 20) {
-            filterResponseCache.delete(filterResponseCache.keys().next().value);
-        }
-        applyFilteredStoreResponse(data, viewParams, cat);
+        applyFilteredStoreResponse(data, viewParams, cat, requestKey);
     } catch (error) {
         if (error.name === 'AbortError') return;
         console.error(error);
@@ -1591,9 +1590,13 @@ async function fetchFilteredStore() {
     }
 }
 
-function applyFilteredStoreResponse(data, viewParams, cat) {
+function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
+    if (requestKey) {
+        lastAppliedRequestKey = requestKey;
+    }
+
     const results = document.getElementById('store-results');
-    if (results) {
+    if (results && results.innerHTML !== (data.productos_html || '')) {
         results.innerHTML = data.productos_html || '';
         observeLazyImages(results);
     }
@@ -1620,14 +1623,30 @@ function applyFilteredStoreResponse(data, viewParams, cat) {
     window.history.replaceState({}, '', `index.php?${urlParams.toString()}${cat ? '#category-detail' : ''}`);
 }
 
-function scheduleFilterProducts(){
+function scheduleFilterProducts(delay = 90){
     clearTimeout(filterTimer);
-    filterTimer = setTimeout(filterProducts, 220);
+    filterTimer = setTimeout(filterProducts, delay);
+}
+
+function handleGeneralFilterInput(event) {
+    const input = event.currentTarget;
+    const previous =
+        input === buscador ? lastSearchValue :
+        input === precioMin ? lastMinValue :
+        lastMaxValue;
+    const current = input.value;
+    const isDeleting = current.length < previous.length || event.inputType?.startsWith('delete');
+
+    if (input === buscador) lastSearchValue = current;
+    if (input === precioMin) lastMinValue = current;
+    if (input === precioMax) lastMaxValue = current;
+
+    scheduleFilterProducts(isDeleting ? 0 : 90);
 }
 
 // UN SOLO EVENTO PARA TODO
 [buscador, precioMin, precioMax].forEach(el=>{
-    el.addEventListener('input', scheduleFilterProducts);
+    el.addEventListener('input', handleGeneralFilterInput);
 });
 categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
@@ -1644,7 +1663,6 @@ if (compatibilityType) {
             clearGroupCheckboxes('.compat-maquinaria');
         }
         syncCompatibilityFields();
-        filterResponseCache.clear();
         fetchFilteredStore();
     });
 }
@@ -1711,6 +1729,9 @@ function clearFilters(){
     buscador.value="";
     precioMin.value="";
     precioMax.value="";
+    lastSearchValue="";
+    lastMinValue="";
+    lastMaxValue="";
     categoria.value="";
     categoriaActiva="";
     if (compatibilityType) compatibilityType.value = "";
@@ -1722,7 +1743,6 @@ function clearFilters(){
     });
     optionSearchInputs.forEach(filterOptionList);
     syncCompatibilityFields();
-    filterResponseCache.clear();
 
     fetchFilteredStore();
 }
