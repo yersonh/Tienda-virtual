@@ -170,18 +170,23 @@ class TiendaController {
         $maquinaria_marcas = array_values(array_unique($maquinaria_marcas));
         $maquinaria_modelos = array_values(array_unique($maquinaria_modelos));
 
+        if ($compatibilidad_tipo === '' && (!empty($vehiculo_marcas) || !empty($vehiculo_modelos) || !empty($vehiculo_anos))) {
+            $compatibilidad_tipo = 'vehiculo';
+        }
         if ($compatibilidad_tipo === '' && (!empty($maquinaria_tipos) || !empty($maquinaria_marcas) || !empty($maquinaria_modelos))) {
             $compatibilidad_tipo = 'maquinaria';
         }
 
-        $opcionesVehiculo = $incluirOpcionesVehiculo
+        $opcionesVehiculo = ($incluirOpcionesVehiculo || $compatibilidad_tipo === 'vehiculo')
             ? $this->productoModel()->obtenerOpcionesCompatibilidadVehiculo()
             : ['marcas' => [], 'modelos' => [], 'anos' => []];
-        $opcionesMaquinaria = [
-            'tipos' => $this->productoModel()->obtenerTipos($maquinaria_marcas, $maquinaria_modelos),
-            'marcas' => $this->productoModel()->obtenerMarcas($maquinaria_modelos, $maquinaria_tipos),
-            'modelos' => $this->productoModel()->obtenerModelos($maquinaria_marcas, $maquinaria_tipos)
-        ];
+        $opcionesMaquinaria = $compatibilidad_tipo === 'maquinaria'
+            ? [
+                'tipos' => $this->productoModel()->obtenerTipos($maquinaria_marcas, $maquinaria_modelos),
+                'marcas' => $this->productoModel()->obtenerMarcas($maquinaria_modelos, $maquinaria_tipos),
+                'modelos' => $this->productoModel()->obtenerModelos($maquinaria_marcas, $maquinaria_tipos)
+            ]
+            : ['tipos' => [], 'marcas' => [], 'modelos' => []];
 
         if ($compatibilidad_tipo === 'vehiculo') {
             $productos = $this->productoModel()->filtrarVehiculo($vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
@@ -364,7 +369,8 @@ class TiendaController {
 
     // Ã°Å¸â€Â DETALLE
     public function filtrosAjax() {
-        extract($this->obtenerDatosTienda(false));
+        $modoCompatibilidad = $_GET['compatibilidad_tipo'] ?? '';
+        extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo'));
         $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 
         ob_start();
@@ -375,11 +381,22 @@ class TiendaController {
         echo json_encode([
             'success' => true,
             'productos_html' => $productosHtml,
-            'opciones' => $opcionesMaquinaria,
+            'compatibilidad_tipo' => $compatibilidad_tipo,
+            'opciones' => [
+                'vehiculo' => $opcionesVehiculo,
+                'maquinaria' => $opcionesMaquinaria
+            ],
             'seleccion' => [
-                'tipos' => $maquinaria_tipos,
-                'marcas' => $maquinaria_marcas,
-                'modelos' => $maquinaria_modelos
+                'vehiculo' => [
+                    'marcas' => $vehiculo_marcas,
+                    'modelos' => $vehiculo_modelos,
+                    'anos' => array_map('strval', $vehiculo_anos)
+                ],
+                'maquinaria' => [
+                    'tipos' => $maquinaria_tipos,
+                    'marcas' => $maquinaria_marcas,
+                    'modelos' => $maquinaria_modelos
+                ]
             ],
             'categorias' => array_map('count', $categorias)
         ]);

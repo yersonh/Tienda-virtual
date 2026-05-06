@@ -996,7 +996,7 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </select>
-    <button class="btn-filter <?= !empty($compatibilidad_tipo) || !empty($maquinaria_tipos ?? []) || !empty($maquinaria_marcas ?? []) || !empty($maquinaria_modelos ?? []) ? 'active' : '' ?>" type="button" id="open-filters">
+    <button class="btn-filter <?= !empty($compatibilidad_tipo) ? 'active' : '' ?>" type="button" id="open-filters">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5h18"></path>
             <path d="M6 12h12"></path>
@@ -1052,7 +1052,19 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
         </button>
     </div>
     <div class="sidebar-body">
-        <input type="hidden" id="compatibility-type" value="<?= !empty($compatibilidad_tipo) ? htmlspecialchars($compatibilidad_tipo, ENT_QUOTES, 'UTF-8') : '' ?>">
+        <div class="filter-group">
+            <label class="filter-label" for="compatibility-type"><?= htmlspecialchars('Buscar por', ENT_QUOTES, 'UTF-8') ?></label>
+            <select class="filter-input filter-select" id="compatibility-type">
+                <option value="" <?= empty($compatibilidad_tipo) ? 'selected' : '' ?>><?= htmlspecialchars('Todos los productos', ENT_QUOTES, 'UTF-8') ?></option>
+                <option value="vehiculo" <?= ($compatibilidad_tipo ?? '') === 'vehiculo' ? 'selected' : '' ?>><?= htmlspecialchars('Vehiculo', ENT_QUOTES, 'UTF-8') ?></option>
+                <option value="maquinaria" <?= ($compatibilidad_tipo ?? '') === 'maquinaria' ? 'selected' : '' ?>><?= htmlspecialchars('Maquinaria', ENT_QUOTES, 'UTF-8') ?></option>
+            </select>
+        </div>
+        <div class="compat-fields compat-vehiculo">
+            <?php $renderOptionPicker('vehicle-brand', 'Marca vehiculo', 'vehiculo_marca', $opcionesVehiculo['marcas'] ?? [], $vehiculo_marcas); ?>
+            <?php $renderOptionPicker('vehicle-model', 'Modelo vehiculo', 'vehiculo_modelo', $opcionesVehiculo['modelos'] ?? [], $vehiculo_modelos); ?>
+            <?php $renderOptionPicker('vehicle-year', 'Ano', 'vehiculo_ano', $opcionesVehiculo['anos'] ?? [], $vehiculo_anos); ?>
+        </div>
         <div class="compat-fields compat-maquinaria">
             <?php $renderOptionPicker('machine-type', 'Tipo maquinaria', 'tipo', $opcionesMaquinaria['tipos'] ?? [], $maquinaria_tipos); ?>
             <?php $renderOptionPicker('machine-brand', 'Marca', 'marca', $opcionesMaquinaria['marcas'] ?? [], $maquinaria_marcas); ?>
@@ -1347,8 +1359,7 @@ function buildFilterParams(catOverride = null, includeCompatibility = true){
     const min = precioMin.value.replace(/\D/g,'').trim();
     const max = precioMax.value.replace(/\D/g,'').trim();
     const cat = catOverride !== null ? catOverride : (categoria.value || categoriaActiva);
-    const hasMachineFilters = hasCheckedValues('marca') || hasCheckedValues('modelo') || hasCheckedValues('tipo');
-    const compatMode = includeCompatibility && hasMachineFilters ? 'maquinaria' : '';
+    const compatMode = includeCompatibility && compatibilityType ? compatibilityType.value : '';
     const params = new URLSearchParams();
     params.set('action', 'tienda');
     if(texto) params.set('filtro', texto);
@@ -1360,6 +1371,11 @@ function buildFilterParams(catOverride = null, includeCompatibility = true){
         appendCheckedValues(params, 'tipo');
         appendCheckedValues(params, 'marca');
         appendCheckedValues(params, 'modelo');
+    }
+    if(compatMode === 'vehiculo'){
+        appendCheckedValues(params, 'vehiculo_marca');
+        appendCheckedValues(params, 'vehiculo_modelo');
+        appendCheckedValues(params, 'vehiculo_ano');
     }
     return params;
 }
@@ -1466,6 +1482,22 @@ function refreshOptionSearches() {
     document.querySelectorAll('[data-option-search]').forEach((input) => filterOptionList(input));
 }
 
+function clearGroupCheckboxes(selector) {
+    document.querySelectorAll(`${selector} input[type="checkbox"]`).forEach((input) => {
+        input.checked = false;
+    });
+}
+
+function syncCompatibilityFields() {
+    const mode = compatibilityType ? compatibilityType.value : '';
+    document.querySelectorAll('.compat-vehiculo').forEach((el) => {
+        el.style.display = mode === 'vehiculo' ? '' : 'none';
+    });
+    document.querySelectorAll('.compat-maquinaria').forEach((el) => {
+        el.style.display = mode === 'maquinaria' ? '' : 'none';
+    });
+}
+
 function setFilterLoading(isLoading) {
     if (!filterSidebar) return;
     filterSidebar.classList.toggle('loading', isLoading);
@@ -1529,15 +1561,22 @@ function applyFilteredStoreResponse(data, viewParams, cat) {
         observeLazyImages(results);
     }
 
-    renderOptionList('tipo', data.opciones?.tipos || [], data.seleccion?.tipos || []);
-    renderOptionList('marca', data.opciones?.marcas || [], data.seleccion?.marcas || []);
-    renderOptionList('modelo', data.opciones?.modelos || [], data.seleccion?.modelos || []);
-    bindDynamicFilterCheckboxes();
-    refreshOptionSearches();
-    syncCategoryTabs(cat);
-    if (openFiltersBtn) {
-        openFiltersBtn.classList.toggle('active', Boolean(data.seleccion?.tipos?.length || data.seleccion?.marcas?.length || data.seleccion?.modelos?.length));
-    }
+        if (compatibilityType && typeof data.compatibilidad_tipo !== 'undefined') {
+            compatibilityType.value = data.compatibilidad_tipo || '';
+        }
+        renderOptionList('vehiculo_marca', data.opciones?.vehiculo?.marcas || [], data.seleccion?.vehiculo?.marcas || []);
+        renderOptionList('vehiculo_modelo', data.opciones?.vehiculo?.modelos || [], data.seleccion?.vehiculo?.modelos || []);
+        renderOptionList('vehiculo_ano', data.opciones?.vehiculo?.anos || [], data.seleccion?.vehiculo?.anos || []);
+        renderOptionList('tipo', data.opciones?.maquinaria?.tipos || [], data.seleccion?.maquinaria?.tipos || []);
+        renderOptionList('marca', data.opciones?.maquinaria?.marcas || [], data.seleccion?.maquinaria?.marcas || []);
+        renderOptionList('modelo', data.opciones?.maquinaria?.modelos || [], data.seleccion?.maquinaria?.modelos || []);
+        syncCompatibilityFields();
+        bindDynamicFilterCheckboxes();
+        refreshOptionSearches();
+        syncCategoryTabs(cat);
+        if (openFiltersBtn) {
+            openFiltersBtn.classList.toggle('active', Boolean(data.compatibilidad_tipo));
+        }
 
     const urlParams = new URLSearchParams(viewParams);
     urlParams.set('action', 'tienda');
@@ -1557,6 +1596,21 @@ categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
     filterProducts();
 });
+if (compatibilityType) {
+    compatibilityType.addEventListener('change', () => {
+        if (compatibilityType.value === 'vehiculo') {
+            clearGroupCheckboxes('.compat-maquinaria');
+        } else if (compatibilityType.value === 'maquinaria') {
+            clearGroupCheckboxes('.compat-vehiculo');
+        } else {
+            clearGroupCheckboxes('.compat-vehiculo');
+            clearGroupCheckboxes('.compat-maquinaria');
+        }
+        syncCompatibilityFields();
+        filterResponseCache.clear();
+        fetchFilteredStore();
+    });
+}
 if (openFiltersBtn) openFiltersBtn.addEventListener('click', openFilterSidebar);
 if (closeFiltersBtn) closeFiltersBtn.addEventListener('click', closeFilterSidebar);
 if (filterOverlay) filterOverlay.addEventListener('click', closeFilterSidebar);
@@ -1625,6 +1679,8 @@ function clearFilters(){
         input.checked = false;
     });
     optionSearchInputs.forEach(filterOptionList);
+    syncCompatibilityFields();
+    filterResponseCache.clear();
 
     fetchFilteredStore();
 }
@@ -1646,6 +1702,7 @@ formatoMiles(precioMin);
 formatoMiles(precioMax);
 
 syncCategoryTabs(categoria.value || categoriaActiva);
+syncCompatibilityFields();
 if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     openFilterSidebar();
 }
