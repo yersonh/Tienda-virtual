@@ -5,7 +5,9 @@ $facturaReceptor = isset($facturaPedido['receptor']) && is_array($facturaPedido[
 $facturaIdPedido = (int) ($facturaPedido['id_pedido'] ?? 0);
 $facturaIdVenta = (int) ($facturaPedido['id_venta'] ?? 0);
 $facturaNumero = 'NVX-' . str_pad((string) $facturaIdPedido, 6, '0', STR_PAD_LEFT);
-$facturaFecha = date('d/m/Y');
+$facturaFechaRaw = (string) ($facturaPedido['fecha'] ?? '');
+$facturaFechaTs = $facturaFechaRaw !== '' ? strtotime($facturaFechaRaw) : false;
+$facturaFecha = $facturaFechaTs ? date('d/m/Y', $facturaFechaTs) : date('d/m/Y');
 $facturaVence = !empty($facturaPedido['fecha_estimada_entrega'])
     ? date('d/m/Y', strtotime((string) $facturaPedido['fecha_estimada_entrega']))
     : $facturaFecha;
@@ -30,7 +32,26 @@ if (!function_exists('facturaMoney')) {
         return '$' . number_format($value, 0, ',', '.');
     }
 }
+
+$facturaLogoDataUri = '';
+$facturaLogoPath = __DIR__ . '/../../public/imagenes/logosinfondo.png';
+if (is_file($facturaLogoPath)) {
+    $facturaLogoDataUri = 'data:image/png;base64,' . base64_encode((string) file_get_contents($facturaLogoPath));
+}
 ?>
+
+<?php if ($facturaDownloadMode): ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title><?= htmlspecialchars('Factura ' . $facturaNumero, ENT_QUOTES, 'UTF-8') ?></title>
+<?php if ($facturaLogoDataUri !== ''): ?>
+<link rel="icon" href="<?= htmlspecialchars($facturaLogoDataUri, ENT_QUOTES, 'UTF-8') ?>" type="image/png">
+<?php endif; ?>
+</head>
+<body>
+<?php endif; ?>
 
 <style>
 .modern-invoice-page {
@@ -73,6 +94,13 @@ if (!function_exists('facturaMoney')) {
     color: #0f5590;
     font-weight: 900;
     letter-spacing: 0;
+    overflow: hidden;
+}
+.modern-logo img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    display: block;
 }
 .modern-brand h1 {
     margin: 0 0 6px;
@@ -407,7 +435,13 @@ if (!function_exists('facturaMoney')) {
             <header class="modern-invoice-header">
                 <div>
                     <div class="modern-brand">
-                        <div class="modern-logo">NXS</div>
+                        <div class="modern-logo">
+                            <?php if ($facturaLogoDataUri !== ''): ?>
+                                <img src="<?= htmlspecialchars($facturaLogoDataUri, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars('NAYLEX Store', ENT_QUOTES, 'UTF-8') ?>">
+                            <?php else: ?>
+                                NXS
+                            <?php endif; ?>
+                        </div>
                         <div>
                             <h1>NAYLEX STORE S.A.S</h1>
                             <small>Tecnologia, accesorios y tienda virtual</small>
@@ -552,3 +586,8 @@ if (!function_exists('facturaMoney')) {
         <?php endif; ?>
     </div>
 </<?= $facturaRootTag ?>>
+
+<?php if ($facturaDownloadMode): ?>
+</body>
+</html>
+<?php endif; ?>

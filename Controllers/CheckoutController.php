@@ -198,6 +198,7 @@ class CheckoutController {
             $_SESSION['pedido_confirmado'] = [
                 'id_pedido' => (int) $pedido['id_pedido'],
                 'id_venta' => $idVenta,
+                'fecha' => date('Y-m-d H:i:s'),
                 'total' => $resumen['total'],
                 'subtotal' => $resumen['subtotal'],
                 'iva' => $resumen['iva'],

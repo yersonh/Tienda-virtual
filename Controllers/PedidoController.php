@@ -167,6 +167,36 @@ class PedidoController {
         return preg_replace('/\s+/', ' ', trim($ciudad));
     }
 
+    private function limpiarParteNombreArchivo(string $value, string $fallback): string {
+        $value = trim($value);
+        if ($value === '') {
+            return $fallback;
+        }
+
+        $sinAcentos = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+        if ($sinAcentos !== false) {
+            $value = $sinAcentos;
+        }
+
+        $value = preg_replace('/[\\\\\/:*?"<>|#]+/', '', $value);
+        $value = preg_replace('/\s+/', '-', trim((string) $value));
+        $value = preg_replace('/-+/', '-', (string) $value);
+
+        return $value !== '' ? $value : $fallback;
+    }
+
+    private function nombreArchivoFactura(array $pedidoConfirmado, array $pedido): string {
+        $idPedido = (int) ($pedidoConfirmado['id_pedido'] ?? 0);
+        $receptor = trim((string) ($pedidoConfirmado['receptor']['nombre'] ?? 'Cliente'));
+        $partesNombre = preg_split('/\s+/', $receptor);
+        $primerNombre = $this->limpiarParteNombreArchivo((string) ($partesNombre[0] ?? 'Cliente'), 'Cliente');
+        $fechaRaw = (string) ($pedido['fecha'] ?? '');
+        $timestamp = $fechaRaw !== '' ? strtotime($fechaRaw) : false;
+        $fecha = $timestamp ? date('d-m-Y', $timestamp) : date('d-m-Y');
+
+        return sprintf('Factura #%d-%s-%s.html', $idPedido, $primerNombre, $fecha);
+    }
+
     private function tarifasEnvioPorCiudad(): array {
         return [
             'villavicencio' => 2000,
@@ -1033,6 +1063,7 @@ class PedidoController {
         $pedidoConfirmado = [
             'id_pedido' => (int) $pedido['id_pedido'],
             'id_venta' => 0,
+            'fecha' => $pedido['fecha'] ?? null,
             'total' => $total,
             'subtotal' => $subtotalItems,
             'iva' => $iva,
@@ -1051,10 +1082,10 @@ class PedidoController {
         if (!empty($_GET['download'])) {
             $facturaPedido = $pedidoConfirmado;
             $facturaDownloadMode = true;
-            $filename = 'factura-' . str_pad((string) ((int) $pedidoConfirmado['id_pedido']), 6, '0', STR_PAD_LEFT) . '.html';
+            $filename = $this->nombreArchivoFactura($pedidoConfirmado, $pedido);
 
             header('Content-Type: text/html; charset=utf-8');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header("Content-Disposition: attachment; filename=\"" . addslashes($filename) . "\"; filename*=UTF-8''" . rawurlencode($filename));
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
             header('Pragma: no-cache');
 
