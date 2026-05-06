@@ -116,6 +116,8 @@ $facturaRootTag = 'section';
     color: var(--text);
     text-decoration: none;
     font-weight: 900;
+    font-family: inherit;
+    cursor: pointer;
     transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 .payment-confirmed-action:hover {
@@ -184,6 +186,12 @@ $facturaRootTag = 'section';
     color: var(--text);
     margin-bottom: 4px;
 }
+.confirmed-invoice-wrap {
+    display: none;
+}
+.confirmed-invoice-wrap.is-visible {
+    display: block;
+}
 @keyframes confirmPulse {
     0%, 100% { transform: scale(0.8); opacity: 0.75; }
     50% { transform: scale(1.25); opacity: 1; }
@@ -213,9 +221,13 @@ $facturaRootTag = 'section';
                     <?= htmlspecialchars('Tu compra fue registrada correctamente y la factura quedo generada. Ya estamos preparando el pedido para iniciar el envio.', ENT_QUOTES, 'UTF-8') ?>
                 </p>
                 <div class="payment-confirmed-actions">
-                    <a class="payment-confirmed-action primary" href="#factura-pedido-confirmado">
+                    <button class="payment-confirmed-action primary" type="button" id="toggle-confirmed-invoice">
                         <i class="fas fa-file-invoice"></i>
-                        <?= htmlspecialchars('Ver factura', ENT_QUOTES, 'UTF-8') ?>
+                        <span id="toggle-confirmed-invoice-label"><?= htmlspecialchars('Visualizar factura', ENT_QUOTES, 'UTF-8') ?></span>
+                    </button>
+                    <a class="payment-confirmed-action" href="index.php?action=facturaPedido&id=<?= $idPedidoConfirmado ?>&download=1">
+                        <i class="fas fa-file-arrow-down"></i>
+                        <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
                     </a>
                     <a class="payment-confirmed-action" href="index.php?action=misPedidos">
                         <i class="fas fa-receipt"></i>
@@ -253,7 +265,7 @@ $facturaRootTag = 'section';
     </div>
 </main>
 
-<div id="factura-pedido-confirmado">
+<div class="confirmed-invoice-wrap" id="factura-pedido-confirmado" hidden>
     <?php require_once __DIR__ . '/factura_moderna.php'; ?>
 </div>
 
@@ -268,6 +280,23 @@ if (confirmationPage) {
         const y = ((event.clientY - rect.top) / Math.max(rect.height, 1)) * 100;
         confirmationPage.style.setProperty('--pulse-x', `${x}%`);
         confirmationPage.style.setProperty('--pulse-y', `${y}%`);
+    });
+}
+
+const invoiceWrap = document.getElementById('factura-pedido-confirmado');
+const invoiceToggle = document.getElementById('toggle-confirmed-invoice');
+const invoiceToggleLabel = document.getElementById('toggle-confirmed-invoice-label');
+if (invoiceWrap && invoiceToggle) {
+    invoiceToggle.addEventListener('click', () => {
+        const showInvoice = invoiceWrap.hidden;
+        invoiceWrap.hidden = !showInvoice;
+        invoiceWrap.classList.toggle('is-visible', showInvoice);
+        if (invoiceToggleLabel) {
+            invoiceToggleLabel.textContent = showInvoice ? 'Ocultar factura' : 'Visualizar factura';
+        }
+        if (showInvoice) {
+            invoiceWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     });
 }
 </script>

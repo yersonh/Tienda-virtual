@@ -805,7 +805,7 @@ class PedidoController {
         ];
 
         $resultado = $this->direccionPedidoModel->actualizarDireccion($idDireccion, $idUsuario, $data);
-        $this->responderDireccion($resultado, $resultado['success'] ? 200 : 422);
+        $this->responderDireccion($resultado, $resultado['success'] ? 200 : 422, 'Direccion actualizada correctamente');
     }
 
     public function eliminarDireccion() {
@@ -818,7 +818,7 @@ class PedidoController {
         }
 
         $resultado = $this->direccionPedidoModel->eliminarDireccion($idDireccion, $idUsuario);
-        $this->responderDireccion($resultado, $resultado['success'] ? 200 : 422);
+        $this->responderDireccion($resultado, $resultado['success'] ? 200 : 422, 'Direccion eliminada correctamente');
     }
 
     public function editarDireccionPedido() {
@@ -840,7 +840,7 @@ class PedidoController {
         exit();
     }
 
-    private function responderDireccion(array $resultado, int $status = 200): void {
+    private function responderDireccion(array $resultado, int $status = 200, string $successMessage = 'Direccion actualizada correctamente'): void {
         if ($this->isAjaxRequest()) {
             http_response_code($status);
             header('Content-Type: application/json; charset=utf-8');
@@ -849,7 +849,7 @@ class PedidoController {
         }
 
         if ($resultado['success']) {
-            $_SESSION['success'] = 'Direccion actualizada correctamente';
+            $_SESSION['success'] = $successMessage;
         } else {
             $_SESSION['error'] = $resultado['message'] ?? 'No se pudo procesar la direccion';
         }
