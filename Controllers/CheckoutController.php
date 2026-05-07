@@ -153,6 +153,14 @@ class CheckoutController {
         return sprintf('%04d-%02d-01', $anio, $mes);
     }
 
+    private function generarTokenPago(): string {
+        try {
+            return 'tok_' . bin2hex(random_bytes(32));
+        } catch (Throwable $e) {
+            return 'tok_' . hash('sha256', uniqid('', true) . microtime(true));
+        }
+    }
+
     private function validarPagoEntrada(int $idUsuario, int &$idMetodo, array $data): ?array {
         if (!in_array($idMetodo, [1, 2, 3, 4], true)) {
             throw new InvalidArgumentException('Selecciona un metodo de pago valido');
@@ -214,7 +222,7 @@ class CheckoutController {
             'titular' => $titular,
             'ultimos_4' => substr($numero, -4),
             'franquicia' => $franquicia,
-            'token_pago' => 'tok_' . uniqid('', true),
+            'token_pago' => $this->generarTokenPago(),
             'fecha_expiracion' => $fechaExpiracion,
             'es_predeterminado' => !empty($data['es_predeterminado_pago']) ? 1 : 0
         ];

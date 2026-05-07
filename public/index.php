@@ -212,6 +212,10 @@ switch ($action) {
         (new PedidoController())->eliminarMetodoPagoUsuario();
         break;
 
+    case 'cambiarEstadoMetodoPagoUsuario':
+        (new PedidoController())->cambiarEstadoMetodoPagoUsuario();
+        break;
+
     case 'actualizarMetodoPagoUsuario':
         (new PedidoController())->actualizarMetodoPagoUsuario();
         break;

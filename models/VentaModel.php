@@ -138,8 +138,6 @@ class VentaModel {
                     :p_iva,
                     :p_envio,
                     :p_id_cliente,
-                    :p_metodo_pago,
-                    :p_estado,
                     :p_id_venta
                   ); END;";
 
@@ -153,16 +151,12 @@ class VentaModel {
         $iva = '0.00';
         $envio = '0.00';
         $idCliente = $this->obtenerIdClienteUsuarioTx($idUsuario);
-        $metodoPago = null;
-        $estado = 'PENDIENTE';
 
         oci_bind_by_name($stmt, ':p_id_usuario', $idUsuario, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':p_subtotal', $subtotal, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':p_iva', $iva, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':p_envio', $envio, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':p_id_cliente', $idCliente, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':p_metodo_pago', $metodoPago);
-        oci_bind_by_name($stmt, ':p_estado', $estado);
         oci_bind_by_name($stmt, ':p_id_venta', $idVenta, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
@@ -227,13 +221,6 @@ class VentaModel {
                 $valores[] = ':id_cliente';
                 $binds[':id_cliente'] = ['value' => $idCliente, 'type' => SQLT_INT];
             }
-        }
-
-        if ($this->columnaExiste('VENTA', 'ESTADO')) {
-            $estado = 'PENDIENTE';
-            $columnas[] = 'ESTADO';
-            $valores[] = ':estado';
-            $binds[':estado'] = ['value' => $estado, 'type' => SQLT_CHR];
         }
 
         $query = "INSERT INTO VENTA (" . implode(', ', $columnas) . ")

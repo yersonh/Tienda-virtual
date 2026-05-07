@@ -973,7 +973,7 @@ class PedidoController {
         $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envio);
         $total = $resumenCompra['total'];
         $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
-        $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario);
+        $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario, false);
         $metodoPagoPredeterminado = $this->metodoPagoUsuarioModel->obtenerPredeterminado($idUsuario);
 
         require_once __DIR__ . '/../views/pagos/pago.php';
@@ -998,6 +998,34 @@ class PedidoController {
             oci_rollback($this->conn);
             error_log($e->getMessage());
             $_SESSION['error'] = 'No se pudo eliminar el metodo de pago';
+        }
+
+        header('Location: index.php?action=pago');
+        exit();
+    }
+
+    public function cambiarEstadoMetodoPagoUsuario(): void {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+        $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
+        $activo = (int) ($_POST['activo'] ?? 0) === 1;
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion';
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        try {
+            $ok = $this->metodoPagoUsuarioModel->cambiarActivo($idMetodo, $idUsuario, $activo);
+            oci_commit($this->conn);
+            $_SESSION[$ok ? 'success' : 'error'] = $ok
+                ? ($activo ? 'Tarjeta activada correctamente' : 'Tarjeta desactivada correctamente')
+                : 'No se pudo actualizar la tarjeta';
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No se pudo actualizar la tarjeta';
         }
 
         header('Location: index.php?action=pago');

@@ -20,8 +20,6 @@ BEGIN
     add_column_if_missing('VENTA', 'SUBTOTAL', 'NUMBER(10,2)');
     add_column_if_missing('VENTA', 'IVA', 'NUMBER(10,2)');
     add_column_if_missing('VENTA', 'ENVIO', 'NUMBER(10,2)');
-    add_column_if_missing('VENTA', 'METODO_PAGO', 'VARCHAR2(50)');
-    add_column_if_missing('VENTA', 'ESTADO', 'VARCHAR2(20)');
     add_column_if_missing('VENTA', 'FECHA', 'DATE');
     add_column_if_missing('DETALLE_VENTA', 'PRECIO_UNITARIO', 'NUMBER(10,2)');
     add_column_if_missing('DETALLE_VENTA', 'SUBTOTAL', 'NUMBER(10,2)');
@@ -35,8 +33,6 @@ CREATE OR REPLACE PROCEDURE PC_CREAR_VENTA (
     p_iva IN NUMBER,
     p_envio IN NUMBER,
     p_id_cliente IN NUMBER,
-    p_metodo_pago IN VARCHAR2,
-    p_estado IN VARCHAR2,
     p_id_venta OUT NUMBER
 )
 AS
@@ -52,9 +48,7 @@ BEGIN
         TOTAL,
         SUBTOTAL,
         IVA,
-        ENVIO,
-        METODO_PAGO,
-        ESTADO
+        ENVIO
     )
     VALUES (
         p_id_usuario,
@@ -64,9 +58,7 @@ BEGIN
         v_total,
         NVL(p_subtotal, 0),
         NVL(p_iva, 0),
-        NVL(p_envio, 0),
-        p_metodo_pago,
-        NVL(p_estado, 'PENDIENTE')
+        NVL(p_envio, 0)
     )
     RETURNING ID_VENTA INTO p_id_venta;
 END;
@@ -125,7 +117,6 @@ CREATE OR REPLACE PROCEDURE SP_PROCESAR_PAGO (
 AS
     v_monto NUMBER(10,2);
     v_pago_existente NUMBER;
-    v_metodo_pago VARCHAR2(50);
 BEGIN
     IF p_id_venta IS NULL OR p_id_venta <= 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Venta invalida');
@@ -154,13 +145,6 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20004, 'La venta ya tiene un pago registrado');
     END IF;
 
-    v_metodo_pago := CASE p_metodo
-        WHEN 1 THEN 'Efectivo'
-        WHEN 2 THEN 'Tarjeta debito'
-        WHEN 3 THEN 'Tarjeta credito'
-        WHEN 4 THEN 'Transferencia bancaria'
-    END;
-
     INSERT INTO PAGO (
         ID_PAGO,
         ID_VENTA,
@@ -177,12 +161,6 @@ BEGIN
         SYSTIMESTAMP,
         'PAGADO'
     );
-
-    UPDATE VENTA
-    SET METODO_PAGO = v_metodo_pago,
-        ESTADO = 'PAGADA',
-        FECHA = SYSDATE
-    WHERE ID_VENTA = p_id_venta;
 
     UPDATE PEDIDO
     SET ID_ESTADO = 2
