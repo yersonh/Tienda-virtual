@@ -132,7 +132,16 @@ class VentaModel {
             throw new InvalidArgumentException('Usuario invalido');
         }
 
-        $query = "BEGIN PC_CREAR_VENTA(:p_id_usuario, :p_id_venta); END;";
+        $query = "BEGIN PC_CREAR_VENTA(
+                    :p_id_usuario,
+                    :p_subtotal,
+                    :p_iva,
+                    :p_envio,
+                    :p_id_cliente,
+                    :p_metodo_pago,
+                    :p_estado,
+                    :p_id_venta
+                  ); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -140,7 +149,20 @@ class VentaModel {
         }
 
         $idVenta = null;
+        $subtotal = '0.00';
+        $iva = '0.00';
+        $envio = '0.00';
+        $idCliente = $this->obtenerIdClienteUsuarioTx($idUsuario);
+        $metodoPago = null;
+        $estado = 'PENDIENTE';
+
         oci_bind_by_name($stmt, ':p_id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':p_subtotal', $subtotal, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':p_iva', $iva, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':p_envio', $envio, -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':p_id_cliente', $idCliente, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':p_metodo_pago', $metodoPago);
+        oci_bind_by_name($stmt, ':p_estado', $estado);
         oci_bind_by_name($stmt, ':p_id_venta', $idVenta, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {

@@ -277,7 +277,6 @@ class CheckoutController {
 
             if ($idVenta > 0) {
                 $this->pagoModel->procesarPago($idVenta, $idMetodo, $resumen['total']);
-                $this->pedidoModel->mantenerPendienteTx($idPedido);
             }
 
             $this->carritoModel->eliminarSeleccionadosTx($idUsuario);

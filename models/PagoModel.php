@@ -14,6 +14,16 @@ class PagoModel {
         return $error['message'] ?? 'Error de Oracle desconocido';
     }
 
+    private function logOracleError($stmt = null, string $context = 'Oracle'): void {
+        $error = $stmt ? oci_error($stmt) : oci_error($this->conn);
+        if (!$error) {
+            error_log($context . ': Error de Oracle desconocido');
+            return;
+        }
+
+        error_log($context . ': ' . json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
     private function columnasTabla(string $tabla): array {
         $tabla = strtoupper($tabla);
         if (isset($this->columnasCache[$tabla])) {
@@ -69,7 +79,6 @@ class PagoModel {
     public function procesarPago($idVenta, $idMetodo, ?float $monto = null): void {
         $idVenta = (int) $idVenta;
         $idMetodo = (int) $idMetodo;
-        $monto = $monto !== null ? round(max(0, $monto), 2) : 0;
 
         if ($idVenta <= 0) {
             throw new InvalidArgumentException('Venta invalida');
@@ -79,49 +88,29 @@ class PagoModel {
             throw new InvalidArgumentException('Metodo de pago invalido');
         }
 
-        if ($monto <= 0) {
+        if ($monto !== null && round(max(0, $monto), 2) <= 0) {
             throw new InvalidArgumentException('Monto de pago invalido');
         }
 
-        $estadoPago = 'PAGADO';
-        $montoPago = $this->numeroOracle($monto);
-
-        $query = "INSERT INTO PAGO (
-                    ID_PAGO,
-                    ID_VENTA,
-                    ID_METODO,
-                    MONTO,
-                    FECHA,
-                    ESTADO
-                  )
-                  VALUES (
-                    SEQ_PAGO.NEXTVAL,
-                    :id_venta,
-                    :id_metodo,
-                    :monto,
-                    SYSTIMESTAMP,
-                    :estado
-                  )";
+        $query = "BEGIN SP_PROCESAR_PAGO(:p_id_venta, :p_metodo); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
+            $this->logOracleError(null, 'PagoModel::procesarPago oci_parse SP_PROCESAR_PAGO');
             throw new Exception($this->oracleErrorMessage());
         }
 
         try {
-            oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':id_metodo', $idMetodo, -1, SQLT_INT);
-            oci_bind_by_name($stmt, ':monto', $montoPago, -1, SQLT_CHR);
-            oci_bind_by_name($stmt, ':estado', $estadoPago);
+            oci_bind_by_name($stmt, ':p_id_venta', $idVenta, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':p_metodo', $idMetodo, -1, SQLT_INT);
 
             if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $this->logOracleError($stmt, 'PagoModel::procesarPago oci_execute SP_PROCESAR_PAGO');
                 throw new Exception($this->oracleErrorMessage($stmt));
             }
         } finally {
             oci_free_statement($stmt);
         }
-
-        $this->actualizarVentaPagadaTx($idVenta, $idMetodo);
     }
 
     private function actualizarVentaPagadaTx(int $idVenta, int $idMetodo): void {

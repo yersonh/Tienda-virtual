@@ -13,6 +13,16 @@ class PedidoModel {
         return $error['message'] ?? 'Error de Oracle desconocido';
     }
 
+    private function logOracleError($stmt = null, string $context = 'Oracle'): void {
+        $error = $stmt ? oci_error($stmt) : oci_error($this->conn);
+        if (!$error) {
+            error_log($context . ': Error de Oracle desconocido');
+            return;
+        }
+
+        error_log($context . ': ' . json_encode($error, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
     private function secuenciaDisponible(array $candidatas): ?string {
         foreach ($candidatas as $secuencia) {
             $query = "SELECT SEQUENCE_NAME
@@ -222,6 +232,7 @@ class PedidoModel {
         $query = "BEGIN SP_CREAR_PEDIDO_COMPLETO(" . implode(', ', $placeholders) . "); END;";
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
+            $this->logOracleError(null, 'PedidoModel::crearPedidoCompletoTx oci_parse SP_CREAR_PEDIDO_COMPLETO');
             throw new Exception($this->oracleErrorMessage());
         }
 
@@ -284,6 +295,7 @@ class PedidoModel {
         }
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $this->logOracleError($stmt, 'PedidoModel::crearPedidoCompletoTx oci_execute SP_CREAR_PEDIDO_COMPLETO');
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
             throw new Exception($message);

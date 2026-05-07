@@ -54,8 +54,7 @@ BEGIN
         IVA,
         ENVIO,
         METODO_PAGO,
-        ESTADO,
-        FECHA
+        ESTADO
     )
     VALUES (
         p_id_usuario,
@@ -67,8 +66,7 @@ BEGIN
         NVL(p_iva, 0),
         NVL(p_envio, 0),
         p_metodo_pago,
-        NVL(p_estado, 'PENDIENTE'),
-        CASE WHEN p_metodo_pago IS NULL THEN NULL ELSE SYSDATE END
+        NVL(p_estado, 'PENDIENTE')
     )
     RETURNING ID_VENTA INTO p_id_venta;
 END;
