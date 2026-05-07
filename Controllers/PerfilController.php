@@ -17,7 +17,7 @@ class PerfilController {
         $metodoPagoUsuarioModel = new MetodoPagoUsuarioModel($conn);
 
         $usuario = $model->obtenerPorId($_SESSION['id_usuario']);
-        $metodosPagoUsuario = $metodoPagoUsuarioModel->obtenerPorUsuario((int) $_SESSION['id_usuario']);
+        $metodosPagoUsuario = $metodoPagoUsuarioModel->obtenerPorUsuario((int) $_SESSION['id_usuario'], 1);
 
         require_once __DIR__ . '/../views/Perfil.php';
     }

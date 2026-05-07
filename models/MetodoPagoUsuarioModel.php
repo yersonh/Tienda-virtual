@@ -8,13 +8,65 @@ class MetodoPagoUsuarioModel {
         $this->conn = $conn;
     }
 
+    private function ensureSession(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
     private function oracleErrorMessage($stmt = null): string {
         $error = $stmt ? oci_error($stmt) : oci_error($this->conn);
         return $error['message'] ?? 'Error de Oracle desconocido';
     }
 
     private function normalizarFila(array $row): array {
-        return array_change_key_case($row, CASE_LOWER);
+        $data = array_change_key_case($row, CASE_LOWER);
+        $data['activo'] = (int) ($data['activo'] ?? 0);
+        $data['es_predeterminado'] = (int) ($data['es_predeterminado'] ?? 0);
+        $data['id_usuario'] = (int) ($data['id_usuario'] ?? 0);
+        $data['id_metodo'] = (int) ($data['id_metodo'] ?? 0);
+        $data['id_metodo_pago_usuario'] = (int) ($data['id_metodo_pago_usuario'] ?? 0);
+
+        return $data;
+    }
+
+    private function cacheKey(int $idUsuario, int $soloActivos): string {
+        return $idUsuario . ':' . ($soloActivos === 1 ? 1 : 0);
+    }
+
+    private function obtenerCache(int $idUsuario, int $soloActivos): ?array {
+        $this->ensureSession();
+        $key = $this->cacheKey($idUsuario, $soloActivos);
+        $cache = $_SESSION['metodos_pago_cache'][$key] ?? null;
+
+        if (
+            is_array($cache)
+            && (int) ($cache['expires'] ?? 0) >= time()
+            && (int) ($cache['id_usuario'] ?? 0) === $idUsuario
+            && isset($cache['data'])
+            && is_array($cache['data'])
+        ) {
+            return $cache['data'];
+        }
+
+        return null;
+    }
+
+    private function guardarCache(int $idUsuario, int $soloActivos, array $data): void {
+        $this->ensureSession();
+        $_SESSION['metodos_pago_cache'][$this->cacheKey($idUsuario, $soloActivos)] = [
+            'expires' => time() + 45,
+            'id_usuario' => $idUsuario,
+            'data' => $data
+        ];
+    }
+
+    private function limpiarCache(int $idUsuario): void {
+        $this->ensureSession();
+        unset(
+            $_SESSION['metodos_pago_cache'][$this->cacheKey($idUsuario, 0)],
+            $_SESSION['metodos_pago_cache'][$this->cacheKey($idUsuario, 1)]
+        );
     }
 
     private function quitarPredeterminado(int $idUsuario): void {
@@ -38,32 +90,38 @@ class MetodoPagoUsuarioModel {
         oci_free_statement($stmt);
     }
 
-    public function obtenerPorUsuario(int $idUsuario, bool $soloActivos = true): array {
+    public function obtenerPorUsuario(int $idUsuario, int $soloActivos = 1): array {
         if ($idUsuario <= 0) {
             return [];
         }
 
-        $query = "SELECT ID_METODO_PAGO_USUARIO,
-                         ID_USUARIO,
-                         ID_METODO,
-                         (SELECT FORMA_PAGO
-                          FROM METODO_PAGO mp
-                          WHERE mp.ID_METODO = mpu.ID_METODO) AS FORMA_PAGO,
-                         TITULAR,
-                         ULTIMOS_4,
-                         FRANQUICIA,
-                         TO_CHAR(FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
-                         ES_PREDETERMINADO,
-                         ACTIVO,
-                         TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
-                  FROM METODO_PAGO_USUARIO mpu
-                  WHERE ID_USUARIO = :id_usuario";
-
-        if ($soloActivos) {
-            $query .= " AND ACTIVO = 1";
+        $soloActivos = $soloActivos === 1 ? 1 : 0;
+        $cache = $this->obtenerCache($idUsuario, $soloActivos);
+        if ($cache !== null) {
+            return $cache;
         }
 
-        $query .= " ORDER BY ACTIVO DESC, ES_PREDETERMINADO DESC, ID_METODO_PAGO_USUARIO DESC";
+        $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
+                         mpu.ID_USUARIO,
+                         mpu.ID_METODO,
+                         mp.FORMA_PAGO,
+                         mpu.TITULAR,
+                         mpu.ULTIMOS_4,
+                         mpu.FRANQUICIA,
+                         TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
+                         mpu.ES_PREDETERMINADO,
+                         mpu.ACTIVO,
+                         TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
+                  FROM METODO_PAGO_USUARIO mpu
+                  INNER JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
+                  WHERE mpu.ID_USUARIO = :id_usuario
+                    AND mpu.ID_METODO IN (2, 3)";
+
+        if ($soloActivos === 1) {
+            $query .= " AND mpu.ACTIVO = 1";
+        }
+
+        $query .= " ORDER BY mpu.ACTIVO DESC, mpu.ES_PREDETERMINADO DESC, mpu.ID_METODO_PAGO_USUARIO DESC";
 
         $stmt = @oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -83,6 +141,7 @@ class MetodoPagoUsuarioModel {
         }
 
         oci_free_statement($stmt);
+        $this->guardarCache($idUsuario, $soloActivos, $metodos);
         return $metodos;
     }
 
@@ -91,41 +150,13 @@ class MetodoPagoUsuarioModel {
             return null;
         }
 
-        $query = "SELECT ID_METODO_PAGO_USUARIO,
-                         ID_USUARIO,
-                         ID_METODO,
-                         (SELECT FORMA_PAGO
-                          FROM METODO_PAGO mp
-                          WHERE mp.ID_METODO = mpu.ID_METODO) AS FORMA_PAGO,
-                         TITULAR,
-                         ULTIMOS_4,
-                         FRANQUICIA,
-                         TO_CHAR(FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
-                         ES_PREDETERMINADO,
-                         ACTIVO,
-                         TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
-                  FROM METODO_PAGO_USUARIO mpu
-                  WHERE ID_USUARIO = :id_usuario
-                    AND ES_PREDETERMINADO = 1
-                    AND ACTIVO = 1
-                  ORDER BY ID_METODO_PAGO_USUARIO DESC
-                  FETCH FIRST 1 ROWS ONLY";
-
-        $stmt = @oci_parse($this->conn, $query);
-        if (!$stmt) {
-            return null;
+        foreach ($this->obtenerPorUsuario($idUsuario, 1) as $metodo) {
+            if ((int) ($metodo['es_predeterminado'] ?? 0) === 1) {
+                return $metodo;
+            }
         }
 
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            oci_free_statement($stmt);
-            return null;
-        }
-
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return $row ? $this->normalizarFila($row) : null;
+        return null;
     }
 
     public function obtenerPorIdUsuario(int $idMetodoPagoUsuario, int $idUsuario): ?array {
@@ -133,23 +164,41 @@ class MetodoPagoUsuarioModel {
             return null;
         }
 
-        $query = "SELECT ID_METODO_PAGO_USUARIO,
-                         ID_USUARIO,
-                         ID_METODO,
-                         (SELECT FORMA_PAGO
-                          FROM METODO_PAGO mp
-                          WHERE mp.ID_METODO = mpu.ID_METODO) AS FORMA_PAGO,
-                         TITULAR,
-                         ULTIMOS_4,
-                         FRANQUICIA,
-                         TO_CHAR(FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
-                         ES_PREDETERMINADO,
-                         ACTIVO,
-                         TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
+        $metodosCache = $this->obtenerCache($idUsuario, 0) ?? $this->obtenerCache($idUsuario, 1);
+        if (is_array($metodosCache)) {
+            foreach ($metodosCache as $metodo) {
+                if (
+                    (int) ($metodo['id_metodo_pago_usuario'] ?? 0) === $idMetodoPagoUsuario
+                    && (int) ($metodo['activo'] ?? 0) === 1
+                ) {
+                    return $metodo;
+                }
+            }
+        }
+
+        foreach ($this->obtenerPorUsuario($idUsuario, 1) as $metodo) {
+            if ((int) ($metodo['id_metodo_pago_usuario'] ?? 0) === $idMetodoPagoUsuario) {
+                return $metodo;
+            }
+        }
+
+        $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
+                         mpu.ID_USUARIO,
+                         mpu.ID_METODO,
+                         mp.FORMA_PAGO,
+                         mpu.TITULAR,
+                         mpu.ULTIMOS_4,
+                         mpu.FRANQUICIA,
+                         TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
+                         mpu.ES_PREDETERMINADO,
+                         mpu.ACTIVO,
+                         TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
                   FROM METODO_PAGO_USUARIO mpu
-                  WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
-                    AND ID_USUARIO = :id_usuario
-                    AND ACTIVO = 1
+                  INNER JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
+                  WHERE mpu.ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
+                    AND mpu.ID_USUARIO = :id_usuario
+                    AND mpu.ACTIVO = 1
+                    AND mpu.ID_METODO IN (2, 3)
                   FETCH FIRST 1 ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
@@ -180,13 +229,13 @@ class MetodoPagoUsuarioModel {
         $franquicia = strtoupper(trim((string) ($data['franquicia'] ?? '')));
         $tokenPago = trim((string) ($data['token_pago'] ?? ''));
         $fechaExpiracion = trim((string) ($data['fecha_expiracion'] ?? ''));
-        $esPredeterminado = !empty($data['es_predeterminado']) ? '1' : '0';
+        $esPredeterminado = !empty($data['es_predeterminado']) ? 1 : 0;
 
         if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenPago === '' || $fechaExpiracion === '') {
             throw new InvalidArgumentException('Datos de metodo de pago incompletos');
         }
 
-        if ($esPredeterminado === '1') {
+        if ($esPredeterminado === 1) {
             $this->quitarPredeterminado($idUsuario);
         }
 
@@ -213,7 +262,7 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':franquicia', $franquicia);
         oci_bind_by_name($stmt, ':token', $tokenPago);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
-        oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado);
+        oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
@@ -222,7 +271,10 @@ class MetodoPagoUsuarioModel {
         }
 
         oci_free_statement($stmt);
-        return $this->obtenerIdPorToken($tokenPago, $idUsuario);
+        $idMetodoPagoUsuario = $this->obtenerIdPorToken($tokenPago, $idUsuario);
+        $this->limpiarCache($idUsuario);
+
+        return $idMetodoPagoUsuario;
     }
 
     private function obtenerIdPorToken(string $tokenPago, int $idUsuario): int {
@@ -277,15 +329,18 @@ class MetodoPagoUsuarioModel {
 
         $affected = oci_num_rows($stmt) > 0;
         oci_free_statement($stmt);
+        if ($affected) {
+            $this->limpiarCache($idUsuario);
+        }
         return $affected;
     }
 
-    public function cambiarActivo(int $idMetodoPagoUsuario, int $idUsuario, bool $activo): bool {
+    public function cambiarActivo(int $idMetodoPagoUsuario, int $idUsuario, int $activo): bool {
         if ($idMetodoPagoUsuario <= 0 || $idUsuario <= 0) {
             return false;
         }
 
-        $activoInt = $activo ? 1 : 0;
+        $activoInt = $activo === 1 ? 1 : 0;
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET ACTIVO = :activo,
                       ES_PREDETERMINADO = CASE WHEN :activo_pred = 0 THEN 0 ELSE ES_PREDETERMINADO END
@@ -310,6 +365,9 @@ class MetodoPagoUsuarioModel {
 
         $affected = oci_num_rows($stmt) > 0;
         oci_free_statement($stmt);
+        if ($affected) {
+            $this->limpiarCache($idUsuario);
+        }
         return $affected;
     }
 
@@ -361,6 +419,9 @@ class MetodoPagoUsuarioModel {
 
         $affected = oci_num_rows($stmt) > 0;
         oci_free_statement($stmt);
+        if ($affected) {
+            $this->limpiarCache($idUsuario);
+        }
         return $affected;
     }
 
@@ -393,6 +454,9 @@ class MetodoPagoUsuarioModel {
 
         $affected = oci_num_rows($stmt) > 0;
         oci_free_statement($stmt);
+        if ($affected) {
+            $this->limpiarCache($idUsuario);
+        }
         return $affected;
     }
 }

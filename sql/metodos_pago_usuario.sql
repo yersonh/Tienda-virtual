@@ -117,6 +117,34 @@ INNER JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
 WHERE mpu.ACTIVO = 1;
 /
 
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_INDEXES
+    WHERE INDEX_NAME = 'IDX_MPU_USUARIO_ACTIVO';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE INDEX IDX_MPU_USUARIO_ACTIVO ON METODO_PAGO_USUARIO(ID_USUARIO, ACTIVO)';
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_INDEXES
+    WHERE INDEX_NAME = 'IDX_MPU_USUARIO_METODO';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE INDEX IDX_MPU_USUARIO_METODO ON METODO_PAGO_USUARIO(ID_USUARIO, ID_METODO)';
+    END IF;
+END;
+/
+
 CREATE OR REPLACE PROCEDURE SP_GUARDAR_METODO_PAGO (
     p_id_usuario IN NUMBER,
     p_id_metodo IN NUMBER,
@@ -125,7 +153,7 @@ CREATE OR REPLACE PROCEDURE SP_GUARDAR_METODO_PAGO (
     p_franquicia IN VARCHAR2,
     p_token IN VARCHAR2,
     p_fecha_expiracion IN VARCHAR2,
-    p_es_predeterminado IN VARCHAR2
+    p_es_predeterminado IN NUMBER
 )
 AS
     v_predeterminado NUMBER(1);
@@ -146,7 +174,7 @@ BEGIN
       AND ACTIVO = 1;
 
     v_predeterminado := CASE
-        WHEN UPPER(TRIM(NVL(p_es_predeterminado, '0'))) IN ('1', 'S', 'SI', 'TRUE', 'YES') OR v_total_activos = 0 THEN 1
+        WHEN NVL(p_es_predeterminado, 0) = 1 OR v_total_activos = 0 THEN 1
         ELSE 0
     END;
 

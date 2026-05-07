@@ -15,7 +15,7 @@ $metodoPagoPredeterminado = isset($metodoPagoPredeterminado) && is_array($metodo
 $metodoPagoInicial = $metodoPagoPredeterminado;
 if (!$metodoPagoInicial) {
     foreach ($metodosPagoUsuario as $metodoGuardadoInicial) {
-        if ((int) ($metodoGuardadoInicial['activo'] ?? 1) === 1) {
+        if ((int) ($metodoGuardadoInicial['activo'] ?? 0) === 1 && in_array((int) ($metodoGuardadoInicial['id_metodo'] ?? 0), [2, 3], true)) {
             $metodoPagoInicial = $metodoGuardadoInicial;
             break;
         }
@@ -1167,21 +1167,21 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
 
                         <div class="payment-fast-path" aria-label="<?= htmlspecialchars('Opciones rapidas para finalizar el pago', ENT_QUOTES, 'UTF-8') ?>">
                             <div class="payment-fast-step">
-                                <i class="fas fa-credit-card" aria-hidden="true"></i>
+                                <i class="fas fa-credit-card"></i>
                                 <div>
                                     <strong><?= htmlspecialchars('Tarjeta guardada', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <span><?= htmlspecialchars('Elige una activa y confirma con CVV.', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>
                             <div class="payment-fast-step">
-                                <i class="fas fa-plus" aria-hidden="true"></i>
+                                <i class="fas fa-plus"></i>
                                 <div>
                                     <strong><?= htmlspecialchars('Nueva tarjeta', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <span><?= htmlspecialchars('Puedes guardarla sin almacenar CVV.', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>
                             <div class="payment-fast-step">
-                                <i class="fas fa-building-columns" aria-hidden="true"></i>
+                                <i class="fas fa-building-columns"></i>
                                 <div>
                                     <strong><?= htmlspecialchars('Efectivo o transferencia', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <span><?= htmlspecialchars('Completa solo los datos requeridos.', ENT_QUOTES, 'UTF-8') ?></span>
@@ -1196,42 +1196,42 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                         <input type="hidden" name="metodo_pago" id="metodo_pago" value="<?= $metodoSeleccionado ?>">
                         <input type="hidden" name="id_metodo_pago_usuario" id="id_metodo_pago_usuario" value="<?= $metodoPagoGuardadoSeleccionado ?>">
                         <div class="payment-method-grid" role="radiogroup" aria-labelledby="payment-method-label">
-                            <button class="payment-method <?= $metodoSeleccionado === 1 ? 'is-active' : '' ?>" type="button" data-method="1" role="radio" aria-checked="<?= $metodoSeleccionado === 1 ? 'true' : 'false' ?>">
+                            <button class="payment-method <?= $metodoSeleccionado === 1 ? 'is-active' : '' ?>" type="button" data-method="1" role="radio" aria-checked="<?= $metodoSeleccionado === 1 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
-                                    <span class="payment-method-icon" aria-hidden="true">
+                                    <span class="payment-method-icon">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 12h10"></path><path d="M7 15h4"></path></svg>
                                     </span>
-                                    <span class="payment-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
+                                    <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Efectivo', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Pago simulado al recibir.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                            <button class="payment-method <?= $metodoSeleccionado === 2 ? 'is-active' : '' ?>" type="button" data-method="2" role="radio" aria-checked="<?= $metodoSeleccionado === 2 ? 'true' : 'false' ?>">
+                            <button class="payment-method <?= $metodoSeleccionado === 2 ? 'is-active' : '' ?>" type="button" data-method="2" role="radio" aria-checked="<?= $metodoSeleccionado === 2 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
-                                    <span class="payment-method-icon" aria-hidden="true">
+                                    <span class="payment-method-icon">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path><path d="M7 15h3"></path></svg>
                                     </span>
-                                    <span class="payment-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
+                                    <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Tarjeta debito', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Datos de prueba para continuar.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                            <button class="payment-method <?= $metodoSeleccionado === 3 ? 'is-active' : '' ?>" type="button" data-method="3" role="radio" aria-checked="<?= $metodoSeleccionado === 3 ? 'true' : 'false' ?>">
+                            <button class="payment-method <?= $metodoSeleccionado === 3 ? 'is-active' : '' ?>" type="button" data-method="3" role="radio" aria-checked="<?= $metodoSeleccionado === 3 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
-                                    <span class="payment-method-icon" aria-hidden="true">
+                                    <span class="payment-method-icon">
                                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18"></path><path d="M16 15h2"></path></svg>
                                     </span>
-                                    <span class="payment-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
+                                    <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Tarjeta credito', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Confirmacion inmediata simulada.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
-                            <button class="payment-method <?= $metodoSeleccionado === 4 ? 'is-active' : '' ?>" type="button" data-method="4" role="radio" aria-checked="<?= $metodoSeleccionado === 4 ? 'true' : 'false' ?>">
+                            <button class="payment-method <?= $metodoSeleccionado === 4 ? 'is-active' : '' ?>" type="button" data-method="4" role="radio" aria-checked="<?= $metodoSeleccionado === 4 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
-                                    <span class="payment-method-icon" aria-hidden="true">
+                                    <span class="payment-method-icon">
                                         <svg viewBox="0 0 24 24"><path d="M3 10h18"></path><path d="M5 10V8l7-4 7 4v2"></path><path d="M6 10v8"></path><path d="M10 10v8"></path><path d="M14 10v8"></path><path d="M18 10v8"></path><path d="M4 18h16"></path></svg>
                                     </span>
-                                    <span class="payment-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
+                                    <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Transferencia bancaria', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Registro manual del pago.', ENT_QUOTES, 'UTF-8') ?></small>
@@ -1256,18 +1256,20 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                         $idGuardado = (int) ($metodoGuardado['id_metodo_pago_usuario'] ?? 0);
                                         $seleccionadoGuardado = $metodoPagoGuardadoSeleccionado === $idGuardado;
                                         $expiracionTexto = (string) ($metodoGuardado['fecha_expiracion_texto'] ?? '');
-                                        $activoGuardado = (int) ($metodoGuardado['activo'] ?? 1) === 1;
+                                        $activoGuardado = (int) ($metodoGuardado['activo'] ?? 0);
+                                        $tarjetaActiva = $activoGuardado === 1;
+                                        $tarjetaPredeterminada = (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1;
                                         ?>
-                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $activoGuardado ? 'is-selected' : '' ?> <?= !$activoGuardado ? 'is-disabled' : '' ?>" data-saved-card data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-card-active="<?= $activoGuardado ? '1' : '0' ?>">
-                                            <input type="radio" name="saved_payment_choice" value="<?= $idGuardado ?>" <?= $seleccionadoGuardado && $activoGuardado ? 'checked' : '' ?> <?= !$activoGuardado ? 'disabled' : '' ?>>
+                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>" data-saved-card data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-card-active="<?= $activoGuardado ?>">
+                                            <input type="radio" name="saved_payment_choice" value="<?= $idGuardado ?>" <?= $seleccionadoGuardado && $tarjetaActiva ? 'checked' : '' ?> <?= !$tarjetaActiva ? 'disabled' : '' ?>>
                                             <span class="saved-payment-body">
                                                 <span class="saved-payment-brand">
                                                     <strong><?= htmlspecialchars((string) ($metodoGuardado['franquicia'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> **** **** **** <?= htmlspecialchars((string) ($metodoGuardado['ultimos_4'] ?? '0000'), ENT_QUOTES, 'UTF-8') ?></strong>
                                                     <span>
-                                                        <?php if ((int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1): ?>
+                                                        <?php if ($tarjetaPredeterminada): ?>
                                                             <span class="saved-payment-chip"><?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
                                                         <?php endif; ?>
-                                                        <?php if (!$activoGuardado): ?>
+                                                        <?php if (!$tarjetaActiva): ?>
                                                             <span class="saved-payment-chip"><?= htmlspecialchars('Inactiva', ENT_QUOTES, 'UTF-8') ?></span>
                                                         <?php endif; ?>
                                                     </span>
@@ -1287,21 +1289,21 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                                     </span>
                                                 </span>
                                                 <span class="saved-payment-actions">
-                                                    <?php if ($activoGuardado): ?>
+                                                    <?php if ($tarjetaActiva): ?>
                                                         <button class="saved-payment-action primary-select" type="button" data-use-saved-payment onclick="event.stopPropagation();">
                                                             <?= htmlspecialchars('Usar esta tarjeta', ENT_QUOTES, 'UTF-8') ?>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <button class="saved-payment-action" type="button" data-edit-payment onclick="event.stopPropagation();" <?= !$activoGuardado ? 'disabled' : '' ?>>
+                                                    <button class="saved-payment-action" type="button" data-edit-payment onclick="event.stopPropagation();" <?= !$tarjetaActiva ? 'disabled' : '' ?>>
                                                         <?= htmlspecialchars('Editar', ENT_QUOTES, 'UTF-8') ?>
                                                     </button>
-                                                    <?php if ($activoGuardado && (int) ($metodoGuardado['es_predeterminado'] ?? 0) !== 1): ?>
+                                                    <?php if ($tarjetaActiva && !$tarjetaPredeterminada): ?>
                                                         <button class="saved-payment-action" type="submit" form="default-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
                                                             <?= htmlspecialchars('Predeterminar', ENT_QUOTES, 'UTF-8') ?>
                                                         </button>
                                                     <?php endif; ?>
                                                     <button class="saved-payment-action" type="submit" form="toggle-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
-                                                        <?= htmlspecialchars($activoGuardado ? 'Desactivar' : 'Activar', ENT_QUOTES, 'UTF-8') ?>
+                                                        <?= htmlspecialchars($tarjetaActiva ? 'Desactivar' : 'Activar', ENT_QUOTES, 'UTF-8') ?>
                                                     </button>
                                                     <button class="saved-payment-action danger" type="submit" form="delete-payment-<?= $idGuardado ?>" onclick="event.stopPropagation(); return confirm('Eliminar esta tarjeta guardada de forma permanente?');">
                                                         <?= htmlspecialchars('Eliminar', ENT_QUOTES, 'UTF-8') ?>
@@ -1319,7 +1321,7 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                                         </span>
                                                     </span>
                                                     <label class="payment-checkline">
-                                                        <input type="checkbox" name="es_predeterminado" value="1" form="edit-payment-<?= $idGuardado ?>" <?= (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1 ? 'checked' : '' ?>>
+                                                        <input type="checkbox" name="es_predeterminado" value="1" form="edit-payment-<?= $idGuardado ?>" <?= $tarjetaPredeterminada ? 'checked' : '' ?>>
                                                         <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
                                                     </label>
                                                     <span class="saved-payment-edit-actions">
@@ -1444,7 +1446,7 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                             </form>
                             <form id="toggle-payment-<?= $idGuardadoForm ?>" method="POST" action="index.php?action=cambiarEstadoMetodoPagoUsuario">
                                 <input type="hidden" name="id_metodo_pago_usuario" value="<?= $idGuardadoForm ?>">
-                                <input type="hidden" name="activo" value="<?= (int) ($metodoGuardadoForm['activo'] ?? 1) === 1 ? 0 : 1 ?>">
+                                <input type="hidden" name="activo" value="<?= (int) ($metodoGuardadoForm['activo'] ?? 0) === 1 ? 0 : 1 ?>">
                             </form>
                             <form id="default-payment-<?= $idGuardadoForm ?>" method="POST" action="index.php?action=predeterminarMetodoPagoUsuario">
                                 <input type="hidden" name="id_metodo_pago_usuario" value="<?= $idGuardadoForm ?>">
@@ -1456,24 +1458,24 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
 
                         <div class="payment-actions">
                             <button class="payment-btn" type="submit" form="payment-confirm-form">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"></path></svg>
+                                <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>
                                 <?= htmlspecialchars('Confirmar pago', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                             <a class="payment-link" href="index.php?action=ConfirmarPedido">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
                                 <?= htmlspecialchars('Volver a direccion', ENT_QUOTES, 'UTF-8') ?>
                             </a>
                         </div>
                     </div>
 
                     <aside class="payment-aside">
-                        <span class="payment-aside-icon" aria-hidden="true">
+                        <span class="payment-aside-icon">
                             <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
                         </span>
                         <h2><?= htmlspecialchars('Pago seguro simulado', ENT_QUOTES, 'UTF-8') ?></h2>
                         <p><?= htmlspecialchars('Al confirmar, el sistema registra la compra, sincroniza tu carrito y genera la factura.', ENT_QUOTES, 'UTF-8') ?></p>
                         <div class="payment-invoice-note">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15l-3-2-3 2-3-2-3 2-3-2V3z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path></svg>
+                            <svg viewBox="0 0 24 24"><path d="M7 3h10l3 3v15l-3-2-3 2-3-2-3 2-3-2V3z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path></svg>
                             <span><?= htmlspecialchars('Despues del pago veras la confirmacion y podras descargar o imprimir la factura.', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                         <div class="payment-steps">
@@ -1563,6 +1565,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return card && (metodoInput.value === '2' || metodoInput.value === '3');
     }
 
+    function numericData(card, key) {
+        return parseInt(card?.dataset?.[key] || '0', 10);
+    }
+
     function syncSavedCardsByMethod() {
         const isCardMethod = metodoInput.value === '2' || metodoInput.value === '3';
         let visibleCount = 0;
@@ -1575,7 +1581,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (matches) {
                 visibleCount += 1;
             }
-            if (matches && input && savedMethodInput && input.value === savedMethodInput.value && card.dataset.cardActive === '1') {
+            if (matches && input && savedMethodInput && input.value === savedMethodInput.value && numericData(card, 'cardActive') === 1) {
                 selectedStillVisible = true;
             }
         });
@@ -1650,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', function () {
         methodButtons.forEach((button) => {
             const active = button.dataset.method === val;
             button.classList.toggle('is-active', active);
-            button.setAttribute('aria-checked', active ? 'true' : 'false');
+            button.setAttribute('aria-checked', active ? '1' : '0');
         });
     }
 
@@ -1684,13 +1690,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     savedCards.forEach((card) => {
         card.addEventListener('click', () => {
-            if (card.dataset.cardActive !== '1') return;
+            if (numericData(card, 'cardActive') !== 1) return;
             if (!cardMatchesCurrentMethod(card)) return;
             const input = card.querySelector('input[type="radio"]');
             if (!input || input.disabled || !savedMethodInput) return;
             savedMethodInput.value = input.value;
-            if (card.dataset.cardMethod === '2' || card.dataset.cardMethod === '3') {
-                metodoInput.value = card.dataset.cardMethod;
+            const cardMethod = numericData(card, 'cardMethod');
+            if (cardMethod === 2 || cardMethod === 3) {
+                metodoInput.value = String(cardMethod);
             }
             syncPaymentFields();
         });
@@ -1700,12 +1707,13 @@ document.addEventListener('DOMContentLoaded', function () {
         button.addEventListener('click', (event) => {
             event.stopPropagation();
             const card = button.closest('[data-saved-card]');
-            if (!card || card.dataset.cardActive !== '1' || !cardMatchesCurrentMethod(card)) return;
+            if (!card || numericData(card, 'cardActive') !== 1 || !cardMatchesCurrentMethod(card)) return;
             const input = card.querySelector('input[type="radio"]');
             if (!input || input.disabled || !savedMethodInput) return;
             savedMethodInput.value = input.value;
-            if (card.dataset.cardMethod === '2' || card.dataset.cardMethod === '3') {
-                metodoInput.value = card.dataset.cardMethod;
+            const cardMethod = numericData(card, 'cardMethod');
+            if (cardMethod === 2 || cardMethod === 3) {
+                metodoInput.value = String(cardMethod);
             }
             syncPaymentFields();
             savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1786,7 +1794,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const button = document.querySelector('.payment-btn[form="payment-confirm-form"]');
         if (button) {
             button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Confirmando pago';
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Confirmando pago';
         }
     });
 

@@ -984,10 +984,10 @@ class PedidoController {
         $resumenCompra = $checkoutRapido['resumen'];
         $total = $resumenCompra['total'];
         $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
-        $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario, false);
+        $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario, 0);
         $metodoPagoPredeterminado = null;
         foreach ($metodosPagoUsuario as $metodoGuardado) {
-            if ((int) ($metodoGuardado['activo'] ?? 1) === 1 && (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1) {
+            if ((int) ($metodoGuardado['activo'] ?? 0) === 1 && (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1) {
                 $metodoPagoPredeterminado = $metodoGuardado;
                 break;
             }
@@ -1025,7 +1025,7 @@ class PedidoController {
         $this->ensureSession();
         $idUsuario = $this->getUsuarioId();
         $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
-        $activo = (int) ($_POST['activo'] ?? 0) === 1;
+        $activo = (int) ($_POST['activo'] ?? 0) === 1 ? 1 : 0;
 
         if ($idUsuario <= 0) {
             $_SESSION['error'] = 'Debes iniciar sesion';
@@ -1037,7 +1037,7 @@ class PedidoController {
             $ok = $this->metodoPagoUsuarioModel->cambiarActivo($idMetodo, $idUsuario, $activo);
             oci_commit($this->conn);
             $_SESSION[$ok ? 'success' : 'error'] = $ok
-                ? ($activo ? 'Tarjeta activada correctamente' : 'Tarjeta desactivada correctamente')
+                ? ($activo === 1 ? 'Tarjeta activada correctamente' : 'Tarjeta desactivada correctamente')
                 : 'No se pudo actualizar la tarjeta';
         } catch (Throwable $e) {
             oci_rollback($this->conn);
@@ -1128,7 +1128,7 @@ class PedidoController {
                 'franquicia' => $franquicia,
                 'token_pago' => $this->generarTokenMetodoPago(),
                 'fecha_expiracion' => $fechaExpiracion,
-                'es_predeterminado' => $_POST['es_predeterminado_pago'] ?? 0
+                'es_predeterminado' => (int) ($_POST['es_predeterminado_pago'] ?? 0)
             ]);
 
             oci_commit($this->conn);
@@ -1173,7 +1173,7 @@ class PedidoController {
             $ok = $this->metodoPagoUsuarioModel->actualizar($idMetodo, $idUsuario, [
                 'titular' => $_POST['titular'] ?? '',
                 'fecha_expiracion' => $fechaExpiracion,
-                'es_predeterminado' => $_POST['es_predeterminado'] ?? 0
+                'es_predeterminado' => (int) ($_POST['es_predeterminado'] ?? 0)
             ]);
             oci_commit($this->conn);
             $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago actualizado correctamente' : 'No se pudo actualizar el metodo de pago';
