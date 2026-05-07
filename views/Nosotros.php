@@ -3,19 +3,12 @@ require_once __DIR__ . '/layouts/navbar.php';
 
 $direccionTienda = 'Cra 34 No. 26A-05, Barrio Nuevo Maizaro, Villavicencio, Meta, Colombia';
 $direccionMaps = rawurlencode($direccionTienda);
+$mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&z=17&output=embed';
 $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $direccionMaps . '&travelmode=driving';
 $mapsSearchUrl = 'https://www.google.com/maps/search/?api=1&query=' . $direccionMaps;
-$tiendaLat = 4.14110;
-$tiendaLng = -73.63288;
 $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 ?>
-
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIINfQd5d9v3K/5i5xUvkgYCC9hU+V1L4Kc="
-    crossorigin="">
 
 <style>
 .about-page {
@@ -30,10 +23,7 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 }
 
 .about-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
-    gap: 22px;
-    align-items: stretch;
+    display: block;
 }
 
 .about-panel,
@@ -210,38 +200,33 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 .about-map-panel {
     display: grid;
     grid-template-rows: 1fr auto;
+    margin-top: 18px;
     overflow: hidden;
     border-radius: 8px;
-    min-height: 620px;
+    min-height: auto;
 }
 
 .about-map-frame {
     position: relative;
-    min-height: 470px;
+    min-height: 430px;
     background: #e8eef2;
     overflow: hidden;
 }
 
-.about-map {
+.about-map-embed {
     width: 100%;
     height: 100%;
-    min-height: 470px;
+    min-height: 430px;
     border: 0;
     display: block;
 }
 
-.about-map-frame .leaflet-container {
-    font-family: 'Manrope', system-ui, sans-serif;
-    background: #e8eef2;
-}
-
-.about-map-frame .leaflet-tile {
-    max-width: none !important;
-    max-height: none !important;
-}
-
-.about-map-frame .leaflet-tile-pane {
-    opacity: 1;
+.about-location-pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+    transform: translate(-50%, -100%);
 }
 
 .about-location-marker {
@@ -255,6 +240,7 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
     border: 4px solid #ffffff;
     box-shadow: 0 18px 36px rgba(2, 8, 23, 0.36);
     transform: rotate(-45deg);
+    cursor: pointer;
 }
 
 .about-location-marker i {
@@ -263,8 +249,26 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 }
 
 .about-location-popup {
+    position: absolute;
+    left: 50%;
+    bottom: 72px;
+    width: min(290px, calc(100vw - 48px));
     min-width: 230px;
+    padding: 14px;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 18px 36px rgba(2, 8, 23, 0.24);
     color: #102033;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.about-location-popup.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -6px);
 }
 
 .about-location-popup strong {
@@ -348,7 +352,6 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 }
 
 @media (max-width: 980px) {
-    .about-hero,
     .about-services {
         grid-template-columns: 1fr;
     }
@@ -374,6 +377,11 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
     .about-actions,
     .about-map-actions {
         display: grid;
+    }
+
+    .about-map-frame,
+    .about-map-embed {
+        min-height: 360px;
     }
 }
 </style>
@@ -407,50 +415,57 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
                     <div class="about-stats" aria-label="<?= htmlspecialchars('Datos de la empresa', ENT_QUOTES, 'UTF-8') ?>">
                         <div class="about-stat">
                             <strong>5</strong>
-                            <span><?= htmlspecialchars('anos de servicio local', ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Años de servicio local', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                         <div class="about-stat">
-                            <strong>3</strong>
-                            <span><?= htmlspecialchars('lineas: repuestos, iluminacion y electrico', ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong>2</strong>
+                            <span><?= htmlspecialchars('Lineas: repuestos de automoviles y maquinaria agricola', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                         <div class="about-stat">
                             <strong>1</strong>
-                            <span><?= htmlspecialchars('punto fisico en Nuevo Maizaro', ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Punto fisico en Nuevo Maizaro', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                     </div>
+
+                    <aside class="about-map-panel" id="mapa-tienda" aria-label="<?= htmlspecialchars('Mapa de la tienda fisica', ENT_QUOTES, 'UTF-8') ?>">
+                        <div class="about-map-frame">
+                            <iframe
+                                class="about-map-embed"
+                                title="<?= htmlspecialchars('Mapa de ElectriTorres en Villavicencio', ENT_QUOTES, 'UTF-8') ?>"
+                                src="<?= htmlspecialchars($mapsEmbedUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                allowfullscreen>
+                            </iframe>
+                            <div class="about-location-pin">
+                                <button class="about-location-marker" id="about-map-marker" type="button" aria-expanded="false" aria-controls="about-map-popup" aria-label="<?= htmlspecialchars('Ver informacion del local', ENT_QUOTES, 'UTF-8') ?>">
+                                    <i class="fas fa-store" aria-hidden="true"></i>
+                                </button>
+                                <div class="about-location-popup" id="about-map-popup" role="status">
+                                    <strong><?= htmlspecialchars('ElectriTorres', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <p><?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?></p>
+                                    <p class="popup-hours"><?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?></p>
+                                    <p><?= htmlspecialchars($infoTienda, ENT_QUOTES, 'UTF-8') ?></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="about-map-info">
+                            <h2><?= htmlspecialchars('Tienda fisica', ENT_QUOTES, 'UTF-8') ?></h2>
+                            <p><?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?><br><?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?></p>
+                            <div class="about-map-actions">
+                                <a class="about-btn primary" href="<?= htmlspecialchars($mapsDirectionsUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
+                                    <i class="fas fa-location-arrow"></i>
+                                    <?= htmlspecialchars('Iniciar recorrido', ENT_QUOTES, 'UTF-8') ?>
+                                </a>
+                                <a class="about-btn" href="<?= htmlspecialchars($mapsSearchUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
+                                    <i class="fas fa-map"></i>
+                                    <?= htmlspecialchars('Abrir mapa', ENT_QUOTES, 'UTF-8') ?>
+                                </a>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
             </article>
-
-            <aside class="about-map-panel" id="mapa-tienda" aria-label="<?= htmlspecialchars('Mapa de la tienda fisica', ENT_QUOTES, 'UTF-8') ?>">
-                <div class="about-map-frame">
-                    <div
-                        class="about-map"
-                        id="about-store-map"
-                        role="application"
-                        aria-label="<?= htmlspecialchars('Mapa interactivo de ElectriTorres en Villavicencio', ENT_QUOTES, 'UTF-8') ?>"
-                        data-lat="<?= htmlspecialchars((string) $tiendaLat, ENT_QUOTES, 'UTF-8') ?>"
-                        data-lng="<?= htmlspecialchars((string) $tiendaLng, ENT_QUOTES, 'UTF-8') ?>"
-                        data-name="<?= htmlspecialchars('ElectriTorres', ENT_QUOTES, 'UTF-8') ?>"
-                        data-address="<?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?>"
-                        data-hours="<?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?>"
-                        data-info="<?= htmlspecialchars($infoTienda, ENT_QUOTES, 'UTF-8') ?>">
-                    </div>
-                </div>
-                <div class="about-map-info">
-                    <h2><?= htmlspecialchars('Tienda fisica', ENT_QUOTES, 'UTF-8') ?></h2>
-                    <p><?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?><br><?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?></p>
-                    <div class="about-map-actions">
-                        <a class="about-btn primary" href="<?= htmlspecialchars($mapsDirectionsUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
-                            <i class="fas fa-location-arrow"></i>
-                            <?= htmlspecialchars('Iniciar recorrido', ENT_QUOTES, 'UTF-8') ?>
-                        </a>
-                        <a class="about-btn" href="<?= htmlspecialchars($mapsSearchUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
-                            <i class="fas fa-map"></i>
-                            <?= htmlspecialchars('Abrir mapa', ENT_QUOTES, 'UTF-8') ?>
-                        </a>
-                    </div>
-                </div>
-            </aside>
         </section>
 
         <section class="about-services" aria-label="<?= htmlspecialchars('Servicios de ElectriTorres', ENT_QUOTES, 'UTF-8') ?>">
@@ -473,92 +488,17 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
     </div>
 </main>
 
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin="">
-</script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const mapElement = document.getElementById('about-store-map');
+    const marker = document.getElementById('about-map-marker');
+    const popup = document.getElementById('about-map-popup');
 
-    if (!mapElement || typeof L === 'undefined') {
-        return;
-    }
-
-    const lat = Number(mapElement.dataset.lat);
-    const lng = Number(mapElement.dataset.lng);
-    const storePoint = [lat, lng];
-
-    const map = L.map(mapElement, {
-        scrollWheelZoom: false,
-        zoomControl: true,
-        fadeAnimation: false,
-        markerZoomAnimation: false
-    }).setView(storePoint, 17);
-
-    const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        minZoom: 3,
-        detectRetina: false,
-        updateWhenIdle: true,
-        keepBuffer: 4,
-        crossOrigin: true,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    tiles.on('tileerror', (event) => {
-        const tile = event.tile;
-        if (!tile || tile.dataset.retried === '1') {
-            return;
-        }
-
-        tile.dataset.retried = '1';
-        setTimeout(() => {
-            tile.src = tile.src.split('?')[0] + '?retry=' + Date.now();
-        }, 450);
+    marker?.addEventListener('click', () => {
+        const open = !popup?.classList.contains('is-visible');
+        popup?.classList.toggle('is-visible', open);
+        marker.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
-
-    const markerIcon = L.divIcon({
-        className: '',
-        html: '<span class="about-location-marker"><i class="fas fa-store" aria-hidden="true"></i></span>',
-        iconSize: [54, 54],
-        iconAnchor: [27, 54],
-        popupAnchor: [0, -52]
-    });
-
-    const popupHtml = `
-        <div class="about-location-popup">
-            <strong>${escapeHtml(mapElement.dataset.name)}</strong>
-            <p>${escapeHtml(mapElement.dataset.address)}</p>
-            <p class="popup-hours">${escapeHtml(mapElement.dataset.hours)}</p>
-            <p>${escapeHtml(mapElement.dataset.info)}</p>
-        </div>
-    `;
-
-    L.marker(storePoint, { icon: markerIcon, title: mapElement.dataset.name })
-        .addTo(map)
-        .bindPopup(popupHtml)
-        .openPopup();
-
-    requestAnimationFrame(() => {
-        map.invalidateSize(true);
-        map.setView(storePoint, 17, { animate: false });
-    });
-
-    setTimeout(() => map.invalidateSize(true), 350);
-    window.addEventListener('resize', () => map.invalidateSize(true));
 });
-
-function escapeHtml(value) {
-    return String(value || '').replace(/[&<>"']/g, (char) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    }[char]));
-}
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
