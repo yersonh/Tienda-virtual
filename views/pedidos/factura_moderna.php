@@ -12,7 +12,7 @@ $facturaVence = !empty($facturaPedido['fecha_estimada_entrega'])
     ? date('d/m/Y', strtotime((string) $facturaPedido['fecha_estimada_entrega']))
     : $facturaFecha;
 $facturaMetodo = (string) ($facturaPedido['metodo_pago'] ?? 'Registrado');
-$facturaDireccionLocal = 'Barrio Nuevo, Carrera 34 # 26A-05 Nuevo, Puente El Maizaro, Villavicencio, Meta';
+$facturaDireccionLocal = 'Carrera 34 # 40-20, Villavicencio, Meta';
 $facturaSubtotal = (float) ($facturaPedido['subtotal'] ?? 0);
 $facturaRootTag = isset($facturaRootTag) && in_array($facturaRootTag, ['main', 'section'], true) ? $facturaRootTag : 'main';
 $facturaDownloadMode = !empty($facturaDownloadMode);

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/layouts/navbar.php';
 
-$direccionTienda = 'Barrio Nuevo, Carrera 34 # 26A-05 Nuevo, Puente El Maizaro, Villavicencio, Meta';
+$direccionTienda = 'Carrera 34 # 40-20, Villavicencio, Meta';
 $direccionMaps = rawurlencode($direccionTienda);
 $mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&z=18&output=embed';
 $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $direccionMaps . '&travelmode=driving';
@@ -419,7 +419,7 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
                         </div>
                         <div class="about-stat">
                             <strong>1</strong>
-                            <span><?= htmlspecialchars('Punto fisico en Puente El Maizaro', ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Punto fisico en Villavicencio', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                     </div>
 

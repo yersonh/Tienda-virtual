@@ -1309,16 +1309,10 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                     <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <small id="saved-payment-subtitle"><?= htmlspecialchars('Selecciona una tarjeta activa o registra una nueva.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </span>
-                                <span class="saved-payment-actions">
-                                    <button class="new-card-toggle" type="button" id="one-time-card-toggle">
-                                        <i class="fas fa-credit-card"></i>
-                                        <?= htmlspecialchars('Pagar sin guardar', ENT_QUOTES, 'UTF-8') ?>
-                                    </button>
-                                    <button class="new-card-toggle" type="button" id="new-card-toggle">
-                                        <i class="fas fa-plus"></i>
-                                        <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
-                                    </button>
-                                </span>
+                                <button class="new-card-toggle" type="button" id="new-card-toggle">
+                                    <i class="fas fa-plus"></i>
+                                    <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                                </button>
                             </div>
                             <?php if (!empty($metodosPagoUsuario)): ?>
                                 <div class="saved-payment-grid">
@@ -1424,6 +1418,11 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 </div>
                             </div>
                         </div>
+
+                        <button class="payment-link" type="button" id="one-time-card-toggle" style="display: none;">
+                            <i class="fas fa-credit-card"></i>
+                            <?= htmlspecialchars('Pagar con tarjeta sin guardar', ENT_QUOTES, 'UTF-8') ?>
+                        </button>
 
                         <div id="efectivo" class="payment-dynamic">
                             <div class="payment-cash-fields">
@@ -1633,6 +1632,7 @@ function initPaymentPage() {
     const oneTimeCardToggle = document.getElementById('one-time-card-toggle');
     const checkoutSaveCard = document.getElementById('checkout-save-card');
     const checkoutDefaultCard = document.getElementById('checkout-default-card');
+    let oneTimeCardMode = false;
 
     function setRequired(container, required) {
         if (!container) return;
@@ -1780,23 +1780,28 @@ function initPaymentPage() {
         const method = selectedPaymentMethod();
         const val = String(method);
         efectivo.classList.toggle('is-visible', method === 1);
-        tarjeta.classList.toggle('is-visible', isCardPaymentMethod(method));
+        tarjeta.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
         transferencia.classList.toggle('is-visible', method === 4);
+        if (oneTimeCardToggle) {
+            oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
+        }
         const savedState = syncSavedCardsByMethod();
         if (savedPanel) {
             savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
         }
         setRequired(efectivo, method === 1);
         setRequired(transferencia, method === 4);
-        setNewCardFieldsEnabled(false);
+        setNewCardFieldsEnabled(isCardPaymentMethod(method) && oneTimeCardMode);
 
         if (savedState.isCardMethod) {
             if (savedState.selectedRadio) {
+                oneTimeCardMode = false;
                 setActiveSavedCard(savedState.selectedRadio, { syncMethod: false });
             } else {
                 clearActiveSavedCard();
             }
         } else {
+            oneTimeCardMode = false;
             clearActiveSavedCard();
         }
 
@@ -1813,6 +1818,7 @@ function initPaymentPage() {
             const nextMethod = Number(button.dataset.method || 0);
             metodoInput.value = String(nextMethod);
             if (standaloneCardForm && Number(previousMethod || 0) !== nextMethod) {
+                oneTimeCardMode = false;
                 standaloneCardForm.classList.remove('is-visible');
                 standaloneCardForm.reset();
                 if (standaloneCardMethod && isCardPaymentMethod(nextMethod)) {
@@ -1840,6 +1846,7 @@ function initPaymentPage() {
         card.addEventListener('click', () => {
             const input = card.querySelector('input[type="radio"]');
             if (!input) return;
+            oneTimeCardMode = false;
             setActiveSavedCard(input);
             syncPaymentFields();
         });
@@ -1847,6 +1854,7 @@ function initPaymentPage() {
 
     document.querySelectorAll('input[name="saved_payment_choice"]').forEach((radio) => {
         radio.addEventListener('change', () => {
+            oneTimeCardMode = false;
             setActiveSavedCard(radio);
             syncPaymentFields();
         });
@@ -1858,6 +1866,7 @@ function initPaymentPage() {
             const card = button.closest('[data-saved-card]');
             const input = card.querySelector('input[type="radio"]');
             if (!input) return;
+            oneTimeCardMode = false;
             setActiveSavedCard(input, { scrollCvv: true });
             syncPaymentFields();
         });
@@ -1893,9 +1902,9 @@ function initPaymentPage() {
     });
 
     oneTimeCardToggle?.addEventListener('click', () => {
+        oneTimeCardMode = true;
         clearActiveSavedCard();
-        setNewCardFieldsEnabled(true);
-        tarjeta?.classList.add('is-visible');
+        syncPaymentFields();
         newCardFields?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
