@@ -445,7 +445,7 @@ if (is_file($facturaLogoPath)) {
                         </div>
                         <div>
                             <h1>NAYLEX STORE S.A.S</h1>
-                            <small>Tecnologia, accesorios y tienda virtual</small>
+                            <small>Venta de repuestos de vehiculos y maquinaria agricola</small>
                         </div>
                     </div>
                     <div class="modern-company-lines">
@@ -461,7 +461,7 @@ if (is_file($facturaLogoPath)) {
                     </div>
                     <div class="modern-factura-meta">
                         <p><strong>Fecha emision:</strong> <?= htmlspecialchars($facturaFecha, ENT_QUOTES, 'UTF-8') ?></p>
-                        <p><strong>Vencimiento:</strong> <?= htmlspecialchars($facturaVence, ENT_QUOTES, 'UTF-8') ?></p>
+                        <p><strong>Fecha estimada de entrega:</strong> <?= htmlspecialchars($facturaVence, ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
                     <span class="modern-paid">PAGADA</span>
                 </div>
@@ -543,8 +543,7 @@ if (is_file($facturaLogoPath)) {
                         </div>
                         <div class="modern-bank">
                             <strong>Datos bancarios</strong><br>
-                            Bancolombia - Cta Corriente No. 678-901234-56
-                        </div>
+                            Señor(a) usurio de Naylex Store, le agradecemos por su compra, esperamos quedisfrute su producto y su experiencia de compra haya sido satisfactoria. .
                     </div>
                     <div class="modern-totals">
                         <div class="modern-total-row"><span>Subtotal productos</span><strong><?= facturaMoney($facturaSubtotal ?: ($facturaTotal - $facturaIva - $facturaEnvio)) ?></strong></div>

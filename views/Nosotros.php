@@ -3,9 +3,19 @@ require_once __DIR__ . '/layouts/navbar.php';
 
 $direccionTienda = 'Cra 34 No. 26A-05, Barrio Nuevo Maizaro, Villavicencio, Meta, Colombia';
 $direccionMaps = rawurlencode($direccionTienda);
-$mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&output=embed';
 $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $direccionMaps . '&travelmode=driving';
+$mapsSearchUrl = 'https://www.google.com/maps/search/?api=1&query=' . $direccionMaps;
+$tiendaLat = 4.14110;
+$tiendaLng = -73.63288;
+$horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
+$infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 ?>
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIINfQd5d9v3K/5i5xUvkgYCC9hU+V1L4Kc="
+    crossorigin="">
 
 <style>
 .about-page {
@@ -181,22 +191,67 @@ $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $di
     grid-template-rows: 1fr auto;
     overflow: hidden;
     border-radius: 8px;
-    min-height: 520px;
+    min-height: 620px;
 }
 
 .about-map-frame {
     position: relative;
-    min-height: 360px;
+    min-height: 470px;
     background: #0b1324;
 }
 
-.about-map-frame iframe {
+.about-map {
     width: 100%;
     height: 100%;
-    min-height: 360px;
+    min-height: 470px;
     border: 0;
     display: block;
-    filter: saturate(1.08) contrast(1.02);
+}
+
+.about-map-frame .leaflet-container {
+    font-family: 'Manrope', system-ui, sans-serif;
+    background: #0b1324;
+}
+
+.about-location-marker {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 50% 50% 50% 10px;
+    background: linear-gradient(135deg, #22d3ee, #38bdf8);
+    color: #041522;
+    border: 4px solid #ffffff;
+    box-shadow: 0 18px 36px rgba(2, 8, 23, 0.36);
+    transform: rotate(-45deg);
+}
+
+.about-location-marker i {
+    transform: rotate(45deg);
+    font-size: 22px;
+}
+
+.about-location-popup {
+    min-width: 230px;
+    color: #102033;
+}
+
+.about-location-popup strong {
+    display: block;
+    margin-bottom: 6px;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 16px;
+}
+
+.about-location-popup p {
+    margin: 0 0 8px;
+    color: #415168;
+    line-height: 1.45;
+}
+
+.about-location-popup .popup-hours {
+    color: #0f766e;
+    font-weight: 800;
 }
 
 .about-map-info {
@@ -331,23 +386,28 @@ $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $di
 
             <aside class="about-map-panel" id="mapa-tienda" aria-label="<?= htmlspecialchars('Mapa de la tienda fisica', ENT_QUOTES, 'UTF-8') ?>">
                 <div class="about-map-frame">
-                    <iframe
-                        title="<?= htmlspecialchars('Mapa de ElectriTorres en Villavicencio', ENT_QUOTES, 'UTF-8') ?>"
-                        src="<?= htmlspecialchars($mapsEmbedUrl, ENT_QUOTES, 'UTF-8') ?>"
-                        loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"
-                        allowfullscreen>
-                    </iframe>
+                    <div
+                        class="about-map"
+                        id="about-store-map"
+                        role="application"
+                        aria-label="<?= htmlspecialchars('Mapa interactivo de ElectriTorres en Villavicencio', ENT_QUOTES, 'UTF-8') ?>"
+                        data-lat="<?= htmlspecialchars((string) $tiendaLat, ENT_QUOTES, 'UTF-8') ?>"
+                        data-lng="<?= htmlspecialchars((string) $tiendaLng, ENT_QUOTES, 'UTF-8') ?>"
+                        data-name="<?= htmlspecialchars('ElectriTorres', ENT_QUOTES, 'UTF-8') ?>"
+                        data-address="<?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?>"
+                        data-hours="<?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?>"
+                        data-info="<?= htmlspecialchars($infoTienda, ENT_QUOTES, 'UTF-8') ?>">
+                    </div>
                 </div>
                 <div class="about-map-info">
                     <h2><?= htmlspecialchars('Tienda fisica', ENT_QUOTES, 'UTF-8') ?></h2>
-                    <p><?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?></p>
+                    <p><?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?><br><?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?></p>
                     <div class="about-map-actions">
                         <a class="about-btn primary" href="<?= htmlspecialchars($mapsDirectionsUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
                             <i class="fas fa-location-arrow"></i>
                             <?= htmlspecialchars('Iniciar recorrido', ENT_QUOTES, 'UTF-8') ?>
                         </a>
-                        <a class="about-btn" href="https://www.google.com/maps/search/?api=1&query=<?= htmlspecialchars($direccionMaps, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
+                        <a class="about-btn" href="<?= htmlspecialchars($mapsSearchUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
                             <i class="fas fa-map"></i>
                             <?= htmlspecialchars('Abrir mapa', ENT_QUOTES, 'UTF-8') ?>
                         </a>
@@ -375,5 +435,68 @@ $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $di
         </section>
     </div>
 </main>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const mapElement = document.getElementById('about-store-map');
+
+    if (!mapElement || typeof L === 'undefined') {
+        return;
+    }
+
+    const lat = Number(mapElement.dataset.lat);
+    const lng = Number(mapElement.dataset.lng);
+    const storePoint = [lat, lng];
+
+    const map = L.map(mapElement, {
+        scrollWheelZoom: false,
+        zoomControl: true
+    }).setView(storePoint, 18);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const markerIcon = L.divIcon({
+        className: '',
+        html: '<span class="about-location-marker"><i class="fas fa-store" aria-hidden="true"></i></span>',
+        iconSize: [54, 54],
+        iconAnchor: [27, 54],
+        popupAnchor: [0, -52]
+    });
+
+    const popupHtml = `
+        <div class="about-location-popup">
+            <strong>${escapeHtml(mapElement.dataset.name)}</strong>
+            <p>${escapeHtml(mapElement.dataset.address)}</p>
+            <p class="popup-hours">${escapeHtml(mapElement.dataset.hours)}</p>
+            <p>${escapeHtml(mapElement.dataset.info)}</p>
+        </div>
+    `;
+
+    L.marker(storePoint, { icon: markerIcon, title: mapElement.dataset.name })
+        .addTo(map)
+        .bindPopup(popupHtml)
+        .openPopup();
+
+    setTimeout(() => map.invalidateSize(), 120);
+});
+
+function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    }[char]));
+}
+</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

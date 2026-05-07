@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$action = $_GET['action'] ?? 'tienda';
+$action = $_GET['action'] ?? 'nosotros';
 $_SESSION['logueado'] = isset($_SESSION['id_usuario']);
 
 if ($action === 'health') {
@@ -215,6 +215,10 @@ switch ($action) {
 
     case 'eliminarMetodoPagoUsuario':
         (new PedidoController())->eliminarMetodoPagoUsuario();
+        break;
+
+    case 'guardarMetodoPagoUsuario':
+        (new PedidoController())->guardarMetodoPagoUsuario();
         break;
 
     case 'cambiarEstadoMetodoPagoUsuario':

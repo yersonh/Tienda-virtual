@@ -10,7 +10,7 @@ $carritoCount = $logueado
     ? (int) ($_SESSION['carrito_count'] ?? 0)
     : 0;
 
-$currentAction = $_GET['action'] ?? 'tienda';
+$currentAction = $_GET['action'] ?? 'nosotros';
 
 ?>
 <!DOCTYPE html>
@@ -505,6 +505,12 @@ textarea:focus {
     <div class="nav-logo">NAYLEX<span>.</span><sub>STORE</sub></div>
     <div class="nav-links">
 
+        <a href="index.php?action=nosotros"
+            data-nav-key="nosotros"
+            class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>">
+            <?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
         <a href="index.php?action=inicio#interaccion-360"
             onclick="return mostrarSeccion('interaccion-360');"
             data-nav-key="interaccion"
@@ -528,12 +534,6 @@ textarea:focus {
             data-nav-key="tienda"
             class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>">
             <?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?>
-        </a>
-
-        <a href="index.php?action=nosotros"
-            data-nav-key="nosotros"
-            class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>">
-            <?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?>
         </a>
 
         <?php if($logueado): ?>
@@ -574,11 +574,11 @@ textarea:focus {
     <button class="side-close" id="side-menu-close" type="button" aria-label="<?= htmlspecialchars('Cerrar menu', ENT_QUOTES, 'UTF-8') ?>">&times;</button>
   </div>
   <div class="side-links">
+    <a href="index.php?action=nosotros" data-nav-key="nosotros" class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>"><?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=inicio#lo-nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
-    <a href="index.php?action=nosotros" data-nav-key="nosotros" class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>"><?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?></a>
     <?php if($logueado): ?>
       <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=perfil" data-nav-key="perfil" class="<?= $currentAction === 'perfil' ? 'active' : '' ?>"><?= htmlspecialchars('Perfil', ENT_QUOTES, 'UTF-8') ?></a>
@@ -603,7 +603,7 @@ function setActiveNav(key) {
 
 function syncActiveNavFromLocation() {
     const params = new URLSearchParams(window.location.search);
-    const action = params.get('action') || 'tienda';
+    const action = params.get('action') || 'nosotros';
     if (action === 'inicio' && (window.location.hash === '#lo-nuevo' || window.location.hash === '#nuevo')) {
         setActiveNav('nuevo');
         return;

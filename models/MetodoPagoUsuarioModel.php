@@ -17,6 +17,27 @@ class MetodoPagoUsuarioModel {
         return array_change_key_case($row, CASE_LOWER);
     }
 
+    private function quitarPredeterminado(int $idUsuario): void {
+        $query = "UPDATE METODO_PAGO_USUARIO
+                  SET ES_PREDETERMINADO = 0
+                  WHERE ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        oci_free_statement($stmt);
+    }
+
     public function obtenerPorUsuario(int $idUsuario, bool $soloActivos = true): array {
         if ($idUsuario <= 0) {
             return [];
@@ -73,17 +94,20 @@ class MetodoPagoUsuarioModel {
         $query = "SELECT ID_METODO_PAGO_USUARIO,
                          ID_USUARIO,
                          ID_METODO,
-                         FORMA_PAGO,
+                         (SELECT FORMA_PAGO
+                          FROM METODO_PAGO mp
+                          WHERE mp.ID_METODO = mpu.ID_METODO) AS FORMA_PAGO,
                          TITULAR,
                          ULTIMOS_4,
                          FRANQUICIA,
-                         FECHA_EXPIRACION_TEXTO,
+                         TO_CHAR(FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
                          ES_PREDETERMINADO,
                          ACTIVO,
                          TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
-                  FROM V_METODOS_PAGO_USUARIO
+                  FROM METODO_PAGO_USUARIO mpu
                   WHERE ID_USUARIO = :id_usuario
                     AND ES_PREDETERMINADO = 1
+                    AND ACTIVO = 1
                   ORDER BY ID_METODO_PAGO_USUARIO DESC
                   FETCH FIRST 1 ROWS ONLY";
 
@@ -112,17 +136,20 @@ class MetodoPagoUsuarioModel {
         $query = "SELECT ID_METODO_PAGO_USUARIO,
                          ID_USUARIO,
                          ID_METODO,
-                         FORMA_PAGO,
+                         (SELECT FORMA_PAGO
+                          FROM METODO_PAGO mp
+                          WHERE mp.ID_METODO = mpu.ID_METODO) AS FORMA_PAGO,
                          TITULAR,
                          ULTIMOS_4,
                          FRANQUICIA,
-                         FECHA_EXPIRACION_TEXTO,
+                         TO_CHAR(FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
                          ES_PREDETERMINADO,
                          ACTIVO,
                          TO_CHAR(FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
-                  FROM V_METODOS_PAGO_USUARIO
+                  FROM METODO_PAGO_USUARIO mpu
                   WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
+                    AND ACTIVO = 1
                   FETCH FIRST 1 ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
@@ -157,6 +184,10 @@ class MetodoPagoUsuarioModel {
 
         if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenPago === '' || $fechaExpiracion === '') {
             throw new InvalidArgumentException('Datos de metodo de pago incompletos');
+        }
+
+        if ($esPredeterminado === '1') {
+            $this->quitarPredeterminado($idUsuario);
         }
 
         $query = "BEGIN SP_GUARDAR_METODO_PAGO(
@@ -299,6 +330,10 @@ class MetodoPagoUsuarioModel {
             throw new InvalidArgumentException('Fecha de expiracion invalida');
         }
 
+        if ($esPredeterminado === 1) {
+            $this->quitarPredeterminado($idUsuario);
+        }
+
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET TITULAR = :titular,
                       FECHA_EXPIRACION = TO_DATE(:fecha_expiracion, 'YYYY-MM-DD'),
@@ -333,6 +368,8 @@ class MetodoPagoUsuarioModel {
         if ($idMetodoPagoUsuario <= 0 || $idUsuario <= 0) {
             return false;
         }
+
+        $this->quitarPredeterminado($idUsuario);
 
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET ES_PREDETERMINADO = 1

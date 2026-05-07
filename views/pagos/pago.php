@@ -12,9 +12,19 @@ $paymentOld = isset($_SESSION['payment_old']) && is_array($_SESSION['payment_old
 unset($_SESSION['payment_old']);
 $metodosPagoUsuario = isset($metodosPagoUsuario) && is_array($metodosPagoUsuario) ? $metodosPagoUsuario : [];
 $metodoPagoPredeterminado = isset($metodoPagoPredeterminado) && is_array($metodoPagoPredeterminado) ? $metodoPagoPredeterminado : null;
-$metodoPagoGuardadoSeleccionado = (int) ($paymentOld['id_metodo_pago_usuario'] ?? ($metodoPagoPredeterminado['id_metodo_pago_usuario'] ?? 0));
-$metodoSeleccionado = (int) ($paymentOld['metodo_pago'] ?? ($metodoPagoPredeterminado['id_metodo'] ?? 1));
+$metodoPagoInicial = $metodoPagoPredeterminado;
+if (!$metodoPagoInicial) {
+    foreach ($metodosPagoUsuario as $metodoGuardadoInicial) {
+        if ((int) ($metodoGuardadoInicial['activo'] ?? 1) === 1) {
+            $metodoPagoInicial = $metodoGuardadoInicial;
+            break;
+        }
+    }
+}
+$metodoPagoGuardadoSeleccionado = (int) ($paymentOld['id_metodo_pago_usuario'] ?? ($metodoPagoInicial['id_metodo_pago_usuario'] ?? 0));
+$metodoSeleccionado = (int) ($paymentOld['metodo_pago'] ?? ($metodoPagoInicial['id_metodo'] ?? 1));
 $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metodoSeleccionado : 1;
+$mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
 ?>
 
 <style>
@@ -591,6 +601,33 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 
 .card-new-fields.is-hidden {
     display: none;
+}
+
+.standalone-card-form {
+    display: none;
+    margin: 18px 0 20px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+}
+
+.standalone-card-form.is-visible {
+    display: block;
+}
+
+.standalone-card-form .section-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.standalone-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
 }
 
 .payment-error {
@@ -1209,7 +1246,7 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                                 </span>
                                 <button class="new-card-toggle" type="button" id="new-card-toggle">
                                     <i class="fas fa-plus"></i>
-                                    <?= htmlspecialchars('Nueva tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                                    <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
                                 </button>
                             </div>
                             <?php if (!empty($metodosPagoUsuario)): ?>
@@ -1301,7 +1338,7 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                             <?php endif; ?>
                             <div class="saved-payment-empty" id="saved-payment-empty">
                                 <i class="fas fa-circle-info"></i>
-                                <span><?= htmlspecialchars('No tienes tarjetas guardadas para este metodo. Puedes registrar una nueva abajo.', ENT_QUOTES, 'UTF-8') ?></span>
+                                <span><?= htmlspecialchars('No tienes tarjetas guardadas para este metodo. Usa Agregar tarjeta para registrar una.', ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
                             <div class="card-cvv-only <?= $metodoPagoGuardadoSeleccionado > 0 ? 'is-visible' : '' ?>" id="saved-card-cvv">
                                 <div class="payment-field">
@@ -1342,19 +1379,6 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                                     <label for="cvv_tarjeta"><?= htmlspecialchars('CVV', ENT_QUOTES, 'UTF-8') ?></label>
                                     <input id="cvv_tarjeta" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control">
                                 </div>
-                                <div class="payment-field">
-                                    <label><?= htmlspecialchars('Guardar tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <div class="card-save-options">
-                                        <label class="payment-checkline">
-                                            <input type="checkbox" name="guardar_metodo_pago" value="1">
-                                            <span><?= htmlspecialchars('Guardar metodo de pago', ENT_QUOTES, 'UTF-8') ?></span>
-                                        </label>
-                                        <label class="payment-checkline">
-                                            <input type="checkbox" name="es_predeterminado_pago" value="1">
-                                            <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
-                                        </label>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -1371,6 +1395,46 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                             </div>
                         </div>
 
+                    </form>
+                    <form class="standalone-card-form <?= $mostrarFormularioTarjeta ? 'is-visible' : '' ?>" id="standalone-card-form" method="POST" action="index.php?action=guardarMetodoPagoUsuario">
+                        <div class="section-title">
+                            <div>
+                                <h2 class="fs-4"><?= htmlspecialchars('Nueva tarjeta', ENT_QUOTES, 'UTF-8') ?></h2>
+                                <p class="section-kicker"><?= htmlspecialchars('Guarda una tarjeta para usarla despues sin confirmar el pedido todavia.', ENT_QUOTES, 'UTF-8') ?></p>
+                            </div>
+                        </div>
+                        <input type="hidden" name="id_metodo" id="standalone-card-method" value="<?= in_array($metodoSeleccionado, [2, 3], true) ? $metodoSeleccionado : 2 ?>">
+                        <div class="payment-card-fields">
+                            <div class="payment-field">
+                                <label for="standalone-numero-tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
+                                <input id="standalone-numero-tarjeta" name="numero_tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control" required>
+                            </div>
+                            <div class="payment-field">
+                                <label for="standalone-titular-tarjeta"><?= htmlspecialchars('Nombre titular', ENT_QUOTES, 'UTF-8') ?></label>
+                                <input id="standalone-titular-tarjeta" name="titular_tarjeta" type="text" autocomplete="cc-name" placeholder="Nombre como aparece en la tarjeta" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['titular_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                            </div>
+                            <div class="payment-field">
+                                <label for="standalone-vencimiento-tarjeta"><?= htmlspecialchars('Vencimiento', ENT_QUOTES, 'UTF-8') ?></label>
+                                <input id="standalone-vencimiento-tarjeta" name="vencimiento_tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                            </div>
+                            <div class="payment-field">
+                                <label><?= htmlspecialchars('Preferencia', ENT_QUOTES, 'UTF-8') ?></label>
+                                <label class="payment-checkline">
+                                    <input type="checkbox" name="es_predeterminado_pago" value="1">
+                                    <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="standalone-card-actions">
+                            <button class="payment-btn" type="submit">
+                                <i class="fas fa-floppy-disk"></i>
+                                <?= htmlspecialchars('Guardar tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                            </button>
+                            <button class="payment-link" type="button" id="cancel-new-card">
+                                <i class="fas fa-xmark"></i>
+                                <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
+                            </button>
+                        </div>
                     </form>
                         <?php foreach ($metodosPagoUsuario as $metodoGuardadoForm): ?>
                             <?php $idGuardadoForm = (int) ($metodoGuardadoForm['id_metodo_pago_usuario'] ?? 0); ?>
@@ -1478,6 +1542,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const savedPaymentEmpty = document.getElementById('saved-payment-empty');
     const savedPaymentTitle = document.getElementById('saved-payment-title');
     const savedPaymentSubtitle = document.getElementById('saved-payment-subtitle');
+    const standaloneCardForm = document.getElementById('standalone-card-form');
+    const standaloneCardMethod = document.getElementById('standalone-card-method');
+    const cancelNewCard = document.getElementById('cancel-new-card');
 
     function setRequired(container, required) {
         if (!container) return;
@@ -1545,11 +1612,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (newCardFields) {
-            newCardFields.classList.toggle('is-hidden', useSaved);
+            newCardFields.classList.add('is-hidden');
             newCardFields.querySelectorAll('input').forEach((field) => {
-                const isSaveOption = field.name === 'guardar_metodo_pago' || field.name === 'es_predeterminado_pago';
-                field.disabled = useSaved;
-                field.required = !useSaved && !isSaveOption;
+                field.disabled = true;
+                field.required = false;
             });
         }
 
@@ -1565,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function syncPaymentFields() {
         const val = metodoInput.value;
         efectivo.classList.toggle('is-visible', val === '1');
-        tarjeta.classList.toggle('is-visible', val === '2' || val === '3');
+        tarjeta.classList.toggle('is-visible', false);
         transferencia.classList.toggle('is-visible', val === '4');
         const visibleSavedCards = syncSavedCardsByMethod();
         if (savedPanel) {
@@ -1575,6 +1641,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setRequired(transferencia, val === '4');
         if (val === '2' || val === '3') {
             setCardMode(usingSavedCard());
+            setRequired(tarjeta, false);
         } else {
             setCardMode(false);
             setRequired(tarjeta, false);
@@ -1660,7 +1727,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     newCardToggle?.addEventListener('click', () => {
-        setCardMode(false);
+        if (standaloneCardMethod && (metodoInput.value === '2' || metodoInput.value === '3')) {
+            standaloneCardMethod.value = metodoInput.value;
+        }
+        standaloneCardForm?.classList.add('is-visible');
+        standaloneCardForm?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    cancelNewCard?.addEventListener('click', () => {
+        standaloneCardForm?.classList.remove('is-visible');
     });
 
     syncPaymentFields();
@@ -1670,7 +1745,17 @@ document.addEventListener('DOMContentLoaded', function () {
         event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
     });
 
+    document.getElementById('standalone-numero-tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 19);
+        event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    });
+
     document.getElementById('vencimiento_tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+        event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+    });
+
+    document.getElementById('standalone-vencimiento-tarjeta')?.addEventListener('input', (event) => {
         const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
         event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
     });

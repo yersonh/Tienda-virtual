@@ -1064,6 +1064,91 @@ class PedidoController {
         throw new InvalidArgumentException('Ingresa el vencimiento en formato MM/AA');
     }
 
+    private function detectarFranquiciaTarjeta(string $numero): string {
+        $numero = preg_replace('/\D+/', '', $numero);
+        if (preg_match('/^4\d{12}(\d{3})?(\d{3})?$/', $numero)) {
+            return 'VISA';
+        }
+        if (preg_match('/^(5[1-5]\d{14}|2(2[2-9]\d|[3-6]\d{2}|7[01]\d|720)\d{12})$/', $numero)) {
+            return 'MASTERCARD';
+        }
+
+        return 'DESCONOCIDA';
+    }
+
+    private function generarTokenMetodoPago(): string {
+        try {
+            return 'tok_' . bin2hex(random_bytes(32));
+        } catch (Throwable $e) {
+            return 'tok_' . hash('sha256', uniqid('', true) . microtime(true));
+        }
+    }
+
+    public function guardarMetodoPagoUsuario(): void {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para guardar una tarjeta';
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        try {
+            $idMetodo = (int) ($_POST['id_metodo'] ?? $_POST['metodo_pago'] ?? 0);
+            $numero = preg_replace('/\D+/', '', (string) ($_POST['numero_tarjeta'] ?? ''));
+            $titular = trim((string) ($_POST['titular_tarjeta'] ?? $_POST['titular'] ?? ''));
+            $vencimiento = trim((string) ($_POST['vencimiento_tarjeta'] ?? $_POST['fecha_expiracion'] ?? ''));
+            $franquicia = $this->detectarFranquiciaTarjeta($numero);
+
+            if (!in_array($idMetodo, [2, 3], true)) {
+                throw new InvalidArgumentException('Selecciona si la tarjeta es debito o credito');
+            }
+            if (strlen($numero) < 13 || strlen($numero) > 19 || $franquicia === 'DESCONOCIDA') {
+                throw new InvalidArgumentException('Ingresa una tarjeta Visa o Mastercard valida');
+            }
+            if ($titular === '') {
+                throw new InvalidArgumentException('Ingresa el nombre del titular');
+            }
+
+            $fechaExpiracion = $this->fechaExpiracionMetodoPago($vencimiento);
+            if (strtotime($fechaExpiracion . ' +1 month -1 day') < strtotime(date('Y-m-d'))) {
+                throw new InvalidArgumentException('La tarjeta esta vencida');
+            }
+
+            $idGuardado = $this->metodoPagoUsuarioModel->guardar([
+                'id_usuario' => $idUsuario,
+                'id_metodo' => $idMetodo,
+                'titular' => $titular,
+                'ultimos_4' => substr($numero, -4),
+                'franquicia' => $franquicia,
+                'token_pago' => $this->generarTokenMetodoPago(),
+                'fecha_expiracion' => $fechaExpiracion,
+                'es_predeterminado' => $_POST['es_predeterminado_pago'] ?? 0
+            ]);
+
+            oci_commit($this->conn);
+            $_SESSION['payment_old'] = [
+                'metodo_pago' => $idMetodo,
+                'id_metodo_pago_usuario' => $idGuardado
+            ];
+            $_SESSION['success'] = 'Tarjeta guardada correctamente. Seleccionala y confirma con CVV.';
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log($e->getMessage());
+            $_SESSION['payment_old'] = [
+                'metodo_pago' => (int) ($_POST['id_metodo'] ?? 2),
+                'titular_tarjeta' => trim((string) ($_POST['titular_tarjeta'] ?? '')),
+                'vencimiento_tarjeta' => trim((string) ($_POST['vencimiento_tarjeta'] ?? '')),
+                'mostrar_formulario_tarjeta' => 1
+            ];
+            $_SESSION['error'] = $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo guardar la tarjeta';
+        }
+
+        header('Location: index.php?action=pago');
+        exit();
+    }
+
     public function actualizarMetodoPagoUsuario(): void {
         $this->ensureSession();
         $idUsuario = $this->getUsuarioId();
