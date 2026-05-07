@@ -60,7 +60,7 @@ class MetodoPagoUsuarioModel {
 
     private function fechaExpiracionSelect(): string {
         return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY')"
+            ? "mpu.FECHA_EXPIRACION"
             : "''";
     }
 
@@ -444,7 +444,7 @@ class MetodoPagoUsuarioModel {
             throw new InvalidArgumentException('Completa titular y fecha de expiracion');
         }
 
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaExpiracion)) {
+        if (!preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $fechaExpiracion)) {
             throw new InvalidArgumentException('Fecha de expiracion invalida');
         }
 
@@ -454,7 +454,7 @@ class MetodoPagoUsuarioModel {
 
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET TITULAR = :titular,
-                      FECHA_EXPIRACION = TO_DATE(:fecha_expiracion, 'YYYY-MM-DD'),
+                      FECHA_EXPIRACION = :fecha_expiracion,
                       ES_PREDETERMINADO = :es_predeterminado
                   WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
