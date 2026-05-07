@@ -3,6 +3,7 @@
 class MetodoPagoUsuarioModel {
 
     private $conn;
+    private ?array $columnasMetodoPagoUsuario = null;
 
     public function __construct($conn) {
         $this->conn = $conn;
@@ -28,6 +29,45 @@ class MetodoPagoUsuarioModel {
         $data['id_metodo_pago_usuario'] = (int) ($data['id_metodo_pago_usuario'] ?? 0);
 
         return $data;
+    }
+
+    private function columnaExiste(string $columna): bool {
+        if ($this->columnasMetodoPagoUsuario === null) {
+            $query = "SELECT COLUMN_NAME
+                      FROM USER_TAB_COLUMNS
+                      WHERE TABLE_NAME = 'METODO_PAGO_USUARIO'";
+
+            $stmt = @oci_parse($this->conn, $query);
+            if (!$stmt || !@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                if ($stmt) {
+                    error_log('MetodoPagoUsuarioModel columnas: ' . $this->oracleErrorMessage($stmt));
+                    oci_free_statement($stmt);
+                }
+                $this->columnasMetodoPagoUsuario = [];
+                return false;
+            }
+
+            $columnas = [];
+            while ($row = oci_fetch_assoc($stmt)) {
+                $columnas[strtoupper((string) $row['COLUMN_NAME'])] = true;
+            }
+            oci_free_statement($stmt);
+            $this->columnasMetodoPagoUsuario = $columnas;
+        }
+
+        return isset($this->columnasMetodoPagoUsuario[strtoupper($columna)]);
+    }
+
+    private function fechaExpiracionSelect(): string {
+        return $this->columnaExiste('FECHA_EXPIRACION')
+            ? "TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY')"
+            : "''";
+    }
+
+    private function fechaCreacionSelect(): string {
+        return $this->columnaExiste('FECHA_CREACION')
+            ? "TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS')"
+            : "''";
     }
 
     private function cacheKey(int $idUsuario, int $soloActivos): string {
@@ -109,6 +149,8 @@ class MetodoPagoUsuarioModel {
             return $cache;
         }
 
+        $fechaExpiracionSelect = $this->fechaExpiracionSelect();
+        $fechaCreacionSelect = $this->fechaCreacionSelect();
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
@@ -120,10 +162,10 @@ class MetodoPagoUsuarioModel {
                          mpu.TITULAR,
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
-                         TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
+                         {$fechaExpiracionSelect} AS FECHA_EXPIRACION_TEXTO,
                          mpu.ES_PREDETERMINADO,
                          mpu.ACTIVO,
-                         TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
+                         {$fechaCreacionSelect} AS FECHA_CREACION
                   FROM METODO_PAGO_USUARIO mpu
                   WHERE mpu.ID_USUARIO = :id_usuario
                     AND mpu.ID_METODO IN (2, 3)";
@@ -136,12 +178,14 @@ class MetodoPagoUsuarioModel {
 
         $stmt = @oci_parse($this->conn, $query);
         if (!$stmt) {
+            error_log('MetodoPagoUsuarioModel obtenerPorUsuario parse: ' . $this->oracleErrorMessage());
             return [];
         }
 
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            error_log('MetodoPagoUsuarioModel obtenerPorUsuario execute: ' . $this->oracleErrorMessage($stmt));
             oci_free_statement($stmt);
             return [];
         }
@@ -193,6 +237,8 @@ class MetodoPagoUsuarioModel {
             }
         }
 
+        $fechaExpiracionSelect = $this->fechaExpiracionSelect();
+        $fechaCreacionSelect = $this->fechaCreacionSelect();
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
@@ -204,10 +250,10 @@ class MetodoPagoUsuarioModel {
                          mpu.TITULAR,
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
-                         TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
+                         {$fechaExpiracionSelect} AS FECHA_EXPIRACION_TEXTO,
                          mpu.ES_PREDETERMINADO,
                          mpu.ACTIVO,
-                         TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
+                         {$fechaCreacionSelect} AS FECHA_CREACION
                   FROM METODO_PAGO_USUARIO mpu
                   WHERE mpu.ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND mpu.ID_USUARIO = :id_usuario
