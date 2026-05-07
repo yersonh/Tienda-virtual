@@ -3,7 +3,7 @@ require_once __DIR__ . '/layouts/navbar.php';
 
 $direccionTienda = 'Barrio Nuevo, Carrera 34 # 26A-05 Nuevo, Puente El Maizaro, Villavicencio, Meta';
 $direccionMaps = rawurlencode($direccionTienda);
-$mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&z=17&output=embed';
+$mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&z=18&output=embed';
 $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $direccionMaps . '&travelmode=driving';
 $mapsSearchUrl = 'https://www.google.com/maps/search/?api=1&query=' . $direccionMaps;
 $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
@@ -403,7 +403,7 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
                         </p>
                     </div>
                     <div class="about-actions">
-                        <a class="about-btn primary" href="#mapa-tienda">
+                        <a class="about-btn primary" href="#mapa-tienda" id="about-view-location">
                             <i class="fas fa-location-dot"></i>
                             <?= htmlspecialchars('Ver ubicacion', ENT_QUOTES, 'UTF-8') ?>
                         </a>
@@ -427,8 +427,10 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
                         <div class="about-map-frame">
                             <iframe
                                 class="about-map-embed"
+                                id="about-map-embed"
                                 title="<?= htmlspecialchars('Mapa de ElectriTorres en Villavicencio', ENT_QUOTES, 'UTF-8') ?>"
                                 src="<?= htmlspecialchars($mapsEmbedUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                data-center-src="<?= htmlspecialchars($mapsEmbedUrl, ENT_QUOTES, 'UTF-8') ?>"
                                 loading="lazy"
                                 referrerpolicy="no-referrer-when-downgrade"
                                 allowfullscreen>
@@ -485,13 +487,39 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const viewLocation = document.getElementById('about-view-location');
+    const mapPanel = document.getElementById('mapa-tienda');
+    const mapEmbed = document.getElementById('about-map-embed');
     const marker = document.getElementById('about-map-marker');
     const popup = document.getElementById('about-map-popup');
 
+    function showStorePopup(open = true) {
+        popup?.classList.toggle('is-visible', open);
+        marker?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function centerStoreOnMap() {
+        if (mapEmbed?.dataset.centerSrc) {
+            mapEmbed.src = mapEmbed.dataset.centerSrc;
+        }
+
+        mapPanel?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+        window.setTimeout(() => showStorePopup(true), 280);
+    }
+
+    viewLocation?.addEventListener('click', (event) => {
+        event.preventDefault();
+        history.replaceState(null, '', '#mapa-tienda');
+        centerStoreOnMap();
+    });
+
     marker?.addEventListener('click', () => {
         const open = !popup?.classList.contains('is-visible');
-        popup?.classList.toggle('is-visible', open);
-        marker.setAttribute('aria-expanded', open ? 'true' : 'false');
+        showStorePopup(open);
     });
 });
 </script>

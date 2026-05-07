@@ -1338,6 +1338,12 @@ body[data-theme="light"] {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 10px 25px rgba(0,0,0,0.26);
 }
 
+.sketchfab-frame[data-src] {
+    background:
+        linear-gradient(135deg, rgba(34,211,238,0.12), transparent 58%),
+        #0f172a;
+}
+
 @media (max-width: 980px) {
     .best-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1452,7 +1458,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Car Engine</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
+                title="Car Engine 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/d440e8b6ec914b17b144a241ddbfa136/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"></iframe>
             </div>
             </div>
@@ -1461,7 +1469,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>V8 Engine</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
+                title="V8 Engine 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/90c115119767433fbf6f33dda1302893/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1470,7 +1480,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>V8 Twin Turbo</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
+                title="V8 Twin Turbo 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/7a957b5f9f954fe5b24e685f5e22046f/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1479,7 +1491,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Brake Disc</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
+                title="Brake Disc 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/8986d014eeae43f28a8d423ebc0ccc47/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1496,7 +1510,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Tractor Wheel</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
+                title="Tractor Wheel 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/085c99428d5a4ccc8e26be604b872487/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1505,7 +1521,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Full Tractor Wheel</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
+                title="Full Tractor Wheel 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/2df9d28c9d3f4bd4a135a9c248313bcb/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1522,7 +1540,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Ford Mustang 1965</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
+                title="Ford Mustang 1965 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/5f4e3965f79540a9888b5d05acea5943/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1531,7 +1551,9 @@ body[data-theme="light"] {
             <div class="model-card">
                 <h5>Old Farm Tractor</h5>
                 <iframe class="sketchfab-frame"
-                src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
+                title="Old Farm Tractor 360"
+                loading="lazy"
+                data-src="https://sketchfab.com/models/279f40d11d914026b3566a7a3afe4307/embed"
                 allow="fullscreen"></iframe>
             </div>
             </div>
@@ -1864,12 +1886,51 @@ body[data-theme="light"] {
             setActiveNav(navKeyBySection[id]);
         }
 
+        document.dispatchEvent(new CustomEvent('inicio:section-visible', {
+            detail: { id }
+        }));
+
         return false;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         const modelTabs = Array.from(document.querySelectorAll('[data-model-tab]'));
         const modelPanels = Array.from(document.querySelectorAll('[data-model-panel]'));
+        let modelFrameObserver = null;
+
+        function loadModelFrame(frame) {
+            if (!frame || !frame.dataset.src) return;
+            frame.src = frame.dataset.src;
+            frame.removeAttribute('data-src');
+            if (modelFrameObserver) {
+                modelFrameObserver.unobserve(frame);
+            }
+        }
+
+        function observeModelFrames(container = document) {
+            const frames = Array.from(container.querySelectorAll('.sketchfab-frame[data-src]'));
+            if (!frames.length) return;
+
+            if ('IntersectionObserver' in window) {
+                if (!modelFrameObserver) {
+                    modelFrameObserver = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                loadModelFrame(entry.target);
+                            }
+                        });
+                    }, {
+                        rootMargin: '160px 0px',
+                        threshold: 0.01
+                    });
+                }
+
+                frames.forEach((frame) => modelFrameObserver.observe(frame));
+                return;
+            }
+
+            frames.slice(0, 1).forEach(loadModelFrame);
+        }
 
         function mostrarModelo360(modelo) {
             modelTabs.forEach(tab => {
@@ -1882,11 +1943,19 @@ body[data-theme="light"] {
                 const active = panel.dataset.modelPanel === modelo;
                 panel.hidden = !active;
                 panel.classList.toggle('is-active', active);
+                if (active) {
+                    observeModelFrames(panel);
+                }
             });
         }
 
         modelTabs.forEach(tab => {
             tab.addEventListener('click', () => mostrarModelo360(tab.dataset.modelTab));
+        });
+
+        document.addEventListener('inicio:section-visible', (event) => {
+            if (event.detail?.id !== 'interaccion-360') return;
+            observeModelFrames(document.querySelector('[data-model-panel].is-active') || document);
         });
 
         document.querySelectorAll('[data-sales-dashboard]').forEach((dashboard) => {

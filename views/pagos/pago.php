@@ -938,6 +938,32 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
     line-height: 1.5;
 }
 
+.payment-success-note {
+    border-color: rgba(34,197,94,0.42);
+    background:
+        linear-gradient(135deg, rgba(34,197,94,0.18), rgba(20,184,166,0.08)),
+        rgba(5,46,22,0.28);
+    color: #dcfce7;
+    box-shadow: 0 18px 40px rgba(34,197,94,0.12);
+}
+
+.payment-success-note i {
+    color: #86efac;
+    margin-top: 3px;
+}
+
+[data-theme="light"] .payment-success-note {
+    border-color: rgba(22,163,74,0.32);
+    background:
+        linear-gradient(135deg, rgba(187,247,208,0.82), rgba(204,251,241,0.7)),
+        #f0fdf4;
+    color: #14532d;
+}
+
+[data-theme="light"] .payment-success-note i {
+    color: #15803d;
+}
+
 .payment-invoice-note svg {
     width: 20px;
     height: 20px;
@@ -1148,7 +1174,7 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                             </div>
                         <?php endif; ?>
                         <?php if (isset($_SESSION['success'])): ?>
-                            <div class="payment-invoice-note" role="status">
+                            <div class="payment-invoice-note payment-success-note" role="status">
                                 <i class="fas fa-circle-check"></i>
                                 <span><?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['success']); ?></span>
                             </div>
@@ -1562,7 +1588,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function cardMatchesCurrentMethod(card) {
-        return card && (metodoInput.value === '2' || metodoInput.value === '3');
+        const selectedMethod = parseInt(metodoInput.value || '0', 10);
+        const cardMethod = numericData(card, 'cardMethod');
+        return card && (selectedMethod === 2 || selectedMethod === 3) && cardMethod === selectedMethod;
     }
 
     function numericData(card, key) {
@@ -1570,12 +1598,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncSavedCardsByMethod() {
-        const isCardMethod = metodoInput.value === '2' || metodoInput.value === '3';
+        const selectedMethod = parseInt(metodoInput.value || '0', 10);
+        const isCardMethod = selectedMethod === 2 || selectedMethod === 3;
         let visibleCount = 0;
         let selectedStillVisible = false;
 
         savedCards.forEach((card) => {
-            const matches = isCardMethod;
+            const matches = isCardMethod && numericData(card, 'cardMethod') === selectedMethod;
             const input = card.querySelector('input[type="radio"]');
             card.classList.toggle('is-hidden-by-method', !matches);
             if (matches) {

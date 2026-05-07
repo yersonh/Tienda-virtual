@@ -69,6 +69,14 @@ class MetodoPagoUsuarioModel {
         );
     }
 
+    public function invalidarCacheUsuario(int $idUsuario): void {
+        if ($idUsuario <= 0) {
+            return;
+        }
+
+        $this->limpiarCache($idUsuario);
+    }
+
     private function quitarPredeterminado(int $idUsuario): void {
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET ES_PREDETERMINADO = 0
