@@ -318,6 +318,10 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
     display: block;
 }
 
+.saved-payment-panel-title {
+    margin: 0;
+}
+
 .saved-payment-head {
     display: flex;
     justify-content: space-between;
@@ -338,29 +342,52 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 
 .saved-payment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 12px;
+    gap: 14px;
 }
 
 .saved-payment-card {
     position: relative;
     display: grid;
-    gap: 9px;
-    min-height: 132px;
-    padding: 14px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: rgba(15,23,42,0.34);
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 154px;
+    padding: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg, rgba(34,211,238,0.07), transparent 64%),
+        rgba(15,23,42,0.54);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
     color: var(--text);
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    overflow: hidden;
+    transition: border-color 0.22s ease, background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.saved-payment-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(34, 197, 94, 0.08));
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+}
+
+.saved-payment-card.is-hidden-by-method {
+    display: none;
 }
 
 .saved-payment-card:hover,
 .saved-payment-card.is-selected {
-    border-color: rgba(34,211,238,0.52);
-    background: rgba(34,211,238,0.1);
-    transform: translateY(-2px);
+    border-color: rgba(96, 165, 250, 0.9);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.22), 0 22px 54px rgba(37, 99, 235, 0.22);
+    transform: translateY(-4px);
+}
+
+.saved-payment-card:hover::before,
+.saved-payment-card.is-selected::before {
+    opacity: 1;
 }
 
 .saved-payment-card.is-disabled {
@@ -375,9 +402,19 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 }
 
 .saved-payment-card input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+    position: relative;
+    z-index: 1;
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    accent-color: var(--accent);
+}
+
+.saved-payment-body {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 10px;
 }
 
 .saved-payment-brand {
@@ -388,8 +425,10 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 }
 
 .saved-payment-brand strong {
-    font-size: 15px;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 17px;
     text-transform: uppercase;
+    letter-spacing: 0;
 }
 
 .saved-payment-chip {
@@ -407,8 +446,20 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 
 .saved-payment-meta {
     color: var(--secondary);
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.45;
+}
+
+.saved-payment-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+}
+
+.saved-payment-meta-line i {
+    width: 17px;
+    color: var(--accent);
 }
 
 .saved-payment-actions {
@@ -448,6 +499,12 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
     color: #fca5a5;
 }
 
+.saved-payment-action.primary-select {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: #041522;
+}
+
 .saved-payment-edit {
     display: none;
     gap: 10px;
@@ -479,6 +536,23 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.saved-payment-empty {
+    display: none;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    color: var(--secondary);
+    background: rgba(255,255,255,0.025);
+    font-weight: 800;
+}
+
+.saved-payment-empty.is-visible {
+    display: flex;
 }
 
 .new-card-toggle {
@@ -556,6 +630,51 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
 
 .payment-breakdown strong {
     color: var(--text);
+}
+
+.payment-fast-path {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0 0 22px;
+}
+
+.payment-fast-step {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-height: 58px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+    color: var(--secondary);
+}
+
+.payment-fast-step strong {
+    display: block;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.payment-fast-step span {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.payment-fast-step i {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    color: var(--accent);
+    background: rgba(34,211,238,0.12);
 }
 
 .payment-note {
@@ -820,7 +939,8 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
     }
 
     .payment-method-grid,
-    .payment-summary {
+    .payment-summary,
+    .payment-fast-path {
         grid-template-columns: 1fr;
     }
 
@@ -1008,6 +1128,30 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                             <div><span><?= htmlspecialchars('Envio', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format((float) ($resumenCompra['envio'] ?? 0)) ?> COP</strong></div>
                         </div>
 
+                        <div class="payment-fast-path" aria-label="<?= htmlspecialchars('Opciones rapidas para finalizar el pago', ENT_QUOTES, 'UTF-8') ?>">
+                            <div class="payment-fast-step">
+                                <i class="fas fa-credit-card" aria-hidden="true"></i>
+                                <div>
+                                    <strong><?= htmlspecialchars('Tarjeta guardada', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <span><?= htmlspecialchars('Elige una activa y confirma con CVV.', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
+                            </div>
+                            <div class="payment-fast-step">
+                                <i class="fas fa-plus" aria-hidden="true"></i>
+                                <div>
+                                    <strong><?= htmlspecialchars('Nueva tarjeta', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <span><?= htmlspecialchars('Puedes guardarla sin almacenar CVV.', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
+                            </div>
+                            <div class="payment-fast-step">
+                                <i class="fas fa-building-columns" aria-hidden="true"></i>
+                                <div>
+                                    <strong><?= htmlspecialchars('Efectivo o transferencia', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <span><?= htmlspecialchars('Completa solo los datos requeridos.', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="payment-section-title">
                             <label id="payment-method-label"><?= htmlspecialchars('Metodo de pago', ENT_QUOTES, 'UTF-8') ?></label>
                         </div>
@@ -1060,8 +1204,8 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                         <div class="saved-payment-panel <?= in_array($metodoSeleccionado, [2, 3], true) && !empty($metodosPagoUsuario) ? 'is-visible' : '' ?>" id="saved-payment-panel">
                             <div class="saved-payment-head">
                                 <span>
-                                    <strong><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
-                                    <small><?= htmlspecialchars('Selecciona una tarjeta y confirma solo con CVV temporal.', ENT_QUOTES, 'UTF-8') ?></small>
+                                    <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <small id="saved-payment-subtitle"><?= htmlspecialchars('Selecciona una tarjeta activa o registra una nueva.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </span>
                                 <button class="new-card-toggle" type="button" id="new-card-toggle">
                                     <i class="fas fa-plus"></i>
@@ -1079,64 +1223,86 @@ $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metod
                                         ?>
                                         <label class="saved-payment-card <?= $seleccionadoGuardado && $activoGuardado ? 'is-selected' : '' ?> <?= !$activoGuardado ? 'is-disabled' : '' ?>" data-saved-card data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-card-active="<?= $activoGuardado ? '1' : '0' ?>">
                                             <input type="radio" name="saved_payment_choice" value="<?= $idGuardado ?>" <?= $seleccionadoGuardado && $activoGuardado ? 'checked' : '' ?> <?= !$activoGuardado ? 'disabled' : '' ?>>
-                                            <span class="saved-payment-brand">
-                                                <strong><?= htmlspecialchars((string) ($metodoGuardado['franquicia'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> **** **** **** <?= htmlspecialchars((string) ($metodoGuardado['ultimos_4'] ?? '0000'), ENT_QUOTES, 'UTF-8') ?></strong>
-                                                <?php if ((int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1): ?>
-                                                    <span class="saved-payment-chip"><?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
-                                                <?php endif; ?>
-                                                <?php if (!$activoGuardado): ?>
-                                                    <span class="saved-payment-chip"><?= htmlspecialchars('Inactiva', ENT_QUOTES, 'UTF-8') ?></span>
-                                                <?php endif; ?>
-                                            </span>
-                                            <span class="saved-payment-meta">
-                                                <?= htmlspecialchars((string) ($metodoGuardado['forma_pago'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?><br>
-                                                <?= htmlspecialchars('Alias: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoGuardado['titular'] ?? ''), ENT_QUOTES, 'UTF-8') ?><br>
-                                                <?= htmlspecialchars('Expira ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoGuardado['fecha_expiracion_texto'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
-                                            </span>
-                                            <span class="saved-payment-actions">
-                                                <button class="saved-payment-action" type="button" data-edit-payment onclick="event.stopPropagation();" <?= !$activoGuardado ? 'disabled' : '' ?>>
-                                                    <?= htmlspecialchars('Editar', ENT_QUOTES, 'UTF-8') ?>
-                                                </button>
-                                                <?php if ($activoGuardado && (int) ($metodoGuardado['es_predeterminado'] ?? 0) !== 1): ?>
-                                                    <button class="saved-payment-action" type="submit" form="default-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
-                                                        <?= htmlspecialchars('Predeterminar', ENT_QUOTES, 'UTF-8') ?>
-                                                    </button>
-                                                <?php endif; ?>
-                                                <button class="saved-payment-action" type="submit" form="toggle-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
-                                                    <?= htmlspecialchars($activoGuardado ? 'Desactivar' : 'Activar', ENT_QUOTES, 'UTF-8') ?>
-                                                </button>
-                                                <button class="saved-payment-action danger" type="submit" form="delete-payment-<?= $idGuardado ?>" onclick="event.stopPropagation(); return confirm('Eliminar esta tarjeta guardada de forma permanente?');">
-                                                    <?= htmlspecialchars('Eliminar', ENT_QUOTES, 'UTF-8') ?>
-                                                </button>
-                                            </span>
-                                            <span class="saved-payment-edit" data-payment-edit-panel onclick="event.stopPropagation();">
-                                                <span class="saved-payment-edit-grid">
-                                                    <span class="payment-field">
-                                                        <label for="edit-titular-<?= $idGuardado ?>"><?= htmlspecialchars('Alias', ENT_QUOTES, 'UTF-8') ?></label>
-                                                        <input class="form-control" id="edit-titular-<?= $idGuardado ?>" name="titular" type="text" form="edit-payment-<?= $idGuardado ?>" value="<?= htmlspecialchars((string) ($metodoGuardado['titular'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
-                                                    </span>
-                                                    <span class="payment-field">
-                                                        <label for="edit-exp-<?= $idGuardado ?>"><?= htmlspecialchars('Expira', ENT_QUOTES, 'UTF-8') ?></label>
-                                                        <input class="form-control" id="edit-exp-<?= $idGuardado ?>" name="fecha_expiracion" type="text" inputmode="numeric" maxlength="5" placeholder="MM/AA" form="edit-payment-<?= $idGuardado ?>" value="<?= htmlspecialchars($expiracionTexto, ENT_QUOTES, 'UTF-8') ?>" required data-edit-exp>
+                                            <span class="saved-payment-body">
+                                                <span class="saved-payment-brand">
+                                                    <strong><?= htmlspecialchars((string) ($metodoGuardado['franquicia'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> **** **** **** <?= htmlspecialchars((string) ($metodoGuardado['ultimos_4'] ?? '0000'), ENT_QUOTES, 'UTF-8') ?></strong>
+                                                    <span>
+                                                        <?php if ((int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1): ?>
+                                                            <span class="saved-payment-chip"><?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
+                                                        <?php endif; ?>
+                                                        <?php if (!$activoGuardado): ?>
+                                                            <span class="saved-payment-chip"><?= htmlspecialchars('Inactiva', ENT_QUOTES, 'UTF-8') ?></span>
+                                                        <?php endif; ?>
                                                     </span>
                                                 </span>
-                                                <label class="payment-checkline">
-                                                    <input type="checkbox" name="es_predeterminado" value="1" form="edit-payment-<?= $idGuardado ?>" <?= (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1 ? 'checked' : '' ?>>
-                                                    <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
-                                                </label>
-                                                <span class="saved-payment-edit-actions">
-                                                    <button class="saved-payment-action" type="submit" form="edit-payment-<?= $idGuardado ?>">
-                                                        <?= htmlspecialchars('Guardar cambios', ENT_QUOTES, 'UTF-8') ?>
+                                                <span class="saved-payment-meta">
+                                                    <span class="saved-payment-meta-line">
+                                                        <i class="fas fa-credit-card"></i>
+                                                        <span><?= htmlspecialchars((string) ($metodoGuardado['forma_pago'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?></span>
+                                                    </span>
+                                                    <span class="saved-payment-meta-line">
+                                                        <i class="fas fa-tag"></i>
+                                                        <span><?= htmlspecialchars('Alias: ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoGuardado['titular'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+                                                    </span>
+                                                    <span class="saved-payment-meta-line">
+                                                        <i class="fas fa-calendar"></i>
+                                                        <span><?= htmlspecialchars('Expira ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoGuardado['fecha_expiracion_texto'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+                                                    </span>
+                                                </span>
+                                                <span class="saved-payment-actions">
+                                                    <?php if ($activoGuardado): ?>
+                                                        <button class="saved-payment-action primary-select" type="button" data-use-saved-payment onclick="event.stopPropagation();">
+                                                            <?= htmlspecialchars('Usar esta tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <button class="saved-payment-action" type="button" data-edit-payment onclick="event.stopPropagation();" <?= !$activoGuardado ? 'disabled' : '' ?>>
+                                                        <?= htmlspecialchars('Editar', ENT_QUOTES, 'UTF-8') ?>
                                                     </button>
-                                                    <button class="saved-payment-action" type="button" data-cancel-edit-payment>
-                                                        <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
+                                                    <?php if ($activoGuardado && (int) ($metodoGuardado['es_predeterminado'] ?? 0) !== 1): ?>
+                                                        <button class="saved-payment-action" type="submit" form="default-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
+                                                            <?= htmlspecialchars('Predeterminar', ENT_QUOTES, 'UTF-8') ?>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <button class="saved-payment-action" type="submit" form="toggle-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
+                                                        <?= htmlspecialchars($activoGuardado ? 'Desactivar' : 'Activar', ENT_QUOTES, 'UTF-8') ?>
                                                     </button>
+                                                    <button class="saved-payment-action danger" type="submit" form="delete-payment-<?= $idGuardado ?>" onclick="event.stopPropagation(); return confirm('Eliminar esta tarjeta guardada de forma permanente?');">
+                                                        <?= htmlspecialchars('Eliminar', ENT_QUOTES, 'UTF-8') ?>
+                                                    </button>
+                                                </span>
+                                                <span class="saved-payment-edit" data-payment-edit-panel onclick="event.stopPropagation();">
+                                                    <span class="saved-payment-edit-grid">
+                                                        <span class="payment-field">
+                                                            <label for="edit-titular-<?= $idGuardado ?>"><?= htmlspecialchars('Alias', ENT_QUOTES, 'UTF-8') ?></label>
+                                                            <input class="form-control" id="edit-titular-<?= $idGuardado ?>" name="titular" type="text" form="edit-payment-<?= $idGuardado ?>" value="<?= htmlspecialchars((string) ($metodoGuardado['titular'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                                        </span>
+                                                        <span class="payment-field">
+                                                            <label for="edit-exp-<?= $idGuardado ?>"><?= htmlspecialchars('Expira', ENT_QUOTES, 'UTF-8') ?></label>
+                                                            <input class="form-control" id="edit-exp-<?= $idGuardado ?>" name="fecha_expiracion" type="text" inputmode="numeric" maxlength="5" placeholder="MM/AA" form="edit-payment-<?= $idGuardado ?>" value="<?= htmlspecialchars($expiracionTexto, ENT_QUOTES, 'UTF-8') ?>" required data-edit-exp>
+                                                        </span>
+                                                    </span>
+                                                    <label class="payment-checkline">
+                                                        <input type="checkbox" name="es_predeterminado" value="1" form="edit-payment-<?= $idGuardado ?>" <?= (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1 ? 'checked' : '' ?>>
+                                                        <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
+                                                    </label>
+                                                    <span class="saved-payment-edit-actions">
+                                                        <button class="saved-payment-action" type="submit" form="edit-payment-<?= $idGuardado ?>">
+                                                            <?= htmlspecialchars('Guardar cambios', ENT_QUOTES, 'UTF-8') ?>
+                                                        </button>
+                                                        <button class="saved-payment-action" type="button" data-cancel-edit-payment>
+                                                            <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
+                                                        </button>
+                                                    </span>
                                                 </span>
                                             </span>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
+                            <div class="saved-payment-empty" id="saved-payment-empty">
+                                <i class="fas fa-circle-info"></i>
+                                <span><?= htmlspecialchars('No tienes tarjetas guardadas para este metodo. Puedes registrar una nueva abajo.', ENT_QUOTES, 'UTF-8') ?></span>
+                            </div>
                             <div class="card-cvv-only <?= $metodoPagoGuardadoSeleccionado > 0 ? 'is-visible' : '' ?>" id="saved-card-cvv">
                                 <div class="payment-field">
                                     <label for="cvv_tarjeta_guardada"><?= htmlspecialchars('CVV temporal', ENT_QUOTES, 'UTF-8') ?></label>
@@ -1309,6 +1475,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const newCardToggle = document.getElementById('new-card-toggle');
     const newCardFields = document.getElementById('new-card-fields');
     const savedCardCvv = document.getElementById('saved-card-cvv');
+    const savedPaymentEmpty = document.getElementById('saved-payment-empty');
+    const savedPaymentTitle = document.getElementById('saved-payment-title');
+    const savedPaymentSubtitle = document.getElementById('saved-payment-subtitle');
 
     function setRequired(container, required) {
         if (!container) return;
@@ -1322,6 +1491,47 @@ document.addEventListener('DOMContentLoaded', function () {
         return Boolean(savedMethodInput && parseInt(savedMethodInput.value || '0', 10) > 0);
     }
 
+    function cardMatchesCurrentMethod(card) {
+        return card && card.dataset.cardMethod === metodoInput.value;
+    }
+
+    function syncSavedCardsByMethod() {
+        const isCardMethod = metodoInput.value === '2' || metodoInput.value === '3';
+        let visibleCount = 0;
+        let selectedStillVisible = false;
+        const methodName = metodoInput.value === '2' ? 'debito' : 'credito';
+
+        savedCards.forEach((card) => {
+            const matches = isCardMethod && cardMatchesCurrentMethod(card);
+            const input = card.querySelector('input[type="radio"]');
+            card.classList.toggle('is-hidden-by-method', !matches);
+            if (matches) {
+                visibleCount += 1;
+            }
+            if (matches && input && savedMethodInput && input.value === savedMethodInput.value && card.dataset.cardActive === '1') {
+                selectedStillVisible = true;
+            }
+        });
+
+        if (savedMethodInput && !selectedStillVisible) {
+            savedMethodInput.value = '';
+        }
+
+        if (savedPaymentEmpty) {
+            savedPaymentEmpty.classList.toggle('is-visible', isCardMethod && visibleCount === 0);
+        }
+        if (savedPaymentTitle) {
+            savedPaymentTitle.textContent = isCardMethod ? `Tarjetas ${methodName} guardadas` : 'Tarjetas guardadas';
+        }
+        if (savedPaymentSubtitle) {
+            savedPaymentSubtitle.textContent = isCardMethod
+                ? `Selecciona una tarjeta ${methodName} activa o registra una nueva.`
+                : 'Transferencia y efectivo no guardan datos de tarjeta.';
+        }
+
+        return visibleCount;
+    }
+
     function setCardMode(useSaved) {
         if (savedMethodInput && !useSaved) {
             savedMethodInput.value = '';
@@ -1329,7 +1539,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         savedCards.forEach((card) => {
             const input = card.querySelector('input[type="radio"]');
-            const selected = useSaved && input && input.value === savedMethodInput.value;
+            const selected = useSaved && input && input.value === savedMethodInput.value && cardMatchesCurrentMethod(card);
             card.classList.toggle('is-selected', Boolean(selected));
             if (input) input.checked = Boolean(selected);
         });
@@ -1357,8 +1567,9 @@ document.addEventListener('DOMContentLoaded', function () {
         efectivo.classList.toggle('is-visible', val === '1');
         tarjeta.classList.toggle('is-visible', val === '2' || val === '3');
         transferencia.classList.toggle('is-visible', val === '4');
+        const visibleSavedCards = syncSavedCardsByMethod();
         if (savedPanel) {
-            savedPanel.classList.toggle('is-visible', (val === '2' || val === '3') && savedCards.length > 0);
+            savedPanel.classList.toggle('is-visible', (val === '2' || val === '3') && (savedCards.length > 0 || visibleSavedCards === 0));
         }
         setRequired(efectivo, val === '1');
         setRequired(transferencia, val === '4');
@@ -1407,14 +1618,24 @@ document.addEventListener('DOMContentLoaded', function () {
     savedCards.forEach((card) => {
         card.addEventListener('click', () => {
             if (card.dataset.cardActive !== '1') return;
+            if (!cardMatchesCurrentMethod(card)) return;
             const input = card.querySelector('input[type="radio"]');
             if (!input || input.disabled || !savedMethodInput) return;
             savedMethodInput.value = input.value;
-            const cardMethod = card.dataset.cardMethod || metodoInput.value;
-            if (cardMethod === '2' || cardMethod === '3') {
-                metodoInput.value = cardMethod;
-            }
             syncPaymentFields();
+        });
+    });
+
+    document.querySelectorAll('[data-use-saved-payment]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const card = button.closest('[data-saved-card]');
+            if (!card || card.dataset.cardActive !== '1' || !cardMatchesCurrentMethod(card)) return;
+            const input = card.querySelector('input[type="radio"]');
+            if (!input || input.disabled || !savedMethodInput) return;
+            savedMethodInput.value = input.value;
+            syncPaymentFields();
+            savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     });
 

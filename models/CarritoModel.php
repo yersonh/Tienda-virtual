@@ -500,14 +500,78 @@ class CarritoModel {
         ];
     }
 
+    public function obtenerResumenSeleccionadosRapido($idUsuario): array {
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return [
+                'total_items' => 0,
+                'total_pagar' => 0.0
+            ];
+        }
+
+        $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS,
+                         NVL(SUM(p.PRECIO * dc.CANTIDAD), 0) AS TOTAL_PAGAR
+                  FROM DETALLE_CARRITO dc
+                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                  WHERE dc.ID_CARRITO = :ID_CARRITO
+                    AND NVL(dc.SELECCIONADO, 0) = 1";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $row = oci_fetch_assoc($stmt) ?: [];
+        oci_free_statement($stmt);
+
+        return [
+            'total_items' => (int) ($row['TOTAL_ITEMS'] ?? 0),
+            'total_pagar' => (float) ($row['TOTAL_PAGAR'] ?? 0)
+        ];
+    }
+
     public function obtenerTotalCarrito($idUsuario, bool $soloSeleccionados = false): float {
         $resumen = $this->obtenerResumenCarrito($idUsuario, $soloSeleccionados);
         return (float) ($resumen['total_pagar'] ?? 0);
     }
 
     public function obtenerTotalItemsCarrito($idUsuario): int {
-        $resumen = $this->obtenerResumenCarrito($idUsuario, false);
-        return (int) ($resumen['total_items'] ?? 0);
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
+        if (!$idCarrito) {
+            return 0;
+        }
+
+        $query = "SELECT NVL(SUM(CANTIDAD), 0) AS TOTAL_ITEMS
+                  FROM DETALLE_CARRITO
+                  WHERE ID_CARRITO = :ID_CARRITO";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $row = oci_fetch_assoc($stmt) ?: [];
+        oci_free_statement($stmt);
+
+        return (int) ($row['TOTAL_ITEMS'] ?? 0);
     }
 
     public function fusionarCarritoSesion($idUsuario, $carritoSesion) {

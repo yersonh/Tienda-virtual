@@ -43,6 +43,7 @@ $publicas = [
     'verificarTelefono',
     'iniciarSesion',
     'inicio',
+    'nosotros',
     'tienda',
     'tiendaFiltros',
     'productoDetalle',
@@ -126,6 +127,10 @@ switch ($action) {
 
     case 'inicio':
         (new TiendaController())->inicio();
+        break;
+
+    case 'nosotros':
+        (new TiendaController())->nosotros();
         break;
 
     case 'tienda':

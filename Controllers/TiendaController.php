@@ -459,6 +459,13 @@ class TiendaController {
         require_once __DIR__ . '/../views/Inicio.php';
     }
 
+    public function nosotros() {
+        $carritoVista = $this->obtenerCarritoVista();
+        $carritoCount = array_sum($carritoVista);
+
+        require_once __DIR__ . '/../views/Nosotros.php';
+    }
+
     public function index() {
         extract($this->obtenerDatosTienda());
         require_once __DIR__ . '/../views/Tienda.php';

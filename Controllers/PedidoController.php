@@ -301,6 +301,23 @@ class PedidoController {
         return $resumen;
     }
 
+    private function obtenerResumenCheckoutRapido(int $idUsuario, array $direccion): array {
+        $resumenSeleccionados = $this->carritoModel->obtenerResumenSeleccionadosRapido($idUsuario);
+        if ((int) ($resumenSeleccionados['total_items'] ?? 0) <= 0) {
+            return [
+                'resumen' => [],
+                'items_validos' => false
+            ];
+        }
+
+        $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
+
+        return [
+            'resumen' => $this->calcularResumenCompra((float) ($resumenSeleccionados['total_pagar'] ?? 0), $envio),
+            'items_validos' => true
+        ];
+    }
+
     private function nombreMetodoPago(int $metodo): string {
         return match ($metodo) {
             1 => 'Efectivo',
@@ -730,15 +747,6 @@ class PedidoController {
     public function ConfirmarPedido() {
         $this->ensureSession();
 
-        $pedidoConfirmado = $_SESSION['pedido_confirmado'] ?? null;
-        if ($pedidoConfirmado) {
-            unset($_SESSION['pedido_confirmado']);
-            $direcciones = [];
-            $total = (float) ($pedidoConfirmado['total'] ?? 0);
-            require_once __DIR__ . '/../views/ConfirmarPedido.php';
-            return;
-        }
-
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
             $_SESSION['error'] = 'Debes iniciar sesion para continuar la compra';
@@ -915,16 +923,15 @@ class PedidoController {
             exit();
         }
 
-        $itemsSeleccionados = $this->carritoModel->obtenerItemsVisualizacion($idUsuario, true);
-        if (empty($itemsSeleccionados)) {
+        $resumenSeleccionados = $this->carritoModel->obtenerResumenSeleccionadosRapido($idUsuario);
+        if ((int) ($resumenSeleccionados['total_items'] ?? 0) <= 0) {
             $_SESSION['error'] = 'Selecciona al menos un producto para confirmar el pedido';
             header("Location: index.php?action=verCarrito");
             exit();
         }
 
         $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
-        $subtotalSeleccionado = array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $itemsSeleccionados));
-        $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envio);
+        $resumenCompra = $this->calcularResumenCompra((float) ($resumenSeleccionados['total_pagar'] ?? 0), $envio);
         $_SESSION['checkout_direccion_id'] = $idDireccion;
         $_SESSION['checkout_direccion_snapshot'] = $direccion;
         $_SESSION['checkout_fecha_estimada_entrega'] = date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
@@ -953,28 +960,38 @@ class PedidoController {
             exit();
         }
 
-        $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion);
-        if (!$direccion || (int) $direccion['id_usuario'] !== $idUsuario) {
-            unset($_SESSION['checkout_direccion_id'], $_SESSION['checkout_direccion_snapshot']);
-            $_SESSION['error'] = 'La direccion seleccionada no esta disponible';
-            header("Location: index.php?action=ConfirmarPedido");
-            exit();
+        $direccionSnapshot = $_SESSION['checkout_direccion_snapshot'] ?? null;
+        if (is_array($direccionSnapshot) && (int) ($direccionSnapshot['id_direccion'] ?? $direccionSnapshot['id_direccion_pedido'] ?? $idDireccion) === $idDireccion) {
+            $direccion = $direccionSnapshot;
+        } else {
+            $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion);
+            if (!$direccion || (int) $direccion['id_usuario'] !== $idUsuario) {
+                unset($_SESSION['checkout_direccion_id'], $_SESSION['checkout_direccion_snapshot'], $_SESSION['checkout_resumen']);
+                $_SESSION['error'] = 'La direccion seleccionada no esta disponible';
+                header("Location: index.php?action=ConfirmarPedido");
+                exit();
+            }
+            $_SESSION['checkout_direccion_snapshot'] = $direccion;
         }
 
-        $itemsSeleccionados = $this->carritoModel->obtenerItemsVisualizacion($idUsuario, true);
-        if (empty($itemsSeleccionados)) {
+        $checkoutRapido = $this->obtenerResumenCheckoutRapido($idUsuario, $direccion);
+        if (!$checkoutRapido['items_validos']) {
             $_SESSION['error'] = 'Selecciona al menos un producto para pagar';
             header("Location: index.php?action=verCarrito");
             exit();
         }
 
-        $envio = $this->calcularEnvio((string) ($direccion['ciudad'] ?? ''));
-        $subtotalSeleccionado = array_sum(array_map(fn($item) => (float) ($item['total_linea'] ?? 0), $itemsSeleccionados));
-        $resumenCompra = $this->calcularResumenCompra($subtotalSeleccionado, $envio);
+        $resumenCompra = $checkoutRapido['resumen'];
         $total = $resumenCompra['total'];
         $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
         $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario, false);
-        $metodoPagoPredeterminado = $this->metodoPagoUsuarioModel->obtenerPredeterminado($idUsuario);
+        $metodoPagoPredeterminado = null;
+        foreach ($metodosPagoUsuario as $metodoGuardado) {
+            if ((int) ($metodoGuardado['activo'] ?? 1) === 1 && (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1) {
+                $metodoPagoPredeterminado = $metodoGuardado;
+                break;
+            }
+        }
 
         require_once __DIR__ . '/../views/pagos/pago.php';
     }

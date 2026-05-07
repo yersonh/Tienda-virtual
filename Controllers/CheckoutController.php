@@ -291,7 +291,7 @@ class CheckoutController {
 
             oci_commit($this->conn);
             $this->limpiarSesionCheckout();
-            $_SESSION['carrito_count'] = $this->carritoModel->obtenerTotalItemsCarrito($idUsuario);
+            $_SESSION['carrito_count'] = array_sum($this->carritoModel->obtenerMapaCarritoUsuario($idUsuario));
 
             $_SESSION['pedido_confirmado'] = [
                 'id_pedido' => (int) $pedido['id_pedido'],

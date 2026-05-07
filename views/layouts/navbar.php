@@ -530,6 +530,12 @@ textarea:focus {
             <?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?>
         </a>
 
+        <a href="index.php?action=nosotros"
+            data-nav-key="nosotros"
+            class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>">
+            <?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
         <?php if($logueado): ?>
             <a href="index.php?action=misPedidos"
             data-nav-key="mis-pedidos"
@@ -572,6 +578,7 @@ textarea:focus {
     <a href="index.php?action=inicio#lo-nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
+    <a href="index.php?action=nosotros" data-nav-key="nosotros" class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>"><?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?></a>
     <?php if($logueado): ?>
       <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=perfil" data-nav-key="perfil" class="<?= $currentAction === 'perfil' ? 'active' : '' ?>"><?= htmlspecialchars('Perfil', ENT_QUOTES, 'UTF-8') ?></a>
@@ -615,6 +622,10 @@ function syncActiveNavFromLocation() {
     }
     if (action === 'tienda' || action === 'productoDetalle') {
         setActiveNav('tienda');
+        return;
+    }
+    if (action === 'nosotros') {
+        setActiveNav('nosotros');
     }
 }
 
