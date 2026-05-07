@@ -7,7 +7,6 @@ $mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&z=17&outpu
 $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $direccionMaps . '&travelmode=driving';
 $mapsSearchUrl = 'https://www.google.com/maps/search/?api=1&query=' . $direccionMaps;
 $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
-$infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 ?>
 
 <style>
@@ -442,7 +441,6 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
                                     <strong><?= htmlspecialchars('ElectriTorres', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <p><?= htmlspecialchars($direccionTienda, ENT_QUOTES, 'UTF-8') ?></p>
                                     <p class="popup-hours"><?= htmlspecialchars($horarioTienda, ENT_QUOTES, 'UTF-8') ?></p>
-                                    <p><?= htmlspecialchars($infoTienda, ENT_QUOTES, 'UTF-8') ?></p>
                                 </div>
                             </div>
                         </div>
