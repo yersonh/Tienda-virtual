@@ -123,10 +123,9 @@ CREATE OR REPLACE PROCEDURE SP_GUARDAR_METODO_PAGO (
     p_titular IN VARCHAR2,
     p_ultimos_4 IN VARCHAR2,
     p_franquicia IN VARCHAR2,
-    p_token_pago IN VARCHAR2,
-    p_fecha_expiracion IN DATE,
-    p_es_predeterminado IN NUMBER,
-    p_id_metodo_pago_usuario OUT NUMBER
+    p_token IN VARCHAR2,
+    p_fecha_expiracion IN VARCHAR2,
+    p_es_predeterminado IN VARCHAR2
 )
 AS
     v_predeterminado NUMBER(1);
@@ -147,7 +146,7 @@ BEGIN
       AND ACTIVO = 1;
 
     v_predeterminado := CASE
-        WHEN NVL(p_es_predeterminado, 0) = 1 OR v_total_activos = 0 THEN 1
+        WHEN UPPER(TRIM(NVL(p_es_predeterminado, '0'))) IN ('1', 'S', 'SI', 'TRUE', 'YES') OR v_total_activos = 0 THEN 1
         ELSE 0
     END;
 
@@ -168,12 +167,11 @@ BEGIN
         SUBSTR(TRIM(p_titular), 1, 120),
         SUBSTR(TRIM(p_ultimos_4), 1, 4),
         UPPER(SUBSTR(TRIM(p_franquicia), 1, 20)),
-        p_token_pago,
-        p_fecha_expiracion,
+        p_token,
+        TO_DATE(p_fecha_expiracion, 'YYYY-MM-DD'),
         v_predeterminado,
         1
-    )
-    RETURNING ID_METODO_PAGO_USUARIO INTO p_id_metodo_pago_usuario;
+    );
 END;
 /
 

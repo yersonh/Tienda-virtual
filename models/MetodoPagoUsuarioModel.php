@@ -153,7 +153,7 @@ class MetodoPagoUsuarioModel {
         $franquicia = strtoupper(trim((string) ($data['franquicia'] ?? '')));
         $tokenPago = trim((string) ($data['token_pago'] ?? ''));
         $fechaExpiracion = trim((string) ($data['fecha_expiracion'] ?? ''));
-        $esPredeterminado = !empty($data['es_predeterminado']) ? 1 : 0;
+        $esPredeterminado = !empty($data['es_predeterminado']) ? '1' : '0';
 
         if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenPago === '' || $fechaExpiracion === '') {
             throw new InvalidArgumentException('Datos de metodo de pago incompletos');
@@ -165,10 +165,9 @@ class MetodoPagoUsuarioModel {
                     :titular,
                     :ultimos_4,
                     :franquicia,
-                    :token_pago,
-                    TO_DATE(:fecha_expiracion, 'YYYY-MM-DD'),
-                    :es_predeterminado,
-                    :id_metodo_pago_usuario
+                    :token,
+                    :fecha_expiracion,
+                    :es_predeterminado
                   ); END;";
 
         $stmt = oci_parse($this->conn, $query);
@@ -176,16 +175,14 @@ class MetodoPagoUsuarioModel {
             throw new Exception($this->oracleErrorMessage());
         }
 
-        $idMetodoPagoUsuario = 0;
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':id_metodo', $idMetodo, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':titular', $titular);
         oci_bind_by_name($stmt, ':ultimos_4', $ultimos4);
         oci_bind_by_name($stmt, ':franquicia', $franquicia);
-        oci_bind_by_name($stmt, ':token_pago', $tokenPago);
+        oci_bind_by_name($stmt, ':token', $tokenPago);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
-        oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_metodo_pago_usuario', $idMetodoPagoUsuario, 64, SQLT_INT);
+        oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
@@ -194,7 +191,34 @@ class MetodoPagoUsuarioModel {
         }
 
         oci_free_statement($stmt);
-        return (int) $idMetodoPagoUsuario;
+        return $this->obtenerIdPorToken($tokenPago, $idUsuario);
+    }
+
+    private function obtenerIdPorToken(string $tokenPago, int $idUsuario): int {
+        $query = "SELECT ID_METODO_PAGO_USUARIO
+                  FROM METODO_PAGO_USUARIO
+                  WHERE TOKEN_PAGO = :token_pago
+                    AND ID_USUARIO = :id_usuario
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':token_pago', $tokenPago);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return (int) ($row['ID_METODO_PAGO_USUARIO'] ?? 0);
     }
 
     public function eliminar(int $idMetodoPagoUsuario, int $idUsuario): bool {
