@@ -251,7 +251,8 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 .about-location-popup {
     position: absolute;
     left: 50%;
-    bottom: 72px;
+    bottom: auto;
+    top: 72px;
     width: min(290px, calc(100vw - 48px));
     min-width: 230px;
     padding: 14px;
@@ -268,7 +269,7 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 .about-location-popup.is-visible {
     opacity: 1;
     pointer-events: auto;
-    transform: translate(-50%, -6px);
+    transform: translate(-50%, 6px);
 }
 
 .about-location-popup strong {
@@ -406,10 +407,6 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
                         <a class="about-btn primary" href="#mapa-tienda">
                             <i class="fas fa-location-dot"></i>
                             <?= htmlspecialchars('Ver ubicacion', ENT_QUOTES, 'UTF-8') ?>
-                        </a>
-                        <a class="about-btn" href="<?= htmlspecialchars($mapsDirectionsUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">
-                            <i class="fas fa-route"></i>
-                            <?= htmlspecialchars('Iniciar recorrido', ENT_QUOTES, 'UTF-8') ?>
                         </a>
                     </div>
                     <div class="about-stats" aria-label="<?= htmlspecialchars('Datos de la empresa', ENT_QUOTES, 'UTF-8') ?>">
