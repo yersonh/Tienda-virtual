@@ -29,7 +29,11 @@ class MetodoPagoUsuarioModel {
         $data['id_metodo'] = (int) ($data['id_metodo'] ?? 0);
         $data['id_metodo_pago_usuario'] = (int) ($data['id_metodo_pago_usuario'] ?? 0);
         if (!empty($data['fecha_expiracion_texto'])) {
-            $data['fecha_expiracion_texto'] = trim((string) $data['fecha_expiracion_texto']);
+            $fechaExpiracion = trim((string) $data['fecha_expiracion_texto']);
+            if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', $fechaExpiracion, $matches)) {
+                $fechaExpiracion = $matches[2] . '/' . substr($matches[1], -2);
+            }
+            $data['fecha_expiracion_texto'] = $fechaExpiracion;
         }
 
         return $data;
@@ -64,13 +68,13 @@ class MetodoPagoUsuarioModel {
 
     private function fechaExpiracionSelect(): string {
         return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY')"
+            ? "mpu.FECHA_EXPIRACION"
             : "''";
     }
 
     private function tarjetaVencidaSelect(): string {
         return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "CASE WHEN LAST_DAY(mpu.FECHA_EXPIRACION) < TRUNC(SYSDATE) THEN 1 ELSE 0 END"
+            ? "CASE WHEN LAST_DAY(TO_DATE(mpu.FECHA_EXPIRACION, 'YYYY-MM-DD')) < TRUNC(SYSDATE) THEN 1 ELSE 0 END"
             : "0";
     }
 
@@ -159,7 +163,7 @@ class MetodoPagoUsuarioModel {
                   WHERE ID_USUARIO = :id_usuario
                     AND ID_METODO IN (2, 3)
                     AND ACTIVO = 1
-                    AND LAST_DAY(FECHA_EXPIRACION) < TRUNC(SYSDATE)";
+                    AND LAST_DAY(TO_DATE(FECHA_EXPIRACION, 'YYYY-MM-DD')) < TRUNC(SYSDATE)";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -528,7 +532,7 @@ class MetodoPagoUsuarioModel {
 
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET TITULAR = :titular,
-                      FECHA_EXPIRACION = TO_DATE(:fecha_expiracion, 'YYYY-MM-DD'),
+                      FECHA_EXPIRACION = :fecha_expiracion,
                       ES_PREDETERMINADO = :es_predeterminado
                   WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
@@ -572,7 +576,7 @@ class MetodoPagoUsuarioModel {
                 WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
                     AND ACTIVO = 1
-                    AND LAST_DAY(FECHA_EXPIRACION) >= TRUNC(SYSDATE)";
+                    AND LAST_DAY(TO_DATE(FECHA_EXPIRACION, 'YYYY-MM-DD')) >= TRUNC(SYSDATE)";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
