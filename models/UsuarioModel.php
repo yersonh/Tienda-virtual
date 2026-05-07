@@ -108,19 +108,15 @@ class UsuarioModel
     {
         $username = $this->normalizarUsername($username);
 
-        $query = "SELECT id_usuario,
-                         id_persona,
-                         id_tipo,
-                         username,
-                         password,
-                         estado,
-                         nombres,
-                         apellidos,
-                         correo,
-                         telefono,
-                         direccion
-                  FROM v_usuario_completo
-                  WHERE LOWER(username) = :username";
+        $query = "SELECT ID_USUARIO,
+                         ID_PERSONA,
+                         ID_TIPO,
+                         USERNAME,
+                         PASSWORD,
+                         ESTADO
+                  FROM USUARIO
+                  WHERE USERNAME = :username
+                  FETCH FIRST 1 ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ":username", $username);
@@ -133,6 +129,29 @@ class UsuarioModel
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
 
+        if (!$row) {
+            $query = "SELECT ID_USUARIO,
+                             ID_PERSONA,
+                             ID_TIPO,
+                             USERNAME,
+                             PASSWORD,
+                             ESTADO
+                      FROM USUARIO
+                      WHERE LOWER(USERNAME) = :username
+                      FETCH FIRST 1 ROWS ONLY";
+
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ":username", $username);
+
+            if (!oci_execute($stmt)) {
+                $error = oci_error($stmt);
+                throw new Exception("Error en login: " . ($error['message'] ?? 'desconocido'));
+            }
+
+            $row = oci_fetch_assoc($stmt);
+            oci_free_statement($stmt);
+        }
+
         if (!$row || !password_verify($password, $row['PASSWORD'])) {
             return null;
         }
@@ -143,11 +162,11 @@ class UsuarioModel
             'id_tipo' => $row['ID_TIPO'],
             'username' => $row['USERNAME'],
             'estado' => strtoupper(trim($row['ESTADO'])),
-            'nombres' => $row['NOMBRES'],
-            'apellidos' => $row['APELLIDOS'],
-            'correo' => $row['CORREO'],
-            'telefono' => $row['TELEFONO'],
-            'direccion' => $row['DIRECCION']
+            'nombres' => '',
+            'apellidos' => '',
+            'correo' => '',
+            'telefono' => '',
+            'direccion' => ''
         ];
     }
 

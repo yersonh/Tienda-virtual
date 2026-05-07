@@ -546,21 +546,17 @@ class CarritoModel {
 
     public function obtenerTotalItemsCarrito($idUsuario): int {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-        $idCarrito = $this->obtenerIdCarritoUsuario($idUsuario);
-        if (!$idCarrito) {
-            return 0;
-        }
-
-        $query = "SELECT NVL(SUM(CANTIDAD), 0) AS TOTAL_ITEMS
-                  FROM DETALLE_CARRITO
-                  WHERE ID_CARRITO = :ID_CARRITO";
+        $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS
+                  FROM CARRITO c
+                  LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  WHERE c.ID_USUARIO = :ID_USUARIO";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
 
-        oci_bind_by_name($stmt, ':ID_CARRITO', $idCarrito, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);

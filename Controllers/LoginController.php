@@ -12,8 +12,6 @@ class LoginController
             session_start();
         }
 
-        $conn = Database::getConnection();
-        $model = new UsuarioModel($conn);
         $carritoInvitado = (isset($_SESSION['carrito']) && is_array($_SESSION['carrito']))
             ? $_SESSION['carrito']
             : [];
@@ -26,6 +24,9 @@ class LoginController
             header("Location: index.php?action=login");
             exit();
         }
+
+        $conn = Database::getConnection();
+        $model = new UsuarioModel($conn);
 
         try {
             $usuario = $model->validarCredenciales($username, $password);

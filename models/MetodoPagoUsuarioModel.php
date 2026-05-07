@@ -112,7 +112,14 @@ class MetodoPagoUsuarioModel {
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
-                         mp.FORMA_PAGO,
+                         NVL(
+                             mp.FORMA_PAGO,
+                             CASE mpu.ID_METODO
+                                 WHEN 2 THEN 'Tarjeta debito'
+                                 WHEN 3 THEN 'Tarjeta credito'
+                                 ELSE 'Tarjeta'
+                             END
+                         ) AS FORMA_PAGO,
                          mpu.TITULAR,
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
@@ -121,7 +128,7 @@ class MetodoPagoUsuarioModel {
                          mpu.ACTIVO,
                          TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
                   FROM METODO_PAGO_USUARIO mpu
-                  INNER JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
+                  LEFT JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
                   WHERE mpu.ID_USUARIO = :id_usuario
                     AND mpu.ID_METODO IN (2, 3)";
 
@@ -193,7 +200,14 @@ class MetodoPagoUsuarioModel {
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
-                         mp.FORMA_PAGO,
+                         NVL(
+                             mp.FORMA_PAGO,
+                             CASE mpu.ID_METODO
+                                 WHEN 2 THEN 'Tarjeta debito'
+                                 WHEN 3 THEN 'Tarjeta credito'
+                                 ELSE 'Tarjeta'
+                             END
+                         ) AS FORMA_PAGO,
                          mpu.TITULAR,
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
@@ -202,7 +216,7 @@ class MetodoPagoUsuarioModel {
                          mpu.ACTIVO,
                          TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS') AS FECHA_CREACION
                   FROM METODO_PAGO_USUARIO mpu
-                  INNER JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
+                  LEFT JOIN METODO_PAGO mp ON mp.ID_METODO = mpu.ID_METODO
                   WHERE mpu.ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND mpu.ID_USUARIO = :id_usuario
                     AND mpu.ACTIVO = 1
