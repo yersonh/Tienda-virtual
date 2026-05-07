@@ -105,6 +105,22 @@ class PedidoController {
         );
     }
 
+    private function responderPagoGuardado(bool $success, string $message, int $status = 200, array $extra = []): void {
+        if ($this->isAjaxRequest()) {
+            http_response_code($status);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(array_merge([
+                'success' => $success,
+                'message' => $message
+            ], $extra));
+            exit();
+        }
+
+        $_SESSION[$success ? 'success' : 'error'] = $message;
+        header('Location: index.php?action=pago');
+        exit();
+    }
+
     private function calcularTotalCarrito(array $carrito): float {
         $productos = $this->obtenerProductosResumen(array_keys($carrito));
 
@@ -1006,51 +1022,23 @@ class PedidoController {
         $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
 
         if ($idUsuario <= 0) {
-            $_SESSION['error'] = 'Debes iniciar sesion';
-            header('Location: index.php?action=login');
-            exit();
+            $this->responderPagoGuardado(false, 'Debes iniciar sesion', 401, ['redirect' => 'index.php?action=login']);
         }
 
         try {
             $ok = $this->metodoPagoUsuarioModel->eliminar($idMetodo, $idUsuario);
             oci_commit($this->conn);
-            $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago eliminado correctamente' : 'No se pudo eliminar el metodo de pago';
+            $this->responderPagoGuardado($ok, $ok ? 'Metodo de pago eliminado correctamente' : 'No se pudo eliminar el metodo de pago', $ok ? 200 : 400);
         } catch (Throwable $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
-            $_SESSION['error'] = 'No se pudo eliminar el metodo de pago';
+            $this->responderPagoGuardado(false, 'No se pudo eliminar el metodo de pago', 500);
         }
-
-        header('Location: index.php?action=pago');
-        exit();
     }
 
     public function cambiarEstadoMetodoPagoUsuario(): void {
         $this->ensureSession();
-        $idUsuario = $this->getUsuarioId();
-        $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
-        $activo = (int) ($_POST['activo'] ?? 0) === 1 ? 1 : 0;
-
-        if ($idUsuario <= 0) {
-            $_SESSION['error'] = 'Debes iniciar sesion';
-            header('Location: index.php?action=login');
-            exit();
-        }
-
-        try {
-            $ok = $this->metodoPagoUsuarioModel->cambiarActivo($idMetodo, $idUsuario, $activo);
-            oci_commit($this->conn);
-            $_SESSION[$ok ? 'success' : 'error'] = $ok
-                ? ($activo === 1 ? 'Tarjeta activada correctamente' : 'Tarjeta desactivada correctamente')
-                : 'No se pudo actualizar la tarjeta';
-        } catch (Throwable $e) {
-            oci_rollback($this->conn);
-            error_log($e->getMessage());
-            $_SESSION['error'] = 'No se pudo actualizar la tarjeta';
-        }
-
-        header('Location: index.php?action=pago');
-        exit();
+        $this->responderPagoGuardado(false, 'Las tarjetas solo se desactivan automaticamente cuando vencen.', 403);
     }
 
     private function fechaExpiracionMetodoPago(string $vencimiento): string {
@@ -1093,9 +1081,7 @@ class PedidoController {
         $idUsuario = $this->getUsuarioId();
 
         if ($idUsuario <= 0) {
-            $_SESSION['error'] = 'Debes iniciar sesion para guardar una tarjeta';
-            header('Location: index.php?action=login');
-            exit();
+            $this->responderPagoGuardado(false, 'Debes iniciar sesion para guardar una tarjeta', 401, ['redirect' => 'index.php?action=login']);
         }
 
         try {
@@ -1140,7 +1126,7 @@ class PedidoController {
                 'metodo_pago' => $idMetodo,
                 'id_metodo_pago_usuario' => $idGuardado
             ];
-            $_SESSION['success'] = 'Tarjeta guardada correctamente. Seleccionala y confirma con CVV.';
+            $this->responderPagoGuardado(true, 'Tarjeta guardada correctamente. Seleccionala y confirma con CVV.');
         } catch (Throwable $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
@@ -1150,11 +1136,8 @@ class PedidoController {
                 'vencimiento_tarjeta' => trim((string) ($_POST['vencimiento_tarjeta'] ?? '')),
                 'mostrar_formulario_tarjeta' => 1
             ];
-            $_SESSION['error'] = $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo guardar la tarjeta';
+            $this->responderPagoGuardado(false, $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo guardar la tarjeta', 400);
         }
-
-        header('Location: index.php?action=pago');
-        exit();
     }
 
     public function actualizarMetodoPagoUsuario(): void {
@@ -1163,9 +1146,7 @@ class PedidoController {
         $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
 
         if ($idUsuario <= 0) {
-            $_SESSION['error'] = 'Debes iniciar sesion';
-            header('Location: index.php?action=login');
-            exit();
+            $this->responderPagoGuardado(false, 'Debes iniciar sesion', 401, ['redirect' => 'index.php?action=login']);
         }
 
         try {
@@ -1180,15 +1161,12 @@ class PedidoController {
                 'es_predeterminado' => (int) ($_POST['es_predeterminado'] ?? 0)
             ]);
             oci_commit($this->conn);
-            $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago actualizado correctamente' : 'No se pudo actualizar el metodo de pago';
+            $this->responderPagoGuardado($ok, $ok ? 'Metodo de pago actualizado correctamente' : 'No se pudo actualizar el metodo de pago', $ok ? 200 : 400);
         } catch (Throwable $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
-            $_SESSION['error'] = $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar el metodo de pago';
+            $this->responderPagoGuardado(false, $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar el metodo de pago', 400);
         }
-
-        header('Location: index.php?action=pago');
-        exit();
     }
 
     public function predeterminarMetodoPagoUsuario(): void {
@@ -1197,23 +1175,18 @@ class PedidoController {
         $idMetodo = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
 
         if ($idUsuario <= 0) {
-            $_SESSION['error'] = 'Debes iniciar sesion';
-            header('Location: index.php?action=login');
-            exit();
+            $this->responderPagoGuardado(false, 'Debes iniciar sesion', 401, ['redirect' => 'index.php?action=login']);
         }
 
         try {
             $ok = $this->metodoPagoUsuarioModel->establecerPredeterminado($idMetodo, $idUsuario);
             oci_commit($this->conn);
-            $_SESSION[$ok ? 'success' : 'error'] = $ok ? 'Metodo de pago predeterminado actualizado' : 'No se pudo actualizar el metodo de pago';
+            $this->responderPagoGuardado($ok, $ok ? 'Metodo de pago predeterminado actualizado' : 'No se pudo actualizar el metodo de pago', $ok ? 200 : 400);
         } catch (Throwable $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
-            $_SESSION['error'] = 'No se pudo actualizar el metodo de pago';
+            $this->responderPagoGuardado(false, 'No se pudo actualizar el metodo de pago', 500);
         }
-
-        header('Location: index.php?action=pago');
-        exit();
     }
 
     public function procesarPago() {

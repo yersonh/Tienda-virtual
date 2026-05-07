@@ -24,9 +24,13 @@ class MetodoPagoUsuarioModel {
         $data = array_change_key_case($row, CASE_LOWER);
         $data['activo'] = (int) ($data['activo'] ?? 0);
         $data['es_predeterminado'] = (int) ($data['es_predeterminado'] ?? 0);
+        $data['vencida'] = (int) ($data['vencida'] ?? 0);
         $data['id_usuario'] = (int) ($data['id_usuario'] ?? 0);
         $data['id_metodo'] = (int) ($data['id_metodo'] ?? 0);
         $data['id_metodo_pago_usuario'] = (int) ($data['id_metodo_pago_usuario'] ?? 0);
+        if (!empty($data['fecha_expiracion_texto'])) {
+            $data['fecha_expiracion_texto'] = trim((string) $data['fecha_expiracion_texto']);
+        }
 
         return $data;
     }
@@ -60,8 +64,14 @@ class MetodoPagoUsuarioModel {
 
     private function fechaExpiracionSelect(): string {
         return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "mpu.FECHA_EXPIRACION"
+            ? "TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY')"
             : "''";
+    }
+
+    private function tarjetaVencidaSelect(): string {
+        return $this->columnaExiste('FECHA_EXPIRACION')
+            ? "CASE WHEN LAST_DAY(mpu.FECHA_EXPIRACION) < TRUNC(SYSDATE) THEN 1 ELSE 0 END"
+            : "0";
     }
 
     private function fechaCreacionSelect(): string {
@@ -138,12 +148,59 @@ class MetodoPagoUsuarioModel {
         oci_free_statement($stmt);
     }
 
+    public function desactivarVencidasUsuario(int $idUsuario): int {
+        if ($idUsuario <= 0 || !$this->columnaExiste('FECHA_EXPIRACION')) {
+            return 0;
+        }
+
+        $query = "UPDATE METODO_PAGO_USUARIO
+                  SET ACTIVO = 0,
+                      ES_PREDETERMINADO = 0
+                  WHERE ID_USUARIO = :id_usuario
+                    AND ID_METODO IN (2, 3)
+                    AND ACTIVO = 1
+                    AND LAST_DAY(FECHA_EXPIRACION) < TRUNC(SYSDATE)";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $affected = oci_num_rows($stmt);
+        oci_free_statement($stmt);
+        if ($affected > 0) {
+            $this->limpiarCache($idUsuario);
+        }
+
+        return $affected;
+    }
+
     public function obtenerPorUsuario(int $idUsuario, int $soloActivos = 1): array {
         if ($idUsuario <= 0) {
             return [];
         }
 
         $soloActivos = $soloActivos === 1 ? 1 : 0;
+        try {
+            $desactivadas = $this->desactivarVencidasUsuario($idUsuario);
+            if ($desactivadas > 0) {
+                @oci_commit($this->conn);
+                $this->ensureSession();
+                $_SESSION['payment_expired_notice'] = 'Una o mas tarjetas vencidas fueron desactivadas automaticamente. Puedes eliminarlas desde tus tarjetas guardadas.';
+            }
+        } catch (Throwable $e) {
+            error_log('MetodoPagoUsuarioModel desactivar vencidas: ' . $e->getMessage());
+            @oci_rollback($this->conn);
+        }
+
         $cache = $this->obtenerCache($idUsuario, $soloActivos);
         if ($cache !== null) {
             return $cache;
@@ -151,6 +208,7 @@ class MetodoPagoUsuarioModel {
 
         $fechaExpiracionSelect = $this->fechaExpiracionSelect();
         $fechaCreacionSelect = $this->fechaCreacionSelect();
+        $tarjetaVencidaSelect = $this->tarjetaVencidaSelect();
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
@@ -163,6 +221,7 @@ class MetodoPagoUsuarioModel {
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
                          {$fechaExpiracionSelect} AS FECHA_EXPIRACION_TEXTO,
+                         {$tarjetaVencidaSelect} AS VENCIDA,
                          mpu.ES_PREDETERMINADO,
                          mpu.ACTIVO,
                          {$fechaCreacionSelect} AS FECHA_CREACION
@@ -219,6 +278,12 @@ class MetodoPagoUsuarioModel {
             return null;
         }
 
+        try {
+            $this->desactivarVencidasUsuario($idUsuario);
+        } catch (Throwable $e) {
+            error_log('MetodoPagoUsuarioModel desactivar vencida por id: ' . $e->getMessage());
+        }
+
         $metodosCache = $this->obtenerCache($idUsuario, 0) ?? $this->obtenerCache($idUsuario, 1);
         if (is_array($metodosCache)) {
             foreach ($metodosCache as $metodo) {
@@ -239,6 +304,7 @@ class MetodoPagoUsuarioModel {
 
         $fechaExpiracionSelect = $this->fechaExpiracionSelect();
         $fechaCreacionSelect = $this->fechaCreacionSelect();
+        $tarjetaVencidaSelect = $this->tarjetaVencidaSelect();
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
@@ -251,6 +317,7 @@ class MetodoPagoUsuarioModel {
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
                          {$fechaExpiracionSelect} AS FECHA_EXPIRACION_TEXTO,
+                         {$tarjetaVencidaSelect} AS VENCIDA,
                          mpu.ES_PREDETERMINADO,
                          mpu.ACTIVO,
                          {$fechaCreacionSelect} AS FECHA_CREACION
@@ -332,6 +399,9 @@ class MetodoPagoUsuarioModel {
 
         oci_free_statement($stmt);
         $idMetodoPagoUsuario = $this->obtenerIdPorToken($tokenPago, $idUsuario);
+        if ($esPredeterminado === 1 && $idMetodoPagoUsuario > 0) {
+            $this->establecerPredeterminado($idMetodoPagoUsuario, $idUsuario);
+        }
         $this->limpiarCache($idUsuario);
 
         return $idMetodoPagoUsuario;
@@ -444,7 +514,11 @@ class MetodoPagoUsuarioModel {
             throw new InvalidArgumentException('Completa titular y fecha de expiracion');
         }
 
-        if (!preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $fechaExpiracion)) {
+        if (preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', $fechaExpiracion, $matches)) {
+            $fechaExpiracion = sprintf('%04d-%02d-01', 2000 + (int) $matches[2], (int) $matches[1]);
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaExpiracion)) {
             throw new InvalidArgumentException('Fecha de expiracion invalida');
         }
 
@@ -454,7 +528,7 @@ class MetodoPagoUsuarioModel {
 
         $query = "UPDATE METODO_PAGO_USUARIO
                   SET TITULAR = :titular,
-                      FECHA_EXPIRACION = :fecha_expiracion,
+                      FECHA_EXPIRACION = TO_DATE(:fecha_expiracion, 'YYYY-MM-DD'),
                       ES_PREDETERMINADO = :es_predeterminado
                   WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
@@ -490,15 +564,15 @@ class MetodoPagoUsuarioModel {
             return false;
         }
 
+        $this->desactivarVencidasUsuario($idUsuario);
         $this->quitarPredeterminado($idUsuario);
-
-        oci_commit($this->conn);
 
         $query = "UPDATE METODO_PAGO_USUARIO
                 SET ES_PREDETERMINADO = 1
                 WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
-                    AND ACTIVO = 1";
+                    AND ACTIVO = 1
+                    AND LAST_DAY(FECHA_EXPIRACION) >= TRUNC(SYSDATE)";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {

@@ -206,7 +206,7 @@ class ProductoModel {
                 $stockJoin
                 $imageJoin
                 WHERE NVL(p.estado, 'false') = 'true'
-                ORDER BY c.nombre, p.nombre";
+                ORDER BY c.nombre, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
         oci_execute($stmt);
@@ -352,7 +352,7 @@ class ProductoModel {
                   $stockJoin
                   $imageJoin
                   WHERE p.id_producto IN ($placeholdersStr)
-                  ORDER BY p.nombre";
+                  ORDER BY CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
         $bindValues = [];
@@ -683,7 +683,7 @@ class ProductoModel {
                       $anioCondition
                   )
                   AND UPPER(NVL(p.ESTADO, 'ACTIVO')) = 'ACTIVO'
-                  ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
+                  ORDER BY c.NOMBRE, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
         $this->bindDynamicValues($stmt, $binds);
@@ -729,7 +729,7 @@ class ProductoModel {
                       $maquinariaConditions
                   )
                   AND $productoActivo
-                  ORDER BY c.NOMBRE, p.NOMBRE, r.NUMERO_REFERENCIA";
+                  ORDER BY c.NOMBRE, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.NOMBRE, r.NUMERO_REFERENCIA";
 
         $stmt = oci_parse($this->conn, $query);
         $this->bindDynamicValues($stmt, $binds);

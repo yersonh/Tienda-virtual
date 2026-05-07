@@ -1551,11 +1551,14 @@ function setFilterLoading(isLoading) {
     filterSidebar.classList.toggle('loading', isLoading);
 }
 
-async function fetchFilteredStore() {
+async function fetchFilteredStore(force = false) {
     const cat = categoria.value || categoriaActiva;
     const viewParams = buildFilterParams(cat);
     const requestParams = new URLSearchParams(viewParams);
     requestParams.set('action', 'tiendaFiltros');
+    if (force) {
+        requestParams.set('_live', String(Date.now()));
+    }
     const requestKey = requestParams.toString();
     const currentRequestId = ++filterRequestId;
 
@@ -1563,7 +1566,7 @@ async function fetchFilteredStore() {
         filterAbortController.abort();
     }
 
-    if (requestKey === lastAppliedRequestKey) {
+    if (!force && requestKey === lastAppliedRequestKey) {
         return;
     }
 
@@ -1790,6 +1793,11 @@ syncCompatibilityFields();
 if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     openFilterSidebar();
 }
+
+setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    fetchFilteredStore(true);
+}, 12000);
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

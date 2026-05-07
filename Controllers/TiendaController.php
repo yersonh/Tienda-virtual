@@ -7,7 +7,7 @@ class TiendaController {
 
     private $model;
     private $carritoModel;
-    private const CACHE_TTL = 60;
+    private const CACHE_TTL = 8;
 
     public function __construct() {
     }
@@ -89,15 +89,29 @@ class TiendaController {
         ];
     }
 
-    private function obtenerCatalogoCacheado(bool $incluirDescripcion = true): array {
+    private function obtenerCatalogoCacheado(bool $incluirDescripcion = true, bool $forzarActualizacion = false): array {
         $cacheKey = $incluirDescripcion ? 'catalogo_full_compat_v2' : 'catalogo_ligero_compat_v2';
-        $productos = $this->getCache($cacheKey);
+        $productos = $forzarActualizacion ? null : $this->getCache($cacheKey);
         if ($productos !== null) {
             return $productos;
         }
 
         $productos = $this->productoModel()->obtenerCatalogo($incluirDescripcion);
         $this->setCache($cacheKey, $productos);
+        return $productos;
+    }
+
+    private function ordenarProductosCategoria(array $productos): array {
+        usort($productos, function(array $a, array $b): int {
+            $sinStockA = (int) ($a['stock_p'] ?? 0) <= 0 ? 1 : 0;
+            $sinStockB = (int) ($b['stock_p'] ?? 0) <= 0 ? 1 : 0;
+            if ($sinStockA !== $sinStockB) {
+                return $sinStockA <=> $sinStockB;
+            }
+
+            return strnatcasecmp((string) ($a['nombre'] ?? ''), (string) ($b['nombre'] ?? ''));
+        });
+
         return $productos;
     }
 
@@ -363,7 +377,7 @@ class TiendaController {
         ];
     }
 
-    private function obtenerDatosTienda(bool $incluirOpcionesVehiculo = true): array {
+    private function obtenerDatosTienda(bool $incluirOpcionesVehiculo = true, bool $forzarActualizacionCatalogo = false): array {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
 
@@ -393,7 +407,7 @@ class TiendaController {
             $compatibilidad_tipo = 'maquinaria';
         }
 
-        $productosBase = $this->obtenerCatalogoCacheado(!empty($filtro));
+        $productosBase = $this->obtenerCatalogoCacheado(!empty($filtro), $forzarActualizacionCatalogo);
         $productosFiltradosBase = $this->filtrarProductosGenerales($productosBase, trim((string) $filtro), $precio_min, $precio_max, trim((string) $categoria_filtro));
 
         $opcionesVehiculo = $this->construirOpcionesCompatibilidadVehiculo($productosFiltradosBase, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
@@ -426,6 +440,10 @@ class TiendaController {
             $cat = $p['categoria_nombre'] ?? 'Sin categoria';
             $categorias[$cat][] = $p;
         }
+        foreach ($categorias as &$productosCategoria) {
+            $productosCategoria = $this->ordenarProductosCategoria($productosCategoria);
+        }
+        unset($productosCategoria);
 
         return compact(
             'carritoVista',
@@ -573,7 +591,7 @@ class TiendaController {
     // Ã°Å¸â€Â DETALLE
     public function filtrosAjax() {
         $modoCompatibilidad = $_GET['compatibilidad_tipo'] ?? '';
-        extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo'));
+        extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo', true));
         $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 
         ob_start();

@@ -74,6 +74,22 @@ if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
         exit();
     }
 
+    if (in_array($action, ['eliminarMetodoPagoUsuario', 'guardarMetodoPagoUsuario', 'cambiarEstadoMetodoPagoUsuario', 'actualizarMetodoPagoUsuario', 'predeterminarMetodoPagoUsuario'], true)) {
+        if (
+            (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+            (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch')
+        ) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Debes iniciar sesion',
+                'redirect' => 'index.php?action=login'
+            ]);
+            exit();
+        }
+    }
+
     header("Location: index.php?action=login");
     exit();
 }

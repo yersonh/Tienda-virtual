@@ -25,6 +25,15 @@ $metodoPagoGuardadoSeleccionado = (int) ($paymentOld['id_metodo_pago_usuario'] ?
 $metodoSeleccionado = (int) ($paymentOld['metodo_pago'] ?? ($metodoPagoInicial['id_metodo'] ?? 1));
 $metodoSeleccionado = in_array($metodoSeleccionado, [1, 2, 3, 4], true) ? $metodoSeleccionado : 1;
 $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
+$paymentExpiredNotice = $_SESSION['payment_expired_notice'] ?? null;
+unset($_SESSION['payment_expired_notice']);
+$hayTarjetasVencidas = false;
+foreach ($metodosPagoUsuario as $metodoPagoAviso) {
+    if ((int) ($metodoPagoAviso['vencida'] ?? 0) === 1) {
+        $hayTarjetasVencidas = true;
+        break;
+    }
+}
 ?>
 
 <style>
@@ -303,6 +312,11 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
 .payment-card-fields .payment-field:first-child,
 .payment-card-fields .payment-field:nth-child(2),
 .payment-transfer-fields .payment-field:first-child {
+    grid-column: 1 / -1;
+}
+
+.payment-card-fields .payment-section-title,
+.payment-card-fields .payment-checkline {
     grid-column: 1 / -1;
 }
 
@@ -641,6 +655,25 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
     background: rgba(248,113,113,0.12);
     color: #fecaca;
     line-height: 1.45;
+}
+
+.payment-warning-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid rgba(250,204,21,0.38);
+    border-radius: 8px;
+    background: rgba(250,204,21,0.12);
+    color: #fde68a;
+    line-height: 1.45;
+}
+
+[data-theme="light"] .payment-warning-note {
+    color: #854d0e;
+    background: #fff7d6;
+    border-color: #f3d078;
 }
 
 [data-theme="light"] .payment-error {
@@ -1179,6 +1212,12 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                 <span><?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['success']); ?></span>
                             </div>
                         <?php endif; ?>
+                        <?php if ($paymentExpiredNotice || $hayTarjetasVencidas): ?>
+                            <div class="payment-warning-note" role="status">
+                                <i class="fas fa-triangle-exclamation"></i>
+                                <span><?= htmlspecialchars((string) ($paymentExpiredNotice ?: 'Una tarjeta vencida fue desactivada por el sistema. Solo puedes eliminarla.'), ENT_QUOTES, 'UTF-8') ?></span>
+                            </div>
+                        <?php endif; ?>
 
                         <div class="payment-summary">
                             <span><?= htmlspecialchars('Total del pedido', ENT_QUOTES, 'UTF-8') ?></span>
@@ -1270,10 +1309,16 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                     <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <small id="saved-payment-subtitle"><?= htmlspecialchars('Selecciona una tarjeta activa o registra una nueva.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </span>
-                                <button class="new-card-toggle" type="button" id="new-card-toggle">
-                                    <i class="fas fa-plus"></i>
-                                    <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
-                                </button>
+                                <span class="saved-payment-actions">
+                                    <button class="new-card-toggle" type="button" id="one-time-card-toggle">
+                                        <i class="fas fa-credit-card"></i>
+                                        <?= htmlspecialchars('Pagar sin guardar', ENT_QUOTES, 'UTF-8') ?>
+                                    </button>
+                                    <button class="new-card-toggle" type="button" id="new-card-toggle">
+                                        <i class="fas fa-plus"></i>
+                                        <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                                    </button>
+                                </span>
                             </div>
                             <?php if (!empty($metodosPagoUsuario)): ?>
                                 <div class="saved-payment-grid">
@@ -1283,10 +1328,11 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                         $seleccionadoGuardado = $metodoPagoGuardadoSeleccionado === $idGuardado;
                                         $expiracionTexto = (string) ($metodoGuardado['fecha_expiracion_texto'] ?? '');
                                         $activoGuardado = (int) ($metodoGuardado['activo'] ?? 0);
-                                        $tarjetaActiva = $activoGuardado === 1;
+                                        $tarjetaVencida = (int) ($metodoGuardado['vencida'] ?? 0) === 1;
+                                        $tarjetaActiva = $activoGuardado === 1 && !$tarjetaVencida;
                                         $tarjetaPredeterminada = (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1;
                                         ?>
-                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>" data-saved-card data-card-id="<?= $idGuardado ?>" data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-active="<?= $activoGuardado ?>" data-default="<?= $tarjetaPredeterminada ? 1 : 0 ?>">
+                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>" data-saved-card data-card-id="<?= $idGuardado ?>" data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-active="<?= $tarjetaActiva ? 1 : 0 ?>" data-default="<?= $tarjetaPredeterminada ? 1 : 0 ?>">
                                             <input type="radio" name="saved_payment_choice" value="<?= $idGuardado ?>" <?= $seleccionadoGuardado && $tarjetaActiva ? 'checked' : '' ?> <?= !$tarjetaActiva ? 'disabled' : '' ?>>
                                             <span class="saved-payment-body">
                                                 <span class="saved-payment-brand">
@@ -1296,7 +1342,7 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                                             <span class="saved-payment-chip"><?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
                                                         <?php endif; ?>
                                                         <?php if (!$tarjetaActiva): ?>
-                                                            <span class="saved-payment-chip"><?= htmlspecialchars('Inactiva', ENT_QUOTES, 'UTF-8') ?></span>
+                                                            <span class="saved-payment-chip"><?= htmlspecialchars($tarjetaVencida ? 'Vencida' : 'Inactiva', ENT_QUOTES, 'UTF-8') ?></span>
                                                         <?php endif; ?>
                                                     </span>
                                                 </span>
@@ -1313,6 +1359,12 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                                         <i class="fas fa-calendar"></i>
                                                         <span><?= htmlspecialchars('Expira ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoGuardado['fecha_expiracion_texto'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
                                                     </span>
+                                                    <?php if ($tarjetaVencida): ?>
+                                                        <span class="saved-payment-meta-line">
+                                                            <i class="fas fa-circle-info"></i>
+                                                            <span><?= htmlspecialchars('Desactivada automaticamente porque ya vencio.', ENT_QUOTES, 'UTF-8') ?></span>
+                                                        </span>
+                                                    <?php endif; ?>
                                                 </span>
                                                 <span class="saved-payment-actions">
                                                     <?php if ($tarjetaActiva): ?>
@@ -1328,9 +1380,6 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                                             <?= htmlspecialchars('Predeterminar', ENT_QUOTES, 'UTF-8') ?>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <button class="saved-payment-action" type="submit" form="toggle-payment-<?= $idGuardado ?>" onclick="event.stopPropagation();">
-                                                        <?= htmlspecialchars($tarjetaActiva ? 'Desactivar' : 'Activar', ENT_QUOTES, 'UTF-8') ?>
-                                                    </button>
                                                     <button class="saved-payment-action danger" type="submit" form="delete-payment-<?= $idGuardado ?>" onclick="event.stopPropagation(); return confirm('Eliminar esta tarjeta guardada de forma permanente?');">
                                                         <?= htmlspecialchars('Eliminar', ENT_QUOTES, 'UTF-8') ?>
                                                     </button>
@@ -1391,6 +1440,9 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
 
                         <div id="tarjeta" class="payment-dynamic">
                             <div class="payment-card-fields card-new-fields <?= $metodoPagoGuardadoSeleccionado > 0 ? 'is-hidden' : '' ?>" id="new-card-fields">
+                                <div class="payment-section-title">
+                                    <span><?= htmlspecialchars('Pagar con tarjeta sin guardar', ENT_QUOTES, 'UTF-8') ?></span>
+                                </div>
                                 <div class="payment-field">
                                     <label for="numero_tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
                                     <input id="numero_tarjeta" name="numero_tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control">
@@ -1407,6 +1459,14 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                     <label for="cvv_tarjeta"><?= htmlspecialchars('CVV', ENT_QUOTES, 'UTF-8') ?></label>
                                     <input id="cvv_tarjeta" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control">
                                 </div>
+                                <label class="payment-checkline">
+                                    <input type="checkbox" name="guardar_metodo_pago" id="checkout-save-card" value="1">
+                                    <span><?= htmlspecialchars('Guardar esta tarjeta para futuras compras', ENT_QUOTES, 'UTF-8') ?></span>
+                                </label>
+                                <label class="payment-checkline">
+                                    <input type="checkbox" name="es_predeterminado_pago" id="checkout-default-card" value="1" disabled>
+                                    <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
+                                </label>
                             </div>
                         </div>
 
@@ -1469,10 +1529,6 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                             <?php $idGuardadoForm = (int) ($metodoGuardadoForm['id_metodo_pago_usuario'] ?? 0); ?>
                             <form id="delete-payment-<?= $idGuardadoForm ?>" method="POST" action="index.php?action=eliminarMetodoPagoUsuario">
                                 <input type="hidden" name="id_metodo_pago_usuario" value="<?= $idGuardadoForm ?>">
-                            </form>
-                            <form id="toggle-payment-<?= $idGuardadoForm ?>" method="POST" action="index.php?action=cambiarEstadoMetodoPagoUsuario">
-                                <input type="hidden" name="id_metodo_pago_usuario" value="<?= $idGuardadoForm ?>">
-                                <input type="hidden" name="activo" value="<?= (int) ($metodoGuardadoForm['activo'] ?? 0) === 1 ? 0 : 1 ?>">
                             </form>
                             <form id="default-payment-<?= $idGuardadoForm ?>" method="POST" action="index.php?action=predeterminarMetodoPagoUsuario">
                                 <input type="hidden" name="id_metodo_pago_usuario" value="<?= $idGuardadoForm ?>">
@@ -1550,7 +1606,7 @@ function redirectCompletedPaymentFromHistory(event) {
 
 window.addEventListener('pageshow', redirectCompletedPaymentFromHistory);
 
-document.addEventListener('DOMContentLoaded', function () {
+function initPaymentPage() {
     if (currentNavigation?.type !== 'back_forward') {
         sessionStorage.removeItem(paymentCompletedKey);
         sessionStorage.removeItem(paymentSubmittedKey);
@@ -1574,6 +1630,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const standaloneCardForm = document.getElementById('standalone-card-form');
     const standaloneCardMethod = document.getElementById('standalone-card-method');
     const cancelNewCard = document.getElementById('cancel-new-card');
+    const oneTimeCardToggle = document.getElementById('one-time-card-toggle');
+    const checkoutSaveCard = document.getElementById('checkout-save-card');
+    const checkoutDefaultCard = document.getElementById('checkout-default-card');
 
     function setRequired(container, required) {
         if (!container) return;
@@ -1616,6 +1675,16 @@ document.addEventListener('DOMContentLoaded', function () {
             field.disabled = !enabled;
             field.required = enabled;
         });
+        if (checkoutSaveCard) {
+            checkoutSaveCard.required = false;
+        }
+        if (checkoutDefaultCard) {
+            checkoutDefaultCard.required = false;
+            checkoutDefaultCard.disabled = !enabled || !checkoutSaveCard?.checked;
+            if (checkoutDefaultCard.disabled) {
+                checkoutDefaultCard.checked = false;
+            }
+        }
     }
 
     function clearActiveSavedCard() {
@@ -1711,7 +1780,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const method = selectedPaymentMethod();
         const val = String(method);
         efectivo.classList.toggle('is-visible', method === 1);
-        tarjeta.classList.toggle('is-visible', false);
+        tarjeta.classList.toggle('is-visible', isCardPaymentMethod(method));
         transferencia.classList.toggle('is-visible', method === 4);
         const savedState = syncSavedCardsByMethod();
         if (savedPanel) {
@@ -1726,11 +1795,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 setActiveSavedCard(savedState.selectedRadio, { syncMethod: false });
             } else {
                 clearActiveSavedCard();
+                setNewCardFieldsEnabled(true);
             }
-            setRequired(tarjeta, false);
         } else {
             clearActiveSavedCard();
-            setRequired(tarjeta, false);
         }
 
         methodButtons.forEach((button) => {
@@ -1825,8 +1893,23 @@ document.addEventListener('DOMContentLoaded', function () {
         standaloneCardForm?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
+    oneTimeCardToggle?.addEventListener('click', () => {
+        clearActiveSavedCard();
+        setNewCardFieldsEnabled(true);
+        tarjeta?.classList.add('is-visible');
+        newCardFields?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
     cancelNewCard?.addEventListener('click', () => {
         standaloneCardForm?.classList.remove('is-visible');
+    });
+
+    checkoutSaveCard?.addEventListener('change', () => {
+        if (!checkoutDefaultCard) return;
+        checkoutDefaultCard.disabled = !checkoutSaveCard.checked;
+        if (checkoutDefaultCard.disabled) {
+            checkoutDefaultCard.checked = false;
+        }
     });
 
     syncPaymentFields();
@@ -1875,6 +1958,78 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function paymentNoticeClass(isError) {
+        return isError ? 'payment-error' : 'payment-invoice-note payment-success-note';
+    }
+
+    function showPaymentNotice(message, isError = false) {
+        const main = document.querySelector('.payment-main');
+        const form = document.getElementById('payment-confirm-form');
+        if (!main || !form || !message) return;
+        main.querySelectorAll('[data-live-payment-notice]').forEach((item) => item.remove());
+        const notice = document.createElement('div');
+        notice.className = paymentNoticeClass(isError);
+        notice.dataset.livePaymentNotice = '1';
+        notice.setAttribute('role', isError ? 'alert' : 'status');
+        notice.innerHTML = `<i class="fas ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span></span>`;
+        notice.querySelector('span').textContent = message;
+        main.insertBefore(notice, form);
+    }
+
+    async function refreshPaymentMain(message = '', isError = false) {
+        const response = await fetch('index.php?action=pago', {
+            headers: {
+                'Accept': 'text/html',
+                'X-Requested-With': 'fetch'
+            }
+        });
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nextMain = doc.querySelector('.payment-main');
+        const currentMain = document.querySelector('.payment-main');
+        if (nextMain && currentMain) {
+            currentMain.replaceWith(nextMain);
+            initPaymentPage();
+            showPaymentNotice(message, isError);
+        }
+    }
+
+    async function submitPaymentAjaxForm(form) {
+        const submitter = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
+        if (submitter) {
+            submitter.disabled = true;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: form.method || 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'fetch'
+                },
+                body: new FormData(form)
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'No se pudo completar la accion');
+            }
+            await refreshPaymentMain(data.message || 'Accion completada');
+        } catch (error) {
+            showPaymentNotice(error.message || 'No se pudo completar la accion', true);
+        } finally {
+            if (submitter) {
+                submitter.disabled = false;
+            }
+        }
+    }
+
+    document.querySelectorAll('form[id^="delete-payment-"], form[id^="default-payment-"], form[id^="edit-payment-"], #standalone-card-form').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submitPaymentAjaxForm(form);
+        });
+    });
+
     document.querySelectorAll('[data-confirm-cancel-payment]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (!confirm('Quieres cancelar este pedido? Solo se puede cancelar mientras siga pendiente.')) {
@@ -1882,7 +2037,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-});
+}
+
+document.addEventListener('DOMContentLoaded', initPaymentPage);
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
