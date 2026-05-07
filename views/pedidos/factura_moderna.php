@@ -12,6 +12,7 @@ $facturaVence = !empty($facturaPedido['fecha_estimada_entrega'])
     ? date('d/m/Y', strtotime((string) $facturaPedido['fecha_estimada_entrega']))
     : $facturaFecha;
 $facturaMetodo = (string) ($facturaPedido['metodo_pago'] ?? 'Registrado');
+$facturaDireccionLocal = 'Barrio Nuevo, Carrera 34 # 26A-05 Nuevo, Puente El Maizaro, Villavicencio, Meta';
 $facturaSubtotal = (float) ($facturaPedido['subtotal'] ?? 0);
 $facturaRootTag = isset($facturaRootTag) && in_array($facturaRootTag, ['main', 'section'], true) ? $facturaRootTag : 'main';
 $facturaDownloadMode = !empty($facturaDownloadMode);
@@ -449,7 +450,7 @@ if (is_file($facturaLogoPath)) {
                         </div>
                     </div>
                     <div class="modern-company-lines">
-                        <p>Cra 12 #45-67, Villavicencio, Meta, Colombia</p>
+                        <p><?= htmlspecialchars($facturaDireccionLocal, ENT_QUOTES, 'UTF-8') ?></p>
                         <p>NIT: 900.456.123-5 - Tel: +57 311 234 5678</p>
                         <p>soporte@naylex.store - www.naylex.store</p>
                     </div>

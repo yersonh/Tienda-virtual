@@ -1560,17 +1560,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function cardMatchesCurrentMethod(card) {
-        return card && card.dataset.cardMethod === metodoInput.value;
+        return card && (metodoInput.value === '2' || metodoInput.value === '3');
     }
 
     function syncSavedCardsByMethod() {
         const isCardMethod = metodoInput.value === '2' || metodoInput.value === '3';
         let visibleCount = 0;
         let selectedStillVisible = false;
-        const methodName = metodoInput.value === '2' ? 'debito' : 'credito';
 
         savedCards.forEach((card) => {
-            const matches = isCardMethod && cardMatchesCurrentMethod(card);
+            const matches = isCardMethod;
             const input = card.querySelector('input[type="radio"]');
             card.classList.toggle('is-hidden-by-method', !matches);
             if (matches) {
@@ -1589,11 +1588,11 @@ document.addEventListener('DOMContentLoaded', function () {
             savedPaymentEmpty.classList.toggle('is-visible', isCardMethod && visibleCount === 0);
         }
         if (savedPaymentTitle) {
-            savedPaymentTitle.textContent = isCardMethod ? `Tarjetas ${methodName} guardadas` : 'Tarjetas guardadas';
+            savedPaymentTitle.textContent = isCardMethod ? 'Tarjetas guardadas' : 'Tarjetas guardadas';
         }
         if (savedPaymentSubtitle) {
             savedPaymentSubtitle.textContent = isCardMethod
-                ? `Selecciona una tarjeta ${methodName} activa o registra una nueva.`
+                ? 'Selecciona una tarjeta activa o registra una nueva.'
                 : 'Transferencia y efectivo no guardan datos de tarjeta.';
         }
 
@@ -1607,7 +1606,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         savedCards.forEach((card) => {
             const input = card.querySelector('input[type="radio"]');
-            const selected = useSaved && input && input.value === savedMethodInput.value && cardMatchesCurrentMethod(card);
+            const selected = useSaved && input && input.value === savedMethodInput.value;
             card.classList.toggle('is-selected', Boolean(selected));
             if (input) input.checked = Boolean(selected);
         });
@@ -1668,14 +1667,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (button.dataset.method !== '2' && button.dataset.method !== '3' && savedMethodInput) {
                 savedMethodInput.value = '';
-            } else if (savedMethodInput && savedMethodInput.value) {
-                const selectedCard = savedCards.find((card) => {
-                    const input = card.querySelector('input[type="radio"]');
-                    return input && input.value === savedMethodInput.value;
-                });
-                if (selectedCard && selectedCard.dataset.cardMethod !== button.dataset.method) {
-                    savedMethodInput.value = '';
-                }
             }
             syncPaymentFields();
         });
@@ -1698,6 +1689,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const input = card.querySelector('input[type="radio"]');
             if (!input || input.disabled || !savedMethodInput) return;
             savedMethodInput.value = input.value;
+            if (card.dataset.cardMethod === '2' || card.dataset.cardMethod === '3') {
+                metodoInput.value = card.dataset.cardMethod;
+            }
             syncPaymentFields();
         });
     });
@@ -1710,6 +1704,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const input = card.querySelector('input[type="radio"]');
             if (!input || input.disabled || !savedMethodInput) return;
             savedMethodInput.value = input.value;
+            if (card.dataset.cardMethod === '2' || card.dataset.cardMethod === '3') {
+                metodoInput.value = card.dataset.cardMethod;
+            }
             syncPaymentFields();
             savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
