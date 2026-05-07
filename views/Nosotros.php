@@ -119,6 +119,27 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
     line-height: 1.75;
 }
 
+.about-purpose {
+    margin-top: 20px;
+    padding: 18px 20px;
+    border: 1px solid rgba(34, 211, 238, 0.22);
+    border-radius: 8px;
+    background: rgba(34, 211, 238, 0.08);
+}
+
+.about-purpose h2 {
+    margin: 0 0 8px;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0;
+}
+
+.about-purpose p {
+    margin: 0;
+    color: var(--secondary);
+    line-height: 1.65;
+}
+
 .about-actions {
     display: flex;
     flex-wrap: wrap;
@@ -197,7 +218,8 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 .about-map-frame {
     position: relative;
     min-height: 470px;
-    background: #0b1324;
+    background: #e8eef2;
+    overflow: hidden;
 }
 
 .about-map {
@@ -210,7 +232,16 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
 
 .about-map-frame .leaflet-container {
     font-family: 'Manrope', system-ui, sans-serif;
-    background: #0b1324;
+    background: #e8eef2;
+}
+
+.about-map-frame .leaflet-tile {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+.about-map-frame .leaflet-tile-pane {
+    opacity: 1;
 }
 
 .about-location-marker {
@@ -357,6 +388,12 @@ $infoTienda = 'Repuestos, iluminacion y servicio electrico automotriz.';
                     <p class="about-lead">
                         <?= htmlspecialchars('Somos una empresa de Villavicencio dedicada a conectar movilidad, maquinaria agricola e iluminacion premium con soluciones confiables. Vendemos repuestos automotrices, repuestos para maquinaria agricola, bombilleria de lujo, exploradores LED y prestamos servicios de mantenimiento y reparacion del sistema electrico para vehiculos y equipos de trabajo.', ENT_QUOTES, 'UTF-8') ?>
                     </p>
+                    <div class="about-purpose">
+                        <h2><?= htmlspecialchars('Por que creamos Naylex Store', ENT_QUOTES, 'UTF-8') ?></h2>
+                        <p>
+                            <?= htmlspecialchars('ElectriTorres creo Naylex Store para llevar su experiencia local al mundo digital: facilitar que los clientes encuentren repuestos, iluminacion y accesorios confiables desde cualquier lugar, comparar opciones con claridad y comprar con un proceso mas rapido, ordenado y seguro, sin perder el respaldo tecnico de la tienda fisica.', ENT_QUOTES, 'UTF-8') ?>
+                        </p>
+                    </div>
                     <div class="about-actions">
                         <a class="about-btn primary" href="#mapa-tienda">
                             <i class="fas fa-location-dot"></i>
@@ -455,13 +492,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = L.map(mapElement, {
         scrollWheelZoom: false,
-        zoomControl: true
-    }).setView(storePoint, 18);
+        zoomControl: true,
+        fadeAnimation: false,
+        markerZoomAnimation: false
+    }).setView(storePoint, 17);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
+        minZoom: 3,
+        detectRetina: false,
+        updateWhenIdle: true,
+        keepBuffer: 4,
+        crossOrigin: true,
+        attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+
+    tiles.on('tileerror', (event) => {
+        const tile = event.tile;
+        if (!tile || tile.dataset.retried === '1') {
+            return;
+        }
+
+        tile.dataset.retried = '1';
+        setTimeout(() => {
+            tile.src = tile.src.split('?')[0] + '?retry=' + Date.now();
+        }, 450);
+    });
 
     const markerIcon = L.divIcon({
         className: '',
@@ -485,7 +541,13 @@ document.addEventListener('DOMContentLoaded', () => {
         .bindPopup(popupHtml)
         .openPopup();
 
-    setTimeout(() => map.invalidateSize(), 120);
+    requestAnimationFrame(() => {
+        map.invalidateSize(true);
+        map.setView(storePoint, 17, { animate: false });
+    });
+
+    setTimeout(() => map.invalidateSize(true), 350);
+    window.addEventListener('resize', () => map.invalidateSize(true));
 });
 
 function escapeHtml(value) {

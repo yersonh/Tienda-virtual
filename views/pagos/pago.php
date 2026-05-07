@@ -1418,13 +1418,14 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                 <input id="standalone-vencimiento-tarjeta" name="vencimiento_tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
                             </div>
                             <div class="payment-field">
-                                <label><?= htmlspecialchars('Preferencia', ENT_QUOTES, 'UTF-8') ?></label>
-                                <label class="payment-checkline">
-                                    <input type="checkbox" name="es_predeterminado_pago" value="1">
-                                    <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
-                                </label>
+                                <label for="standalone-cvv-tarjeta"><?= htmlspecialchars('CVV', ENT_QUOTES, 'UTF-8') ?></label>
+                                <input id="standalone-cvv-tarjeta" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control" required>
                             </div>
                         </div>
+                        <label class="payment-checkline">
+                            <input type="checkbox" name="es_predeterminado_pago" value="1">
+                            <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
+                        </label>
                         <div class="standalone-card-actions">
                             <button class="payment-btn" type="submit">
                                 <i class="fas fa-floppy-disk"></i>
@@ -1656,7 +1657,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     methodButtons.forEach((button) => {
         button.addEventListener('click', () => {
+            const previousMethod = metodoInput.value;
             metodoInput.value = button.dataset.method;
+            if (standaloneCardForm && previousMethod !== button.dataset.method) {
+                standaloneCardForm.classList.remove('is-visible');
+                standaloneCardForm.reset();
+                if (standaloneCardMethod && (button.dataset.method === '2' || button.dataset.method === '3')) {
+                    standaloneCardMethod.value = button.dataset.method;
+                }
+            }
             if (button.dataset.method !== '2' && button.dataset.method !== '3' && savedMethodInput) {
                 savedMethodInput.value = '';
             } else if (savedMethodInput && savedMethodInput.value) {
@@ -1758,6 +1767,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('standalone-vencimiento-tarjeta')?.addEventListener('input', (event) => {
         const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
         event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+    });
+
+    document.getElementById('standalone-cvv-tarjeta')?.addEventListener('input', (event) => {
+        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
     });
 
     document.querySelectorAll('[data-edit-exp]').forEach((field) => {

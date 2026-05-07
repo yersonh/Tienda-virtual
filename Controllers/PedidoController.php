@@ -1099,6 +1099,7 @@ class PedidoController {
             $numero = preg_replace('/\D+/', '', (string) ($_POST['numero_tarjeta'] ?? ''));
             $titular = trim((string) ($_POST['titular_tarjeta'] ?? $_POST['titular'] ?? ''));
             $vencimiento = trim((string) ($_POST['vencimiento_tarjeta'] ?? $_POST['fecha_expiracion'] ?? ''));
+            $cvv = preg_replace('/\D+/', '', (string) ($_POST['cvv_tarjeta'] ?? ''));
             $franquicia = $this->detectarFranquiciaTarjeta($numero);
 
             if (!in_array($idMetodo, [2, 3], true)) {
@@ -1109,6 +1110,9 @@ class PedidoController {
             }
             if ($titular === '') {
                 throw new InvalidArgumentException('Ingresa el nombre del titular');
+            }
+            if (strlen($cvv) < 3 || strlen($cvv) > 4) {
+                throw new InvalidArgumentException('Ingresa un CVV valido');
             }
 
             $fechaExpiracion = $this->fechaExpiracionMetodoPago($vencimiento);
