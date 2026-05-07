@@ -1264,7 +1264,7 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                             </button>
                         </div>
 
-                        <div class="saved-payment-panel <?= in_array($metodoSeleccionado, [2, 3], true) && !empty($metodosPagoUsuario) ? 'is-visible' : '' ?>" id="saved-payment-panel">
+                        <div class="saved-payment-panel <?= in_array($metodoSeleccionado, [2, 3], true) ? 'is-visible' : '' ?>" id="saved-payment-panel">
                             <div class="saved-payment-head">
                                 <span>
                                     <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
@@ -1286,7 +1286,7 @@ $mostrarFormularioTarjeta = !empty($paymentOld['mostrar_formulario_tarjeta']);
                                         $tarjetaActiva = $activoGuardado === 1;
                                         $tarjetaPredeterminada = (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1;
                                         ?>
-                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>" data-saved-card data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-card-active="<?= $activoGuardado ?>">
+                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>" data-saved-card data-card-id="<?= $idGuardado ?>" data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-active="<?= $activoGuardado ?>" data-default="<?= $tarjetaPredeterminada ? 1 : 0 ?>">
                                             <input type="radio" name="saved_payment_choice" value="<?= $idGuardado ?>" <?= $seleccionadoGuardado && $tarjetaActiva ? 'checked' : '' ?> <?= !$tarjetaActiva ? 'disabled' : '' ?>>
                                             <span class="saved-payment-body">
                                                 <span class="saved-payment-brand">
@@ -1583,25 +1583,102 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function usingSavedCard() {
-        return Boolean(savedMethodInput && parseInt(savedMethodInput.value || '0', 10) > 0);
-    }
-
-    function cardMatchesCurrentMethod(card) {
-        const selectedMethod = parseInt(metodoInput.value || '0', 10);
-        const cardMethod = numericData(card, 'cardMethod');
-        return card && (selectedMethod === 2 || selectedMethod === 3) && cardMethod === selectedMethod;
-    }
-
     function numericData(card, key) {
-        return parseInt(card?.dataset?.[key] || '0', 10);
+        return Number(card?.dataset?.[key] || 0);
+    }
+
+    function selectedPaymentMethod() {
+        return Number(metodoInput?.value || 0);
+    }
+
+    function isCardPaymentMethod(method) {
+        return method === 2 || method === 3;
+    }
+
+    function cardMatchesSelectedMethod(card) {
+        const method = selectedPaymentMethod();
+        return Boolean(card) && isCardPaymentMethod(method) && numericData(card, 'cardMethod') === method;
+    }
+
+    function setSavedCardCvvActive(active) {
+        if (!savedCardCvv) return;
+        savedCardCvv.classList.toggle('is-visible', active);
+        savedCardCvv.querySelectorAll('input').forEach((field) => {
+            field.disabled = !active;
+            field.required = active;
+        });
+    }
+
+    function setNewCardFieldsEnabled(enabled) {
+        if (!newCardFields) return;
+        newCardFields.classList.toggle('is-hidden', !enabled);
+        newCardFields.querySelectorAll('input').forEach((field) => {
+            field.disabled = !enabled;
+            field.required = enabled;
+        });
+    }
+
+    function clearActiveSavedCard() {
+        if (savedMethodInput) {
+            savedMethodInput.value = '';
+        }
+        savedCards.forEach((card) => {
+            card.classList.remove('is-selected');
+            const input = card.querySelector('input[type="radio"]');
+            if (input) input.checked = false;
+        });
+        setSavedCardCvvActive(false);
+    }
+
+    function setActiveSavedCard(radio, options = {}) {
+        const { syncMethod = true, scrollCvv = false } = options;
+        if (!radio || radio.disabled) {
+            clearActiveSavedCard();
+            return;
+        }
+
+        const card = radio.closest('[data-saved-card]');
+        if (!card || numericData(card, 'active') !== 1) {
+            clearActiveSavedCard();
+            return;
+        }
+
+        const cardMethod = numericData(card, 'cardMethod');
+        if (syncMethod && isCardPaymentMethod(cardMethod)) {
+            metodoInput.value = String(cardMethod);
+            if (standaloneCardMethod) {
+                standaloneCardMethod.value = String(cardMethod);
+            }
+        }
+
+        if (!cardMatchesSelectedMethod(card)) {
+            clearActiveSavedCard();
+            return;
+        }
+
+        savedCards.forEach((item) => {
+            const input = item.querySelector('input[type="radio"]');
+            const selected = item === card;
+            item.classList.toggle('is-selected', selected);
+            if (input) input.checked = selected;
+        });
+
+        if (savedMethodInput) {
+            savedMethodInput.value = radio.value;
+        }
+        setNewCardFieldsEnabled(false);
+        setSavedCardCvvActive(true);
+
+        if (scrollCvv) {
+            savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     function syncSavedCardsByMethod() {
-        const selectedMethod = parseInt(metodoInput.value || '0', 10);
-        const isCardMethod = selectedMethod === 2 || selectedMethod === 3;
+        const selectedMethod = selectedPaymentMethod();
+        const isCardMethod = isCardPaymentMethod(selectedMethod);
         let visibleCount = 0;
-        let selectedStillVisible = false;
+        let selectedRadio = null;
 
         savedCards.forEach((card) => {
             const matches = isCardMethod && numericData(card, 'cardMethod') === selectedMethod;
@@ -1610,14 +1687,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (matches) {
                 visibleCount += 1;
             }
-            if (matches && input && savedMethodInput && input.value === savedMethodInput.value && numericData(card, 'cardActive') === 1) {
-                selectedStillVisible = true;
+            if (matches && input && savedMethodInput && input.value === savedMethodInput.value && numericData(card, 'active') === 1) {
+                selectedRadio = input;
             }
         });
-
-        if (savedMethodInput && !selectedStillVisible) {
-            savedMethodInput.value = '';
-        }
 
         if (savedPaymentEmpty) {
             savedPaymentEmpty.classList.toggle('is-visible', isCardMethod && visibleCount === 0);
@@ -1631,59 +1704,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 : 'Transferencia y efectivo no guardan datos de tarjeta.';
         }
 
-        return visibleCount;
-    }
-
-    function setCardMode(useSaved) {
-        if (savedMethodInput && !useSaved) {
-            savedMethodInput.value = '';
-        }
-
-        savedCards.forEach((card) => {
-            const input = card.querySelector('input[type="radio"]');
-            const selected = useSaved && input && input.value === savedMethodInput.value;
-            card.classList.toggle('is-selected', Boolean(selected));
-            if (input) input.checked = Boolean(selected);
-        });
-
-        if (newCardFields) {
-            newCardFields.classList.add('is-hidden');
-            newCardFields.querySelectorAll('input').forEach((field) => {
-                field.disabled = true;
-                field.required = false;
-            });
-        }
-
-        if (savedCardCvv) {
-            savedCardCvv.classList.toggle('is-visible', useSaved);
-            savedCardCvv.querySelectorAll('input').forEach((field) => {
-                field.disabled = !useSaved;
-                field.required = useSaved;
-            });
-        }
+        return { isCardMethod, visibleCount, selectedRadio };
     }
 
     function syncPaymentFields() {
-        const val = metodoInput.value;
-        efectivo.classList.toggle('is-visible', val === '1');
+        const method = selectedPaymentMethod();
+        const val = String(method);
+        efectivo.classList.toggle('is-visible', method === 1);
         tarjeta.classList.toggle('is-visible', false);
-        transferencia.classList.toggle('is-visible', val === '4');
-        const visibleSavedCards = syncSavedCardsByMethod();
+        transferencia.classList.toggle('is-visible', method === 4);
+        const savedState = syncSavedCardsByMethod();
         if (savedPanel) {
-            savedPanel.classList.toggle('is-visible', (val === '2' || val === '3') && (savedCards.length > 0 || visibleSavedCards === 0));
+            savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
         }
-        setRequired(efectivo, val === '1');
-        setRequired(transferencia, val === '4');
-        if (val === '2' || val === '3') {
-            setCardMode(usingSavedCard());
+        setRequired(efectivo, method === 1);
+        setRequired(transferencia, method === 4);
+        setNewCardFieldsEnabled(false);
+
+        if (savedState.isCardMethod) {
+            if (savedState.selectedRadio) {
+                setActiveSavedCard(savedState.selectedRadio, { syncMethod: false });
+            } else {
+                clearActiveSavedCard();
+            }
             setRequired(tarjeta, false);
         } else {
-            setCardMode(false);
+            clearActiveSavedCard();
             setRequired(tarjeta, false);
         }
 
         methodButtons.forEach((button) => {
-            const active = button.dataset.method === val;
+            const active = Number(button.dataset.method || 0) === method;
             button.classList.toggle('is-active', active);
             button.setAttribute('aria-checked', active ? '1' : '0');
         });
@@ -1692,15 +1743,16 @@ document.addEventListener('DOMContentLoaded', function () {
     methodButtons.forEach((button) => {
         button.addEventListener('click', () => {
             const previousMethod = metodoInput.value;
-            metodoInput.value = button.dataset.method;
-            if (standaloneCardForm && previousMethod !== button.dataset.method) {
+            const nextMethod = Number(button.dataset.method || 0);
+            metodoInput.value = String(nextMethod);
+            if (standaloneCardForm && Number(previousMethod || 0) !== nextMethod) {
                 standaloneCardForm.classList.remove('is-visible');
                 standaloneCardForm.reset();
-                if (standaloneCardMethod && (button.dataset.method === '2' || button.dataset.method === '3')) {
-                    standaloneCardMethod.value = button.dataset.method;
+                if (standaloneCardMethod && isCardPaymentMethod(nextMethod)) {
+                    standaloneCardMethod.value = String(nextMethod);
                 }
             }
-            if (button.dataset.method !== '2' && button.dataset.method !== '3' && savedMethodInput) {
+            if (!isCardPaymentMethod(nextMethod) && savedMethodInput) {
                 savedMethodInput.value = '';
             }
             syncPaymentFields();
@@ -1719,15 +1771,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     savedCards.forEach((card) => {
         card.addEventListener('click', () => {
-            if (numericData(card, 'cardActive') !== 1) return;
-            if (!cardMatchesCurrentMethod(card)) return;
             const input = card.querySelector('input[type="radio"]');
-            if (!input || input.disabled || !savedMethodInput) return;
-            savedMethodInput.value = input.value;
-            const cardMethod = numericData(card, 'cardMethod');
-            if (cardMethod === 2 || cardMethod === 3) {
-                metodoInput.value = String(cardMethod);
-            }
+            if (!input) return;
+            setActiveSavedCard(input);
+            syncPaymentFields();
+        });
+    });
+
+    document.querySelectorAll('input[name="saved_payment_choice"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+            setActiveSavedCard(radio);
             syncPaymentFields();
         });
     });
@@ -1736,16 +1789,10 @@ document.addEventListener('DOMContentLoaded', function () {
         button.addEventListener('click', (event) => {
             event.stopPropagation();
             const card = button.closest('[data-saved-card]');
-            if (!card || numericData(card, 'cardActive') !== 1 || !cardMatchesCurrentMethod(card)) return;
             const input = card.querySelector('input[type="radio"]');
-            if (!input || input.disabled || !savedMethodInput) return;
-            savedMethodInput.value = input.value;
-            const cardMethod = numericData(card, 'cardMethod');
-            if (cardMethod === 2 || cardMethod === 3) {
-                metodoInput.value = String(cardMethod);
-            }
+            if (!input) return;
+            setActiveSavedCard(input, { scrollCvv: true });
             syncPaymentFields();
-            savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     });
 
@@ -1770,8 +1817,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     newCardToggle?.addEventListener('click', () => {
-        if (standaloneCardMethod && (metodoInput.value === '2' || metodoInput.value === '3')) {
-            standaloneCardMethod.value = metodoInput.value;
+        const method = selectedPaymentMethod();
+        if (standaloneCardMethod && isCardPaymentMethod(method)) {
+            standaloneCardMethod.value = String(method);
         }
         standaloneCardForm?.classList.add('is-visible');
         standaloneCardForm?.scrollIntoView({ behavior: 'smooth', block: 'center' });

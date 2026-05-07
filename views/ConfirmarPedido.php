@@ -444,6 +444,53 @@ body[data-theme="light"] .address-form,
 .light-mode .address-form {
     background: rgba(255, 255, 255, 0.78);
 }
+body[data-theme="light"] .address-name,
+.light-mode .address-name {
+    color: #0f172a;
+}
+body[data-theme="light"] .address-text,
+.light-mode .address-text {
+    color: #1e293b;
+}
+body[data-theme="light"] .address-info,
+.light-mode .address-info {
+    background: rgba(226, 232, 240, 0.9);
+    color: #475569;
+}
+body[data-theme="light"] .checkout-btn.secondary,
+.light-mode .checkout-btn.secondary {
+    border-color: rgba(100, 116, 139, 0.26);
+    background: rgba(248, 250, 252, 0.94);
+    color: #334155;
+}
+body[data-theme="light"] .checkout-btn.secondary:hover,
+.light-mode .checkout-btn.secondary:hover {
+    border-color: rgba(37, 99, 235, 0.36);
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+body[data-theme="light"] .checkout-btn.danger,
+.light-mode .checkout-btn.danger {
+    border-color: rgba(239, 68, 68, 0.34);
+    background: rgba(254, 226, 226, 0.92);
+    color: #b91c1c;
+}
+body[data-theme="light"] .checkout-btn.danger:hover,
+.light-mode .checkout-btn.danger:hover {
+    background: #fee2e2;
+    color: #991b1b;
+}
+body[data-theme="light"] .checkout-btn.outline-add,
+.light-mode .checkout-btn.outline-add {
+    border-color: rgba(37, 99, 235, 0.34);
+    background: rgba(239, 246, 255, 0.88);
+    color: #1d4ed8;
+}
+body[data-theme="light"] .checkout-btn:disabled,
+.light-mode .checkout-btn:disabled {
+    color: #64748b;
+    opacity: 0.72;
+}
 body[data-theme="light"] .form-control,
 .light-mode .form-control {
     background: rgba(255, 255, 255, 0.88);
