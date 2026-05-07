@@ -492,9 +492,11 @@ class MetodoPagoUsuarioModel {
 
         $this->quitarPredeterminado($idUsuario);
 
+        oci_commit($this->conn);
+
         $query = "UPDATE METODO_PAGO_USUARIO
-                  SET ES_PREDETERMINADO = 1
-                  WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
+                SET ES_PREDETERMINADO = 1
+                WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND ID_USUARIO = :id_usuario
                     AND ACTIVO = 1";
 
@@ -513,10 +515,13 @@ class MetodoPagoUsuarioModel {
         }
 
         $affected = oci_num_rows($stmt) > 0;
+
         oci_free_statement($stmt);
+
         if ($affected) {
             $this->limpiarCache($idUsuario);
         }
+
         return $affected;
     }
 }
