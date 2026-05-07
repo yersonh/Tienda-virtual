@@ -1795,7 +1795,6 @@ function initPaymentPage() {
                 setActiveSavedCard(savedState.selectedRadio, { syncMethod: false });
             } else {
                 clearActiveSavedCard();
-                setNewCardFieldsEnabled(true);
             }
         } else {
             clearActiveSavedCard();
