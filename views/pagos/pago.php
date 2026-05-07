@@ -657,6 +657,10 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
     line-height: 1.45;
 }
 
+[data-theme="light"] .payment-error {
+    color: #991b1b;
+}
+
 .payment-warning-note {
     display: flex;
     align-items: flex-start;
@@ -674,10 +678,6 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
     color: #854d0e;
     background: #fff7d6;
     border-color: #f3d078;
-}
-
-[data-theme="light"] .payment-error {
-    color: #991b1b;
 }
 
 .payment-breakdown {
@@ -1518,10 +1518,6 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 <i class="fas fa-floppy-disk"></i>
                                 <?= htmlspecialchars('Guardar tarjeta', ENT_QUOTES, 'UTF-8') ?>
                             </button>
-                            <button class="payment-link" type="button" id="cancel-new-card">
-                                <i class="fas fa-xmark"></i>
-                                <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
-                            </button>
                         </div>
                     </form>
                         <?php foreach ($metodosPagoUsuario as $metodoGuardadoForm): ?>
@@ -1605,7 +1601,7 @@ function redirectCompletedPaymentFromHistory(event) {
 
 window.addEventListener('pageshow', redirectCompletedPaymentFromHistory);
 
-function initPaymentPage() {
+function bindPaymentPage() {
     if (currentNavigation?.type !== 'back_forward') {
         sessionStorage.removeItem(paymentCompletedKey);
         sessionStorage.removeItem(paymentSubmittedKey);
@@ -1628,7 +1624,6 @@ function initPaymentPage() {
     const savedPaymentSubtitle = document.getElementById('saved-payment-subtitle');
     const standaloneCardForm = document.getElementById('standalone-card-form');
     const standaloneCardMethod = document.getElementById('standalone-card-method');
-    const cancelNewCard = document.getElementById('cancel-new-card');
     const oneTimeCardToggle = document.getElementById('one-time-card-toggle');
     const checkoutSaveCard = document.getElementById('checkout-save-card');
     const checkoutDefaultCard = document.getElementById('checkout-default-card');
@@ -1897,19 +1892,20 @@ function initPaymentPage() {
         if (standaloneCardMethod && isCardPaymentMethod(method)) {
             standaloneCardMethod.value = String(method);
         }
+        oneTimeCardMode = false;
+        tarjeta?.classList.remove('is-visible');
+        setNewCardFieldsEnabled(false);
         standaloneCardForm?.classList.add('is-visible');
         standaloneCardForm?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
     oneTimeCardToggle?.addEventListener('click', () => {
         oneTimeCardMode = true;
+        standaloneCardForm?.classList.remove('is-visible');
+        standaloneCardForm?.reset();
         clearActiveSavedCard();
         syncPaymentFields();
         newCardFields?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    cancelNewCard?.addEventListener('click', () => {
-        standaloneCardForm?.classList.remove('is-visible');
     });
 
     checkoutSaveCard?.addEventListener('change', () => {
@@ -1966,17 +1962,13 @@ function initPaymentPage() {
         }
     });
 
-    function paymentNoticeClass(isError) {
-        return isError ? 'payment-error' : 'payment-invoice-note payment-success-note';
-    }
-
     function showPaymentNotice(message, isError = false) {
         const main = document.querySelector('.payment-main');
         const form = document.getElementById('payment-confirm-form');
         if (!main || !form || !message) return;
         main.querySelectorAll('[data-live-payment-notice]').forEach((item) => item.remove());
         const notice = document.createElement('div');
-        notice.className = paymentNoticeClass(isError);
+        notice.className = isError ? 'payment-error' : 'payment-invoice-note payment-success-note';
         notice.dataset.livePaymentNotice = '1';
         notice.setAttribute('role', isError ? 'alert' : 'status');
         notice.innerHTML = `<i class="fas ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span></span>`;
@@ -1997,7 +1989,7 @@ function initPaymentPage() {
         const currentMain = document.querySelector('.payment-main');
         if (nextMain && currentMain) {
             currentMain.replaceWith(nextMain);
-            initPaymentPage();
+            bindPaymentPage();
             showPaymentNotice(message, isError);
         }
     }
@@ -2047,7 +2039,7 @@ function initPaymentPage() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', initPaymentPage);
+document.addEventListener('DOMContentLoaded', bindPaymentPage);
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
