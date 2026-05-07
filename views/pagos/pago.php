@@ -1309,16 +1309,10 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                     <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <small id="saved-payment-subtitle"><?= htmlspecialchars('Selecciona una tarjeta activa o registra una nueva.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </span>
-                                <span class="saved-payment-actions">
-                                    <button class="new-card-toggle" type="button" id="one-time-card-toggle">
-                                        <i class="fas fa-credit-card"></i>
-                                        <?= htmlspecialchars('Pagar sin guardar', ENT_QUOTES, 'UTF-8') ?>
-                                    </button>
-                                    <button class="new-card-toggle" type="button" id="new-card-toggle">
-                                        <i class="fas fa-plus"></i>
-                                        <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
-                                    </button>
-                                </span>
+                                <button class="new-card-toggle" type="button" id="new-card-toggle">
+                                    <i class="fas fa-plus"></i>
+                                    <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                                </button>
                             </div>
                             <?php if (!empty($metodosPagoUsuario)): ?>
                                 <div class="saved-payment-grid">
@@ -1424,6 +1418,11 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 </div>
                             </div>
                         </div>
+
+                        <button class="payment-link" type="button" id="one-time-card-toggle" style="display: none;">
+                            <i class="fas fa-credit-card"></i>
+                            <?= htmlspecialchars('Pagar con tarjeta sin guardar', ENT_QUOTES, 'UTF-8') ?>
+                        </button>
 
                         <div id="efectivo" class="payment-dynamic">
                             <div class="payment-cash-fields">
@@ -1778,6 +1777,9 @@ function initPaymentPage() {
         efectivo.classList.toggle('is-visible', method === 1);
         tarjeta.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
         transferencia.classList.toggle('is-visible', method === 4);
+        if (oneTimeCardToggle) {
+            oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
+        }
         const savedState = syncSavedCardsByMethod();
         if (savedPanel) {
             savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
