@@ -657,10 +657,6 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
     line-height: 1.45;
 }
 
-[data-theme="light"] .payment-error {
-    color: #991b1b;
-}
-
 .payment-warning-note {
     display: flex;
     align-items: flex-start;
@@ -678,6 +674,10 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
     color: #854d0e;
     background: #fff7d6;
     border-color: #f3d078;
+}
+
+[data-theme="light"] .payment-error {
+    color: #991b1b;
 }
 
 .payment-breakdown {
@@ -1309,10 +1309,16 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                     <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <small id="saved-payment-subtitle"><?= htmlspecialchars('Selecciona una tarjeta activa o registra una nueva.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </span>
-                                <button class="new-card-toggle" type="button" id="new-card-toggle">
-                                    <i class="fas fa-plus"></i>
-                                    <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
-                                </button>
+                                <span class="saved-payment-actions">
+                                    <button class="new-card-toggle" type="button" id="one-time-card-toggle">
+                                        <i class="fas fa-credit-card"></i>
+                                        <?= htmlspecialchars('Pagar sin guardar', ENT_QUOTES, 'UTF-8') ?>
+                                    </button>
+                                    <button class="new-card-toggle" type="button" id="new-card-toggle">
+                                        <i class="fas fa-plus"></i>
+                                        <?= htmlspecialchars('Agregar tarjeta', ENT_QUOTES, 'UTF-8') ?>
+                                    </button>
+                                </span>
                             </div>
                             <?php if (!empty($metodosPagoUsuario)): ?>
                                 <div class="saved-payment-grid">
@@ -1418,11 +1424,6 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 </div>
                             </div>
                         </div>
-
-                        <button class="payment-link" type="button" id="one-time-card-toggle" style="display: none;">
-                            <i class="fas fa-credit-card"></i>
-                            <?= htmlspecialchars('Pagar con tarjeta sin guardar', ENT_QUOTES, 'UTF-8') ?>
-                        </button>
 
                         <div id="efectivo" class="payment-dynamic">
                             <div class="payment-cash-fields">
@@ -1601,7 +1602,7 @@ function redirectCompletedPaymentFromHistory(event) {
 
 window.addEventListener('pageshow', redirectCompletedPaymentFromHistory);
 
-function bindPaymentPage() {
+function initPaymentPage() {
     if (currentNavigation?.type !== 'back_forward') {
         sessionStorage.removeItem(paymentCompletedKey);
         sessionStorage.removeItem(paymentSubmittedKey);
@@ -1777,9 +1778,6 @@ function bindPaymentPage() {
         efectivo.classList.toggle('is-visible', method === 1);
         tarjeta.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
         transferencia.classList.toggle('is-visible', method === 4);
-        if (oneTimeCardToggle) {
-            oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
-        }
         const savedState = syncSavedCardsByMethod();
         if (savedPanel) {
             savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
@@ -1962,13 +1960,17 @@ function bindPaymentPage() {
         }
     });
 
+    function paymentNoticeClass(isError) {
+        return isError ? 'payment-error' : 'payment-invoice-note payment-success-note';
+    }
+
     function showPaymentNotice(message, isError = false) {
         const main = document.querySelector('.payment-main');
         const form = document.getElementById('payment-confirm-form');
         if (!main || !form || !message) return;
         main.querySelectorAll('[data-live-payment-notice]').forEach((item) => item.remove());
         const notice = document.createElement('div');
-        notice.className = isError ? 'payment-error' : 'payment-invoice-note payment-success-note';
+        notice.className = paymentNoticeClass(isError);
         notice.dataset.livePaymentNotice = '1';
         notice.setAttribute('role', isError ? 'alert' : 'status');
         notice.innerHTML = `<i class="fas ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span></span>`;
@@ -1989,7 +1991,7 @@ function bindPaymentPage() {
         const currentMain = document.querySelector('.payment-main');
         if (nextMain && currentMain) {
             currentMain.replaceWith(nextMain);
-            bindPaymentPage();
+            initPaymentPage();
             showPaymentNotice(message, isError);
         }
     }
@@ -2039,7 +2041,7 @@ function bindPaymentPage() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', bindPaymentPage);
+document.addEventListener('DOMContentLoaded', initPaymentPage);
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
