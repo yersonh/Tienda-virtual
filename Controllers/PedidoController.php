@@ -216,6 +216,40 @@ class PedidoController {
         return sprintf('Factura #%d-%s-%s.html', $idPedido, $primerNombre, $fecha);
     }
 
+    private function prepararPedidoConfirmado(array $pedido, string $metodoPago = 'Registrado'): array {
+        $items = isset($pedido['items']) && is_array($pedido['items']) ? $pedido['items'] : [];
+        $subtotalItems = array_sum(array_map(fn($item) => (float) ($item['subtotal'] ?? 0), $items));
+        $total = (float) ($pedido['total'] ?? 0);
+        $subtotalItems = (float) ($pedido['subtotal'] ?? $subtotalItems);
+        $iva = (float) ($pedido['iva'] ?? ($subtotalItems > 0 ? round($subtotalItems * 0.19, 2) : 0));
+        $envio = (float) ($pedido['envio'] ?? max(0, $total - $subtotalItems - $iva));
+
+        if ($subtotalItems <= 0) {
+            $subtotalItems = max(0, round($total / 1.19, 2));
+            $iva = max(0, $total - $subtotalItems);
+            $envio = 0;
+        }
+
+        return [
+            'id_pedido' => (int) ($pedido['id_pedido'] ?? 0),
+            'id_venta' => (int) ($pedido['id_venta'] ?? 0),
+            'fecha' => $pedido['fecha'] ?? null,
+            'total' => $total,
+            'subtotal' => $subtotalItems,
+            'iva' => $iva,
+            'envio' => $envio,
+            'fecha_estimada_entrega' => $pedido['fecha_estimada_entrega'] ?? null,
+            'metodo_pago' => $metodoPago,
+            'items' => $items,
+            'receptor' => [
+                'nombre' => trim((string) (($pedido['nombre_receptor'] ?? '') . ' ' . ($pedido['apellido_receptor'] ?? ''))),
+                'direccion' => (string) ($pedido['direccion_envio'] ?? ''),
+                'ciudad' => (string) ($pedido['ciudad'] ?? ''),
+                'telefono' => (string) ($pedido['telefono_receptor'] ?? '')
+            ]
+        ];
+    }
+
     private function tarifasEnvioPorCiudad(): array {
         return [
             'villavicencio' => 2000,
@@ -627,22 +661,22 @@ class PedidoController {
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
         $query = "SELECT fp.ID_PEDIDO,
                          fp.ID_VENTA,
-                         fp.ID_ESTADO,
+                         CAST(NULL AS NUMBER) AS ID_ESTADO,
                          fp.ESTADO_PEDIDO AS ESTADO,
                          TO_CHAR(fp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
                          NVL(fp.SUBTOTAL, 0) AS SUBTOTAL,
                          NVL(fp.IVA, 0) AS IVA,
                          NVL(fp.ENVIO, 0) AS ENVIO,
                          NVL(fp.TOTAL, 0) AS TOTAL,
-                         TO_CHAR(fp.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA,
+                         CAST(NULL AS VARCHAR2(10)) AS FECHA_ESTIMADA_ENTREGA,
                          fp.NOMBRE_RECEPTOR,
                          fp.APELLIDO_RECEPTOR,
                          fp.DIRECCION_ENVIO,
                          fp.CIUDAD,
                          fp.BARRIO,
                          fp.TELEFONO_RECEPTOR,
-                         fp.TELEFONO_ALTERNO,
-                         fp.INFORMACION_ADICIONAL
+                         CAST(NULL AS VARCHAR2(50)) AS TELEFONO_ALTERNO,
+                         CAST(NULL AS VARCHAR2(500)) AS INFORMACION_ADICIONAL
                   FROM V_FACTURA_PEDIDO fp
                   WHERE fp.ID_USUARIO = :id_usuario
                     AND fp.ID_PEDIDO = :id_pedido
@@ -1196,8 +1230,27 @@ class PedidoController {
     public function confirmacion() {
         $this->ensureSession();
 
+        $idPedido = (int) ($_GET['id'] ?? 0);
         $pedido = $_SESSION['pedido_confirmado'] ?? null;
-        if (!$pedido) {
+
+        if ($idPedido > 0 && (!is_array($pedido) || (int) ($pedido['id_pedido'] ?? 0) !== $idPedido)) {
+            $idUsuario = $this->getUsuarioId();
+            if ($idUsuario <= 0) {
+                $_SESSION['error'] = 'Debes iniciar sesion para ver la confirmacion del pedido';
+                header("Location: index.php?action=login");
+                exit();
+            }
+
+            try {
+                $pedidoDb = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
+                $pedido = $pedidoDb ? $this->prepararPedidoConfirmado($pedidoDb) : null;
+            } catch (Throwable $e) {
+                error_log($e->getMessage());
+                $pedido = null;
+            }
+        }
+
+        if (!is_array($pedido) || (int) ($pedido['id_pedido'] ?? 0) <= 0) {
             header("Location: index.php?action=tienda");
             exit();
         }
@@ -1263,36 +1316,7 @@ class PedidoController {
             exit();
         }
 
-        $items = isset($pedido['items']) && is_array($pedido['items']) ? $pedido['items'] : [];
-        $subtotalItems = array_sum(array_map(fn($item) => (float) ($item['subtotal'] ?? 0), $items));
-        $total = (float) ($pedido['total'] ?? 0);
-        $subtotalItems = (float) ($pedido['subtotal'] ?? $subtotalItems);
-        $iva = (float) ($pedido['iva'] ?? ($subtotalItems > 0 ? round($subtotalItems * 0.19, 2) : 0));
-        $envio = (float) ($pedido['envio'] ?? max(0, $total - $subtotalItems - $iva));
-        if ($subtotalItems <= 0) {
-            $subtotalItems = max(0, round($total / 1.19, 2));
-            $iva = max(0, $total - $subtotalItems);
-            $envio = 0;
-        }
-
-        $pedidoConfirmado = [
-            'id_pedido' => (int) $pedido['id_pedido'],
-            'id_venta' => 0,
-            'fecha' => $pedido['fecha'] ?? null,
-            'total' => $total,
-            'subtotal' => $subtotalItems,
-            'iva' => $iva,
-            'envio' => $envio,
-            'fecha_estimada_entrega' => $pedido['fecha_estimada_entrega'] ?? null,
-            'metodo_pago' => 'Registrado',
-            'items' => $items,
-            'receptor' => [
-                'nombre' => trim((string) (($pedido['nombre_receptor'] ?? '') . ' ' . ($pedido['apellido_receptor'] ?? ''))),
-                'direccion' => (string) ($pedido['direccion_envio'] ?? ''),
-                'ciudad' => (string) ($pedido['ciudad'] ?? ''),
-                'telefono' => (string) ($pedido['telefono_receptor'] ?? '')
-            ]
-        ];
+        $pedidoConfirmado = $this->prepararPedidoConfirmado($pedido);
 
         if (!empty($_GET['download'])) {
             $facturaPedido = $pedidoConfirmado;
@@ -1309,10 +1333,13 @@ class PedidoController {
             exit();
         }
 
-        $direcciones = [];
-        $total = (float) $pedidoConfirmado['total'];
-
-        require_once __DIR__ . '/../views/ConfirmarPedido.php';
+        $facturaPedido = $pedidoConfirmado;
+        $facturaRootTag = 'main';
+        $facturaHideActions = false;
+        require_once __DIR__ . '/../views/helpers/entrega.php';
+        require_once __DIR__ . '/../views/layouts/navbar.php';
+        require_once __DIR__ . '/../views/pedidos/factura_moderna.php';
+        require_once __DIR__ . '/../views/layouts/footer.php';
     }
 
     public function cancelarPedido() {

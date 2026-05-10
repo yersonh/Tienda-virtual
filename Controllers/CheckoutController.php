@@ -307,7 +307,7 @@ class CheckoutController {
                 'receptor' => $this->receptorConfirmacion($direccion)
             ];
 
-            header('Location: index.php?action=confirmacionPedido');
+            header('Location: index.php?action=confirmacionPedido&id=' . (int) $pedido['id_pedido']);
             exit();
         } catch (Throwable $e) {
             oci_rollback($this->conn);

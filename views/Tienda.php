@@ -1594,6 +1594,11 @@ async function fetchFilteredStore(force = false) {
     } catch (error) {
         if (error.name === 'AbortError') return;
         console.error(error);
+        if (!force) {
+            const fallbackParams = new URLSearchParams(viewParams);
+            fallbackParams.set('action', 'tienda');
+            window.location.href = `index.php?${fallbackParams.toString()}${cat ? '#category-detail' : ''}`;
+        }
     } finally {
         if (currentRequestId === filterRequestId) {
             setFilterLoading(false);

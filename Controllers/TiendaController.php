@@ -168,19 +168,23 @@ class TiendaController {
         return array_values(array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
             $match_texto = true;
             if ($filtro !== '') {
-                $f = strtolower($filtro);
+                $f = function_exists('mb_strtolower') ? mb_strtolower($filtro, 'UTF-8') : strtolower($filtro);
+                $nombre = function_exists('mb_strtolower') ? mb_strtolower((string) ($p['nombre'] ?? ''), 'UTF-8') : strtolower((string) ($p['nombre'] ?? ''));
+                $codigo = function_exists('mb_strtolower') ? mb_strtolower((string) ($p['codigo'] ?? ''), 'UTF-8') : strtolower((string) ($p['codigo'] ?? ''));
+                $descripcion = function_exists('mb_strtolower') ? mb_strtolower((string) ($p['descripcion'] ?? ''), 'UTF-8') : strtolower((string) ($p['descripcion'] ?? ''));
                 $match_texto =
-                    str_contains(strtolower((string) ($p['nombre'] ?? '')), $f) ||
-                    str_contains(strtolower((string) ($p['codigo'] ?? '')), $f) ||
-                    str_contains(strtolower((string) ($p['descripcion'] ?? '')), $f);
+                    str_contains($nombre, $f) ||
+                    str_contains($codigo, $f) ||
+                    str_contains($descripcion, $f);
             }
 
+            $precio = (float) ($p['precio'] ?? 0);
             $match_precio = true;
             if ($precio_min !== '') {
-                $match_precio = (int) ($p['precio'] ?? 0) >= (int) $precio_min;
+                $match_precio = $precio >= (float) $precio_min;
             }
             if ($precio_max !== '') {
-                $match_precio = $match_precio && (int) ($p['precio'] ?? 0) <= (int) $precio_max;
+                $match_precio = $match_precio && $precio <= (float) $precio_max;
             }
 
             $match_categoria = true;
@@ -590,38 +594,48 @@ class TiendaController {
 
     // Ã°Å¸â€Â DETALLE
     public function filtrosAjax() {
-        $modoCompatibilidad = $_GET['compatibilidad_tipo'] ?? '';
-        extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo', true));
-        $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
-
-        ob_start();
-        require __DIR__ . '/../views/partials/tienda_productos.php';
-        $productosHtml = ob_get_clean();
-
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => true,
-            'productos_html' => $productosHtml,
-            'compatibilidad_tipo' => $compatibilidad_tipo,
-            'compatibilidad_activa' => $compatibilidad_activa,
-            'opciones' => [
-                'vehiculo' => $opcionesVehiculo,
-                'maquinaria' => $opcionesMaquinaria
-            ],
-            'seleccion' => [
-                'vehiculo' => [
-                    'marcas' => $vehiculo_marcas,
-                    'modelos' => $vehiculo_modelos,
-                    'anos' => array_map('strval', $vehiculo_anos)
+
+        try {
+            $modoCompatibilidad = $_GET['compatibilidad_tipo'] ?? '';
+            extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo', true));
+            $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
+
+            ob_start();
+            require __DIR__ . '/../views/partials/tienda_productos.php';
+            $productosHtml = ob_get_clean();
+
+            echo json_encode([
+                'success' => true,
+                'productos_html' => $productosHtml,
+                'compatibilidad_tipo' => $compatibilidad_tipo,
+                'compatibilidad_activa' => $compatibilidad_activa,
+                'opciones' => [
+                    'vehiculo' => $opcionesVehiculo,
+                    'maquinaria' => $opcionesMaquinaria
                 ],
-                'maquinaria' => [
-                    'tipos' => $maquinaria_tipos,
-                    'marcas' => $maquinaria_marcas,
-                    'modelos' => $maquinaria_modelos
-                ]
-            ],
-            'categorias' => array_map('count', $categorias)
-        ]);
+                'seleccion' => [
+                    'vehiculo' => [
+                        'marcas' => $vehiculo_marcas,
+                        'modelos' => $vehiculo_modelos,
+                        'anos' => array_map('strval', $vehiculo_anos)
+                    ],
+                    'maquinaria' => [
+                        'tipos' => $maquinaria_tipos,
+                        'marcas' => $maquinaria_marcas,
+                        'modelos' => $maquinaria_modelos
+                    ]
+                ],
+                'categorias' => array_map('count', $categorias)
+            ]);
+        } catch (Throwable $e) {
+            error_log('TiendaController::filtrosAjax: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se pudieron aplicar los filtros'
+            ]);
+        }
         exit();
     }
 
