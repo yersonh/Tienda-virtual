@@ -1940,7 +1940,7 @@ function initPaymentPage() {
     });
 
     document.getElementById('standalone-numero-tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 19);
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
         event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
     });
 
@@ -2217,17 +2217,25 @@ function initPaymentPage() {
         if (!acceptance?.checked) {
             throw new Error('Debes aceptar las politicas para guardar la tarjeta');
         }
+        if (!/^\d{16}$/.test(number)) {
+            throw new Error('La tarjeta debe tener exactamente 16 digitos');
+        }
 
         const config = await loadWompiCardConfig();
-        const baseUrl = String(config.public_key).startsWith('pub_test_')
+        const publicKey = String(config.public_key).trim();
+        const baseUrl = publicKey.startsWith('pub_test_')
             ? 'https://sandbox.wompi.co/v1'
             : 'https://production.wompi.co/v1';
+
+        console.log('WOMPI CONFIG', config);
+        console.log('PUBLIC KEY', publicKey);
+
         const response = await fetch(`${baseUrl}/tokens/cards`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.public_key}`
+                'Authorization': `Bearer ${publicKey}`
             },
             body: JSON.stringify({
                 number,
@@ -2237,9 +2245,27 @@ function initPaymentPage() {
                 card_holder: alias
             })
         });
-        const data = await response.json();
+
+        console.log('TOKEN RESPONSE STATUS', response.status);
+        const responseText = await response.text();
+        console.log('TOKEN RESPONSE RAW', responseText);
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (_) {
+            throw new Error(`Error inesperado del servidor de pagos (${response.status})`);
+        }
         if (!response.ok || !data?.data?.id) {
-            throw new Error(data?.error?.reason || data?.message || 'No se pudo tokenizar la tarjeta');
+            if (data?.error) {
+                const errType = data.error.type || '';
+                const errMessages = Array.isArray(data.error.messages)
+                    ? Object.values(data.error.messages).flat().join(', ')
+                    : (data.error.reason || data.error.message || '');
+                const errDetail = errMessages || errType || JSON.stringify(data.error);
+                console.error('WOMPI TOKEN ERROR', data.error);
+                throw new Error(`Error Wompi: ${errDetail}`);
+            }
+            throw new Error(data?.message || `No se pudo tokenizar la tarjeta (${response.status})`);
         }
 
         const tokenData = data.data;
