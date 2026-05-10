@@ -49,4 +49,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "/app/public"]
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "/app/public", "/app/public/router.php"]

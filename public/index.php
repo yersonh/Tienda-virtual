@@ -1,7 +1,12 @@
 <?php
 session_start();
 
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$normalizedPath = rtrim($requestPath, '/') ?: '/';
 $action = $_GET['action'] ?? 'nosotros';
+if ($normalizedPath === '/wompi/webhook') {
+    $action = 'wompiWebhook';
+}
 $_SESSION['logueado'] = isset($_SESSION['id_usuario']);
 
 if ($action === 'health') {
@@ -50,7 +55,8 @@ $publicas = [
     'recuperar',
     'solicitarRecuperacion',
     'restablecer',
-    'cambiarPassword'
+    'cambiarPassword',
+    'wompiWebhook'
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
@@ -332,6 +338,10 @@ switch ($action) {
 
     case 'admin_pedidos_json':
         (new AdminPedidoController())->obtenerPedidosJson();
+        break;
+
+    case 'wompiWebhook':
+        (new WompiController())->webhook();
         break;
 
     default:
