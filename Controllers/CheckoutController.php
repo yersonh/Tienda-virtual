@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/PedidoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
 require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
 require_once __DIR__ . '/../models/PedidoLifecycleModel.php';
+require_once __DIR__ . '/../models/WompiApiModel.php';
 
 class CheckoutController {
 
@@ -141,6 +142,35 @@ class CheckoutController {
 
     private function firmaIntegridadWompi(string $referencia, int $amountInCents, string $currency, string $integritySecret): string {
         return hash('sha256', $referencia . (string) $amountInCents . $currency . $integritySecret);
+    }
+
+    private function correoUsuario(int $idUsuario): string {
+        $query = "SELECT LOWER(TRIM(p.CORREO)) AS CORREO
+                  FROM USUARIO u
+                  INNER JOIN PERSONA p ON p.ID_PERSONA = u.ID_PERSONA
+                  WHERE u.ID_USUARIO = :id_usuario
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception('No se pudo consultar el correo del usuario');
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el correo del usuario');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+        $correo = trim((string) ($row['CORREO'] ?? ''));
+        if ($correo === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Tu usuario no tiene un correo valido para Wompi');
+        }
+
+        return $correo;
     }
 
     private function metodoPendienteWompi(): int {
@@ -331,6 +361,17 @@ class CheckoutController {
         }
 
         $idMetodo = $this->metodoPendienteWompi();
+        $idMetodoPagoUsuario = (int) ($_POST['id_metodo_pago_usuario'] ?? 0);
+        $metodoGuardado = null;
+        if ($idMetodoPagoUsuario > 0) {
+            $metodoGuardado = $this->metodoPagoUsuarioModel->obtenerPorIdUsuario($idMetodoPagoUsuario, $idUsuario);
+            if (!$metodoGuardado || (int) ($metodoGuardado['id_fuente_wompi'] ?? 0) <= 0 || strtoupper((string) ($metodoGuardado['estado_wompi'] ?? 'AVAILABLE')) !== 'AVAILABLE') {
+                $this->jsonResponse(400, [
+                    'success' => false,
+                    'message' => 'La tarjeta guardada no esta disponible para pagos Wompi'
+                ]);
+            }
+        }
 
         $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
         if ($idDireccion <= 0) {
@@ -414,6 +455,35 @@ class CheckoutController {
                 'id_venta' => $idVenta,
                 'checkout' => $checkoutPayload
             ];
+
+            if ($metodoGuardado) {
+                try {
+                    $transaction = (new WompiApiModel())->crearTransaccionConFuente(
+                        (int) $checkoutPayload['amount_in_cents'],
+                        (string) $checkoutPayload['currency'],
+                        (string) $checkoutPayload['reference'],
+                        $this->correoUsuario($idUsuario),
+                        (int) $metodoGuardado['id_fuente_wompi'],
+                        1
+                    );
+
+                    $payload['checkout'] = null;
+                    $payload['saved_card_transaction'] = true;
+                    $payload['transaction'] = [
+                        'id' => $transaction['id'] ?? null,
+                        'status' => $transaction['status'] ?? null,
+                        'reference' => $transaction['reference'] ?? $checkoutPayload['reference']
+                    ];
+                    $payload['redirect'] = 'index.php?action=misPedidos&id=' . $idPedido;
+                    $payload['message'] = 'Transaccion creada con la tarjeta guardada. Wompi confirmara el estado por webhook.';
+                } catch (Throwable $wompiError) {
+                    error_log('Wompi tarjeta guardada: ' . $wompiError->getMessage());
+                    $payload['checkout'] = null;
+                    $payload['saved_card_transaction'] = false;
+                    $payload['redirect'] = 'index.php?action=misPedidos&id=' . $idPedido;
+                    $payload['message'] = 'El pedido quedo pendiente, pero Wompi no pudo cobrar la tarjeta guardada. Puedes reintentar el pago desde Mis pedidos.';
+                }
+            }
 
             if ($jsonRequest) {
                 $this->jsonResponse(200, $payload);

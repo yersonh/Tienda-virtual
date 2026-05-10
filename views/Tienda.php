@@ -1840,7 +1840,7 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
 setInterval(() => {
     if (document.visibilityState !== 'visible') return;
     fetchFilteredStore(true);
-}, 12000);
+}, 3000);
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

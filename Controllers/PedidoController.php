@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
 require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
+require_once __DIR__ . '/../models/WompiApiModel.php';
 require_once __DIR__ . '/../models/PedidoLifecycleModel.php';
 require_once __DIR__ . '/CheckoutController.php';
 
@@ -419,8 +420,8 @@ class PedidoController {
             if (trim((string) ($data['titular_tarjeta'] ?? '')) === '') {
                 $errores[] = 'Ingresa el nombre del titular';
             }
-            if (!preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $vencimiento)) {
-                $errores[] = 'Ingresa el vencimiento en formato MM/AA';
+            if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $vencimiento)) {
+                $errores[] = 'Ingresa el vencimiento en formato MM/YYYY';
             }
             if (strlen($cvv) < 3 || strlen($cvv) > 4) {
                 $errores[] = 'Ingresa un CVV valido';
@@ -643,7 +644,7 @@ class PedidoController {
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
         $query = "SELECT fp.ID_PEDIDO,
                          fp.ID_VENTA,
-                         fp.ID_ESTADO,
+                         p.ID_ESTADO,
                          fp.ESTADO_PEDIDO AS ESTADO,
                          TO_CHAR(fp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
                          NVL(fp.SUBTOTAL, 0) AS SUBTOTAL,
@@ -1050,6 +1051,15 @@ class PedidoController {
         }
 
         try {
+            $metodo = $this->metodoPagoUsuarioModel->obtenerPorIdUsuario($idMetodo, $idUsuario);
+            if ($metodo && (int) ($metodo['id_fuente_wompi'] ?? 0) > 0) {
+                try {
+                    (new WompiApiModel())->anularFuentePago((int) $metodo['id_fuente_wompi']);
+                } catch (Throwable $wompiError) {
+                    error_log('Wompi anular fuente: ' . $wompiError->getMessage());
+                }
+            }
+
             $ok = $this->metodoPagoUsuarioModel->eliminar($idMetodo, $idUsuario);
             oci_commit($this->conn);
             $this->responderPagoGuardado($ok, $ok ? 'Metodo de pago eliminado correctamente' : 'No se pudo eliminar el metodo de pago', $ok ? 200 : 400);
@@ -1067,17 +1077,20 @@ class PedidoController {
 
     private function fechaExpiracionMetodoPago(string $vencimiento): string {
         $vencimiento = trim($vencimiento);
+        if (preg_match('/^(0[1-9]|1[0-2])\/(\d{4})$/', $vencimiento, $matches)) {
+            return $matches[1] . '/' . $matches[2];
+        }
         if (preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', $vencimiento, $matches)) {
-            return sprintf('%04d-%02d-01', 2000 + (int) $matches[2], (int) $matches[1]);
+            return $matches[1] . '/20' . $matches[2];
         }
         if (preg_match('/^\d{4}-\d{2}$/', $vencimiento)) {
-            return $vencimiento . '-01';
+            return substr($vencimiento, 5, 2) . '/' . substr($vencimiento, 0, 4);
         }
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimiento)) {
-            return substr($vencimiento, 0, 7) . '-01';
+            return substr($vencimiento, 5, 2) . '/' . substr($vencimiento, 0, 4);
         }
 
-        throw new InvalidArgumentException('Ingresa el vencimiento en formato MM/AA');
+        throw new InvalidArgumentException('Ingresa el vencimiento en formato MM/YYYY');
     }
 
     private function detectarFranquiciaTarjeta(string $numero): string {
@@ -1092,6 +1105,56 @@ class PedidoController {
         return 'DESCONOCIDA';
     }
 
+    private function correoUsuario(int $idUsuario): string {
+        $query = "SELECT LOWER(TRIM(p.CORREO)) AS CORREO
+                  FROM USUARIO u
+                  INNER JOIN PERSONA p ON p.ID_PERSONA = u.ID_PERSONA
+                  WHERE u.ID_USUARIO = :id_usuario
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception('No se pudo consultar el correo del usuario');
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el correo del usuario');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+        $correo = trim((string) ($row['CORREO'] ?? ''));
+        if ($correo === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Tu usuario no tiene un correo valido para Wompi');
+        }
+
+        return $correo;
+    }
+
+    public function wompiTarjetasConfig(): void {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $this->responderPagoGuardado(false, 'Debes iniciar sesion', 401, ['redirect' => 'index.php?action=login']);
+        }
+
+        try {
+            $api = new WompiApiModel();
+            $aceptaciones = $api->obtenerAceptaciones();
+            $this->responderPagoGuardado(true, 'Configuracion Wompi disponible', 200, [
+                'public_key' => $api->publicKey(),
+                'acceptance_permalink' => $aceptaciones['acceptance_permalink'],
+                'personal_auth_permalink' => $aceptaciones['personal_auth_permalink']
+            ]);
+        } catch (Throwable $e) {
+            error_log('wompiTarjetasConfig: ' . $e->getMessage());
+            $this->responderPagoGuardado(false, 'No se pudo cargar la configuracion de Wompi', 500);
+        }
+    }
+
     public function guardarMetodoPagoUsuario(): void {
         $this->ensureSession();
         $idUsuario = $this->getUsuarioId();
@@ -1100,11 +1163,59 @@ class PedidoController {
             $this->responderPagoGuardado(false, 'Debes iniciar sesion para guardar una tarjeta', 401, ['redirect' => 'index.php?action=login']);
         }
 
-        $this->responderPagoGuardado(
-            false,
-            'Guardar tarjetas queda deshabilitado hasta activar tokenizacion real de Wompi.',
-            501
-        );
+        try {
+            $tokenWompi = trim((string) ($_POST['token_wompi'] ?? ''));
+            $marca = strtoupper(trim((string) ($_POST['marca'] ?? $_POST['franquicia'] ?? '')));
+            $ultimos4 = preg_replace('/\D+/', '', (string) ($_POST['ultimos_4'] ?? ''));
+            $alias = trim((string) ($_POST['alias_tarjeta'] ?? $_POST['titular_tarjeta'] ?? ''));
+            $fechaExpiracion = $this->fechaExpiracionMetodoPago((string) ($_POST['fecha_expiracion'] ?? $_POST['vencimiento_tarjeta'] ?? ''));
+
+            if ($tokenWompi === '' || strlen($ultimos4) !== 4 || $alias === '') {
+                throw new InvalidArgumentException('No se recibio una tarjeta tokenizada valida de Wompi');
+            }
+            if (!in_array($marca, ['VISA', 'MASTERCARD'], true)) {
+                throw new InvalidArgumentException('Solo se permiten tarjetas VISA o MASTERCARD');
+            }
+
+            $fechaExpiracionDate = DateTime::createFromFormat('!m/Y', $fechaExpiracion);
+            if (!$fechaExpiracionDate || $fechaExpiracionDate->modify('last day of this month') < new DateTime('today')) {
+                throw new InvalidArgumentException('La tarjeta esta vencida');
+            }
+
+            $api = new WompiApiModel();
+            $fuente = $api->crearFuenteTarjeta($tokenWompi, $this->correoUsuario($idUsuario));
+            $idFuenteWompi = (int) ($fuente['id'] ?? 0);
+            $estadoWompi = strtoupper((string) ($fuente['status'] ?? 'AVAILABLE'));
+            $publicData = is_array($fuente['public_data'] ?? null) ? $fuente['public_data'] : [];
+            $marca = strtoupper(trim((string) ($publicData['brand'] ?? $publicData['card_brand'] ?? $marca)));
+            $ultimos4 = preg_replace('/\D+/', '', (string) ($publicData['last_four'] ?? $publicData['card_last_four'] ?? $ultimos4));
+
+            $idMetodo = $marca === 'MASTERCARD' || $marca === 'VISA' ? 3 : 2;
+            $idMetodoPagoUsuario = $this->metodoPagoUsuarioModel->guardar([
+                'id_usuario' => $idUsuario,
+                'id_metodo' => $idMetodo,
+                'titular' => $alias,
+                'ultimos_4' => $ultimos4,
+                'franquicia' => $marca,
+                'token_wompi' => $tokenWompi,
+                'id_fuente_wompi' => $idFuenteWompi,
+                'estado_wompi' => $estadoWompi,
+                'fecha_expiracion' => $fechaExpiracion,
+                'es_predeterminado' => (int) ($_POST['es_predeterminado_pago'] ?? $_POST['es_predeterminado'] ?? 0)
+            ]);
+
+            oci_commit($this->conn);
+            $this->responderPagoGuardado(true, 'Tarjeta guardada de forma segura con Wompi', 200, [
+                'id_metodo_pago_usuario' => $idMetodoPagoUsuario
+            ]);
+        } catch (Throwable $e) {
+            oci_rollback($this->conn);
+            error_log('guardarMetodoPagoUsuario: ' . $e->getMessage());
+            $message = $e instanceof InvalidArgumentException || $e instanceof RuntimeException
+                ? $e->getMessage()
+                : 'No se pudo guardar la tarjeta con Wompi';
+            $this->responderPagoGuardado(false, $message, 400);
+        }
     }
 
     public function actualizarMetodoPagoUsuario(): void {
@@ -1118,7 +1229,8 @@ class PedidoController {
 
         try {
             $fechaExpiracion = $this->fechaExpiracionMetodoPago((string) ($_POST['fecha_expiracion'] ?? ''));
-            if (strtotime($fechaExpiracion . ' +1 month -1 day') < strtotime(date('Y-m-d'))) {
+            $fechaExpiracionDate = DateTime::createFromFormat('!m/Y', $fechaExpiracion);
+            if (!$fechaExpiracionDate || $fechaExpiracionDate->modify('last day of this month') < new DateTime('today')) {
                 throw new InvalidArgumentException('La tarjeta esta vencida');
             }
 

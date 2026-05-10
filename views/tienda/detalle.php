@@ -718,8 +718,8 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
                         </svg>
                         <?= htmlspecialchars('Codigo', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars($producto['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                     </span>
-                    <span class="detail-chip <?= ($producto['stock_p'] ?? 0) <= 4 ? 'low' : '' ?>">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <span class="detail-chip <?= ($producto['stock_p'] ?? 0) <= 4 ? 'low' : '' ?>" id="detail-stock-chip">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" id="detail-stock-icon">
                             <?php if (($producto['stock_p'] ?? 0) <= 4): ?>
                                 <path d="M12 9v4"></path>
                                 <path d="M12 17h.01"></path>
@@ -728,7 +728,7 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
                                 <path d="m5 12 5 5L20 7"></path>
                             <?php endif; ?>
                         </svg>
-                        <?= ($producto['stock_p'] ?? 0) <= 4 ? htmlspecialchars('Stock bajo', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Disponible', ENT_QUOTES, 'UTF-8') ?>: <?= (int)($producto['stock_p'] ?? 0) ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?>
+                        <span id="detail-stock-text"><?= ($producto['stock_p'] ?? 0) <= 4 ? htmlspecialchars('Stock bajo', ENT_QUOTES, 'UTF-8') : htmlspecialchars('Disponible', ENT_QUOTES, 'UTF-8') ?>: <?= (int)($producto['stock_p'] ?? 0) ?> <?= htmlspecialchars('uds', ENT_QUOTES, 'UTF-8') ?></span>
                     </span>
                 </div>
 
@@ -903,7 +903,8 @@ const galleryImages = [
 <?php endforeach; ?>
 ];
 let galleryIndex = 0;
-const detailStock = <?= $stockProducto ?>;
+let detailStock = <?= $stockProducto ?>;
+let detailStockRequestRunning = false;
 let detailCartQty = <?= $cantidadEnCarrito ?>;
 const detailProduct = {
     id: <?= (int) ($producto['id_producto'] ?? 0) ?>,
@@ -947,9 +948,10 @@ function changeImage(direction) {
 
 function changeDetailQty(delta, stock) {
     const qtyEl = document.getElementById('detail-qty-value');
-    const remaining = Math.max(0, stock - detailCartQty);
+    const liveStock = detailStock;
+    const remaining = Math.max(0, liveStock - detailCartQty);
     if (remaining <= 0) {
-        syncDetailControls(stock);
+        syncDetailControls(liveStock);
         return;
     }
     let value = parseInt(qtyEl.textContent, 10) + delta;
@@ -959,14 +961,15 @@ function changeDetailQty(delta, stock) {
 }
 
 function syncDetailControls(stock) {
+    detailStock = Math.max(0, Number(stock) || 0);
     const qtyEl = document.getElementById('detail-qty-value');
     const minus = document.getElementById('detail-qty-minus');
     const plus = document.getElementById('detail-qty-plus');
     const btn = document.getElementById('detail-add-btn');
     const label = document.getElementById('detail-add-label');
-    const atLimit = stock <= 0 || detailCartQty >= stock;
+    const atLimit = detailStock <= 0 || detailCartQty >= detailStock;
 
-    if (qtyEl) qtyEl.textContent = atLimit ? Math.max(0, stock) : 1;
+    if (qtyEl) qtyEl.textContent = atLimit ? Math.max(0, detailStock) : 1;
     if (minus) minus.disabled = atLimit;
     if (plus) plus.disabled = atLimit;
     if (!btn || !label) return;
@@ -1024,6 +1027,52 @@ function formatCop(value, includeCurrency = false) {
     }).format(Number(value) || 0);
 
     return `$${formatted}${includeCurrency ? ' COP' : ''}`;
+}
+
+function updateDetailStockBadge(stock) {
+    const safeStock = Math.max(0, Number(stock) || 0);
+    const chip = document.getElementById('detail-stock-chip');
+    const icon = document.getElementById('detail-stock-icon');
+    const text = document.getElementById('detail-stock-text');
+    const low = safeStock <= 4;
+
+    chip?.classList.toggle('low', low);
+    if (icon) {
+        icon.innerHTML = low
+            ? '<path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.5 2.9 16.3A2 2 0 0 0 4.6 19h14.8a2 2 0 0 0 1.7-2.7L13.7 3.5a2 2 0 0 0-3.4 0z"></path>'
+            : '<path d="m5 12 5 5L20 7"></path>';
+    }
+    if (text) {
+        text.textContent = `${low ? 'Stock bajo' : 'Disponible'}: ${safeStock} uds`;
+    }
+}
+
+async function refreshDetailStock(force = false) {
+    if (detailStockRequestRunning || document.visibilityState !== 'visible') return;
+    detailStockRequestRunning = true;
+
+    try {
+        const response = await fetch(`index.php?action=stockProducto&id=${detailProduct.id}&_live=${Date.now()}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'fetch'
+            }
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            return;
+        }
+
+        const nextStock = Math.max(0, Number(data.stock) || 0);
+        if (force || nextStock !== detailStock) {
+            updateDetailStockBadge(nextStock);
+            syncDetailControls(nextStock);
+        }
+    } catch (error) {
+        console.error(error);
+    } finally {
+        detailStockRequestRunning = false;
+    }
 }
 
 function updateDetailOrderMini(product, quantity) {
@@ -1099,7 +1148,9 @@ async function addDetailToCart(idProducto) {
         if (!response.ok || !data.success) {
             if (data && typeof data.cantidad !== 'undefined') {
                 detailCartQty = data.cantidad || 0;
-                syncDetailControls(data.stock || detailStock);
+                const responseStock = typeof data.stock !== 'undefined' ? data.stock : detailStock;
+                updateDetailStockBadge(responseStock);
+                syncDetailControls(responseStock);
             }
             if (response.status === 401) {
                 showCartToast(data.message || 'Debes iniciar sesion', true);
@@ -1110,8 +1161,9 @@ async function addDetailToCart(idProducto) {
         }
 
         detailCartQty = data.cantidad || 0;
-        syncDetailControls(data.stock || detailStock);
-        const updatedStock = data.stock || detailStock;
+        const updatedStock = typeof data.stock !== 'undefined' ? data.stock : detailStock;
+        updateDetailStockBadge(updatedStock);
+        syncDetailControls(updatedStock);
         if (qtyEl && detailCartQty < updatedStock) {
             qtyEl.textContent = '1';
         }
@@ -1161,6 +1213,16 @@ if (followLink) {
         }
     });
 }
+
+setInterval(() => {
+    refreshDetailStock();
+}, 3000);
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        refreshDetailStock(true);
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

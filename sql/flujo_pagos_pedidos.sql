@@ -24,6 +24,10 @@ BEGIN
     add_column_if_missing('DETALLE_VENTA', 'PRECIO_UNITARIO', 'NUMBER(10,2)');
     add_column_if_missing('DETALLE_VENTA', 'SUBTOTAL', 'NUMBER(10,2)');
     add_column_if_missing('DETALLE_VENTA', 'NOMBRE_PRODUCTO', 'VARCHAR2(150)');
+    add_column_if_missing('PAGO', 'ID_TRANSACCION_WOMPI', 'VARCHAR2(120)');
+    add_column_if_missing('PAGO', 'REFERENCIA_WOMPI', 'VARCHAR2(120)');
+    add_column_if_missing('PAGO', 'METODO_REAL', 'VARCHAR2(80)');
+    add_column_if_missing('PAGO', 'JSON_RESPUESTA', 'CLOB');
 END;
 /
 
@@ -112,11 +116,19 @@ END;
 
 CREATE OR REPLACE PROCEDURE SP_PROCESAR_PAGO (
     p_id_venta IN NUMBER,
-    p_metodo IN NUMBER
+    p_metodo IN NUMBER,
+    p_estado IN VARCHAR2,
+    p_transaccion_wompi IN VARCHAR2,
+    p_referencia_wompi IN VARCHAR2,
+    p_metodo_real IN VARCHAR2,
+    p_json_respuesta IN CLOB
 )
 AS
     v_monto NUMBER(10,2);
-    v_pago_existente NUMBER;
+    v_id_pago PAGO.ID_PAGO%TYPE;
+    v_estado_pago_actual PAGO.ESTADO%TYPE;
+    v_estado VARCHAR2(30);
+    v_stock_proc NUMBER;
 BEGIN
     IF p_id_venta IS NULL OR p_id_venta <= 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Venta invalida');
@@ -124,6 +136,11 @@ BEGIN
 
     IF p_metodo IS NULL OR p_metodo NOT IN (1, 2, 3, 4) THEN
         RAISE_APPLICATION_ERROR(-20002, 'Metodo de pago invalido');
+    END IF;
+
+    v_estado := UPPER(TRIM(p_estado));
+    IF v_estado NOT IN ('APPROVED', 'DECLINED', 'ERROR', 'VOIDED') THEN
+        RAISE_APPLICATION_ERROR(-20005, 'Estado Wompi invalido');
     END IF;
 
     SELECT TOTAL
@@ -136,36 +153,83 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20003, 'La venta no tiene un total valido');
     END IF;
 
-    SELECT COUNT(*)
-    INTO v_pago_existente
-    FROM PAGO
-    WHERE ID_VENTA = p_id_venta;
+    BEGIN
+        SELECT ID_PAGO
+        INTO v_id_pago
+        FROM PAGO
+        WHERE ID_VENTA = p_id_venta
+          AND ROWNUM = 1
+        FOR UPDATE;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            v_id_pago := NULL;
+            v_estado_pago_actual := NULL;
+    END;
 
-    IF v_pago_existente > 0 THEN
-        RAISE_APPLICATION_ERROR(-20004, 'La venta ya tiene un pago registrado');
+    IF v_id_pago IS NULL THEN
+        INSERT INTO PAGO (
+            ID_PAGO,
+            ID_VENTA,
+            ID_METODO,
+            MONTO,
+            FECHA,
+            ESTADO,
+            ID_TRANSACCION_WOMPI,
+            REFERENCIA_WOMPI,
+            METODO_REAL,
+            JSON_RESPUESTA
+        )
+        VALUES (
+            SEQ_PAGO.NEXTVAL,
+            p_id_venta,
+            p_metodo,
+            v_monto,
+            SYSTIMESTAMP,
+            v_estado,
+            p_transaccion_wompi,
+            p_referencia_wompi,
+            p_metodo_real,
+            p_json_respuesta
+        );
+    ELSE
+        SELECT ESTADO
+        INTO v_estado_pago_actual
+        FROM PAGO
+        WHERE ID_PAGO = v_id_pago;
+
+        UPDATE PAGO
+        SET ID_METODO = p_metodo,
+            MONTO = v_monto,
+            ESTADO = v_estado,
+            ID_TRANSACCION_WOMPI = p_transaccion_wompi,
+            REFERENCIA_WOMPI = p_referencia_wompi,
+            METODO_REAL = p_metodo_real,
+            JSON_RESPUESTA = p_json_respuesta
+        WHERE ID_PAGO = v_id_pago
+          AND UPPER(TRIM(ESTADO)) NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO');
     END IF;
 
-    INSERT INTO PAGO (
-        ID_PAGO,
-        ID_VENTA,
-        ID_METODO,
-        MONTO,
-        FECHA,
-        ESTADO
-    )
-    VALUES (
-        SEQ_PAGO.NEXTVAL,
-        p_id_venta,
-        p_metodo,
-        v_monto,
-        SYSTIMESTAMP,
-        'PAGADO'
-    );
+    IF v_estado = 'APPROVED' AND NVL(UPPER(TRIM(v_estado_pago_actual)), 'PENDING') NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO') THEN
+        SELECT COUNT(*)
+        INTO v_stock_proc
+        FROM USER_PROCEDURES
+        WHERE OBJECT_NAME = 'SP_DESCONTAR_STOCK'
+          AND PROCEDURE_NAME IS NULL;
 
-    UPDATE PEDIDO
-    SET ID_ESTADO = 2
-    WHERE ID_VENTA = p_id_venta
-    AND ID_ESTADO = 1;
+        IF v_stock_proc > 0 THEN
+            EXECUTE IMMEDIATE 'BEGIN SP_DESCONTAR_STOCK(:id_venta); END;' USING p_id_venta;
+        END IF;
+
+        UPDATE PEDIDO
+        SET ID_ESTADO = 2
+        WHERE ID_VENTA = p_id_venta
+          AND ID_ESTADO = 1;
+    ELSIF v_estado IN ('DECLINED', 'ERROR', 'VOIDED') THEN
+        UPDATE PEDIDO
+        SET ID_ESTADO = 5
+        WHERE ID_VENTA = p_id_venta
+          AND ID_ESTADO = 1;
+    END IF;
 END;
 /
 
@@ -184,9 +248,27 @@ BEGIN
 END;
 /
 
+CREATE OR REPLACE PROCEDURE SP_EXPIRAR_PEDIDOS
+AS
+BEGIN
+    UPDATE PEDIDO p
+    SET p.ID_ESTADO = 5
+    WHERE p.ID_ESTADO = 1
+      AND p.CREATED_AT IS NOT NULL
+      AND CAST(p.CREATED_AT AS TIMESTAMP) < SYSTIMESTAMP - INTERVAL '30' MINUTE
+      AND NOT EXISTS (
+          SELECT 1
+          FROM PAGO pg
+          WHERE pg.ID_VENTA = p.ID_VENTA
+            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+      );
+END;
+/
+
 CREATE OR REPLACE VIEW V_PEDIDOS_USUARIO AS
 SELECT
     p.ID_PEDIDO,
+    p.ID_ESTADO,
     v.FECHA,
     v.TOTAL,
     e.NOMBRE AS ESTADO,

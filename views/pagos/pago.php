@@ -23,8 +23,8 @@ if (!$metodoPagoInicial) {
 }
 $metodoPagoGuardadoSeleccionado = (int) ($paymentOld['id_metodo_pago_usuario'] ?? ($metodoPagoInicial['id_metodo_pago_usuario'] ?? 0));
 $metodoSeleccionado = 3;
-$metodoPagoGuardadoSeleccionado = 0;
 $mostrarFormularioTarjeta = false;
+$wompiPublicKey = trim((string) getenv('WOMPI_PUBLIC_KEY'));
 $paymentExpiredNotice = $_SESSION['payment_expired_notice'] ?? null;
 unset($_SESSION['payment_expired_notice']);
 $hayTarjetasVencidas = false;
@@ -1312,7 +1312,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             </button>
                         </div>
 
-                        <div class="saved-payment-panel wompi-legacy-payment-ui <?= in_array($metodoSeleccionado, [2, 3], true) ? 'is-visible' : '' ?>" id="saved-payment-panel">
+                        <div class="saved-payment-panel <?= in_array($metodoSeleccionado, [2, 3], true) ? 'is-visible' : '' ?>" id="saved-payment-panel">
                             <div class="saved-payment-head">
                                 <span>
                                     <strong class="saved-payment-panel-title" id="saved-payment-title"><?= htmlspecialchars('Tarjetas guardadas', ENT_QUOTES, 'UTF-8') ?></strong>
@@ -1395,7 +1395,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                                         </span>
                                                         <span class="payment-field">
                                                             <label for="edit-exp-<?= $idGuardado ?>"><?= htmlspecialchars('Expira', ENT_QUOTES, 'UTF-8') ?></label>
-                                                            <input class="form-control" id="edit-exp-<?= $idGuardado ?>" name="fecha_expiracion" type="text" inputmode="numeric" maxlength="5" placeholder="MM/AA" form="edit-payment-<?= $idGuardado ?>" value="<?= htmlspecialchars($expiracionTexto, ENT_QUOTES, 'UTF-8') ?>" required data-edit-exp>
+                                                            <input class="form-control" id="edit-exp-<?= $idGuardado ?>" name="fecha_expiracion" type="text" inputmode="numeric" maxlength="7" placeholder="MM/YYYY" form="edit-payment-<?= $idGuardado ?>" value="<?= htmlspecialchars($expiracionTexto, ENT_QUOTES, 'UTF-8') ?>" required data-edit-exp>
                                                         </span>
                                                     </span>
                                                     <label class="payment-checkline">
@@ -1420,11 +1420,9 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 <i class="fas fa-circle-info"></i>
                                 <span><?= htmlspecialchars('No tienes tarjetas guardadas para este metodo. Usa Agregar tarjeta para registrar una.', ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
-                            <div class="card-cvv-only <?= $metodoPagoGuardadoSeleccionado > 0 ? 'is-visible' : '' ?>" id="saved-card-cvv">
-                                <div class="payment-field">
-                                    <label for="cvv_tarjeta_guardada"><?= htmlspecialchars('CVV temporal', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="cvv_tarjeta_guardada" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control">
-                                </div>
+                            <div class="payment-invoice-note" id="saved-card-cvv">
+                                <i class="fas fa-shield-halved"></i>
+                                <span><?= htmlspecialchars('Las tarjetas guardadas se cobran con la fuente de pago tokenizada en Wompi. No pedimos ni guardamos CVV.', ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
                         </div>
 
@@ -1453,7 +1451,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 </div>
                                 <div class="payment-field">
                                     <label for="numero_tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="numero_tarjeta" name="numero_tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control">
+                                    <input id="numero_tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control">
                                 </div>
                                 <div class="payment-field">
                                     <label for="titular_tarjeta"><?= htmlspecialchars('Nombre titular', ENT_QUOTES, 'UTF-8') ?></label>
@@ -1461,11 +1459,11 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 </div>
                                 <div class="payment-field">
                                     <label for="vencimiento_tarjeta"><?= htmlspecialchars('Vencimiento', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="vencimiento_tarjeta" name="vencimiento_tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                    <input id="vencimiento_tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="7" placeholder="MM/YYYY" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                 </div>
                                 <div class="payment-field">
                                     <label for="cvv_tarjeta"><?= htmlspecialchars('CVV', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="cvv_tarjeta" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control">
+                                    <input id="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control">
                                 </div>
                                 <label class="payment-checkline">
                                     <input type="checkbox" name="guardar_metodo_pago" id="checkout-save-card" value="1">
@@ -1492,7 +1490,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                         </div>
 
                     </form>
-                    <form class="standalone-card-form wompi-legacy-payment-ui <?= $mostrarFormularioTarjeta ? 'is-visible' : '' ?>" id="standalone-card-form" method="POST" action="index.php?action=guardarMetodoPagoUsuario">
+                    <form class="standalone-card-form <?= $mostrarFormularioTarjeta ? 'is-visible' : '' ?>" id="standalone-card-form" method="POST" action="index.php?action=guardarMetodoPagoUsuario" data-wompi-public-key="<?= htmlspecialchars($wompiPublicKey, ENT_QUOTES, 'UTF-8') ?>">
                         <div class="section-title">
                             <div>
                                 <h2 class="fs-4"><?= htmlspecialchars('Nueva tarjeta', ENT_QUOTES, 'UTF-8') ?></h2>
@@ -1500,27 +1498,38 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             </div>
                         </div>
                         <input type="hidden" name="id_metodo" id="standalone-card-method" value="<?= in_array($metodoSeleccionado, [2, 3], true) ? $metodoSeleccionado : 2 ?>">
+                        <input type="hidden" name="token_wompi" id="standalone-token-wompi">
+                        <input type="hidden" name="marca" id="standalone-marca">
+                        <input type="hidden" name="ultimos_4" id="standalone-ultimos-4">
+                        <input type="hidden" name="fecha_expiracion" id="standalone-fecha-expiracion">
                         <div class="payment-card-fields">
                             <div class="payment-field">
                                 <label for="standalone-numero-tarjeta"><?= htmlspecialchars('Numero tarjeta', ENT_QUOTES, 'UTF-8') ?></label>
-                                <input id="standalone-numero-tarjeta" name="numero_tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control" required>
+                                <input id="standalone-numero-tarjeta" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" class="form-control" required>
                             </div>
                             <div class="payment-field">
-                                <label for="standalone-titular-tarjeta"><?= htmlspecialchars('Nombre titular', ENT_QUOTES, 'UTF-8') ?></label>
-                                <input id="standalone-titular-tarjeta" name="titular_tarjeta" type="text" autocomplete="cc-name" placeholder="Nombre como aparece en la tarjeta" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['titular_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                <label for="standalone-titular-tarjeta"><?= htmlspecialchars('Alias / nombre', ENT_QUOTES, 'UTF-8') ?></label>
+                                <input id="standalone-titular-tarjeta" name="alias_tarjeta" type="text" autocomplete="cc-name" placeholder="Mi tarjeta principal" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['titular_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
                             </div>
                             <div class="payment-field">
                                 <label for="standalone-vencimiento-tarjeta"><?= htmlspecialchars('Vencimiento', ENT_QUOTES, 'UTF-8') ?></label>
-                                <input id="standalone-vencimiento-tarjeta" name="vencimiento_tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
+                                <input id="standalone-vencimiento-tarjeta" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="7" placeholder="MM/YYYY" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['vencimiento_tarjeta'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required>
                             </div>
                             <div class="payment-field">
                                 <label for="standalone-cvv-tarjeta"><?= htmlspecialchars('CVV', ENT_QUOTES, 'UTF-8') ?></label>
-                                <input id="standalone-cvv-tarjeta" name="cvv_tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control" required>
+                                <input id="standalone-cvv-tarjeta" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123" class="form-control" required>
                             </div>
                         </div>
                         <label class="payment-checkline">
                             <input type="checkbox" name="es_predeterminado_pago" value="1">
                             <span><?= htmlspecialchars('Usar como predeterminada', ENT_QUOTES, 'UTF-8') ?></span>
+                        </label>
+                        <label class="payment-checkline">
+                            <input type="checkbox" id="standalone-wompi-acceptance" required>
+                            <span>
+                                <?= htmlspecialchars('Acepto la politica de privacidad y autorizacion de datos personales de Wompi.', ENT_QUOTES, 'UTF-8') ?>
+                                <a href="#" target="_blank" rel="noopener" data-wompi-acceptance-link><?= htmlspecialchars('Ver documentos', ENT_QUOTES, 'UTF-8') ?></a>
+                            </span>
                         </label>
                         <div class="standalone-card-actions">
                             <button class="payment-btn" type="submit">
@@ -1638,6 +1647,7 @@ function initPaymentPage() {
     const checkoutSaveCard = document.getElementById('checkout-save-card');
     const checkoutDefaultCard = document.getElementById('checkout-default-card');
     let oneTimeCardMode = false;
+    let wompiCardConfig = null;
 
     function setRequired(container, required) {
         if (!container) return;
@@ -1666,10 +1676,10 @@ function initPaymentPage() {
 
     function setSavedCardCvvActive(active) {
         if (!savedCardCvv) return;
-        savedCardCvv.classList.toggle('is-visible', active);
+        savedCardCvv.classList.toggle('is-visible', false);
         savedCardCvv.querySelectorAll('input').forEach((field) => {
-            field.disabled = !active;
-            field.required = active;
+            field.disabled = true;
+            field.required = false;
         });
     }
 
@@ -1741,7 +1751,7 @@ function initPaymentPage() {
             savedMethodInput.value = radio.value;
         }
         setNewCardFieldsEnabled(false);
-        setSavedCardCvvActive(true);
+        setSavedCardCvvActive(false);
 
         if (scrollCvv) {
             savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1939,12 +1949,12 @@ function initPaymentPage() {
     });
 
     document.getElementById('vencimiento_tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
         event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
     });
 
     document.getElementById('standalone-vencimiento-tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
         event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
     });
 
@@ -1954,7 +1964,7 @@ function initPaymentPage() {
 
     document.querySelectorAll('[data-edit-exp]').forEach((field) => {
         field.addEventListener('input', (event) => {
-            const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+            const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
             event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
         });
     });
@@ -2038,6 +2048,12 @@ function initPaymentPage() {
                 throw new Error('Respuesta invalida al preparar el pago');
             }
 
+            if (data?.redirect && data?.saved_card_transaction !== undefined) {
+                showPaymentNotice(data.message || 'Transaccion enviada a Wompi.');
+                window.location.href = data.redirect;
+                return;
+            }
+
             if (!response.ok || !data.success || !data.checkout) {
                 if (data?.redirect) {
                     window.location.href = data.redirect;
@@ -2099,6 +2115,10 @@ function initPaymentPage() {
         }
 
         try {
+            if (form.id === 'standalone-card-form') {
+                await tokenizeStandaloneCard(form);
+            }
+
             const response = await fetch(form.action, {
                 method: form.method || 'POST',
                 headers: {
@@ -2121,12 +2141,100 @@ function initPaymentPage() {
         }
     }
 
+    function detectBrand(number) {
+        const digits = number.replace(/\D/g, '');
+        if (/^4\d{12}(\d{3})?(\d{3})?$/.test(digits)) return 'VISA';
+        if (/^(5[1-5]\d{14}|2(2[2-9]\d|[3-6]\d{2}|7[01]\d|720)\d{12})$/.test(digits)) return 'MASTERCARD';
+        return '';
+    }
+
+    async function loadWompiCardConfig() {
+        if (wompiCardConfig) return wompiCardConfig;
+        const response = await fetch('index.php?action=wompiTarjetasConfig', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'fetch'
+            }
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success || !data.public_key) {
+            throw new Error(data.message || 'No se pudo cargar Wompi para tarjetas');
+        }
+        wompiCardConfig = data;
+        document.querySelectorAll('[data-wompi-acceptance-link]').forEach((link) => {
+            link.href = data.acceptance_permalink || data.personal_auth_permalink || '#';
+        });
+        return data;
+    }
+
+    async function tokenizeStandaloneCard(form) {
+        const numberField = form.querySelector('#standalone-numero-tarjeta');
+        const holderField = form.querySelector('#standalone-titular-tarjeta');
+        const expField = form.querySelector('#standalone-vencimiento-tarjeta');
+        const cvcField = form.querySelector('#standalone-cvv-tarjeta');
+        const acceptance = form.querySelector('#standalone-wompi-acceptance');
+        const number = numberField?.value.replace(/\D/g, '') || '';
+        const alias = holderField?.value.trim() || '';
+        const exp = expField?.value.trim() || '';
+        const cvc = cvcField?.value.replace(/\D/g, '') || '';
+        const brand = detectBrand(number);
+        const expMatch = exp.match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
+
+        if (!brand) {
+            throw new Error('Solo se permiten tarjetas VISA o MASTERCARD');
+        }
+        if (!expMatch) {
+            throw new Error('Ingresa el vencimiento en formato MM/YYYY');
+        }
+        if (alias.length < 3 || cvc.length < 3) {
+            throw new Error('Completa alias y CVV para tokenizar la tarjeta');
+        }
+        if (!acceptance?.checked) {
+            throw new Error('Debes aceptar las politicas de Wompi para guardar la tarjeta');
+        }
+
+        const config = await loadWompiCardConfig();
+        const baseUrl = String(config.public_key).startsWith('pub_test_')
+            ? 'https://sandbox.wompi.co/v1'
+            : 'https://production.wompi.co/v1';
+        const response = await fetch(`${baseUrl}/tokens/cards`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.public_key}`
+            },
+            body: JSON.stringify({
+                number,
+                cvc,
+                exp_month: expMatch[1],
+                exp_year: expMatch[2].slice(-2),
+                card_holder: alias
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || !data?.data?.id) {
+            throw new Error(data?.error?.reason || data?.message || 'Wompi no pudo tokenizar la tarjeta');
+        }
+
+        const tokenData = data.data;
+        form.querySelector('#standalone-token-wompi').value = tokenData.id;
+        form.querySelector('#standalone-marca').value = String(tokenData.brand || brand).toUpperCase();
+        form.querySelector('#standalone-ultimos-4').value = String(tokenData.last_four || number.slice(-4));
+        form.querySelector('#standalone-fecha-expiracion').value = `${String(tokenData.exp_month || expMatch[1]).padStart(2, '0')}/20${String(tokenData.exp_year || expMatch[2].slice(-2)).slice(-2)}`;
+
+        numberField.value = '';
+        cvcField.value = '';
+    }
+
     document.querySelectorAll('form[id^="delete-payment-"], form[id^="default-payment-"], form[id^="edit-payment-"], #standalone-card-form').forEach((form) => {
         form.addEventListener('submit', (event) => {
             event.preventDefault();
             submitPaymentAjaxForm(form);
         });
     });
+
+    loadWompiCardConfig().catch(() => {});
 
     document.querySelectorAll('[data-confirm-cancel-payment]').forEach((form) => {
         form.addEventListener('submit', (event) => {

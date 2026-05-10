@@ -216,55 +216,30 @@ class WompiModel {
         string $metodoReal,
         string $rawJson
     ): void {
-        $argumentos = $this->argumentosProcedimiento('SP_PROCESAR_PAGO');
-        if (empty($argumentos)) {
-            throw new RuntimeException('No se encontro SP_PROCESAR_PAGO en Oracle');
-        }
-
-        $nombres = array_map(fn($arg) => $arg['name'], $argumentos);
-        if (!$this->procedimientoAcepta($nombres, ['ESTADO', 'STATUS']) || !$this->procedimientoAcepta($nombres, ['TRANSACCION']) || !$this->procedimientoAcepta($nombres, ['REFERENCIA'])) {
-            throw new RuntimeException('SP_PROCESAR_PAGO debe aceptar estado, transaccion y referencia Wompi para evitar pagos simulados antiguos');
-        }
-
-        $placeholders = array_map(fn($arg) => ':' . $arg['name'], $argumentos);
-        $stmt = $this->parse("BEGIN SP_PROCESAR_PAGO(" . implode(', ', $placeholders) . "); END;");
-        $binds = [];
+        $stmt = $this->parse(
+            "BEGIN SP_PROCESAR_PAGO(
+                :p_id_venta,
+                :p_metodo,
+                :p_estado,
+                :p_transaccion_wompi,
+                :p_referencia_wompi,
+                :p_metodo_real,
+                :p_json_respuesta
+            ); END;"
+        );
         $jsonClob = null;
 
         try {
-            foreach ($argumentos as $arg) {
-                $name = $arg['name'];
-                $placeholder = ':' . $name;
-                $type = SQLT_CHR;
-                $length = -1;
-                $value = null;
+            $jsonClob = oci_new_descriptor($this->conn, OCI_D_LOB);
+            $jsonClob->writeTemporary($rawJson, OCI_TEMP_CLOB);
 
-                if (str_contains($name, 'VENTA')) {
-                    $value = $idVenta;
-                    $type = SQLT_INT;
-                } elseif (str_contains($name, 'METODO') && !str_contains($name, 'REAL')) {
-                    $value = $idMetodo;
-                    $type = SQLT_INT;
-                } elseif (str_contains($name, 'MONTO')) {
-                    $value = $this->totalVenta($idVenta);
-                } elseif (str_contains($name, 'ESTADO') || str_contains($name, 'STATUS')) {
-                    $value = $estadoPago;
-                } elseif (str_contains($name, 'TRANSACCION')) {
-                    $value = $idTransaccion;
-                } elseif (str_contains($name, 'REFERENCIA')) {
-                    $value = $referencia;
-                } elseif (str_contains($name, 'METODO_REAL') || str_contains($name, 'REAL')) {
-                    $value = $metodoReal;
-                } elseif (str_contains($name, 'JSON') || str_contains($name, 'RESPUESTA')) {
-                    $jsonClob = oci_new_descriptor($this->conn, OCI_D_LOB);
-                    $jsonClob->writeTemporary($rawJson, OCI_TEMP_CLOB);
-                    oci_bind_by_name($stmt, $placeholder, $jsonClob, -1, SQLT_CLOB);
-                    continue;
-                }
-
-                $binds[$placeholder] = $value;
-                oci_bind_by_name($stmt, $placeholder, $binds[$placeholder], $length, $type);
-            }
+            oci_bind_by_name($stmt, ':p_id_venta', $idVenta, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':p_metodo', $idMetodo, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':p_estado', $estadoPago);
+            oci_bind_by_name($stmt, ':p_transaccion_wompi', $idTransaccion);
+            oci_bind_by_name($stmt, ':p_referencia_wompi', $referencia);
+            oci_bind_by_name($stmt, ':p_metodo_real', $metodoReal);
+            oci_bind_by_name($stmt, ':p_json_respuesta', $jsonClob, -1, SQLT_CLOB);
 
             $this->execute($stmt);
         } finally {

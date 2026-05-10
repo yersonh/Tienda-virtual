@@ -660,4 +660,46 @@ class TiendaController {
 
         require_once __DIR__ . '/../views/tienda/detalle.php';
     }
+
+    public function stockProductoJson(): void {
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $id = (int) ($_GET['id'] ?? 0);
+            if ($id <= 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Producto invalido'
+                ]);
+                exit();
+            }
+
+            $producto = $this->productoModel()->obtenerPorId($id);
+            if (!$producto) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Producto no encontrado'
+                ]);
+                exit();
+            }
+
+            echo json_encode([
+                'success' => true,
+                'id_producto' => (int) ($producto['id_producto'] ?? $id),
+                'id_referencia' => (int) ($producto['id_referencia'] ?? 0),
+                'stock' => max(0, (int) ($producto['stock_p'] ?? 0)),
+                'updated_at' => time()
+            ]);
+        } catch (Throwable $e) {
+            error_log('TiendaController::stockProductoJson: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se pudo consultar el stock'
+            ]);
+        }
+        exit();
+    }
 }

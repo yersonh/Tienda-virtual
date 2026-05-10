@@ -802,6 +802,23 @@ EXCEPTION
 END;
 /
 
+CREATE OR REPLACE PROCEDURE SP_EXPIRAR_PEDIDOS
+AS
+BEGIN
+    UPDATE PEDIDO p
+    SET p.ID_ESTADO = 5
+    WHERE p.ID_ESTADO = 1
+      AND p.CREATED_AT IS NOT NULL
+      AND CAST(p.CREATED_AT AS TIMESTAMP) < SYSTIMESTAMP - INTERVAL '30' MINUTE
+      AND NOT EXISTS (
+          SELECT 1
+          FROM PAGO pg
+          WHERE pg.ID_VENTA = p.ID_VENTA
+            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+      );
+END;
+/
+
 CREATE OR REPLACE PROCEDURE SP_ACTUALIZAR_METODO_PAGO (
     p_id_metodo_pago_usuario IN NUMBER,
     p_id_usuario IN NUMBER,
@@ -811,13 +828,24 @@ CREATE OR REPLACE PROCEDURE SP_ACTUALIZAR_METODO_PAGO (
 )
 AS
 BEGIN
+    IF NVL(p_es_predeterminado, 0) = 1 THEN
+        UPDATE METODO_PAGO_USUARIO
+        SET ES_PREDETERMINADO = 0
+        WHERE ID_USUARIO = p_id_usuario
+          AND ID_METODO_PAGO_USUARIO <> p_id_metodo_pago_usuario;
+    END IF;
+
     UPDATE METODO_PAGO_USUARIO
-    SET TITULAR = TRIM(p_titular),
-        FECHA_EXPIRACION = TO_DATE(p_fecha_expiracion, 'YYYY-MM-DD'),
-        ES_PREDETERMINADO = CASE WHEN p_es_predeterminado = 1 THEN 1 ELSE 0 END
+    SET TITULAR = SUBSTR(TRIM(p_titular), 1, 120),
+        FECHA_EXPIRACION = TO_DATE(p_fecha_expiracion, 'MM/YYYY'),
+        ES_PREDETERMINADO = CASE WHEN NVL(p_es_predeterminado, 0) = 1 THEN 1 ELSE ES_PREDETERMINADO END
     WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
       AND ID_USUARIO = p_id_usuario
       AND ACTIVO = 1;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20550, 'Metodo de pago no encontrado');
+    END IF;
 END;
 /
 
@@ -827,9 +855,15 @@ CREATE OR REPLACE PROCEDURE SP_ELIMINAR_METODO_PAGO (
 )
 AS
 BEGIN
-    DELETE FROM METODO_PAGO_USUARIO
+    UPDATE METODO_PAGO_USUARIO
+    SET ACTIVO = 0,
+        ES_PREDETERMINADO = 0
     WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
       AND ID_USUARIO = p_id_usuario;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20551, 'Metodo de pago no encontrado');
+    END IF;
 END;
 /
 
@@ -848,5 +882,9 @@ BEGIN
     WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
       AND ID_USUARIO = p_id_usuario
       AND ACTIVO = 1;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20552, 'Metodo de pago no encontrado');
+    END IF;
 END;
 /

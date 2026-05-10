@@ -7,6 +7,9 @@ $action = $_GET['action'] ?? 'nosotros';
 if ($normalizedPath === '/wompi/webhook') {
     $action = 'wompiWebhook';
 }
+if ($normalizedPath === '/cron/expirar-pedidos') {
+    $action = 'expirarPedidosCron';
+}
 $_SESSION['logueado'] = isset($_SESSION['id_usuario']);
 
 if ($action === 'health') {
@@ -52,11 +55,13 @@ $publicas = [
     'tienda',
     'tiendaFiltros',
     'productoDetalle',
+    'stockProducto',
     'recuperar',
     'solicitarRecuperacion',
     'restablecer',
     'cambiarPassword',
-    'wompiWebhook'
+    'wompiWebhook',
+    'expirarPedidosCron'
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
@@ -80,7 +85,7 @@ if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
         exit();
     }
 
-    if (in_array($action, ['eliminarMetodoPagoUsuario', 'guardarMetodoPagoUsuario', 'cambiarEstadoMetodoPagoUsuario', 'actualizarMetodoPagoUsuario', 'predeterminarMetodoPagoUsuario'], true)) {
+    if (in_array($action, ['eliminarMetodoPagoUsuario', 'guardarMetodoPagoUsuario', 'cambiarEstadoMetodoPagoUsuario', 'actualizarMetodoPagoUsuario', 'predeterminarMetodoPagoUsuario', 'wompiTarjetasConfig'], true)) {
         if (
             (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
             (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'fetch')
@@ -167,6 +172,10 @@ switch ($action) {
         (new TiendaController())->detalle();
         break;
 
+    case 'stockProducto':
+        (new TiendaController())->stockProductoJson();
+        break;
+
     case 'agregarCarrito':
         (new CarritoController())->agregar();
         break;
@@ -241,6 +250,10 @@ switch ($action) {
 
     case 'guardarMetodoPagoUsuario':
         (new PedidoController())->guardarMetodoPagoUsuario();
+        break;
+
+    case 'wompiTarjetasConfig':
+        (new PedidoController())->wompiTarjetasConfig();
         break;
 
     case 'cambiarEstadoMetodoPagoUsuario':
@@ -342,6 +355,10 @@ switch ($action) {
 
     case 'admin_pedidos_json':
         (new AdminPedidoController())->obtenerPedidosJson();
+        break;
+
+    case 'expirarPedidosCron':
+        (new PedidoLifecycleController())->expirarCron();
         break;
 
     case 'wompiWebhook':

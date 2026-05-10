@@ -28,10 +28,11 @@ class MetodoPagoUsuarioModel {
         $data['id_usuario'] = (int) ($data['id_usuario'] ?? 0);
         $data['id_metodo'] = (int) ($data['id_metodo'] ?? 0);
         $data['id_metodo_pago_usuario'] = (int) ($data['id_metodo_pago_usuario'] ?? 0);
+        $data['id_fuente_wompi'] = (int) ($data['id_fuente_wompi'] ?? 0);
         if (!empty($data['fecha_expiracion_texto'])) {
             $fechaExpiracion = trim((string) $data['fecha_expiracion_texto']);
             if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', $fechaExpiracion, $matches)) {
-                $fechaExpiracion = $matches[2] . '/' . substr($matches[1], -2);
+                $fechaExpiracion = $matches[2] . '/' . $matches[1];
             }
             $data['fecha_expiracion_texto'] = $fechaExpiracion;
         }
@@ -68,13 +69,13 @@ class MetodoPagoUsuarioModel {
 
     private function fechaExpiracionSelect(): string {
         return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "mpu.FECHA_EXPIRACION"
+            ? "TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YYYY')"
             : "''";
     }
 
     private function tarjetaVencidaSelect(): string {
         return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "CASE WHEN LAST_DAY(TO_DATE(mpu.FECHA_EXPIRACION, 'YYYY-MM-DD')) < TRUNC(SYSDATE) THEN 1 ELSE 0 END"
+            ? "CASE WHEN LAST_DAY(mpu.FECHA_EXPIRACION) < TRUNC(SYSDATE) THEN 1 ELSE 0 END"
             : "0";
     }
 
@@ -82,6 +83,24 @@ class MetodoPagoUsuarioModel {
         return $this->columnaExiste('FECHA_CREACION')
             ? "TO_CHAR(mpu.FECHA_CREACION, 'YYYY-MM-DD HH24:MI:SS')"
             : "''";
+    }
+
+    private function tokenWompiSelect(): string {
+        return $this->columnaExiste('TOKEN_WOMPI')
+            ? "mpu.TOKEN_WOMPI"
+            : ($this->columnaExiste('TOKEN_PAGO') ? "mpu.TOKEN_PAGO" : "''");
+    }
+
+    private function fuenteWompiSelect(): string {
+        return $this->columnaExiste('ID_FUENTE_WOMPI')
+            ? "mpu.ID_FUENTE_WOMPI"
+            : "NULL";
+    }
+
+    private function estadoWompiSelect(): string {
+        return $this->columnaExiste('ESTADO_WOMPI')
+            ? "mpu.ESTADO_WOMPI"
+            : "'AVAILABLE'";
     }
 
     private function cacheKey(int $idUsuario, int $soloActivos): string {
@@ -163,7 +182,7 @@ class MetodoPagoUsuarioModel {
                   WHERE ID_USUARIO = :id_usuario
                     AND ID_METODO IN (2, 3)
                     AND ACTIVO = 1
-                    AND LAST_DAY(TO_DATE(FECHA_EXPIRACION, 'YYYY-MM-DD')) < TRUNC(SYSDATE)";
+                    AND LAST_DAY(FECHA_EXPIRACION) < TRUNC(SYSDATE)";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -213,6 +232,9 @@ class MetodoPagoUsuarioModel {
         $fechaExpiracionSelect = $this->fechaExpiracionSelect();
         $fechaCreacionSelect = $this->fechaCreacionSelect();
         $tarjetaVencidaSelect = $this->tarjetaVencidaSelect();
+        $tokenWompiSelect = $this->tokenWompiSelect();
+        $fuenteWompiSelect = $this->fuenteWompiSelect();
+        $estadoWompiSelect = $this->estadoWompiSelect();
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
@@ -224,6 +246,9 @@ class MetodoPagoUsuarioModel {
                          mpu.TITULAR,
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
+                         {$tokenWompiSelect} AS TOKEN_WOMPI,
+                         {$fuenteWompiSelect} AS ID_FUENTE_WOMPI,
+                         {$estadoWompiSelect} AS ESTADO_WOMPI,
                          {$fechaExpiracionSelect} AS FECHA_EXPIRACION_TEXTO,
                          {$tarjetaVencidaSelect} AS VENCIDA,
                          mpu.ES_PREDETERMINADO,
@@ -309,6 +334,9 @@ class MetodoPagoUsuarioModel {
         $fechaExpiracionSelect = $this->fechaExpiracionSelect();
         $fechaCreacionSelect = $this->fechaCreacionSelect();
         $tarjetaVencidaSelect = $this->tarjetaVencidaSelect();
+        $tokenWompiSelect = $this->tokenWompiSelect();
+        $fuenteWompiSelect = $this->fuenteWompiSelect();
+        $estadoWompiSelect = $this->estadoWompiSelect();
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
@@ -320,6 +348,9 @@ class MetodoPagoUsuarioModel {
                          mpu.TITULAR,
                          mpu.ULTIMOS_4,
                          mpu.FRANQUICIA,
+                         {$tokenWompiSelect} AS TOKEN_WOMPI,
+                         {$fuenteWompiSelect} AS ID_FUENTE_WOMPI,
+                         {$estadoWompiSelect} AS ESTADO_WOMPI,
                          {$fechaExpiracionSelect} AS FECHA_EXPIRACION_TEXTO,
                          {$tarjetaVencidaSelect} AS VENCIDA,
                          mpu.ES_PREDETERMINADO,
@@ -358,12 +389,23 @@ class MetodoPagoUsuarioModel {
         $titular = trim((string) ($data['titular'] ?? ''));
         $ultimos4 = preg_replace('/\D+/', '', (string) ($data['ultimos_4'] ?? ''));
         $franquicia = strtoupper(trim((string) ($data['franquicia'] ?? '')));
-        $tokenPago = trim((string) ($data['token_pago'] ?? ''));
+        $tokenWompi = trim((string) ($data['token_wompi'] ?? $data['token_pago'] ?? ''));
+        $idFuenteWompi = (int) ($data['id_fuente_wompi'] ?? 0);
+        $estadoWompi = strtoupper(trim((string) ($data['estado_wompi'] ?? 'AVAILABLE')));
         $fechaExpiracion = trim((string) ($data['fecha_expiracion'] ?? ''));
         $esPredeterminado = !empty($data['es_predeterminado']) ? 1 : 0;
 
-        if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenPago === '' || $fechaExpiracion === '') {
+        if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenWompi === '' || $idFuenteWompi <= 0 || $fechaExpiracion === '') {
             throw new InvalidArgumentException('Datos de metodo de pago incompletos');
+        }
+        if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $fechaExpiracion)) {
+            throw new InvalidArgumentException('Ingresa la expiracion en formato MM/YYYY');
+        }
+        if (!in_array($franquicia, ['VISA', 'MASTERCARD'], true)) {
+            throw new InvalidArgumentException('Solo se permiten tarjetas VISA o MASTERCARD tokenizadas');
+        }
+        if ($this->existeDuplicadoActivo($idUsuario, $franquicia, $ultimos4, $fechaExpiracion)) {
+            throw new InvalidArgumentException('Esta tarjeta ya esta guardada para tu usuario');
         }
 
         if ($esPredeterminado === 1) {
@@ -377,6 +419,8 @@ class MetodoPagoUsuarioModel {
                     :ultimos_4,
                     :franquicia,
                     :token,
+                    :id_fuente_wompi,
+                    :estado_wompi,
                     :fecha_expiracion,
                     :es_predeterminado
                   ); END;";
@@ -391,7 +435,9 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':titular', $titular);
         oci_bind_by_name($stmt, ':ultimos_4', $ultimos4);
         oci_bind_by_name($stmt, ':franquicia', $franquicia);
-        oci_bind_by_name($stmt, ':token', $tokenPago);
+        oci_bind_by_name($stmt, ':token', $tokenWompi);
+        oci_bind_by_name($stmt, ':id_fuente_wompi', $idFuenteWompi, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':estado_wompi', $estadoWompi);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
         oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
 
@@ -402,7 +448,7 @@ class MetodoPagoUsuarioModel {
         }
 
         oci_free_statement($stmt);
-        $idMetodoPagoUsuario = $this->obtenerIdPorToken($tokenPago, $idUsuario);
+        $idMetodoPagoUsuario = $this->obtenerIdPorToken($tokenWompi, $idUsuario);
         if ($esPredeterminado === 1 && $idMetodoPagoUsuario > 0) {
             $this->establecerPredeterminado($idMetodoPagoUsuario, $idUsuario);
         }
@@ -411,10 +457,41 @@ class MetodoPagoUsuarioModel {
         return $idMetodoPagoUsuario;
     }
 
+    private function existeDuplicadoActivo(int $idUsuario, string $franquicia, string $ultimos4, string $fechaExpiracion): bool {
+        $query = "SELECT COUNT(*) AS TOTAL
+                  FROM METODO_PAGO_USUARIO
+                  WHERE ID_USUARIO = :id_usuario
+                    AND ACTIVO = 1
+                    AND UPPER(FRANQUICIA) = :franquicia
+                    AND ULTIMOS_4 = :ultimos_4
+                    AND TO_CHAR(FECHA_EXPIRACION, 'MM/YYYY') = :fecha_expiracion";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':franquicia', $franquicia);
+        oci_bind_by_name($stmt, ':ultimos_4', $ultimos4);
+        oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+        return ((int) ($row['TOTAL'] ?? 0)) > 0;
+    }
+
     private function obtenerIdPorToken(string $tokenPago, int $idUsuario): int {
+        $tokenColumn = $this->columnaExiste('TOKEN_WOMPI') ? 'TOKEN_WOMPI' : 'TOKEN_PAGO';
         $query = "SELECT ID_METODO_PAGO_USUARIO
                   FROM METODO_PAGO_USUARIO
-                  WHERE TOKEN_PAGO = :token_pago
+                  WHERE {$tokenColumn} = :token_pago
                     AND ID_USUARIO = :id_usuario
                   FETCH FIRST 1 ROWS ONLY";
 
@@ -513,12 +590,14 @@ class MetodoPagoUsuarioModel {
             throw new InvalidArgumentException('Completa titular y fecha de expiracion');
         }
 
-        if (preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', $fechaExpiracion, $matches)) {
-            $fechaExpiracion = sprintf('%04d-%02d-01', 2000 + (int) $matches[2], (int) $matches[1]);
+        if (preg_match('/^(0[1-9]|1[0-2])\/(\d{4})$/', $fechaExpiracion, $matches)) {
+            $fechaExpiracion = $matches[1] . '/' . $matches[2];
+        } elseif (preg_match('/^(\d{4})-(\d{2})(-\d{2})?$/', $fechaExpiracion, $matches)) {
+            $fechaExpiracion = $matches[2] . '/' . $matches[1];
         }
 
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaExpiracion)) {
-            throw new InvalidArgumentException('Fecha de expiracion invalida');
+        if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $fechaExpiracion)) {
+            throw new InvalidArgumentException('Ingresa la expiracion en formato MM/YYYY');
         }
 
         $query = "BEGIN SP_ACTUALIZAR_METODO_PAGO(

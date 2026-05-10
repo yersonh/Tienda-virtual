@@ -15,7 +15,10 @@ BEGIN
                 TITULAR VARCHAR2(120) NOT NULL,
                 ULTIMOS_4 CHAR(4) NOT NULL,
                 FRANQUICIA VARCHAR2(20) NOT NULL,
-                TOKEN_PAGO VARCHAR2(80) NOT NULL,
+                TOKEN_PAGO VARCHAR2(160) NOT NULL,
+                TOKEN_WOMPI VARCHAR2(160) NOT NULL,
+                ID_FUENTE_WOMPI NUMBER,
+                ESTADO_WOMPI VARCHAR2(30) DEFAULT ''AVAILABLE'' NOT NULL,
                 FECHA_EXPIRACION DATE NOT NULL,
                 ES_PREDETERMINADO NUMBER(1) DEFAULT 0 NOT NULL,
                 ACTIVO NUMBER(1) DEFAULT 1 NOT NULL,
@@ -24,11 +27,97 @@ BEGIN
                 CONSTRAINT CK_MPU_METODO_TARJETA CHECK (ID_METODO IN (2, 3)),
                 CONSTRAINT CK_MPU_PREDET CHECK (ES_PREDETERMINADO IN (0, 1)),
                 CONSTRAINT CK_MPU_ACTIVO CHECK (ACTIVO IN (0, 1)),
+                CONSTRAINT CK_MPU_FRANQUICIA CHECK (ACTIVO = 0 OR UPPER(FRANQUICIA) IN (''VISA'', ''MASTERCARD'')),
+                CONSTRAINT CK_MPU_ESTADO_WOMPI CHECK (UPPER(ESTADO_WOMPI) IN (''AVAILABLE'', ''VOIDED'', ''PENDING'', ''DECLINED'')),
                 CONSTRAINT UK_MPU_TOKEN UNIQUE (TOKEN_PAGO),
+                CONSTRAINT UK_MPU_TOKEN_WOMPI UNIQUE (TOKEN_WOMPI),
+                CONSTRAINT UK_MPU_FUENTE_WOMPI UNIQUE (ID_FUENTE_WOMPI),
                 CONSTRAINT FK_MPU_USUARIO FOREIGN KEY (ID_USUARIO) REFERENCES USUARIO(ID_USUARIO),
                 CONSTRAINT FK_MPU_METODO FOREIGN KEY (ID_METODO) REFERENCES METODO_PAGO(ID_METODO)
             )';
     END IF;
+END;
+/
+
+DECLARE
+    PROCEDURE add_column_if_missing(p_column IN VARCHAR2, p_definition IN VARCHAR2) IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_count
+        FROM USER_TAB_COLUMNS
+        WHERE TABLE_NAME = 'METODO_PAGO_USUARIO'
+          AND COLUMN_NAME = UPPER(p_column);
+
+        IF v_count = 0 THEN
+            EXECUTE IMMEDIATE 'ALTER TABLE METODO_PAGO_USUARIO ADD (' || p_column || ' ' || p_definition || ')';
+        END IF;
+    END;
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TABLE METODO_PAGO_USUARIO MODIFY (TOKEN_PAGO VARCHAR2(160))';
+    add_column_if_missing('TOKEN_WOMPI', 'VARCHAR2(160)');
+    add_column_if_missing('ID_FUENTE_WOMPI', 'NUMBER');
+    add_column_if_missing('ESTADO_WOMPI', 'VARCHAR2(30) DEFAULT ''AVAILABLE'' NOT NULL');
+    EXECUTE IMMEDIATE 'UPDATE METODO_PAGO_USUARIO SET TOKEN_WOMPI = TOKEN_PAGO WHERE TOKEN_WOMPI IS NULL';
+    EXECUTE IMMEDIATE 'ALTER TABLE METODO_PAGO_USUARIO MODIFY (TOKEN_WOMPI VARCHAR2(160) NOT NULL)';
+    EXECUTE IMMEDIATE 'UPDATE METODO_PAGO_USUARIO SET ACTIVO = 0, ES_PREDETERMINADO = 0, ESTADO_WOMPI = ''VOIDED'' WHERE ACTIVO = 1 AND UPPER(FRANQUICIA) NOT IN (''VISA'', ''MASTERCARD'')';
+    EXECUTE IMMEDIATE '
+        UPDATE METODO_PAGO_USUARIO
+        SET ACTIVO = 0,
+            ES_PREDETERMINADO = 0,
+            ESTADO_WOMPI = ''VOIDED''
+        WHERE ID_METODO_PAGO_USUARIO IN (
+            SELECT ID_METODO_PAGO_USUARIO
+            FROM (
+                SELECT ID_METODO_PAGO_USUARIO,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY ID_USUARIO, UPPER(FRANQUICIA), ULTIMOS_4, FECHA_EXPIRACION
+                           ORDER BY ES_PREDETERMINADO DESC, ID_METODO_PAGO_USUARIO DESC
+                       ) AS rn
+                FROM METODO_PAGO_USUARIO
+                WHERE ACTIVO = 1
+            )
+            WHERE rn > 1
+        )';
+END;
+/
+
+DECLARE
+    PROCEDURE add_constraint_if_missing(p_name IN VARCHAR2, p_sql IN VARCHAR2) IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_count
+        FROM USER_CONSTRAINTS
+        WHERE TABLE_NAME = 'METODO_PAGO_USUARIO'
+          AND CONSTRAINT_NAME = UPPER(p_name);
+
+        IF v_count = 0 THEN
+            EXECUTE IMMEDIATE p_sql;
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE NOT IN (-2261, -2264, -2443) THEN
+                RAISE;
+            END IF;
+    END;
+BEGIN
+    add_constraint_if_missing(
+        'CK_MPU_FRANQUICIA',
+        'ALTER TABLE METODO_PAGO_USUARIO ADD CONSTRAINT CK_MPU_FRANQUICIA CHECK (ACTIVO = 0 OR UPPER(FRANQUICIA) IN (''VISA'', ''MASTERCARD''))'
+    );
+    add_constraint_if_missing(
+        'CK_MPU_ESTADO_WOMPI',
+        'ALTER TABLE METODO_PAGO_USUARIO ADD CONSTRAINT CK_MPU_ESTADO_WOMPI CHECK (UPPER(ESTADO_WOMPI) IN (''AVAILABLE'', ''VOIDED'', ''PENDING'', ''DECLINED''))'
+    );
+    add_constraint_if_missing(
+        'UK_MPU_TOKEN_WOMPI',
+        'ALTER TABLE METODO_PAGO_USUARIO ADD CONSTRAINT UK_MPU_TOKEN_WOMPI UNIQUE (TOKEN_WOMPI)'
+    );
+    add_constraint_if_missing(
+        'UK_MPU_FUENTE_WOMPI',
+        'ALTER TABLE METODO_PAGO_USUARIO ADD CONSTRAINT UK_MPU_FUENTE_WOMPI UNIQUE (ID_FUENTE_WOMPI)'
+    );
 END;
 /
 
@@ -107,8 +196,11 @@ SELECT
     mpu.ULTIMOS_4,
     mpu.FRANQUICIA,
     mpu.TOKEN_PAGO,
+    NVL(mpu.TOKEN_WOMPI, mpu.TOKEN_PAGO) AS TOKEN_WOMPI,
+    mpu.ID_FUENTE_WOMPI,
+    mpu.ESTADO_WOMPI,
     mpu.FECHA_EXPIRACION,
-    TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YY') AS FECHA_EXPIRACION_TEXTO,
+    TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YYYY') AS FECHA_EXPIRACION_TEXTO,
     mpu.ES_PREDETERMINADO,
     mpu.ACTIVO,
     mpu.FECHA_CREACION
@@ -145,6 +237,65 @@ BEGIN
 END;
 /
 
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_INDEXES
+    WHERE INDEX_NAME = 'IDX_MPU_FUENTE_WOMPI';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE INDEX IDX_MPU_FUENTE_WOMPI ON METODO_PAGO_USUARIO(ID_FUENTE_WOMPI)';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -1408 THEN
+            RAISE;
+        END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_INDEXES
+    WHERE INDEX_NAME = 'IDX_MPU_TOKEN_WOMPI';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE INDEX IDX_MPU_TOKEN_WOMPI ON METODO_PAGO_USUARIO(TOKEN_WOMPI)';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -1408 THEN
+            RAISE;
+        END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM USER_INDEXES
+    WHERE INDEX_NAME = 'UK_MPU_TARJETA_ACTIVA';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE '
+            CREATE UNIQUE INDEX UK_MPU_TARJETA_ACTIVA
+            ON METODO_PAGO_USUARIO(
+                CASE WHEN ACTIVO = 1 THEN ID_USUARIO END,
+                CASE WHEN ACTIVO = 1 THEN UPPER(FRANQUICIA) END,
+                CASE WHEN ACTIVO = 1 THEN ULTIMOS_4 END,
+                CASE WHEN ACTIVO = 1 THEN FECHA_EXPIRACION END
+            )';
+    END IF;
+END;
+/
+
 CREATE OR REPLACE PROCEDURE SP_GUARDAR_METODO_PAGO (
     p_id_usuario IN NUMBER,
     p_id_metodo IN NUMBER,
@@ -152,6 +303,8 @@ CREATE OR REPLACE PROCEDURE SP_GUARDAR_METODO_PAGO (
     p_ultimos_4 IN VARCHAR2,
     p_franquicia IN VARCHAR2,
     p_token IN VARCHAR2,
+    p_id_fuente_wompi IN NUMBER,
+    p_estado_wompi IN VARCHAR2,
     p_fecha_expiracion IN VARCHAR2,
     p_es_predeterminado IN NUMBER
 )
@@ -165,6 +318,14 @@ BEGIN
 
     IF p_id_metodo NOT IN (2, 3) THEN
         RAISE_APPLICATION_ERROR(-20502, 'Solo se guardan tarjetas debito o credito');
+    END IF;
+
+    IF UPPER(TRIM(p_franquicia)) NOT IN ('VISA', 'MASTERCARD') THEN
+        RAISE_APPLICATION_ERROR(-20503, 'Solo se guardan tarjetas VISA o MASTERCARD');
+    END IF;
+
+    IF p_token IS NULL OR p_id_fuente_wompi IS NULL OR p_id_fuente_wompi <= 0 THEN
+        RAISE_APPLICATION_ERROR(-20504, 'Token o fuente Wompi invalida');
     END IF;
 
     SELECT COUNT(*)
@@ -185,6 +346,9 @@ BEGIN
         ULTIMOS_4,
         FRANQUICIA,
         TOKEN_PAGO,
+        TOKEN_WOMPI,
+        ID_FUENTE_WOMPI,
+        ESTADO_WOMPI,
         FECHA_EXPIRACION,
         ES_PREDETERMINADO,
         ACTIVO
@@ -196,10 +360,85 @@ BEGIN
         SUBSTR(TRIM(p_ultimos_4), 1, 4),
         UPPER(SUBSTR(TRIM(p_franquicia), 1, 20)),
         p_token,
-        TO_DATE(p_fecha_expiracion, 'YYYY-MM-DD'),
+        p_token,
+        p_id_fuente_wompi,
+        NVL(UPPER(TRIM(p_estado_wompi)), 'AVAILABLE'),
+        TO_DATE(p_fecha_expiracion, 'MM/YYYY'),
         v_predeterminado,
         1
     );
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_ACTUALIZAR_METODO_PAGO (
+    p_id_metodo_pago_usuario IN NUMBER,
+    p_id_usuario IN NUMBER,
+    p_titular IN VARCHAR2,
+    p_fecha_expiracion IN VARCHAR2,
+    p_es_predeterminado IN NUMBER
+)
+AS
+BEGIN
+    IF NVL(p_es_predeterminado, 0) = 1 THEN
+        UPDATE METODO_PAGO_USUARIO
+        SET ES_PREDETERMINADO = 0
+        WHERE ID_USUARIO = p_id_usuario
+          AND ID_METODO_PAGO_USUARIO <> p_id_metodo_pago_usuario;
+    END IF;
+
+    UPDATE METODO_PAGO_USUARIO
+    SET TITULAR = SUBSTR(TRIM(p_titular), 1, 120),
+        FECHA_EXPIRACION = TO_DATE(p_fecha_expiracion, 'MM/YYYY'),
+        ES_PREDETERMINADO = CASE WHEN NVL(p_es_predeterminado, 0) = 1 THEN 1 ELSE ES_PREDETERMINADO END
+    WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
+      AND ID_USUARIO = p_id_usuario
+      AND ACTIVO = 1;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20550, 'Metodo de pago no encontrado');
+    END IF;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_ELIMINAR_METODO_PAGO (
+    p_id_metodo_pago_usuario IN NUMBER,
+    p_id_usuario IN NUMBER
+)
+AS
+BEGIN
+    UPDATE METODO_PAGO_USUARIO
+    SET ACTIVO = 0,
+        ES_PREDETERMINADO = 0,
+        ESTADO_WOMPI = 'VOIDED'
+    WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
+      AND ID_USUARIO = p_id_usuario;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20551, 'Metodo de pago no encontrado');
+    END IF;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_PREDETERMINAR_METODO_PAGO (
+    p_id_metodo_pago_usuario IN NUMBER,
+    p_id_usuario IN NUMBER
+)
+AS
+BEGIN
+    UPDATE METODO_PAGO_USUARIO
+    SET ES_PREDETERMINADO = 0
+    WHERE ID_USUARIO = p_id_usuario;
+
+    UPDATE METODO_PAGO_USUARIO
+    SET ES_PREDETERMINADO = 1
+    WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
+      AND ID_USUARIO = p_id_usuario
+      AND ACTIVO = 1
+      AND UPPER(ESTADO_WOMPI) = 'AVAILABLE';
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20552, 'Metodo de pago no encontrado');
+    END IF;
 END;
 /
 
