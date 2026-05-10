@@ -415,24 +415,29 @@ class MetodoPagoUsuarioModel {
         if ($esPredeterminado === 1) {
             $this->quitarPredeterminado($idUsuario);
         }
-
+    
         $query = "BEGIN SP_GUARDAR_METODO_PAGO(
-                    :id_usuario,
-                    :id_metodo,
-                    :titular,
-                    :ultimos_4,
-                    :franquicia,
-                    :token,
-                    :id_fuente_wompi,
-                    :estado_wompi,
-                    :fecha_expiracion,
-                    :es_predeterminado
-                  ); END;";
+            :id_usuario,
+            :id_metodo,
+            :titular,
+            :ultimos_4,
+            :franquicia,
+            :token,
+            :fecha_expiracion,
+            :es_predeterminado,
+            :tipo_token,
+            :email_wompi,
+            :id_fuente_wompi,
+            :estado_wompi
+        ); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
+
+        $tipoToken = 'CARD';
+        $emailWompi = '';
 
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':id_metodo', $idMetodo, -1, SQLT_INT);
@@ -440,10 +445,12 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':ultimos_4', $ultimos4);
         oci_bind_by_name($stmt, ':franquicia', $franquicia);
         oci_bind_by_name($stmt, ':token', $tokenWompi);
-        oci_bind_by_name($stmt, ':id_fuente_wompi', $idFuenteWompi, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':estado_wompi', $estadoWompi);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
         oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':tipo_token', $tipoToken);
+        oci_bind_by_name($stmt, ':email_wompi', $emailWompi);
+        oci_bind_by_name($stmt, ':id_fuente_wompi', $idFuenteWompi, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':estado_wompi', $estadoWompi);
 
         error_log("=== LOG BIND NUMBER METODO PAGO ===");
         error_log("valor: " . var_export($idUsuario, true) . " | tipo: " . gettype($idUsuario) . " | destino: ID_USUARIO");
