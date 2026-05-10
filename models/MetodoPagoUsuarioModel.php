@@ -195,7 +195,8 @@ class MetodoPagoUsuarioModel {
                   WHERE ID_USUARIO = :id_usuario
                     AND ID_METODO IN (2, 3)
                     AND ACTIVO = 1
-                    AND LAST_DAY(FECHA_EXPIRACION) < TRUNC(SYSDATE)";
+                    AND REGEXP_LIKE(FECHA_EXPIRACION, '^(0[1-9]|1[0-2])/[0-9]{4}$')
+                    AND TO_DATE('01/' || FECHA_EXPIRACION, 'DD/MM/YYYY') < TRUNC(SYSDATE, 'MM')";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
