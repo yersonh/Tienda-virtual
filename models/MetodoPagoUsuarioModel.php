@@ -406,12 +406,12 @@ class MetodoPagoUsuarioModel {
         $ultimos4 = preg_replace('/\D+/', '', (string) ($data['ultimos_4'] ?? ''));
         $franquicia = strtoupper(trim((string) ($data['franquicia'] ?? '')));
         $tokenWompi = trim((string) ($data['token_wompi'] ?? $data['token_pago'] ?? ''));
-        $idFuenteWompi = (int) ($data['id_fuente_wompi'] ?? 0);
+        $idFuenteWompi = trim((string) ($data['id_fuente_wompi'] ?? ''));
         $estadoWompi = strtoupper(trim((string) ($data['estado_wompi'] ?? 'AVAILABLE')));
         $fechaExpiracion = trim((string) ($data['fecha_expiracion'] ?? ''));
         $esPredeterminado = !empty($data['es_predeterminado']) ? 1 : 0;
 
-        if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenWompi === '' || $idFuenteWompi <= 0 || $fechaExpiracion === '') {
+        if ($idUsuario <= 0 || !in_array($idMetodo, [2, 3], true) || $titular === '' || strlen($ultimos4) !== 4 || $tokenWompi === '' || $idFuenteWompi === '' || $fechaExpiracion === '') {
             throw new InvalidArgumentException('Datos de metodo de pago incompletos');
         }
         if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $fechaExpiracion)) {
@@ -465,7 +465,7 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':tipo_token', $tipoToken);
         oci_bind_by_name($stmt, ':email_wompi', $emailWompi);
-        oci_bind_by_name($stmt, ':id_fuente_wompi', $idFuenteWompi, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_fuente_wompi', $idFuenteWompi);
         oci_bind_by_name($stmt, ':estado_wompi', $estadoWompi);
 
         error_log("=== LOG BIND NUMBER METODO PAGO ===");
