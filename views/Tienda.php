@@ -1401,10 +1401,10 @@ function hasMachineCompatibilityFilters() {
 }
 
 function buildFilterParams(catOverride = null, includeCompatibility = true){
-    const texto = buscador.value.trim();
-    const min = precioMin.value.replace(/\D/g,'').trim();
-    const max = precioMax.value.replace(/\D/g,'').trim();
-    const cat = catOverride !== null ? catOverride : (categoria.value || categoriaActiva);
+    const texto = buscador ? buscador.value.trim() : '';
+    const min = precioMin ? precioMin.value.replace(/\D/g,'').trim() : '';
+    const max = precioMax ? precioMax.value.replace(/\D/g,'').trim() : '';
+    const cat = catOverride !== null ? catOverride : ((categoria ? categoria.value : '') || categoriaActiva);
     const compatMode = includeCompatibility && compatibilityType ? compatibilityType.value : '';
     const params = new URLSearchParams();
     params.set('action', 'tienda');
@@ -1428,7 +1428,9 @@ function buildFilterParams(catOverride = null, includeCompatibility = true){
 
 function showCategory(cat){
     categoriaActiva = cat || '';
-    categoria.value = categoriaActiva;
+    if (categoria) {
+        categoria.value = categoriaActiva;
+    }
     fetchFilteredStore();
 }
 
@@ -1551,8 +1553,35 @@ function setFilterLoading(isLoading) {
     filterSidebar.classList.toggle('loading', isLoading);
 }
 
+function applyLocalStoreFilters() {
+    const texto = buscador ? buscador.value.trim().toLowerCase() : '';
+    const min = precioMin ? Number(precioMin.value.replace(/\D/g, '')) || 0 : 0;
+    const max = precioMax ? Number(precioMax.value.replace(/\D/g, '')) || 0 : 0;
+    const cat = ((categoria ? categoria.value : '') || categoriaActiva || '').toLowerCase();
+
+    document.querySelectorAll('.product-card').forEach((card) => {
+        const name = (card.dataset.nombre || '').toLowerCase();
+        const code = (card.dataset.codigo || '').toLowerCase();
+        const description = (card.dataset.descripcion || '').toLowerCase();
+        const cardCat = (card.dataset.categoria || '').toLowerCase();
+        const price = Number(card.dataset.precio || 0);
+        const matchText = !texto || name.includes(texto) || code.includes(texto) || description.includes(texto);
+        const matchMin = !min || price >= min;
+        const matchMax = !max || price <= max;
+        const matchCat = !cat || cardCat === cat;
+        card.style.display = matchText && matchMin && matchMax && matchCat ? '' : 'none';
+    });
+
+    document.querySelectorAll('.category-section').forEach((section) => {
+        const visibleCards = Array.from(section.querySelectorAll('.product-card')).some((card) => card.style.display !== 'none');
+        section.style.display = visibleCards ? '' : 'none';
+    });
+}
+
 async function fetchFilteredStore(force = false) {
-    const cat = categoria.value || categoriaActiva;
+    applyLocalStoreFilters();
+
+    const cat = (categoria ? categoria.value : '') || categoriaActiva;
     const viewParams = buildFilterParams(cat);
     const requestParams = new URLSearchParams(viewParams);
     requestParams.set('action', 'tiendaFiltros');
@@ -1581,7 +1610,14 @@ async function fetchFilteredStore(force = false) {
                 'X-Requested-With': 'fetch'
             }
         });
-        const data = await response.json();
+        const raw = await response.text();
+        let data = null;
+        try {
+            data = JSON.parse(raw);
+        } catch (parseError) {
+            throw new Error(raw ? 'La respuesta de filtros no es JSON valido' : 'Respuesta vacia al filtrar');
+        }
+
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'No se pudieron actualizar los filtros');
         }
@@ -1594,7 +1630,7 @@ async function fetchFilteredStore(force = false) {
     } catch (error) {
         if (error.name === 'AbortError') return;
         console.error(error);
-        if (!force) {
+        if (!force && !document.querySelector('.product-card')) {
             const fallbackParams = new URLSearchParams(viewParams);
             fallbackParams.set('action', 'tienda');
             window.location.href = `index.php?${fallbackParams.toString()}${cat ? '#category-detail' : ''}`;
@@ -1615,6 +1651,7 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
     if (results && results.innerHTML !== (data.productos_html || '')) {
         results.innerHTML = data.productos_html || '';
         observeLazyImages(results);
+        applyLocalStoreFilters();
     }
 
         if (compatibilityType && typeof data.compatibilidad_tipo !== 'undefined') {
@@ -1661,10 +1698,10 @@ function handleGeneralFilterInput(event) {
 }
 
 // UN SOLO EVENTO PARA TODO
-[buscador, precioMin, precioMax].forEach(el=>{
+[buscador, precioMin, precioMax].filter(Boolean).forEach(el=>{
     el.addEventListener('input', handleGeneralFilterInput);
 });
-categoria.addEventListener('change', () => {
+if (categoria) categoria.addEventListener('change', () => {
     categoriaActiva = categoria.value;
     filterProducts();
 });
@@ -1756,13 +1793,13 @@ function filterProducts(){
 // LIMPIAR
 function clearFilters(){
     sessionStorage.removeItem('tiendaFilterSidebarOpen');
-    buscador.value="";
-    precioMin.value="";
-    precioMax.value="";
+    if (buscador) buscador.value="";
+    if (precioMin) precioMin.value="";
+    if (precioMax) precioMax.value="";
     lastSearchValue="";
     lastMinValue="";
     lastMaxValue="";
-    categoria.value="";
+    if (categoria) categoria.value="";
     categoriaActiva="";
     if (compatibilityType) compatibilityType.value = "";
     optionSearchInputs.forEach(el => {
@@ -1777,13 +1814,14 @@ function clearFilters(){
     fetchFilteredStore();
 }
 
-syncCategoryTabs(categoria.value);
-if (categoriaActiva && !categoria.value) {
+syncCategoryTabs(categoria ? categoria.value : '');
+if (categoria && categoriaActiva && !categoria.value) {
     categoria.value = categoriaActiva;
 }
 
 // FORMATO
 function formatoMiles(input){
+    if (!input) return;
     input.addEventListener('input',function(){
         let valor=this.value.replace(/\D/g,'');
         if(valor==='') return;
@@ -1793,7 +1831,7 @@ function formatoMiles(input){
 formatoMiles(precioMin);
 formatoMiles(precioMax);
 
-syncCategoryTabs(categoria.value || categoriaActiva);
+syncCategoryTabs((categoria ? categoria.value : '') || categoriaActiva);
 syncCompatibilityFields();
 if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     openFilterSidebar();

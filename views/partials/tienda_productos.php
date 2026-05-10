@@ -39,6 +39,8 @@
             ?>
             <div class="product-card producto-card producto"
                  data-nombre="<?= htmlspecialchars(strtolower((string) $p['nombre']), ENT_QUOTES, 'UTF-8') ?>"
+                 data-codigo="<?= htmlspecialchars(strtolower((string) ($p['codigo'] ?? '')), ENT_QUOTES, 'UTF-8') ?>"
+                 data-descripcion="<?= htmlspecialchars(strtolower((string) ($p['descripcion'] ?? '')), ENT_QUOTES, 'UTF-8') ?>"
                  data-precio="<?= htmlspecialchars((string) $p['precio'], ENT_QUOTES, 'UTF-8') ?>"
                  data-categoria="<?= htmlspecialchars((string) $categoria, ENT_QUOTES, 'UTF-8') ?>"
                  data-id="<?= (int) $p['id_producto'] ?>"
