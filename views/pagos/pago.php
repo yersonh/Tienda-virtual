@@ -2019,6 +2019,21 @@ function initPaymentPage() {
             return;
         }
 
+        const method = selectedPaymentMethod();
+        const expField = document.getElementById('vencimiento_tarjeta');
+        if (isCardPaymentMethod(method) && oneTimeCardMode && expField && expField.value) {
+            const expMatch = expField.value.trim().match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
+            if (expMatch) {
+                const expMonth = parseInt(expMatch[1], 10);
+                const expYear = parseInt(expMatch[2], 10);
+                const now = new Date();
+                if (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < now.getMonth() + 1)) {
+                    showPaymentNotice('La tarjeta ingresada se encuentra vencida', true);
+                    return;
+                }
+            }
+        }
+
         sessionStorage.setItem(paymentSubmittedKey, '1');
         paymentForm.dataset.processing = '1';
         setWompiButtonLoading(true, 'Preparando pago');
@@ -2185,6 +2200,17 @@ function initPaymentPage() {
         if (!expMatch) {
             throw new Error('Ingresa el vencimiento en formato MM/YYYY');
         }
+
+        const expMonth = parseInt(expMatch[1], 10);
+        const expYear = parseInt(expMatch[2], 10);
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+
+        if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
+            throw new Error('La tarjeta ingresada se encuentra vencida');
+        }
+
         if (alias.length < 3 || cvc.length < 3) {
             throw new Error('Completa alias y CVV para tokenizar la tarjeta');
         }

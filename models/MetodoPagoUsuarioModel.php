@@ -401,6 +401,10 @@ class MetodoPagoUsuarioModel {
         if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $fechaExpiracion)) {
             throw new InvalidArgumentException('Ingresa la expiracion en formato MM/YYYY');
         }
+        $expParts = explode('/', $fechaExpiracion);
+        if ((int)$expParts[1] < (int)date('Y') || ((int)$expParts[1] === (int)date('Y') && (int)$expParts[0] < (int)date('m'))) {
+            throw new InvalidArgumentException('La tarjeta ingresada se encuentra vencida');
+        }
         if (!in_array($franquicia, ['VISA', 'MASTERCARD'], true)) {
             throw new InvalidArgumentException('Solo se permiten tarjetas VISA o MASTERCARD tokenizadas');
         }
@@ -440,6 +444,12 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':estado_wompi', $estadoWompi);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
         oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
+
+        error_log("=== LOG BIND NUMBER METODO PAGO ===");
+        error_log("valor: " . var_export($idUsuario, true) . " | tipo: " . gettype($idUsuario) . " | destino: ID_USUARIO");
+        error_log("valor: " . var_export($idMetodo, true) . " | tipo: " . gettype($idMetodo) . " | destino: ID_METODO");
+        error_log("valor: " . var_export($idFuenteWompi, true) . " | tipo: " . gettype($idFuenteWompi) . " | destino: ID_FUENTE_WOMPI");
+        error_log("valor: " . var_export($esPredeterminado, true) . " | tipo: " . gettype($esPredeterminado) . " | destino: ES_PREDETERMINADO");
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
@@ -599,6 +609,10 @@ class MetodoPagoUsuarioModel {
         if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $fechaExpiracion)) {
             throw new InvalidArgumentException('Ingresa la expiracion en formato MM/YYYY');
         }
+        $expParts = explode('/', $fechaExpiracion);
+        if ((int)$expParts[1] < (int)date('Y') || ((int)$expParts[1] === (int)date('Y') && (int)$expParts[0] < (int)date('m'))) {
+            throw new InvalidArgumentException('La tarjeta ingresada se encuentra vencida');
+        }
 
         $query = "BEGIN SP_ACTUALIZAR_METODO_PAGO(
                     :id_metodo_pago_usuario,
@@ -659,3 +673,4 @@ class MetodoPagoUsuarioModel {
         return true;
     }
 }
+
