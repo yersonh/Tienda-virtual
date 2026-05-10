@@ -241,6 +241,7 @@ class MetodoPagoUsuarioModel {
                          CASE mpu.ID_METODO
                              WHEN 2 THEN 'Tarjeta debito'
                              WHEN 3 THEN 'Tarjeta credito'
+                             WHEN 5 THEN 'Wompi'
                              ELSE 'Tarjeta'
                          END AS FORMA_PAGO,
                          mpu.TITULAR,
@@ -360,7 +361,7 @@ class MetodoPagoUsuarioModel {
                   WHERE mpu.ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
                     AND mpu.ID_USUARIO = :id_usuario
                     AND mpu.ACTIVO = 1
-                    AND mpu.ID_METODO IN (2, 3)
+                    AND mpu.ID_METODO IN (2, 3, 5)
                   FETCH FIRST 1 ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
