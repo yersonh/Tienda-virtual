@@ -198,6 +198,7 @@ class MetodoPagoUsuarioModel {
         }
 
         $affected = oci_num_rows($stmt);
+        @oci_commit($this->conn);
         oci_free_statement($stmt);
         if ($affected > 0) {
             $this->limpiarCache($idUsuario);
@@ -220,7 +221,6 @@ class MetodoPagoUsuarioModel {
         try {
             $desactivadas = $this->desactivarVencidasUsuario($idUsuario);
             if ($desactivadas > 0) {
-                @oci_commit($this->conn);
                 $this->ensureSession();
                 $_SESSION['payment_expired_notice'] = 'Una o mas tarjetas vencidas fueron desactivadas automaticamente. Puedes eliminarlas desde tus tarjetas guardadas.';
             }
