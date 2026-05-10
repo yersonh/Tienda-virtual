@@ -259,6 +259,10 @@ switch ($action) {
         (new CheckoutController())->confirmarPedido();
         break;
 
+    case 'reintentarPago':
+        (new CheckoutController())->reintentarPago();
+        break;
+
     case 'confirmacionPedido':
         (new PedidoController())->confirmacion();
         break;

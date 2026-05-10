@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
 require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
+require_once __DIR__ . '/../models/PedidoLifecycleModel.php';
 require_once __DIR__ . '/CheckoutController.php';
 
 class PedidoController {
@@ -11,6 +12,7 @@ class PedidoController {
     private $carritoModel;
     private $direccionPedidoModel;
     private $metodoPagoUsuarioModel;
+    private $pedidoLifecycleModel;
     private $ventaColumnasCache = null;
 
     public function __construct() {
@@ -18,6 +20,7 @@ class PedidoController {
         $this->carritoModel = new CarritoModel($this->conn);
         $this->direccionPedidoModel = new DireccionPedidoModel($this->conn);
         $this->metodoPagoUsuarioModel = new MetodoPagoUsuarioModel($this->conn);
+        $this->pedidoLifecycleModel = new PedidoLifecycleModel($this->conn);
     }
 
     private function ensureSession() {
@@ -119,6 +122,16 @@ class PedidoController {
         $_SESSION[$success ? 'success' : 'error'] = $message;
         header('Location: index.php?action=pago');
         exit();
+    }
+
+    private function expirarPedidosPendientes(): void {
+        try {
+            $this->pedidoLifecycleModel->expirarPendientes();
+            oci_commit($this->conn);
+        } catch (Throwable $e) {
+            @oci_rollback($this->conn);
+            error_log('SP_EXPIRAR_PEDIDOS: ' . $e->getMessage());
+        }
     }
 
     private function calcularTotalCarrito(array $carrito): float {
@@ -507,46 +520,7 @@ class PedidoController {
     }
 
     private function actualizarEstadosPedidosUsuario(int $idUsuario): void {
-        $columnasVenta = $this->obtenerColumnasTabla('VENTA');
-        $columnaFecha = $this->columnaVentaDisponible($columnasVenta, ['fecha', 'fecha_venta', 'fecha_creacion', 'created_at']);
-        if (!$columnaFecha) {
-            return;
-        }
-
-        $query = "UPDATE PEDIDO p
-                  SET p.ID_ESTADO = (
-                      SELECT CASE
-                          WHEN ((SYSDATE - v.$columnaFecha) * 1440) >= 15 THEN 4
-                          WHEN ((SYSDATE - v.$columnaFecha) * 1440) >= 10 THEN GREATEST(p.ID_ESTADO, 3)
-                          WHEN ((SYSDATE - v.$columnaFecha) * 1440) >= 5 THEN GREATEST(p.ID_ESTADO, 2)
-                          ELSE p.ID_ESTADO
-                      END
-                      FROM VENTA v
-                      WHERE v.ID_VENTA = p.ID_VENTA
-                        AND v.ID_USUARIO = :id_usuario
-                  )
-                  WHERE p.ID_ESTADO IN (1, 2, 3)
-                    AND EXISTS (
-                        SELECT 1
-                        FROM VENTA v
-                        WHERE v.ID_VENTA = p.ID_VENTA
-                          AND v.ID_USUARIO = :id_usuario
-                    )";
-
-        $stmt = @oci_parse($this->conn, $query);
-        if (!$stmt) {
-            return;
-        }
-
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            oci_free_statement($stmt);
-            oci_rollback($this->conn);
-            return;
-        }
-
-        oci_free_statement($stmt);
-        oci_commit($this->conn);
+        return;
     }
 
     private function obtenerPedidosUsuario(int $idUsuario): array {
@@ -558,6 +532,14 @@ class PedidoController {
                          $estadoSql AS ESTADO,
                          {$venta['fecha']} AS FECHA,
                          {$venta['total']} AS TOTAL,
+                         TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (30 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
+                         CASE WHEN EXISTS (
+                             SELECT 1
+                             FROM PAGO pg
+                             WHERE pg.ID_VENTA = p.ID_VENTA
+                               AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+                         ) THEN 1 ELSE 0 END AS PAGO_APROBADO,
                          TO_CHAR(p.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA
                   FROM PEDIDO p
                   INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
@@ -661,13 +643,21 @@ class PedidoController {
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
         $query = "SELECT fp.ID_PEDIDO,
                          fp.ID_VENTA,
-                         CAST(NULL AS NUMBER) AS ID_ESTADO,
+                         fp.ID_ESTADO,
                          fp.ESTADO_PEDIDO AS ESTADO,
                          TO_CHAR(fp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
                          NVL(fp.SUBTOTAL, 0) AS SUBTOTAL,
                          NVL(fp.IVA, 0) AS IVA,
                          NVL(fp.ENVIO, 0) AS ENVIO,
                          NVL(fp.TOTAL, 0) AS TOTAL,
+                         TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (30 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
+                         CASE WHEN EXISTS (
+                             SELECT 1
+                             FROM PAGO pg
+                             WHERE pg.ID_VENTA = p.ID_VENTA
+                               AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+                         ) THEN 1 ELSE 0 END AS PAGO_APROBADO,
                          CAST(NULL AS VARCHAR2(10)) AS FECHA_ESTIMADA_ENTREGA,
                          fp.NOMBRE_RECEPTOR,
                          fp.APELLIDO_RECEPTOR,
@@ -678,6 +668,7 @@ class PedidoController {
                          CAST(NULL AS VARCHAR2(50)) AS TELEFONO_ALTERNO,
                          CAST(NULL AS VARCHAR2(500)) AS INFORMACION_ADICIONAL
                   FROM V_FACTURA_PEDIDO fp
+                  INNER JOIN PEDIDO p ON p.ID_PEDIDO = fp.ID_PEDIDO
                   WHERE fp.ID_USUARIO = :id_usuario
                     AND fp.ID_PEDIDO = :id_pedido
                   FETCH FIRST 1 ROWS ONLY";
@@ -1172,6 +1163,7 @@ class PedidoController {
 
     public function confirmacion() {
         $this->ensureSession();
+        $this->expirarPedidosPendientes();
 
         $idPedido = (int) ($_GET['id'] ?? 0);
         $pedido = $_SESSION['pedido_confirmado'] ?? null;
@@ -1187,6 +1179,11 @@ class PedidoController {
             try {
                 $pedidoDb = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
                 $pedido = $pedidoDb ? $this->prepararPedidoConfirmado($pedidoDb) : null;
+                if ($pedidoDb && !in_array((int) ($pedidoDb['id_estado'] ?? 0), [2, 3, 4], true)) {
+                    $_SESSION['error'] = 'La confirmacion y la factura estaran disponibles cuando Wompi apruebe el pago.';
+                    header("Location: index.php?action=misPedidos&id=" . $idPedido);
+                    exit();
+                }
             } catch (Throwable $e) {
                 error_log($e->getMessage());
                 $pedido = null;
@@ -1203,6 +1200,7 @@ class PedidoController {
 
     public function misPedidos() {
         $this->ensureSession();
+        $this->expirarPedidosPendientes();
         $idUsuario = $this->getUsuarioId();
 
         if ($idUsuario <= 0) {
@@ -1237,6 +1235,7 @@ class PedidoController {
 
     public function facturaPedido() {
         $this->ensureSession();
+        $this->expirarPedidosPendientes();
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
@@ -1256,6 +1255,14 @@ class PedidoController {
         if (!$pedido) {
             $_SESSION['error'] = 'Pedido no encontrado';
             header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        $idEstadoPedido = (int) ($pedido['id_estado'] ?? 0);
+        $pagoAprobadoPedido = (int) ($pedido['pago_aprobado'] ?? 0) === 1;
+        if (!in_array($idEstadoPedido, [2, 3, 4], true) && !($idEstadoPedido === 5 && $pagoAprobadoPedido)) {
+            $_SESSION['error'] = 'La factura estara disponible cuando el pago sea aprobado.';
+            header("Location: index.php?action=misPedidos&id=" . $idPedido);
             exit();
         }
 
@@ -1287,6 +1294,7 @@ class PedidoController {
 
     public function cancelarPedido() {
         $this->ensureSession();
+        $this->expirarPedidosPendientes();
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
@@ -1302,6 +1310,42 @@ class PedidoController {
             exit();
         }
 
+        try {
+            $pedidoActual = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
+            if (!$pedidoActual) {
+                $_SESSION['error'] = 'Pedido no encontrado';
+                header("Location: index.php?action=misPedidos");
+                exit();
+            }
+
+            $estadoActual = (int) ($pedidoActual['id_estado'] ?? 0);
+            if ($estadoActual === 3) {
+                $_SESSION['error'] = 'El pedido ya esta en camino';
+                header("Location: index.php?action=misPedidos&id=" . $idPedido);
+                exit();
+            }
+            if ($estadoActual === 4) {
+                $_SESSION['error'] = 'No es posible cancelar este pedido porque ya fue entregado';
+                header("Location: index.php?action=misPedidos&id=" . $idPedido);
+                exit();
+            }
+            if ($estadoActual === 5) {
+                $_SESSION['success'] = 'Pedido cancelado';
+                header("Location: index.php?action=misPedidos&id=" . $idPedido);
+                exit();
+            }
+            if (!in_array($estadoActual, [1, 2], true)) {
+                $_SESSION['error'] = 'No es posible cancelar este pedido';
+                header("Location: index.php?action=misPedidos&id=" . $idPedido);
+                exit();
+            }
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
+            $_SESSION['error'] = 'No es posible cancelar este pedido';
+            header("Location: index.php?action=misPedidos&id=" . $idPedido);
+            exit();
+        }
+
         $query = "BEGIN SP_CANCELAR_PEDIDO(:id_pedido, :id_usuario); END;";
 
         $stmt = oci_parse($this->conn, $query);
@@ -1312,8 +1356,17 @@ class PedidoController {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
             oci_rollback($this->conn);
-            error_log($error['message'] ?? 'No se pudo cancelar el pedido');
-            $_SESSION['error'] = 'No se pudo cancelar el pedido';
+            $message = (string) ($error['message'] ?? 'No es posible cancelar este pedido');
+            error_log($message);
+            if (str_contains($message, 'camino')) {
+                $_SESSION['error'] = 'El pedido ya esta en camino';
+            } elseif (str_contains($message, 'entregado')) {
+                $_SESSION['error'] = 'No es posible cancelar este pedido porque ya fue entregado';
+            } elseif (str_contains($message, 'cancelado')) {
+                $_SESSION['success'] = 'Pedido cancelado';
+            } else {
+                $_SESSION['error'] = 'No es posible cancelar este pedido';
+            }
             header("Location: index.php?action=misPedidos&id=" . $idPedido);
             exit();
         }

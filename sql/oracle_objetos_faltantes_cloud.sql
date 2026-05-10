@@ -755,21 +755,30 @@ CREATE OR REPLACE PROCEDURE SP_CANCELAR_PEDIDO (
     p_id_usuario IN NUMBER
 )
 AS
+    v_id_estado PEDIDO.ID_ESTADO%TYPE;
 BEGIN
-    UPDATE PEDIDO p
-    SET p.ID_ESTADO = 5
+    SELECT p.ID_ESTADO
+    INTO v_id_estado
+    FROM PEDIDO p
+    JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
     WHERE p.ID_PEDIDO = p_id_pedido
-      AND p.ID_ESTADO IN (1, 2)
-      AND EXISTS (
-          SELECT 1
-          FROM VENTA v
-          WHERE v.ID_VENTA = p.ID_VENTA
-            AND v.ID_USUARIO = p_id_usuario
-      );
+      AND v.ID_USUARIO = p_id_usuario
+    FOR UPDATE;
 
-    IF SQL%ROWCOUNT = 0 THEN
+    IF v_id_estado IN (3, 4) THEN
+        RAISE_APPLICATION_ERROR(-20541, 'El pedido ya esta en camino o fue entregado');
+    ELSIF v_id_estado = 5 THEN
+        RAISE_APPLICATION_ERROR(-20542, 'Pedido cancelado');
+    ELSIF v_id_estado NOT IN (1, 2) THEN
         RAISE_APPLICATION_ERROR(-20540, 'No se puede cancelar el pedido');
     END IF;
+
+    UPDATE PEDIDO
+    SET ID_ESTADO = 5
+    WHERE ID_PEDIDO = p_id_pedido;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20540, 'No se puede cancelar el pedido');
 END;
 /
 

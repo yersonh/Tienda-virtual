@@ -46,11 +46,36 @@ function statusClass(string $estado, int $idEstado = 0): string {
 function canCancelOrder(array $pedido): bool {
     $idEstado = (int) ($pedido['id_estado'] ?? 0);
     if ($idEstado > 0) {
-        return $idEstado === 1;
+        return in_array($idEstado, [1, 2], true);
     }
 
     $estado = strtolower(trim((string) ($pedido['estado'] ?? '')));
-    return str_contains($estado, 'pendiente');
+    return str_contains($estado, 'pendiente') || str_contains($estado, 'proces');
+}
+
+function canDownloadInvoice(array $pedido): bool {
+    $idEstado = (int) ($pedido['id_estado'] ?? 0);
+    if ($idEstado > 0) {
+        return in_array($idEstado, [2, 3, 4], true) || ($idEstado === 5 && (int) ($pedido['pago_aprobado'] ?? 0) === 1);
+    }
+
+    $estado = strtolower(trim((string) ($pedido['estado'] ?? '')));
+    return str_contains($estado, 'proces') || str_contains($estado, 'pag') || str_contains($estado, 'apro') || str_contains($estado, 'envi') || str_contains($estado, 'entreg');
+}
+
+function canRetryPayment(array $pedido): bool {
+    return (int) ($pedido['id_estado'] ?? 0) === 1 && (int) ($pedido['segundos_restantes'] ?? 0) > 0;
+}
+
+function retryTimeText(array $pedido): string {
+    $seconds = (int) ($pedido['segundos_restantes'] ?? 0);
+    if ($seconds <= 0) {
+        return 'Expirado';
+    }
+
+    $minutes = intdiv($seconds, 60);
+    $remainingSeconds = $seconds % 60;
+    return sprintf('%02d:%02d', $minutes, $remainingSeconds);
 }
 
 function orderProductImage(?string $imagen): ?string {
@@ -725,14 +750,20 @@ function orderProductImage(?string $imagen): ?string {
             <div class="orders-toolbar">
                 <?php if ($pedidoDetalle): ?>
                     <a class="orders-btn" href="index.php?action=misPedidos"><i class="fas fa-arrow-left"></i><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
-                    <a class="orders-btn primary" href="index.php?action=facturaPedido&id=<?= (int) $pedidoDetalle['id_pedido'] ?>&download=1"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></a>
-                    <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
-                        <input type="hidden" name="id_pedido" value="<?= (int) $pedidoDetalle['id_pedido'] ?>">
-                        <button class="orders-btn danger" type="submit" <?= canCancelOrder($pedidoDetalle) ? '' : 'disabled' ?> title="<?= htmlspecialchars(canCancelOrder($pedidoDetalle) ? 'Cancelar pedido' : 'Este pedido ya no se puede cancelar', ENT_QUOTES, 'UTF-8') ?>">
-                            <i class="fas fa-ban"></i>
-                            <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
-                        </button>
-                    </form>
+                    <?php if (canDownloadInvoice($pedidoDetalle)): ?>
+                        <a class="orders-btn primary" href="index.php?action=facturaPedido&id=<?= (int) $pedidoDetalle['id_pedido'] ?>&download=1"><i class="fas fa-file-arrow-down"></i><?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?></a>
+                    <?php else: ?>
+                        <span class="orders-btn is-disabled"><i class="fas fa-file-circle-clock"></i><?= htmlspecialchars('Factura pendiente', ENT_QUOTES, 'UTF-8') ?></span>
+                    <?php endif; ?>
+                    <?php if (canCancelOrder($pedidoDetalle)): ?>
+                        <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
+                            <input type="hidden" name="id_pedido" value="<?= (int) $pedidoDetalle['id_pedido'] ?>">
+                            <button class="orders-btn danger" type="submit" title="<?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>">
+                                <i class="fas fa-ban"></i>
+                                <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>
@@ -751,6 +782,8 @@ function orderProductImage(?string $imagen): ?string {
             $cartProgress = 8 + ($progress * 0.84);
             $estadoDetalle = (string) ($pedidoDetalle['estado'] ?? 'Pendiente');
             $puedeCancelarDetalle = canCancelOrder($pedidoDetalle);
+            $puedeReintentarDetalle = canRetryPayment($pedidoDetalle);
+            $puedeEditarDireccionDetalle = (int) ($pedidoDetalle['id_estado'] ?? 0) === 1;
             $itemsPedidoDetalle = isset($pedidoDetalle['items']) && is_array($pedidoDetalle['items']) ? $pedidoDetalle['items'] : [];
             $subtotalPedidoDetalle = array_sum(array_map(fn($item) => (float) ($item['subtotal'] ?? 0), $itemsPedidoDetalle));
             $ivaPedidoDetalle = $subtotalPedidoDetalle > 0
@@ -794,13 +827,30 @@ function orderProductImage(?string $imagen): ?string {
                         <div class="detail-row"><span><?= htmlspecialchars('Entrega estimada', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars(orderDateText($pedidoDetalle['fecha_estimada_entrega'] ?? ''), ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('IVA 19%', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format($ivaPedidoDetalle) ?> COP</strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format((float) ($pedidoDetalle['total'] ?? 0)) ?> COP</strong></div>
-                        <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
-                            <input type="hidden" name="id_pedido" value="<?= (int) $pedidoDetalle['id_pedido'] ?>">
-                            <button class="orders-btn danger" type="submit" <?= $puedeCancelarDetalle ? '' : 'disabled' ?> title="<?= htmlspecialchars($puedeCancelarDetalle ? 'Cancelar pedido' : 'Este pedido ya no se puede cancelar', ENT_QUOTES, 'UTF-8') ?>">
-                                <i class="fas fa-ban"></i>
-                                <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
-                            </button>
-                        </form>
+                        <?php if ($puedeReintentarDetalle): ?>
+                            <div class="detail-row"><span><?= htmlspecialchars('Tiempo para pagar', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars(retryTimeText($pedidoDetalle), ENT_QUOTES, 'UTF-8') ?></strong></div>
+                            <a class="orders-btn primary" href="index.php?action=reintentarPago&id=<?= (int) $pedidoDetalle['id_pedido'] ?>">
+                                <i class="fas fa-credit-card"></i>
+                                <?= htmlspecialchars('Pagar ahora', ENT_QUOTES, 'UTF-8') ?>
+                            </a>
+                        <?php elseif ((int) ($pedidoDetalle['id_estado'] ?? 0) === 1 && (int) ($pedidoDetalle['segundos_restantes'] ?? 0) <= 0): ?>
+                            <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('Este pedido expiro. Crea una nueva compra para pagarlo.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <?php endif; ?>
+                        <?php if ($puedeCancelarDetalle): ?>
+                            <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
+                                <input type="hidden" name="id_pedido" value="<?= (int) $pedidoDetalle['id_pedido'] ?>">
+                                <button class="orders-btn danger" type="submit" title="<?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>">
+                                    <i class="fas fa-ban"></i>
+                                    <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
+                                </button>
+                            </form>
+                        <?php elseif ((int) ($pedidoDetalle['id_estado'] ?? 0) === 3): ?>
+                            <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('El pedido ya esta en camino.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <?php elseif ((int) ($pedidoDetalle['id_estado'] ?? 0) === 4): ?>
+                            <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('No es posible cancelar este pedido porque ya fue entregado.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <?php elseif ((int) ($pedidoDetalle['id_estado'] ?? 0) === 5): ?>
+                            <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('Pedido cancelado.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <?php endif; ?>
                     </aside>
                 </div>
 
@@ -812,7 +862,7 @@ function orderProductImage(?string $imagen): ?string {
                         <div class="detail-row"><span><?= htmlspecialchars('Barrio', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['barrio'] ?? 'Sin barrio', ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Ciudad', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['ciudad'] ?? 'Sin ciudad', ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Telefono', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars($pedidoDetalle['telefono_receptor'] ?? 'Sin telefono', ENT_QUOTES, 'UTF-8') ?></strong></div>
-                        <?php if ($puedeCancelarDetalle): ?>
+                        <?php if ($puedeEditarDireccionDetalle): ?>
                             <div class="order-address-actions">
                                 <button class="orders-btn secondary" type="button" id="edit-order-address-btn">
                                     <i class="fas fa-pen-to-square"></i>
@@ -960,6 +1010,8 @@ function orderProductImage(?string $imagen): ?string {
                         $total = (float) ($pedido['total'] ?? 0);
                         $estado = (string) ($pedido['estado'] ?? 'Pendiente');
                         $puedeCancelar = canCancelOrder($pedido);
+                        $puedeDescargarFactura = canDownloadInvoice($pedido);
+                        $puedeReintentarPago = canRetryPayment($pedido);
                         $itemsPreview = isset($pedido['items_preview']) && is_array($pedido['items_preview']) ? $pedido['items_preview'] : [];
                         $itemsCarrusel = [];
                         $clavesCarrusel = [];
@@ -994,17 +1046,42 @@ function orderProductImage(?string $imagen): ?string {
                                     <i class="fas fa-route"></i>
                                     <?= htmlspecialchars('Ver detalle', ENT_QUOTES, 'UTF-8') ?>
                                 </a>
-                                <a class="orders-btn" href="index.php?action=facturaPedido&id=<?= $idPedido ?>&download=1">
-                                    <i class="fas fa-file-arrow-down"></i>
-                                    <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
-                                </a>
-                                <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
-                                    <input type="hidden" name="id_pedido" value="<?= $idPedido ?>">
-                                    <button class="orders-btn danger" type="submit" <?= $puedeCancelar ? '' : 'disabled' ?> title="<?= htmlspecialchars($puedeCancelar ? 'Cancelar pedido' : 'Este pedido ya no se puede cancelar', ENT_QUOTES, 'UTF-8') ?>">
+                                <?php if ($puedeDescargarFactura): ?>
+                                    <a class="orders-btn" href="index.php?action=facturaPedido&id=<?= $idPedido ?>&download=1">
+                                        <i class="fas fa-file-arrow-down"></i>
+                                        <?= htmlspecialchars('Descargar factura', ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="orders-btn is-disabled">
+                                        <i class="fas fa-file-circle-clock"></i>
+                                        <?= htmlspecialchars('Factura pendiente', ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if ($puedeReintentarPago): ?>
+                                    <a class="orders-btn primary" href="index.php?action=reintentarPago&id=<?= $idPedido ?>" title="<?= htmlspecialchars('Tiempo restante: ' . retryTimeText($pedido), ENT_QUOTES, 'UTF-8') ?>">
+                                        <i class="fas fa-credit-card"></i>
+                                        <?= htmlspecialchars('Pagar ahora', ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
+                                <?php elseif ((int) ($pedido['id_estado'] ?? 0) === 1 && (int) ($pedido['segundos_restantes'] ?? 0) <= 0): ?>
+                                    <span class="orders-btn is-disabled">
+                                        <i class="fas fa-clock-rotate-left"></i>
+                                        <?= htmlspecialchars('Pago expirado', ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if ($puedeCancelar): ?>
+                                    <form class="cancel-order-form" method="POST" action="index.php?action=cancelarPedido" data-confirm-cancel>
+                                        <input type="hidden" name="id_pedido" value="<?= $idPedido ?>">
+                                        <button class="orders-btn danger" type="submit" title="<?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>">
+                                            <i class="fas fa-ban"></i>
+                                            <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
+                                        </button>
+                                    </form>
+                                <?php elseif ((int) ($pedido['id_estado'] ?? 0) === 5): ?>
+                                    <span class="orders-btn is-disabled">
                                         <i class="fas fa-ban"></i>
-                                        <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
-                                    </button>
-                                </form>
+                                        <?= htmlspecialchars('Pedido cancelado', ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                <?php endif; ?>
                                 <div class="order-products-strip <?= $hayCarrusel ? '' : 'is-static' ?>" data-order-strip aria-label="<?= htmlspecialchars('Productos del pedido', ENT_QUOTES, 'UTF-8') ?>">
                                     <?php if ($hayCarrusel): ?>
                                         <button class="order-strip-nav" type="button" data-strip-prev aria-label="<?= htmlspecialchars('Producto anterior', ENT_QUOTES, 'UTF-8') ?>">

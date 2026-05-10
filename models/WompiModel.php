@@ -4,15 +4,18 @@ class WompiModel {
 
     private $conn;
     private array $columnCache = [];
+    private ?array $procesarPagoArgs = null;
 
     public function __construct($conn) {
         $this->conn = $conn;
     }
 
-    public function registrarTransaccionAprobada(array $transaction, string $rawJson): void {
+    public function registrarTransaccion(array $transaction, string $rawJson): void {
         $idTransaccion = trim((string) ($transaction['id'] ?? ''));
         $referencia = trim((string) ($transaction['reference'] ?? ''));
         $metodoReal = $this->metodoReal($transaction);
+        $statusWompi = strtoupper(trim((string) ($transaction['status'] ?? '')));
+        $estadoPago = $this->estadoPagoDesdeWompi($statusWompi);
 
         if ($idTransaccion === '' || $referencia === '') {
             throw new InvalidArgumentException('Transaccion Wompi sin id o referencia');
@@ -35,17 +38,33 @@ class WompiModel {
             $idPago = $this->buscarIdPagoPorVenta($idVenta);
         }
 
-        if ($idPago > 0) {
-            $this->actualizarPagoWompi($idPago, $idTransaccion, $referencia, $metodoReal, $rawJson);
-        } else {
-            $this->insertarPagoWompi($idVenta, $this->idMetodoPago($metodoReal), $idTransaccion, $referencia, $metodoReal, $rawJson);
+        $pagoActual = $idPago > 0 ? $this->obtenerPagoPorId($idPago) : null;
+        if ($this->pagoYaProcesado($pagoActual, $idTransaccion, $referencia, $estadoPago)) {
+            $this->actualizarJsonPago($idPago, $rawJson);
+            oci_commit($this->conn);
+            return;
         }
+
+        $this->procesarPagoWompi(
+            $idVenta,
+            $this->idMetodoPago($metodoReal),
+            $estadoPago,
+            $idTransaccion,
+            $referencia,
+            $metodoReal,
+            $rawJson
+        );
 
         oci_commit($this->conn);
     }
 
+    public function registrarTransaccionAprobada(array $transaction, string $rawJson): void {
+        $transaction['status'] = 'APPROVED';
+        $this->registrarTransaccion($transaction, $rawJson);
+    }
+
     private function buscarPagoExistente(string $idTransaccion, string $referencia): ?array {
-        $query = "SELECT ID_PAGO, ID_VENTA
+        $query = "SELECT ID_PAGO, ID_VENTA, ESTADO, ID_TRANSACCION_WOMPI, REFERENCIA_WOMPI
                   FROM PAGO
                   WHERE ID_TRANSACCION_WOMPI = :id_transaccion
                      OR REFERENCIA_WOMPI = :referencia
@@ -74,6 +93,21 @@ class WompiModel {
         oci_free_statement($stmt);
 
         return (int) ($row['ID_PAGO'] ?? 0);
+    }
+
+    private function obtenerPagoPorId(int $idPago): ?array {
+        $query = "SELECT ID_PAGO, ID_VENTA, ESTADO, ID_TRANSACCION_WOMPI, REFERENCIA_WOMPI
+                  FROM PAGO
+                  WHERE ID_PAGO = :id_pago
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = $this->parse($query);
+        oci_bind_by_name($stmt, ':id_pago', $idPago, -1, SQLT_INT);
+        $this->execute($stmt);
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
     private function buscarVentaPorReferencia(string $referencia): ?array {
@@ -138,59 +172,9 @@ class WompiModel {
         return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
-    private function insertarPagoWompi(int $idVenta, int $idMetodo, string $idTransaccion, string $referencia, string $metodoReal, string $rawJson): void {
-        $monto = $this->totalVenta($idVenta);
-        $query = "INSERT INTO PAGO (
-                      ID_PAGO,
-                      ID_VENTA,
-                      ID_METODO,
-                      MONTO,
-                      FECHA,
-                      ESTADO,
-                      ID_TRANSACCION_WOMPI,
-                      REFERENCIA_WOMPI,
-                      METODO_REAL,
-                      JSON_RESPUESTA
-                  ) VALUES (
-                      SEQ_PAGO.NEXTVAL,
-                      :id_venta,
-                      :id_metodo,
-                      :monto,
-                      SYSTIMESTAMP,
-                      'PAGADO',
-                      :id_transaccion,
-                      :referencia,
-                      :metodo_real,
-                      :json_respuesta
-                  )";
-
-        $stmt = $this->parse($query);
-        $jsonClob = oci_new_descriptor($this->conn, OCI_D_LOB);
-        $jsonClob->writeTemporary($rawJson, OCI_TEMP_CLOB);
-
-        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_metodo', $idMetodo, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':monto', $monto);
-        oci_bind_by_name($stmt, ':id_transaccion', $idTransaccion);
-        oci_bind_by_name($stmt, ':referencia', $referencia);
-        oci_bind_by_name($stmt, ':metodo_real', $metodoReal);
-        oci_bind_by_name($stmt, ':json_respuesta', $jsonClob, -1, SQLT_CLOB);
-
-        try {
-            $this->execute($stmt);
-        } finally {
-            $jsonClob->free();
-            oci_free_statement($stmt);
-        }
-    }
-
-    private function actualizarPagoWompi(int $idPago, string $idTransaccion, string $referencia, string $metodoReal, string $rawJson): void {
+    private function actualizarJsonPago(int $idPago, string $rawJson): void {
         $query = "UPDATE PAGO
-                  SET ESTADO = 'PAGADO',
-                      ID_TRANSACCION_WOMPI = :id_transaccion,
-                      REFERENCIA_WOMPI = :referencia,
-                      METODO_REAL = :metodo_real,
-                      JSON_RESPUESTA = :json_respuesta
+                  SET JSON_RESPUESTA = :json_respuesta
                   WHERE ID_PAGO = :id_pago";
 
         $stmt = $this->parse($query);
@@ -198,9 +182,6 @@ class WompiModel {
         $jsonClob->writeTemporary($rawJson, OCI_TEMP_CLOB);
 
         oci_bind_by_name($stmt, ':id_pago', $idPago, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_transaccion', $idTransaccion);
-        oci_bind_by_name($stmt, ':referencia', $referencia);
-        oci_bind_by_name($stmt, ':metodo_real', $metodoReal);
         oci_bind_by_name($stmt, ':json_respuesta', $jsonClob, -1, SQLT_CLOB);
 
         try {
@@ -224,6 +205,152 @@ class WompiModel {
         oci_free_statement($stmt);
 
         return number_format((float) ($row['TOTAL'] ?? 0), 2, '.', '');
+    }
+
+    private function procesarPagoWompi(
+        int $idVenta,
+        int $idMetodo,
+        string $estadoPago,
+        string $idTransaccion,
+        string $referencia,
+        string $metodoReal,
+        string $rawJson
+    ): void {
+        $argumentos = $this->argumentosProcedimiento('SP_PROCESAR_PAGO');
+        if (empty($argumentos)) {
+            throw new RuntimeException('No se encontro SP_PROCESAR_PAGO en Oracle');
+        }
+
+        $nombres = array_map(fn($arg) => $arg['name'], $argumentos);
+        if (!$this->procedimientoAcepta($nombres, ['ESTADO', 'STATUS']) || !$this->procedimientoAcepta($nombres, ['TRANSACCION']) || !$this->procedimientoAcepta($nombres, ['REFERENCIA'])) {
+            throw new RuntimeException('SP_PROCESAR_PAGO debe aceptar estado, transaccion y referencia Wompi para evitar pagos simulados antiguos');
+        }
+
+        $placeholders = array_map(fn($arg) => ':' . $arg['name'], $argumentos);
+        $stmt = $this->parse("BEGIN SP_PROCESAR_PAGO(" . implode(', ', $placeholders) . "); END;");
+        $binds = [];
+        $jsonClob = null;
+
+        try {
+            foreach ($argumentos as $arg) {
+                $name = $arg['name'];
+                $placeholder = ':' . $name;
+                $type = SQLT_CHR;
+                $length = -1;
+                $value = null;
+
+                if (str_contains($name, 'VENTA')) {
+                    $value = $idVenta;
+                    $type = SQLT_INT;
+                } elseif (str_contains($name, 'METODO') && !str_contains($name, 'REAL')) {
+                    $value = $idMetodo;
+                    $type = SQLT_INT;
+                } elseif (str_contains($name, 'MONTO')) {
+                    $value = $this->totalVenta($idVenta);
+                } elseif (str_contains($name, 'ESTADO') || str_contains($name, 'STATUS')) {
+                    $value = $estadoPago;
+                } elseif (str_contains($name, 'TRANSACCION')) {
+                    $value = $idTransaccion;
+                } elseif (str_contains($name, 'REFERENCIA')) {
+                    $value = $referencia;
+                } elseif (str_contains($name, 'METODO_REAL') || str_contains($name, 'REAL')) {
+                    $value = $metodoReal;
+                } elseif (str_contains($name, 'JSON') || str_contains($name, 'RESPUESTA')) {
+                    $jsonClob = oci_new_descriptor($this->conn, OCI_D_LOB);
+                    $jsonClob->writeTemporary($rawJson, OCI_TEMP_CLOB);
+                    oci_bind_by_name($stmt, $placeholder, $jsonClob, -1, SQLT_CLOB);
+                    continue;
+                }
+
+                $binds[$placeholder] = $value;
+                oci_bind_by_name($stmt, $placeholder, $binds[$placeholder], $length, $type);
+            }
+
+            $this->execute($stmt);
+        } finally {
+            if ($jsonClob) {
+                $jsonClob->free();
+            }
+            oci_free_statement($stmt);
+        }
+    }
+
+    private function argumentosProcedimiento(string $procedimiento): array {
+        if ($procedimiento === 'SP_PROCESAR_PAGO' && $this->procesarPagoArgs !== null) {
+            return $this->procesarPagoArgs;
+        }
+
+        $query = "SELECT ARGUMENT_NAME,
+                         POSITION,
+                         IN_OUT,
+                         DATA_TYPE
+                  FROM USER_ARGUMENTS
+                  WHERE OBJECT_NAME = :procedimiento
+                    AND PACKAGE_NAME IS NULL
+                  ORDER BY POSITION";
+
+        $stmt = $this->parse($query);
+        $procedimiento = strtoupper($procedimiento);
+        oci_bind_by_name($stmt, ':procedimiento', $procedimiento);
+        $this->execute($stmt);
+
+        $argumentos = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            if (empty($row['ARGUMENT_NAME'])) {
+                continue;
+            }
+
+            $argumentos[] = [
+                'name' => strtoupper((string) $row['ARGUMENT_NAME']),
+                'position' => (int) ($row['POSITION'] ?? 0),
+                'in_out' => strtoupper((string) ($row['IN_OUT'] ?? 'IN')),
+                'data_type' => strtoupper((string) ($row['DATA_TYPE'] ?? ''))
+            ];
+        }
+        oci_free_statement($stmt);
+
+        if ($procedimiento === 'SP_PROCESAR_PAGO') {
+            $this->procesarPagoArgs = $argumentos;
+        }
+
+        return $argumentos;
+    }
+
+    private function procedimientoAcepta(array $argumentos, array $tokens): bool {
+        foreach ($argumentos as $argumento) {
+            foreach ($tokens as $token) {
+                if (str_contains($argumento, $token)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function estadoPagoDesdeWompi(string $statusWompi): string {
+        return match ($statusWompi) {
+            'APPROVED', 'DECLINED', 'ERROR', 'VOIDED' => $statusWompi,
+            default => $statusWompi !== '' ? $statusWompi : 'PENDIENTE'
+        };
+    }
+
+    private function pagoYaProcesado(?array $pagoActual, string $idTransaccion, string $referencia, string $estadoPago): bool {
+        if (!$pagoActual) {
+            return false;
+        }
+
+        $estadoActual = strtoupper(trim((string) ($pagoActual['estado'] ?? '')));
+        $txActual = trim((string) ($pagoActual['id_transaccion_wompi'] ?? ''));
+        $refActual = trim((string) ($pagoActual['referencia_wompi'] ?? ''));
+
+        if (in_array($estadoActual, ['APPROVED', 'PAGADO', 'COMPLETADO'], true)) {
+            return true;
+        }
+
+        return $estadoActual === $estadoPago
+            && ($txActual === '' || $txActual === $idTransaccion)
+            && ($refActual === '' || $refActual === $referencia);
     }
 
     private function validarColumnasWompi(): void {

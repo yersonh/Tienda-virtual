@@ -43,12 +43,14 @@ class WompiController {
 
         $transaction = $this->extraerTransaccion($payload);
         $status = strtoupper(trim((string) ($transaction['status'] ?? '')));
+        $statusesProcesables = ['APPROVED', 'DECLINED', 'ERROR', 'VOIDED'];
 
         try {
-            if ($status === 'APPROVED') {
+            if (in_array($status, $statusesProcesables, true)) {
                 $transaction = $this->verificarTransaccionWompi($transaction, $privateKey);
-                if (strtoupper(trim((string) ($transaction['status'] ?? ''))) !== 'APPROVED') {
-                    throw new RuntimeException('La transaccion consultada en Wompi no esta aprobada');
+                $verifiedStatus = strtoupper(trim((string) ($transaction['status'] ?? '')));
+                if ($verifiedStatus !== $status || !in_array($verifiedStatus, $statusesProcesables, true)) {
+                    throw new RuntimeException('La transaccion consultada en Wompi no coincide con el estado del evento');
                 }
 
                 $jsonRespuesta = json_encode([
@@ -61,7 +63,7 @@ class WompiController {
 
                 $this->conn = Database::getConnection();
                 $this->wompiModel = new WompiModel($this->conn);
-                $this->wompiModel->registrarTransaccionAprobada($transaction, $jsonRespuesta);
+                $this->wompiModel->registrarTransaccion($transaction, $jsonRespuesta);
             }
 
             $this->jsonResponse(200, [

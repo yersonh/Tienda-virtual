@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/CarritoModel.php';
 require_once __DIR__ . '/../models/PedidoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
 require_once __DIR__ . '/../models/MetodoPagoUsuarioModel.php';
+require_once __DIR__ . '/../models/PedidoLifecycleModel.php';
 
 class CheckoutController {
 
@@ -16,6 +17,7 @@ class CheckoutController {
     private $pedidoModel;
     private $direccionPedidoModel;
     private $metodoPagoUsuarioModel;
+    private $pedidoLifecycleModel;
 
     public function __construct() {
         $this->conn = Database::getConnection();
@@ -25,6 +27,7 @@ class CheckoutController {
         $this->pedidoModel = new PedidoModel($this->conn);
         $this->direccionPedidoModel = new DireccionPedidoModel($this->conn);
         $this->metodoPagoUsuarioModel = new MetodoPagoUsuarioModel($this->conn);
+        $this->pedidoLifecycleModel = new PedidoLifecycleModel($this->conn);
     }
 
     private function ensureSession(): void {
@@ -120,7 +123,7 @@ class CheckoutController {
 
     private function montoCheckoutWompiCentavos(float $total, bool $testMode): int {
         if ($testMode) {
-            return 100 * 100;
+            return 1500 * 100;
         }
 
         return $this->montoWompiCentavos($total);
@@ -142,6 +145,98 @@ class CheckoutController {
 
     private function metodoPendienteWompi(): int {
         return 3;
+    }
+
+    private function expirarPedidosPendientes(): void {
+        try {
+            $this->pedidoLifecycleModel->expirarPendientes();
+            oci_commit($this->conn);
+        } catch (Throwable $e) {
+            @oci_rollback($this->conn);
+            error_log('SP_EXPIRAR_PEDIDOS checkout: ' . $e->getMessage());
+        }
+    }
+
+    private function pagoAprobadoExiste(int $idVenta): bool {
+        $query = "SELECT COUNT(*) AS TOTAL
+                  FROM PAGO
+                  WHERE ID_VENTA = :id_venta
+                    AND UPPER(TRIM(ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception('No se pudo validar el pago del pedido');
+        }
+
+        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo validar el pago del pedido');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return ((int) ($row['TOTAL'] ?? 0)) > 0;
+    }
+
+    private function obtenerPedidoPendienteUsuario(int $idUsuario, int $idPedido): ?array {
+        $query = "SELECT p.ID_PEDIDO,
+                         p.ID_VENTA,
+                         p.ID_ESTADO,
+                         NVL(v.TOTAL, 0) AS TOTAL,
+                         TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (30 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
+                  FROM PEDIDO p
+                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  WHERE p.ID_PEDIDO = :id_pedido
+                    AND v.ID_USUARIO = :id_usuario
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception('No se pudo preparar la consulta del pedido pendiente');
+        }
+
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo consultar el pedido pendiente');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+    }
+
+    private function checkoutPayloadWompi(int $idPedido, int $idVenta, float $total): array {
+        $publicKey = $this->wompiPublicKey();
+        $integritySecret = $this->wompiIntegritySecret();
+        $wompiTestMode = $this->wompiTestMode();
+        $this->validarConfiguracionWompi($publicKey, $wompiTestMode);
+
+        $currency = 'COP';
+        $realAmountInCents = $this->montoWompiCentavos($total);
+        $amountInCents = $this->montoCheckoutWompiCentavos($total, $wompiTestMode);
+        $referencia = $this->generarReferenciaWompi($idPedido, $idVenta);
+        $integritySignature = $this->firmaIntegridadWompi($referencia, $amountInCents, $currency, $integritySecret);
+        $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&id=' . $idPedido;
+
+        return [
+            'public_key' => $publicKey,
+            'currency' => $currency,
+            'amount_in_cents' => $amountInCents,
+            'real_amount_in_cents' => $realAmountInCents,
+            'test_mode' => $wompiTestMode,
+            'reference' => $referencia,
+            'integrity_signature' => $integritySignature,
+            'redirect_url' => $returnUrl,
+            'return_url' => $returnUrl
+        ];
     }
 
     private function resumenCompra(array $items): array {
@@ -267,11 +362,6 @@ class CheckoutController {
         }
 
         try {
-            $publicKey = $this->wompiPublicKey();
-            $integritySecret = $this->wompiIntegritySecret();
-            $wompiTestMode = $this->wompiTestMode();
-            $this->validarConfiguracionWompi($publicKey, $wompiTestMode);
-
             $items = $this->carritoModel->obtenerItemsCheckoutTx($idUsuario);
             $this->validarItemsCheckout($items);
             $resumen = $this->resumenCompra($items);
@@ -298,12 +388,7 @@ class CheckoutController {
                 throw new Exception('No se pudo preparar el pedido para Wompi');
             }
 
-            $currency = 'COP';
-            $realAmountInCents = $this->montoWompiCentavos((float) $resumen['total']);
-            $amountInCents = $this->montoCheckoutWompiCentavos((float) $resumen['total'], $wompiTestMode);
-            $referencia = $this->generarReferenciaWompi($idPedido, $idVenta);
-            $integritySignature = $this->firmaIntegridadWompi($referencia, $amountInCents, $currency, $integritySecret);
-            $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&id=' . $idPedido;
+            $checkoutPayload = $this->checkoutPayloadWompi($idPedido, $idVenta, (float) $resumen['total']);
 
             $this->carritoModel->eliminarSeleccionadosTx($idUsuario);
 
@@ -313,13 +398,13 @@ class CheckoutController {
             $_SESSION['wompi_pedido_pendiente'] = [
                 'id_pedido' => $idPedido,
                 'id_venta' => $idVenta,
-                'referencia' => $referencia,
-                'amount_in_cents' => $amountInCents,
-                'real_amount_in_cents' => $realAmountInCents,
-                'test_mode' => $wompiTestMode,
+                'referencia' => $checkoutPayload['reference'],
+                'amount_in_cents' => $checkoutPayload['amount_in_cents'],
+                'real_amount_in_cents' => $checkoutPayload['real_amount_in_cents'],
+                'test_mode' => $checkoutPayload['test_mode'],
                 'fecha' => date('Y-m-d H:i:s'),
                 'total' => $resumen['total'],
-                'currency' => $currency
+                'currency' => $checkoutPayload['currency']
             ];
 
             $payload = [
@@ -327,17 +412,7 @@ class CheckoutController {
                 'message' => 'Pedido pendiente creado. Completa el pago en Wompi.',
                 'id_pedido' => $idPedido,
                 'id_venta' => $idVenta,
-                'checkout' => [
-                    'public_key' => $publicKey,
-                    'currency' => $currency,
-                    'amount_in_cents' => $amountInCents,
-                    'real_amount_in_cents' => $realAmountInCents,
-                    'test_mode' => $wompiTestMode,
-                    'reference' => $referencia,
-                    'integrity_signature' => $integritySignature,
-                    'redirect_url' => $returnUrl,
-                    'return_url' => $returnUrl
-                ]
+                'checkout' => $checkoutPayload
             ];
 
             if ($jsonRequest) {
@@ -364,6 +439,77 @@ class CheckoutController {
 
             $_SESSION['error'] = $message;
             header('Location: index.php?action=pago');
+            exit();
+        }
+    }
+
+    public function reintentarPago(): void {
+        $this->ensureSession();
+        $this->expirarPedidosPendientes();
+
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para pagar el pedido';
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        $idPedido = (int) ($_GET['id'] ?? 0);
+        if ($idPedido <= 0) {
+            $_SESSION['error'] = 'Pedido invalido';
+            header('Location: index.php?action=misPedidos');
+            exit();
+        }
+
+        try {
+            $pedidoPendiente = $this->obtenerPedidoPendienteUsuario($idUsuario, $idPedido);
+            if (!$pedidoPendiente) {
+                throw new InvalidArgumentException('Pedido no encontrado');
+            }
+
+            $idEstado = (int) ($pedidoPendiente['id_estado'] ?? 0);
+            $idVenta = (int) ($pedidoPendiente['id_venta'] ?? 0);
+            $total = (float) ($pedidoPendiente['total'] ?? 0);
+            $segundosRestantes = (int) ($pedidoPendiente['segundos_restantes'] ?? 0);
+
+            if ($idEstado !== 1) {
+                throw new InvalidArgumentException($idEstado === 5 ? 'Este pedido ya fue cancelado o expiro.' : 'Este pedido ya no esta pendiente de pago.');
+            }
+
+            if ($segundosRestantes <= 0) {
+                throw new InvalidArgumentException('Este pedido pendiente ya expiro. Vuelve a crear la compra desde el carrito.');
+            }
+
+            if ($idVenta <= 0 || $total <= 0) {
+                throw new InvalidArgumentException('El pedido no tiene una venta valida para reintentar el pago.');
+            }
+
+            if ($this->pagoAprobadoExiste($idVenta)) {
+                throw new InvalidArgumentException('Este pedido ya tiene un pago aprobado.');
+            }
+
+            $checkoutPayload = $this->checkoutPayloadWompi($idPedido, $idVenta, $total);
+            $_SESSION['wompi_pedido_pendiente'] = [
+                'id_pedido' => $idPedido,
+                'id_venta' => $idVenta,
+                'referencia' => $checkoutPayload['reference'],
+                'amount_in_cents' => $checkoutPayload['amount_in_cents'],
+                'real_amount_in_cents' => $checkoutPayload['real_amount_in_cents'],
+                'test_mode' => $checkoutPayload['test_mode'],
+                'fecha' => date('Y-m-d H:i:s'),
+                'total' => $total,
+                'currency' => $checkoutPayload['currency'],
+                'retry' => true
+            ];
+
+            require_once __DIR__ . '/../views/pagos/reintentar_wompi.php';
+            exit();
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
+            $_SESSION['error'] = $e instanceof InvalidArgumentException || $e instanceof RuntimeException
+                ? $e->getMessage()
+                : 'No se pudo preparar el reintento de pago.';
+            header('Location: index.php?action=misPedidos&id=' . $idPedido);
             exit();
         }
     }
