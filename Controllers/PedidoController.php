@@ -1171,6 +1171,8 @@ class PedidoController {
             $alias = trim((string) ($_POST['alias_tarjeta'] ?? $_POST['titular_tarjeta'] ?? ''));
             $fechaExpiracion = $this->fechaExpiracionMetodoPago((string) ($_POST['fecha_expiracion'] ?? $_POST['vencimiento_tarjeta'] ?? ''));
 
+            error_log('[guardar] POST recibido: token=' . $tokenWompi . ' marca=' . $marca . ' ultimos4=' . $ultimos4 . ' alias=' . $alias . ' fecha=' . $fechaExpiracion);
+
             if ($tokenWompi === '' || strlen($ultimos4) !== 4 || $alias === '') {
                 throw new InvalidArgumentException('No se recibio una tarjeta tokenizada valida de Wompi');
             }
@@ -1184,7 +1186,10 @@ class PedidoController {
             }
 
             $api = new WompiApiModel();
+            error_log('[guardar] Llamando crearFuenteTarjeta token=' . $tokenWompi);
             $fuente = $api->crearFuenteTarjeta($tokenWompi, $this->correoUsuario($idUsuario));
+            error_log('[guardar] FUENTE WOMPI RESPONSE: ' . json_encode($fuente));
+
             $idFuenteWompi = (int) ($fuente['id'] ?? 0);
             $estadoWompi = strtoupper((string) ($fuente['status'] ?? 'AVAILABLE'));
             $publicData = is_array($fuente['public_data'] ?? null) ? $fuente['public_data'] : [];
@@ -1195,7 +1200,8 @@ class PedidoController {
             if (!in_array($idMetodo, [2, 3], true)) {
                 $idMetodo = 3;
             }
-            $idMetodoPagoUsuario = $this->metodoPagoUsuarioModel->guardar([
+
+            $datosGuardar = [
                 'id_usuario' => $idUsuario,
                 'id_metodo' => $idMetodo,
                 'titular' => $alias,
@@ -1206,7 +1212,11 @@ class PedidoController {
                 'estado_wompi' => $estadoWompi,
                 'fecha_expiracion' => $fechaExpiracion,
                 'es_predeterminado' => (int) ($_POST['es_predeterminado_pago'] ?? $_POST['es_predeterminado'] ?? 0)
-            ]);
+            ];
+            error_log('[guardar] DATOS GUARDAR: ' . json_encode($datosGuardar));
+
+            $idMetodoPagoUsuario = $this->metodoPagoUsuarioModel->guardar($datosGuardar);
+            error_log('[guardar] id_metodo_pago_usuario generado: ' . $idMetodoPagoUsuario);
 
             oci_commit($this->conn);
             $this->responderPagoGuardado(true, 'Tarjeta guardada de forma segura con Wompi', 200, [
@@ -1214,11 +1224,8 @@ class PedidoController {
             ]);
         } catch (Throwable $e) {
             oci_rollback($this->conn);
-            error_log('guardarMetodoPagoUsuario: ' . $e->getMessage());
-            $message = $e instanceof InvalidArgumentException || $e instanceof RuntimeException
-                ? $e->getMessage()
-                : 'No se pudo guardar la tarjeta con Wompi';
-            $this->responderPagoGuardado(false, $message, 400);
+            error_log('[guardar] ERROR ' . get_class($e) . ': ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
+            $this->responderPagoGuardado(false, $e->getMessage(), 400);
         }
     }
 
