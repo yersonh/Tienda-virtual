@@ -59,6 +59,91 @@ class CheckoutController {
         );
     }
 
+    private function isJsonRequest(): bool {
+        $accept = (string) ($_SERVER['HTTP_ACCEPT'] ?? '');
+        $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $requestedWith === 'fetch' || $requestedWith === 'xmlhttprequest';
+    }
+
+    private function jsonResponse(int $statusCode, array $payload): void {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit();
+    }
+
+    private function baseUrl(): string {
+        $proto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        $https = $proto === 'https' || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        $host = trim((string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? ''));
+        if ($host === '') {
+            $host = 'localhost';
+        }
+
+        return ($https ? 'https' : 'http') . '://' . $host;
+    }
+
+    private function wompiPublicKey(): string {
+        $publicKey = trim((string) getenv('WOMPI_PUBLIC_KEY'));
+        if ($publicKey === '') {
+            throw new RuntimeException('Falta configurar WOMPI_PUBLIC_KEY');
+        }
+        return $publicKey;
+    }
+
+    private function wompiIntegritySecret(): string {
+        $integritySecret = trim((string) getenv('WOMPI_INTEGRITY_SECRET'));
+        if ($integritySecret === '') {
+            throw new RuntimeException('Falta configurar WOMPI_INTEGRITY_SECRET');
+        }
+        return $integritySecret;
+    }
+
+    private function wompiTestMode(): bool {
+        $value = strtolower(trim((string) getenv('WOMPI_TEST_MODE')));
+        return in_array($value, ['1', 'true', 'yes', 'on'], true);
+    }
+
+    private function validarConfiguracionWompi(string $publicKey, bool $testMode): void {
+        if ($testMode && str_starts_with($publicKey, 'pub_prod_')) {
+            throw new RuntimeException('WOMPI_TEST_MODE=true requiere una llave publica sandbox pub_test_');
+        }
+    }
+
+    private function montoWompiCentavos(float $total): int {
+        $amount = (int) round(max(0, $total) * 100);
+        if ($amount <= 0) {
+            throw new InvalidArgumentException('Monto de pago invalido');
+        }
+        return $amount;
+    }
+
+    private function montoCheckoutWompiCentavos(float $total, bool $testMode): int {
+        if ($testMode) {
+            return 100 * 100;
+        }
+
+        return $this->montoWompiCentavos($total);
+    }
+
+    private function generarReferenciaWompi(int $idPedido, int $idVenta): string {
+        try {
+            $suffix = strtoupper(bin2hex(random_bytes(6)));
+        } catch (Throwable $e) {
+            $suffix = strtoupper(substr(hash('sha256', uniqid('', true) . microtime(true)), 0, 12));
+        }
+
+        return sprintf('NVX-PED-%d-VENTA-%d-%s', $idPedido, $idVenta, $suffix);
+    }
+
+    private function firmaIntegridadWompi(string $referencia, int $amountInCents, string $currency, string $integritySecret): string {
+        return hash('sha256', $referencia . (string) $amountInCents . $currency . $integritySecret);
+    }
+
+    private function metodoPendienteWompi(): int {
+        return 3;
+    }
+
     private function resumenCompra(array $items): array {
         $subtotal = 0;
         foreach ($items as $item) {
@@ -132,116 +217,35 @@ class CheckoutController {
         ];
     }
 
-    private function detectarFranquicia(string $numero): string {
-        $numero = preg_replace('/\D+/', '', $numero);
-        if (preg_match('/^4\d{12}(\d{3})?(\d{3})?$/', $numero)) {
-            return 'VISA';
-        }
-        if (preg_match('/^(5[1-5]\d{14}|2(2[2-9]\d{12}|[3-6]\d{13}|7[01]\d{12}|720\d{12}))$/', $numero)) {
-            return 'MASTERCARD';
-        }
-        return 'DESCONOCIDA';
-    }
-
-    private function fechaExpiracionIso(string $vencimiento): string {
-        if (!preg_match('/^(0[1-9]|1[0-2])\/(\d{2})$/', trim($vencimiento), $matches)) {
-            throw new InvalidArgumentException('Ingresa el vencimiento en formato MM/AA');
-        }
-
-        $mes = (int) $matches[1];
-        $anio = 2000 + (int) $matches[2];
-        return sprintf('%04d-%02d-01', $anio, $mes);
-    }
-
-    private function generarTokenPago(): string {
-        try {
-            return 'tok_' . bin2hex(random_bytes(32));
-        } catch (Throwable $e) {
-            return 'tok_' . hash('sha256', uniqid('', true) . microtime(true));
-        }
-    }
-
-    private function validarPagoEntrada(int $idUsuario, int &$idMetodo, array $data): ?array {
-        if (!in_array($idMetodo, [1, 2, 3, 4], true)) {
-            throw new InvalidArgumentException('Selecciona un metodo de pago valido');
-        }
-
-        if ($idMetodo === 1) {
-            if (trim((string) ($data['nombre_pagador'] ?? '')) === '' || trim((string) ($data['documento_pagador'] ?? '')) === '') {
-                throw new InvalidArgumentException('Completa los datos del pago en efectivo');
-            }
-            return null;
-        }
-
-        if ($idMetodo === 4) {
-            if (trim((string) ($data['banco_origen'] ?? '')) === '' || trim((string) ($data['referencia_transferencia'] ?? '')) === '') {
-                throw new InvalidArgumentException('Completa los datos de transferencia');
-            }
-            return null;
-        }
-
-        $idMetodoGuardado = (int) ($data['id_metodo_pago_usuario'] ?? 0);
-        $cvv = preg_replace('/\D+/', '', (string) ($data['cvv_tarjeta'] ?? ''));
-        if (strlen($cvv) < 3 || strlen($cvv) > 4) {
-            throw new InvalidArgumentException('Ingresa un CVV valido');
-        }
-
-        if ($idMetodoGuardado > 0) {
-            $metodoGuardado = $this->metodoPagoUsuarioModel->obtenerPorIdUsuario($idMetodoGuardado, $idUsuario);
-            if (!$metodoGuardado) {
-                throw new InvalidArgumentException('La tarjeta guardada seleccionada no esta disponible');
-            }
-            $idMetodo = (int) ($metodoGuardado['id_metodo'] ?? $idMetodo);
-            return null;
-        }
-
-        $numero = preg_replace('/\D+/', '', (string) ($data['numero_tarjeta'] ?? ''));
-        $titular = trim((string) ($data['titular_tarjeta'] ?? ''));
-        $vencimiento = trim((string) ($data['vencimiento_tarjeta'] ?? ''));
-        $franquicia = $this->detectarFranquicia($numero);
-
-        if (strlen($numero) < 13 || strlen($numero) > 19 || $franquicia === 'DESCONOCIDA') {
-            throw new InvalidArgumentException('Ingresa una tarjeta Visa o Mastercard valida');
-        }
-        if ($titular === '') {
-            throw new InvalidArgumentException('Ingresa el nombre del titular');
-        }
-
-        $fechaExpiracion = $this->fechaExpiracionIso($vencimiento);
-        if (strtotime($fechaExpiracion . ' +1 month -1 day') < strtotime(date('Y-m-d'))) {
-            throw new InvalidArgumentException('La tarjeta esta vencida');
-        }
-
-        if (empty($data['guardar_metodo_pago'])) {
-            return null;
-        }
-
-        return [
-            'id_usuario' => $idUsuario,
-            'id_metodo' => $idMetodo,
-            'titular' => $titular,
-            'ultimos_4' => substr($numero, -4),
-            'franquicia' => $franquicia,
-            'token_pago' => $this->generarTokenPago(),
-            'fecha_expiracion' => $fechaExpiracion,
-            'es_predeterminado' => !empty($data['es_predeterminado_pago']) ? 1 : 0
-        ];
-    }
-
     public function confirmarPedido(): void {
         $this->ensureSession();
+        $jsonRequest = $this->isJsonRequest();
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
+            if ($jsonRequest) {
+                $this->jsonResponse(401, [
+                    'success' => false,
+                    'message' => 'Debes iniciar sesion para finalizar el pago',
+                    'redirect' => 'index.php?action=login'
+                ]);
+            }
             $_SESSION['error'] = 'Debes iniciar sesion para finalizar el pago';
             header('Location: index.php?action=login');
             exit();
         }
 
-        $idMetodo = (int) ($_POST['metodo_pago'] ?? 0);
+        $idMetodo = $this->metodoPendienteWompi();
 
         $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
         if ($idDireccion <= 0) {
+            if ($jsonRequest) {
+                $this->jsonResponse(400, [
+                    'success' => false,
+                    'message' => 'Selecciona una direccion antes de pagar',
+                    'redirect' => 'index.php?action=ConfirmarPedido'
+                ]);
+            }
             $_SESSION['error'] = 'Selecciona una direccion antes de pagar';
             header('Location: index.php?action=ConfirmarPedido');
             exit();
@@ -250,21 +254,28 @@ class CheckoutController {
         $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion, $idUsuario);
         if (!$direccion) {
             unset($_SESSION['checkout_direccion_id'], $_SESSION['checkout_direccion_snapshot']);
+            if ($jsonRequest) {
+                $this->jsonResponse(400, [
+                    'success' => false,
+                    'message' => 'La direccion seleccionada no esta disponible',
+                    'redirect' => 'index.php?action=ConfirmarPedido'
+                ]);
+            }
             $_SESSION['error'] = 'La direccion seleccionada no esta disponible';
             header('Location: index.php?action=ConfirmarPedido');
             exit();
         }
 
         try {
-            $metodoParaGuardar = $this->validarPagoEntrada($idUsuario, $idMetodo, $_POST);
+            $publicKey = $this->wompiPublicKey();
+            $integritySecret = $this->wompiIntegritySecret();
+            $wompiTestMode = $this->wompiTestMode();
+            $this->validarConfiguracionWompi($publicKey, $wompiTestMode);
+
             $items = $this->carritoModel->obtenerItemsCheckoutTx($idUsuario);
             $this->validarItemsCheckout($items);
             $resumen = $this->resumenCompra($items);
             $fechaEstimada = $_SESSION['checkout_fecha_estimada_entrega'] ?? null;
-
-            if ($metodoParaGuardar !== null) {
-                $this->metodoPagoUsuarioModel->guardar($metodoParaGuardar);
-            }
 
             $resultadoPedido = $this->pedidoModel->crearPedidoCompletoTx(
                 $idUsuario,
@@ -283,47 +294,75 @@ class CheckoutController {
             $idPedido = (int) ($pedido['id_pedido'] ?? $idPedido);
             $idVenta = (int) ($pedido['id_venta'] ?? $idVenta);
 
-            if ($idVenta > 0) {
-                $this->pagoModel->procesarPago($idVenta, $idMetodo, $resumen['total']);
+            if ($idPedido <= 0 || $idVenta <= 0) {
+                throw new Exception('No se pudo preparar el pedido para Wompi');
             }
+
+            $currency = 'COP';
+            $realAmountInCents = $this->montoWompiCentavos((float) $resumen['total']);
+            $amountInCents = $this->montoCheckoutWompiCentavos((float) $resumen['total'], $wompiTestMode);
+            $referencia = $this->generarReferenciaWompi($idPedido, $idVenta);
+            $integritySignature = $this->firmaIntegridadWompi($referencia, $amountInCents, $currency, $integritySecret);
+            $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&id=' . $idPedido;
 
             $this->carritoModel->eliminarSeleccionadosTx($idUsuario);
 
             oci_commit($this->conn);
             $this->limpiarSesionCheckout();
             $_SESSION['carrito_count'] = array_sum($this->carritoModel->obtenerMapaCarritoUsuario($idUsuario));
-
-            $_SESSION['pedido_confirmado'] = [
-                'id_pedido' => (int) $pedido['id_pedido'],
+            $_SESSION['wompi_pedido_pendiente'] = [
+                'id_pedido' => $idPedido,
                 'id_venta' => $idVenta,
+                'referencia' => $referencia,
+                'amount_in_cents' => $amountInCents,
+                'real_amount_in_cents' => $realAmountInCents,
+                'test_mode' => $wompiTestMode,
                 'fecha' => date('Y-m-d H:i:s'),
                 'total' => $resumen['total'],
-                'subtotal' => $resumen['subtotal'],
-                'iva' => $resumen['iva'],
-                'envio' => $resumen['envio'],
-                'fecha_estimada_entrega' => $pedido['fecha_estimada_entrega'] ?? null,
-                'metodo_pago' => $this->nombreMetodoPago($idMetodo),
-                'items' => $this->itemsConfirmacion($items),
-                'receptor' => $this->receptorConfirmacion($direccion)
+                'currency' => $currency
             ];
 
-            header('Location: index.php?action=confirmacionPedido&id=' . (int) $pedido['id_pedido']);
+            $payload = [
+                'success' => true,
+                'message' => 'Pedido pendiente creado. Completa el pago en Wompi.',
+                'id_pedido' => $idPedido,
+                'id_venta' => $idVenta,
+                'checkout' => [
+                    'public_key' => $publicKey,
+                    'currency' => $currency,
+                    'amount_in_cents' => $amountInCents,
+                    'real_amount_in_cents' => $realAmountInCents,
+                    'test_mode' => $wompiTestMode,
+                    'reference' => $referencia,
+                    'integrity_signature' => $integritySignature,
+                    'redirect_url' => $returnUrl,
+                    'return_url' => $returnUrl
+                ]
+            ];
+
+            if ($jsonRequest) {
+                $this->jsonResponse(200, $payload);
+            }
+
+            $_SESSION['success'] = 'Pedido pendiente creado. Completa el pago en Wompi para activar la factura.';
+            header('Location: index.php?action=misPedidos&id=' . $idPedido);
             exit();
         } catch (Throwable $e) {
             oci_rollback($this->conn);
             error_log($e->getMessage());
 
-            $_SESSION['payment_old'] = [
-                'metodo_pago' => $idMetodo > 0 ? $idMetodo : 1,
-                'id_metodo_pago_usuario' => (int) ($_POST['id_metodo_pago_usuario'] ?? 0),
-                'titular_tarjeta' => trim((string) ($_POST['titular_tarjeta'] ?? '')),
-                'vencimiento_tarjeta' => trim((string) ($_POST['vencimiento_tarjeta'] ?? '')),
-                'nombre_pagador' => trim((string) ($_POST['nombre_pagador'] ?? '')),
-                'documento_pagador' => trim((string) ($_POST['documento_pagador'] ?? '')),
-                'banco_origen' => trim((string) ($_POST['banco_origen'] ?? '')),
-                'referencia_transferencia' => trim((string) ($_POST['referencia_transferencia'] ?? ''))
-            ];
-            $_SESSION['error'] = $e instanceof InvalidArgumentException ? $e->getMessage() : 'No se pudo procesar el pago. Verifica la informacion e intenta de nuevo.';
+            $message = $e instanceof InvalidArgumentException || $e instanceof RuntimeException
+                ? $e->getMessage()
+                : 'No se pudo preparar el pago con Wompi. Intenta de nuevo.';
+
+            if ($jsonRequest) {
+                $this->jsonResponse(400, [
+                    'success' => false,
+                    'message' => $message
+                ]);
+            }
+
+            $_SESSION['error'] = $message;
             header('Location: index.php?action=pago');
             exit();
         }

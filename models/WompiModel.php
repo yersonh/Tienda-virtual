@@ -41,7 +41,6 @@ class WompiModel {
             $this->insertarPagoWompi($idVenta, $this->idMetodoPago($metodoReal), $idTransaccion, $referencia, $metodoReal, $rawJson);
         }
 
-        $this->marcarPedidoPagado($idVenta);
         oci_commit($this->conn);
     }
 
@@ -78,7 +77,23 @@ class WompiModel {
     }
 
     private function buscarVentaPorReferencia(string $referencia): ?array {
-        foreach ($this->numerosReferencia($referencia) as $numero) {
+        $ids = $this->idsDesdeReferencia($referencia);
+
+        foreach ($ids['pedidos'] as $idPedido) {
+            $porPedido = $this->buscarVentaPorPedido($idPedido);
+            if ($porPedido !== null) {
+                return $porPedido;
+            }
+        }
+
+        foreach ($ids['ventas'] as $idVenta) {
+            $porVenta = $this->buscarVentaPorId($idVenta);
+            if ($porVenta !== null) {
+                return $porVenta;
+            }
+        }
+
+        foreach ($ids['fallback'] as $numero) {
             $porPedido = $this->buscarVentaPorPedido($numero);
             if ($porPedido !== null) {
                 return $porPedido;
@@ -196,18 +211,6 @@ class WompiModel {
         }
     }
 
-    private function marcarPedidoPagado(int $idVenta): void {
-        $query = "UPDATE PEDIDO
-                  SET ID_ESTADO = 2
-                  WHERE ID_VENTA = :id_venta
-                    AND ID_ESTADO = 1";
-
-        $stmt = $this->parse($query);
-        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-        $this->execute($stmt);
-        oci_free_statement($stmt);
-    }
-
     private function totalVenta(int $idVenta): string {
         $query = "SELECT NVL(TOTAL, 0) AS TOTAL
                   FROM VENTA
@@ -289,6 +292,31 @@ class WompiModel {
         preg_match_all('/\d+/', $referencia, $matches);
         $numeros = array_map('intval', $matches[0] ?? []);
         return array_values(array_unique(array_filter($numeros, fn($numero) => $numero > 0)));
+    }
+
+    private function idsDesdeReferencia(string $referencia): array {
+        $pedidos = [];
+        $ventas = [];
+
+        if (preg_match('/(?:^|[-_])PED[-_]?(\d+)(?:[-_]|$)/i', $referencia, $matches)) {
+            $pedidos[] = (int) $matches[1];
+        }
+
+        if (preg_match('/(?:^|[-_])VENTA[-_]?(\d+)(?:[-_]|$)/i', $referencia, $matches)) {
+            $ventas[] = (int) $matches[1];
+        }
+
+        $usados = array_flip(array_merge($pedidos, $ventas));
+        $fallback = array_values(array_filter(
+            $this->numerosReferencia($referencia),
+            fn($numero) => !isset($usados[$numero])
+        ));
+
+        return [
+            'pedidos' => array_values(array_unique(array_filter($pedidos, fn($numero) => $numero > 0))),
+            'ventas' => array_values(array_unique(array_filter($ventas, fn($numero) => $numero > 0))),
+            'fallback' => $fallback
+        ];
     }
 
     private function parse(string $query) {

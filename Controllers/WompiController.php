@@ -19,8 +19,9 @@ class WompiController {
 
         $eventsSecret = trim((string) getenv('WOMPI_EVENTS_SECRET'));
         $integritySecret = trim((string) getenv('WOMPI_INTEGRITY_SECRET'));
-        if ($eventsSecret === '' || $integritySecret === '') {
-            error_log('Wompi webhook: faltan WOMPI_EVENTS_SECRET o WOMPI_INTEGRITY_SECRET');
+        $privateKey = trim((string) getenv('WOMPI_PRIVATE_KEY'));
+        if ($eventsSecret === '' || $integritySecret === '' || $privateKey === '') {
+            error_log('Wompi webhook: faltan secretos o llave privada de Wompi');
             $this->jsonResponse(500, ['ok' => false, 'message' => 'Configuracion Wompi incompleta']);
         }
 
@@ -45,9 +46,22 @@ class WompiController {
 
         try {
             if ($status === 'APPROVED') {
+                $transaction = $this->verificarTransaccionWompi($transaction, $privateKey);
+                if (strtoupper(trim((string) ($transaction['status'] ?? ''))) !== 'APPROVED') {
+                    throw new RuntimeException('La transaccion consultada en Wompi no esta aprobada');
+                }
+
+                $jsonRespuesta = json_encode([
+                    'event' => $payload,
+                    'verified_transaction' => $transaction
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                if (!is_string($jsonRespuesta) || $jsonRespuesta === '') {
+                    $jsonRespuesta = $rawBody;
+                }
+
                 $this->conn = Database::getConnection();
                 $this->wompiModel = new WompiModel($this->conn);
-                $this->wompiModel->registrarTransaccionAprobada($transaction, $rawBody);
+                $this->wompiModel->registrarTransaccionAprobada($transaction, $jsonRespuesta);
             }
 
             $this->jsonResponse(200, [
@@ -70,7 +84,7 @@ class WompiController {
 
     private function validarFirmaEvento(array $payload, string $eventsSecret): bool {
         $signature = $payload['signature'] ?? [];
-        $checksum = strtolower((string) ($signature['checksum'] ?? ''));
+        $checksum = strtolower((string) ($signature['checksum'] ?? ($_SERVER['HTTP_X_EVENT_CHECKSUM'] ?? '')));
         $properties = $signature['properties'] ?? [];
         $timestamp = (string) ($payload['timestamp'] ?? '');
 
@@ -104,6 +118,7 @@ class WompiController {
         $expected = hash('sha256', $reference . (string) $amount . $currency . $integritySecret);
         $candidates = [
             $transaction['signature']['checksum'] ?? null,
+            is_string($transaction['signature'] ?? null) ? $transaction['signature'] : null,
             $transaction['integrity_signature'] ?? null,
             $transaction['integrity_checksum'] ?? null,
             $payload['data']['signature']['checksum'] ?? null,
@@ -122,6 +137,59 @@ class WompiController {
         }
 
         return !$hasCandidate;
+    }
+
+    private function verificarTransaccionWompi(array $transaction, string $privateKey): array {
+        $transactionId = trim((string) ($transaction['id'] ?? ''));
+        if ($transactionId === '') {
+            throw new InvalidArgumentException('Transaccion Wompi sin id');
+        }
+
+        $baseUrl = str_starts_with($privateKey, 'prv_test_')
+            ? 'https://sandbox.wompi.co/v1'
+            : 'https://production.wompi.co/v1';
+
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('La extension cURL es requerida para verificar transacciones Wompi');
+        }
+
+        $ch = curl_init($baseUrl . '/transactions/' . rawurlencode($transactionId));
+        if (!$ch) {
+            throw new RuntimeException('No se pudo inicializar cURL para Wompi');
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $privateKey,
+                'Accept: application/json'
+            ]
+        ]);
+
+        $body = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($body === false || $httpCode < 200 || $httpCode >= 300) {
+            throw new RuntimeException('No se pudo verificar la transaccion en Wompi: HTTP ' . $httpCode . ' ' . $curlError);
+        }
+
+        $response = json_decode((string) $body, true);
+        $verified = is_array($response) && is_array($response['data'] ?? null) ? $response['data'] : null;
+        if (!is_array($verified)) {
+            throw new RuntimeException('Respuesta invalida al verificar la transaccion en Wompi');
+        }
+
+        foreach (['id', 'reference', 'amount_in_cents', 'currency'] as $field) {
+            if (isset($transaction[$field], $verified[$field]) && (string) $transaction[$field] !== (string) $verified[$field]) {
+                throw new RuntimeException('La transaccion verificada no coincide con el evento Wompi');
+            }
+        }
+
+        return $verified;
     }
 
     private function obtenerValorPorRuta(array $source, string $path): mixed {
