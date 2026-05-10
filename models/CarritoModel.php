@@ -13,6 +13,10 @@ class CarritoModel {
         return $error['message'] ?? 'Error de Oracle desconocido';
     }
 
+    private function esObjetoOracleNoVisible(string $message): bool {
+        return str_contains($message, 'ORA-00942');
+    }
+
     private function failure(string $message): array {
         error_log($message);
         return ['success' => false, 'message' => $message];
@@ -64,7 +68,7 @@ class CarritoModel {
         $idUsuario = (int) $idUsuario;
 
         $query = "SELECT ID_CARRITO
-                  FROM V_CARRITO_USUARIO
+                  FROM CARRITO
                   WHERE ID_USUARIO = :ID_USUARIO";
 
         $stmt = oci_parse($this->conn, $query);
@@ -268,18 +272,63 @@ class CarritoModel {
                 ORDER BY vc.NOMBRE, vc.NUMERO_REFERENCIA";
     }
 
-    public function obtenerItemsCheckoutTx($idUsuario): array {
-        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-        $query = $this->itemsBaseQuery(true, false);
+    private function itemsFallbackQuery(bool $soloSeleccionados = false): string {
+        $whereSeleccion = $soloSeleccionados ? "AND NVL(dc.SELECCIONADO, 0) = 1" : "";
 
+        return "SELECT c.ID_CARRITO,
+                       dc.ID_DETALLE,
+                       dc.ID_PRODUCTO,
+                       dc.ID_REFERENCIA,
+                       dc.CANTIDAD,
+                       NVL(dc.SELECCIONADO, 0) AS SELECCIONADO,
+                       p.NOMBRE,
+                       p.CODIGO,
+                       p.DESCRIPCION,
+                       p.PRECIO,
+                       p.ID_CATEGORIA,
+                       cp.NOMBRE AS CATEGORIA_NOMBRE,
+                       r.NUMERO_REFERENCIA,
+                       r.MARCA,
+                       r.FABRICANTE,
+                       NVL(stk.STOCK_P, 0) AS STOCK_P,
+                       p.PRECIO * dc.CANTIDAD AS SUBTOTAL,
+                       img.IMAGEN
+                FROM CARRITO c
+                INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                LEFT JOIN REFERENCIA_PRODUCTO r ON r.ID_REFERENCIA = dc.ID_REFERENCIA
+                LEFT JOIN CATEGORIA_PRODUCTO cp ON cp.ID_CATEGORIA = p.ID_CATEGORIA
+                LEFT JOIN (
+                    SELECT ID_REFERENCIA, SUM(STOCK_P) AS STOCK_P
+                    FROM (
+                        SELECT ID_REFERENCIA, NVL(STOCK_P, 0) AS STOCK_P
+                        FROM COMPATIBILIDAD_VEHICULO
+                        UNION ALL
+                        SELECT ID_REFERENCIA, NVL(STOCK_P, 0) AS STOCK_P
+                        FROM COMPATIBILIDAD_MAQUINARIA
+                    )
+                    GROUP BY ID_REFERENCIA
+                ) stk ON stk.ID_REFERENCIA = dc.ID_REFERENCIA
+                LEFT JOIN (
+                    SELECT ID_PRODUCTO,
+                           MIN(URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(ORDEN, 999999), ID_IMAGEN) AS IMAGEN
+                    FROM PRODUCTO_IMAGEN
+                    GROUP BY ID_PRODUCTO
+                ) img ON img.ID_PRODUCTO = p.ID_PRODUCTO
+                WHERE c.ID_USUARIO = :ID_USUARIO
+                $whereSeleccion
+                ORDER BY p.NOMBRE, r.NUMERO_REFERENCIA";
+    }
+
+    private function obtenerItemsDesdeQuery(string $query, int $idUsuario, bool $tx = false): array {
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
 
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        $mode = $tx ? OCI_NO_AUTO_COMMIT : OCI_COMMIT_ON_SUCCESS;
+        if (!@oci_execute($stmt, $mode)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
             throw new Exception($message);
@@ -294,25 +343,32 @@ class CarritoModel {
         return $items;
     }
 
+    public function obtenerItemsCheckoutTx($idUsuario): array {
+        [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
+        try {
+            return $this->obtenerItemsDesdeQuery($this->itemsBaseQuery(true, false), $idUsuario, true);
+        } catch (Exception $e) {
+            if (!$this->esObjetoOracleNoVisible($e->getMessage())) {
+                throw $e;
+            }
+            return $this->obtenerItemsDesdeQuery($this->itemsFallbackQuery(true), $idUsuario, true);
+        }
+    }
+
     public function obtenerItemsDetallados($idUsuario, bool $soloSeleccionados = false) {
         return $this->obtenerItemsVisualizacion($idUsuario, $soloSeleccionados);
     }
 
     public function obtenerItemsVisualizacion($idUsuario, bool $soloSeleccionados = false) {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-        $query = $this->itemsBaseQuery($soloSeleccionados, false);
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
-
-        $results = [];
-        while ($row = oci_fetch_assoc($stmt)) {
-            $results[] = $this->normalizarItem($row);
+        try {
+            return $this->obtenerItemsDesdeQuery($this->itemsBaseQuery($soloSeleccionados, false), $idUsuario);
+        } catch (Exception $e) {
+            if (!$this->esObjetoOracleNoVisible($e->getMessage())) {
+                throw $e;
+            }
+            return $this->obtenerItemsDesdeQuery($this->itemsFallbackQuery($soloSeleccionados), $idUsuario);
         }
-        oci_free_statement($stmt);
-
-        return $results;
     }
 
     public function obtenerMapaCarritoUsuario($idUsuario) {
@@ -325,7 +381,23 @@ class CarritoModel {
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt);
+        if (!@oci_execute($stmt)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            if (!$this->esObjetoOracleNoVisible($message)) {
+                throw new Exception($message);
+            }
+
+            $query = "SELECT dc.ID_PRODUCTO,
+                             dc.ID_REFERENCIA,
+                             dc.CANTIDAD
+                      FROM CARRITO c
+                      INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                      WHERE c.ID_USUARIO = :ID_USUARIO";
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+            oci_execute($stmt);
+        }
 
         $mapa = [];
         while ($item = oci_fetch_assoc($stmt)) {
@@ -369,7 +441,24 @@ class CarritoModel {
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
-            throw new Exception($message);
+            if (!$this->esObjetoOracleNoVisible($message)) {
+                throw new Exception($message);
+            }
+
+            $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS,
+                             NVL(SUM(p.PRECIO * dc.CANTIDAD), 0) AS TOTAL_PAGAR
+                      FROM CARRITO c
+                      INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                      INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = dc.ID_PRODUCTO
+                      WHERE c.ID_USUARIO = :ID_USUARIO
+                        AND NVL(dc.SELECCIONADO, 0) = 1";
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $message = $this->oracleErrorMessage($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($message);
+            }
         }
 
         $row = oci_fetch_assoc($stmt) ?: [];
@@ -402,7 +491,21 @@ class CarritoModel {
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
-            throw new Exception($message);
+            if (!$this->esObjetoOracleNoVisible($message)) {
+                throw new Exception($message);
+            }
+
+            $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS
+                      FROM CARRITO c
+                      LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                      WHERE c.ID_USUARIO = :ID_USUARIO";
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $message = $this->oracleErrorMessage($stmt);
+                oci_free_statement($stmt);
+                throw new Exception($message);
+            }
         }
 
         $row = oci_fetch_assoc($stmt) ?: [];
