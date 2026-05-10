@@ -2024,10 +2024,6 @@ function initPaymentPage() {
         setWompiButtonLoading(true, 'Preparando pago');
 
         try {
-            if (typeof WidgetCheckout === 'undefined') {
-                throw new Error('No se pudo cargar la pasarela de pago');
-            }
-
             const response = await fetch(paymentForm.action, {
                 method: paymentForm.method || 'POST',
                 headers: {
@@ -2046,16 +2042,23 @@ function initPaymentPage() {
 
             if (data?.redirect && data?.saved_card_transaction !== undefined) {
                 showPaymentNotice(data.message || 'Transaccion enviada.');
-                window.location.href = data.redirect;
+                if (data.saved_card_transaction === false) {
+                    setWompiButtonLoading(false);
+                }
+                window.location.replace(data.redirect);
                 return;
             }
 
             if (!response.ok || !data.success || !data.checkout) {
                 if (data?.redirect) {
-                    window.location.href = data.redirect;
+                    window.location.replace(data.redirect);
                     return;
                 }
                 throw new Error(data?.message || 'No se pudo preparar el pago');
+            }
+
+            if (typeof WidgetCheckout === 'undefined') {
+                throw new Error('No se pudo cargar la pasarela de pago');
             }
 
             setWompiButtonLoading(true, 'Abriendo pago');
