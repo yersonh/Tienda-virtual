@@ -63,15 +63,25 @@ class MetodoPagoUsuarioModel {
     }
 
     private function fechaExpiracionSelect(): string {
-        return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "TO_CHAR(mpu.FECHA_EXPIRACION, 'MM/YYYY')"
-            : "''";
+        return "
+            CASE
+                WHEN REGEXP_LIKE(mpu.FECHA_EXPIRACION, '^(0[1-9]|1[0-2])/[0-9]{4}$')
+                THEN mpu.FECHA_EXPIRACION
+                ELSE NULL
+            END
+        ";
     }
 
     private function tarjetaVencidaSelect(): string {
-        return $this->columnaExiste('FECHA_EXPIRACION')
-            ? "CASE WHEN LAST_DAY(mpu.FECHA_EXPIRACION) < TRUNC(SYSDATE) THEN 1 ELSE 0 END"
-            : "0";
+        return "
+            CASE
+                WHEN REGEXP_LIKE(mpu.FECHA_EXPIRACION, '^(0[1-9]|1[0-2])/[0-9]{4}$')
+                AND TO_DATE('01/' || mpu.FECHA_EXPIRACION, 'DD/MM/YYYY')
+                    < TRUNC(SYSDATE, 'MM')
+                THEN 1
+                ELSE 0
+            END
+        ";
     }
 
     private function fechaCreacionSelect(): string {
@@ -87,15 +97,23 @@ class MetodoPagoUsuarioModel {
     }
 
     private function fuenteWompiSelect(): string {
-        return $this->columnaExiste('ID_FUENTE_WOMPI')
-            ? "mpu.ID_FUENTE_WOMPI"
-            : "NULL";
+        return "
+            CASE
+                WHEN REGEXP_LIKE(TO_CHAR(mpu.ID_FUENTE_WOMPI), '^[0-9]+$')
+                THEN mpu.ID_FUENTE_WOMPI
+                ELSE NULL
+            END
+        ";
     }
 
     private function estadoWompiSelect(): string {
-        return $this->columnaExiste('ESTADO_WOMPI')
-            ? "mpu.ESTADO_WOMPI"
-            : "'AVAILABLE'";
+        return "
+            CASE
+                WHEN mpu.ESTADO_WOMPI IS NOT NULL
+                THEN UPPER(TRIM(mpu.ESTADO_WOMPI))
+                ELSE 'UNKNOWN'
+            END
+        ";
     }
 
     private function cacheKey(int $idUsuario, int $soloActivos): string {
@@ -333,6 +351,7 @@ class MetodoPagoUsuarioModel {
         $tokenWompiSelect = $this->tokenWompiSelect();
         $fuenteWompiSelect = $this->fuenteWompiSelect();
         $estadoWompiSelect = $this->estadoWompiSelect();
+        
         $query = "SELECT mpu.ID_METODO_PAGO_USUARIO,
                          mpu.ID_USUARIO,
                          mpu.ID_METODO,
