@@ -92,6 +92,14 @@ class WompiApiModel {
         return is_array($response['data'] ?? null) ? $response['data'] : $response;
     }
 
+    public function obtenerTransaccion(string $transactionId): array {
+        if ($transactionId === '') {
+            throw new InvalidArgumentException('ID de transaccion requerido');
+        }
+        $response = $this->request('GET', '/transactions/' . rawurlencode($transactionId), null, $this->privateKey);
+        return is_array($response['data'] ?? null) ? $response['data'] : [];
+    }
+
     public function anularFuentePago(int $paymentSourceId): array {
         if ($paymentSourceId <= 0) {
             throw new InvalidArgumentException('Fuente de pago Wompi invalida');

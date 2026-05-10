@@ -1183,6 +1183,196 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
 .wompi-legacy-payment-ui {
     display: none !important;
 }
+
+/* ============================================
+   Saved Card Processing Modal (scm)
+   ============================================ */
+.scm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(6,18,31,0.84);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: scmFadeIn 0.22s ease both;
+}
+.scm-overlay[hidden] { display: none; }
+@keyframes scmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scmSlideUp {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes scmCheckDraw {
+    from { stroke-dashoffset: 48; }
+    to   { stroke-dashoffset: 0;  }
+}
+@keyframes scmPulseGreen {
+    0%,100% { box-shadow: 0 0 0 0    rgba(34,197,94,0.4); }
+    50%      { box-shadow: 0 0 0 12px rgba(34,197,94,0);  }
+}
+@keyframes scmSpin { to { transform: rotate(360deg); } }
+.scm-box {
+    width: 100%;
+    max-width: 460px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background:
+        linear-gradient(145deg, rgba(34,211,238,0.07), transparent 55%),
+        rgba(10,20,38,0.97);
+    box-shadow: 0 36px 90px rgba(0,0,0,0.6);
+    overflow: hidden;
+    animation: scmSlideUp 0.26s ease both;
+}
+[data-theme="light"] .scm-box {
+    background: rgba(255,255,255,0.98);
+    box-shadow: 0 36px 90px rgba(0,0,0,0.14);
+}
+.scm-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+}
+.scm-logo { display: inline-flex; align-items: center; gap: 10px; }
+.scm-logo-badge {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #06121f; font-weight: 900; font-size: 15px; flex: 0 0 auto;
+}
+.scm-logo-name {
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 17px; font-weight: 800; color: var(--text);
+}
+.scm-secure-badge {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--secondary); font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.scm-secure-badge svg {
+    width: 13px; height: 13px;
+    stroke: var(--accent); fill: none; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+.scm-body { padding: 26px 22px 22px; }
+.scm-state-area {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; gap: 12px; padding-bottom: 18px;
+}
+.scm-spinner {
+    width: 52px; height: 52px;
+    border: 4px solid rgba(20,216,189,0.15);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: scmSpin 0.72s linear infinite;
+}
+.scm-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.scm-icon svg {
+    width: 28px; height: 28px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+}
+.scm-icon-success {
+    background: rgba(34,197,94,0.14);
+    border: 2px solid rgba(34,197,94,0.45);
+    color: #4ade80;
+    animation: scmPulseGreen 1.4s ease infinite;
+}
+.scm-icon-success svg {
+    stroke-dasharray: 48;
+    stroke-dashoffset: 0;
+    animation: scmCheckDraw 0.5s ease both 0.1s;
+}
+.scm-icon-declined {
+    background: rgba(248,113,113,0.12);
+    border: 2px solid rgba(248,113,113,0.38);
+    color: #f87171;
+}
+.scm-icon-error {
+    background: rgba(251,191,36,0.1);
+    border: 2px solid rgba(251,191,36,0.32);
+    color: #fbbf24;
+}
+.scm-state-title {
+    margin: 0;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: 19px; font-weight: 800; color: var(--text); line-height: 1.2;
+}
+.scm-state-msg {
+    margin: 0; color: var(--secondary);
+    font-size: 13px; line-height: 1.55; max-width: 310px;
+}
+.scm-polling-bar {
+    height: 3px; border-radius: 2px;
+    background: rgba(255,255,255,0.07);
+    margin: 0 0 20px; overflow: hidden;
+}
+.scm-polling-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+    border-radius: 2px; width: 0%;
+    transition: width 28s linear;
+}
+.scm-details {
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; font-size: 13px;
+}
+.scm-detail-row {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 12px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--secondary);
+}
+.scm-detail-row:last-child { border-bottom: none; }
+.scm-detail-row strong {
+    color: var(--text); font-size: 13px;
+    text-align: right; word-break: break-all;
+}
+.scm-detail-row.scm-highlight { background: rgba(34,211,238,0.06); }
+.scm-detail-row.scm-highlight strong {
+    color: var(--accent); font-size: 15px; font-weight: 900;
+}
+.scm-actions { display: flex; flex-direction: column; gap: 10px; }
+.scm-actions .payment-btn,
+.scm-actions .payment-link {
+    width: 100%; justify-content: center; text-decoration: none;
+}
+.scm-btn-retry {
+    width: 100%; min-height: 46px; padding: 0 18px;
+    border: 1px solid rgba(248,113,113,0.34);
+    border-radius: 8px;
+    background: rgba(248,113,113,0.09);
+    color: #fca5a5; font: inherit; font-size: 15px; font-weight: 800;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: border-color 0.2s, background 0.2s;
+}
+.scm-btn-retry:hover {
+    border-color: rgba(248,113,113,0.58);
+    background: rgba(248,113,113,0.16);
+}
+.scm-btn-retry svg {
+    width: 16px; height: 16px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+@media (max-width: 480px) {
+    .scm-box { border-radius: 14px; }
+    .scm-body { padding: 20px 16px 18px; }
+}
 </style>
 
 <main class="payment-page">
@@ -1289,16 +1479,6 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                 </span>
                                 <strong><?= htmlspecialchars('Tarjeta credito', ENT_QUOTES, 'UTF-8') ?></strong>
                                 <small><?= htmlspecialchars('Pago con tarjeta credito.', ENT_QUOTES, 'UTF-8') ?></small>
-                            </button>
-                            <button class="payment-method <?= $metodoSeleccionado === 4 ? 'is-active' : '' ?>" type="button" data-method="4" role="radio" aria-checked="<?= $metodoSeleccionado === 4 ? '1' : '0' ?>">
-                                <span class="payment-method-top">
-                                    <span class="payment-method-icon">
-                                        <svg viewBox="0 0 24 24"><path d="M3 10h18"></path><path d="M5 10V8l7-4 7 4v2"></path><path d="M6 10v8"></path><path d="M10 10v8"></path><path d="M14 10v8"></path><path d="M18 10v8"></path><path d="M4 18h16"></path></svg>
-                                    </span>
-                                    <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
-                                </span>
-                                <strong><?= htmlspecialchars('Transferencia bancaria', ENT_QUOTES, 'UTF-8') ?></strong>
-                                <small><?= htmlspecialchars('Pago por transferencia bancaria.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
                         </div>
 
@@ -1473,18 +1653,6 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             </div>
                         </div>
 
-                        <div id="transferencia" class="payment-dynamic">
-                            <div class="payment-transfer-fields">
-                                <div class="payment-field">
-                                    <label for="banco_origen"><?= htmlspecialchars('Banco de origen', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="banco_origen" name="banco_origen" type="text" placeholder="Nombre del banco" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['banco_origen'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                </div>
-                                <div class="payment-field">
-                                    <label for="referencia_transferencia"><?= htmlspecialchars('Referencia', ENT_QUOTES, 'UTF-8') ?></label>
-                                    <input id="referencia_transferencia" name="referencia_transferencia" type="text" placeholder="Codigo de comprobante" class="form-control" value="<?= htmlspecialchars((string) ($paymentOld['referencia_transferencia'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
-                                </div>
-                            </div>
-                        </div>
 
                     </form>
                     <form class="standalone-card-form <?= $mostrarFormularioTarjeta ? 'is-visible' : '' ?>" id="standalone-card-form" method="POST" action="index.php?action=guardarMetodoPagoUsuario" data-wompi-public-key="<?= htmlspecialchars($wompiPublicKey, ENT_QUOTES, 'UTF-8') ?>">
@@ -1606,6 +1774,74 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
     </div>
 </main>
 
+<div id="saved-card-modal" class="scm-overlay" role="dialog" aria-modal="true" aria-labelledby="scm-title" hidden>
+    <div class="scm-box">
+        <div class="scm-header">
+            <div class="scm-logo">
+                <span class="scm-logo-badge">W</span>
+                <span class="scm-logo-name">Wompi</span>
+            </div>
+            <span class="scm-secure-badge">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                Pago seguro
+            </span>
+        </div>
+        <div class="scm-body">
+            <div class="scm-state-area">
+                <div class="scm-spinner" id="scm-spinner"></div>
+                <div class="scm-icon scm-icon-success" id="scm-icon-success" hidden>
+                    <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>
+                </div>
+                <div class="scm-icon scm-icon-declined" id="scm-icon-declined" hidden>
+                    <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </div>
+                <div class="scm-icon scm-icon-error" id="scm-icon-error" hidden>
+                    <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <h2 class="scm-state-title" id="scm-title">Procesando pago seguro con Wompi...</h2>
+                <p class="scm-state-msg" id="scm-msg">Estamos verificando tu pago. Por favor no cierres esta ventana.</p>
+            </div>
+            <div class="scm-polling-bar"><div class="scm-polling-fill" id="scm-polling-fill"></div></div>
+            <div class="scm-details" id="scm-details" hidden>
+                <div class="scm-detail-row scm-highlight">
+                    <span>Monto</span>
+                    <strong id="scmd-amount">—</strong>
+                </div>
+                <div class="scm-detail-row">
+                    <span>Tarjeta</span>
+                    <strong id="scmd-card">—</strong>
+                </div>
+                <div class="scm-detail-row">
+                    <span>Referencia</span>
+                    <strong id="scmd-reference">—</strong>
+                </div>
+                <div class="scm-detail-row">
+                    <span>Fecha</span>
+                    <strong id="scmd-date">—</strong>
+                </div>
+                <div class="scm-detail-row">
+                    <span>ID transaccion</span>
+                    <strong id="scmd-txid">—</strong>
+                </div>
+            </div>
+            <div class="scm-actions" id="scm-actions" hidden>
+                <a href="index.php?action=misPedidos" id="scm-btn-order" class="payment-btn">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12 5 5L20 7"/></svg>
+                    Ver pedido
+                </a>
+                <a href="index.php?action=misPedidos" id="scm-btn-invoice" class="payment-link">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Ver comprobante
+                </a>
+                <button type="button" id="scm-btn-retry" class="scm-btn-retry">
+                    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+                    Intentar nuevamente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://checkout.wompi.co/widget.js"></script>
 <script>
 const paymentCompletedKey = 'naylexPaymentCompleted';
@@ -1633,7 +1869,6 @@ function initPaymentPage() {
     const methodButtons = Array.from(document.querySelectorAll('.payment-method'));
     const efectivo = document.getElementById('efectivo');
     const tarjeta = document.getElementById('tarjeta');
-    const transferencia = document.getElementById('transferencia');
     const paymentForm = document.getElementById('payment-confirm-form');
     const savedPanel = document.getElementById('saved-payment-panel');
     const savedMethodInput = document.getElementById('id_metodo_pago_usuario');
@@ -1786,9 +2021,7 @@ function initPaymentPage() {
             savedPaymentTitle.textContent = isCardMethod ? 'Tarjetas guardadas' : 'Tarjetas guardadas';
         }
         if (savedPaymentSubtitle) {
-            savedPaymentSubtitle.textContent = isCardMethod
-                ? 'Selecciona una tarjeta activa o registra una nueva.'
-                : 'La transferencia bancaria no guarda datos de tarjeta.';
+            savedPaymentSubtitle.textContent = 'Selecciona una tarjeta activa o registra una nueva.';
         }
 
         return { isCardMethod, visibleCount, selectedRadio };
@@ -1799,7 +2032,6 @@ function initPaymentPage() {
         const val = String(method);
         efectivo?.classList.toggle('is-visible', false);
         tarjeta?.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
-        transferencia?.classList.toggle('is-visible', method === 4);
         if (oneTimeCardToggle) {
             oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
         }
@@ -1808,7 +2040,6 @@ function initPaymentPage() {
             savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
         }
         setRequired(efectivo, false);
-        setRequired(transferencia, method === 4);
         setNewCardFieldsEnabled(isCardPaymentMethod(method) && oneTimeCardMode);
 
         if (savedState.isCardMethod) {
@@ -2000,7 +2231,17 @@ function initPaymentPage() {
             signature: {
                 integrity: checkout.integrity_signature
             },
-            redirectUrl: checkout.redirect_url
+            redirectUrl: checkout.redirect_url,
+            paymentMethods: {
+                card: true,
+                nequi: true,
+                pse: true,
+                bancolombia_transfer: true,
+                bancolombia_qr: true,
+                cash: false,
+                suplus: false,
+                addi: false
+            }
         });
 
         widget.open((result) => {
@@ -2063,6 +2304,10 @@ function initPaymentPage() {
             }
 
             if (data?.redirect && data?.saved_card_transaction !== undefined) {
+                if (data.saved_card_transaction === true && data.transaction?.id) {
+                    await openSavedCardProcessingFlow(data);
+                    return;
+                }
                 showPaymentNotice(data.message || 'Transaccion enviada.');
                 if (data.saved_card_transaction === false) {
                     setWompiButtonLoading(false);
@@ -2276,6 +2521,171 @@ function initPaymentPage() {
         });
     });
 }
+
+// ============================================================
+//  Saved Card Processing Modal — funciones globales
+// ============================================================
+(function () {
+    const show = (el, v) => v ? el?.removeAttribute('hidden') : el?.setAttribute('hidden', '');
+
+    const refs = () => ({
+        modal:   document.getElementById('saved-card-modal'),
+        spinner: document.getElementById('scm-spinner'),
+        icoOk:   document.getElementById('scm-icon-success'),
+        icoDec:  document.getElementById('scm-icon-declined'),
+        icoErr:  document.getElementById('scm-icon-error'),
+        title:   document.getElementById('scm-title'),
+        msg:     document.getElementById('scm-msg'),
+        details: document.getElementById('scm-details'),
+        actions: document.getElementById('scm-actions'),
+        fill:    document.getElementById('scm-polling-fill'),
+        btnOrd:  document.getElementById('scm-btn-order'),
+        btnInv:  document.getElementById('scm-btn-invoice'),
+        btnRet:  document.getElementById('scm-btn-retry'),
+    });
+
+    function scmOpen()  { const r = refs(); r.modal?.removeAttribute('hidden'); document.body.style.overflow = 'hidden'; }
+    function scmClose() { const r = refs(); r.modal?.setAttribute('hidden',''); document.body.style.overflow = ''; }
+
+    function scmSetIcon(state) {
+        const r = refs();
+        show(r.spinner, state === 'processing');
+        show(r.icoOk,   state === 'approved');
+        show(r.icoDec,  state === 'declined' || state === 'voided');
+        show(r.icoErr,  state === 'error');
+    }
+
+    function scmFormatCOP(cents) {
+        if (!cents) return '—';
+        return '$' + Math.round(Number(cents) / 100).toLocaleString('es-CO') + ' COP';
+    }
+
+    function scmFormatDate(iso) {
+        if (!iso) return '—';
+        try { return new Date(iso).toLocaleString('es-CO', { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+        catch { return iso; }
+    }
+
+    function scmFillDetails(data) {
+        const g = (id) => document.getElementById(id);
+        const fn = String(data.franchise || ''), ln = String(data.last_four || '');
+        const card = fn && ln ? `${fn} **** ${ln}` : (fn || ln || '—');
+        const set = (id, v) => { const el = g(id); if (el) el.textContent = v; };
+        set('scmd-amount',    scmFormatCOP(data.amount_in_cents));
+        set('scmd-card',      card);
+        set('scmd-reference', data.reference      || '—');
+        set('scmd-date',      scmFormatDate(data.finalized_at));
+        set('scmd-txid',      data.transaction_id || '—');
+        refs().details?.removeAttribute('hidden');
+    }
+
+    function updateSavedCardModal(data) {
+        const s = String(data.status || '').toUpperCase();
+        const TITLES = { APPROVED:'Pago aprobado', DECLINED:'Pago rechazado', ERROR:'Error en el pago', VOIDED:'Transaccion anulada', PENDING:'Pago pendiente' };
+        const MSGS   = {
+            APPROVED: 'Tu pago fue aprobado. La factura se activara automaticamente.',
+            DECLINED: 'El pago fue rechazado. Intenta con otra tarjeta o metodo de pago.',
+            ERROR:    'Ocurrio un error al procesar el pago. Puedes intentarlo nuevamente.',
+            VOIDED:   'La transaccion fue anulada.',
+            PENDING:  'El pago sigue pendiente. Puedes revisarlo desde tus pedidos.',
+        };
+        const STATES = { APPROVED:'approved', DECLINED:'declined', ERROR:'error', VOIDED:'voided' };
+        scmSetIcon(STATES[s] || 'processing');
+        const r = refs();
+        if (r.title) r.title.textContent = TITLES[s] || 'Procesando...';
+        if (r.msg)   r.msg.textContent   = data.status_message || MSGS[s] || '';
+        if (s && s !== 'PENDING') scmFillDetails(data);
+    }
+
+    function scmShowButtons(status, orderUrl) {
+        const ok   = status === 'APPROVED';
+        const fail = status === 'DECLINED' || status === 'ERROR' || status === 'VOIDED';
+        const r = refs();
+        if (r.btnOrd) { r.btnOrd.href = orderUrl; r.btnOrd.style.display = ok   ? '' : 'none'; }
+        if (r.btnInv) { r.btnInv.href = orderUrl; r.btnInv.style.display = ok   ? '' : 'none'; }
+        if (r.btnRet)                              r.btnRet.style.display = fail ? '' : 'none';
+        r.actions?.removeAttribute('hidden');
+    }
+
+    function startPaymentPolling(txId, onUpdate, onDone) {
+        const TERMINAL = ['APPROVED','DECLINED','ERROR','VOIDED'];
+        const MAX = 30000, TICK = 2000;
+        let elapsed = 0, stopped = false;
+        const fill = refs().fill;
+        if (fill) {
+            fill.style.transition = 'none';
+            fill.style.width = '0%';
+            requestAnimationFrame(() => { fill.style.transition = 'width 28s linear'; fill.style.width = '95%'; });
+        }
+        const timer = setInterval(async () => {
+            if (stopped) return;
+            elapsed += TICK;
+            try {
+                const res  = await fetch('index.php?action=consultarEstadoPago&id=' + encodeURIComponent(txId), {
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    onUpdate(data);
+                    if (TERMINAL.includes(String(data.status || '').toUpperCase())) {
+                        stopped = true;
+                        clearInterval(timer);
+                        const f = refs().fill;
+                        if (f) f.style.width = '100%';
+                        setTimeout(() => onDone(data), 400);
+                        return;
+                    }
+                }
+            } catch (_) { /* network glitch — keep polling */ }
+            if (elapsed >= MAX) {
+                stopped = true;
+                clearInterval(timer);
+                onDone({ status: 'PENDING', status_message: 'El pago sigue pendiente. Puedes revisarlo desde tus pedidos.' });
+            }
+        }, TICK);
+        return () => { stopped = true; clearInterval(timer); };
+    }
+
+    window.openSavedCardProcessingFlow = async function (data) {
+        const txId     = String(data.transaction?.id || '');
+        const orderUrl = data.redirect || 'index.php?action=misPedidos';
+        // Reset modal al estado inicial
+        scmSetIcon('processing');
+        const r0 = refs();
+        if (r0.title)   r0.title.textContent   = 'Procesando pago seguro con Wompi...';
+        if (r0.msg)     r0.msg.textContent     = 'Estamos verificando tu pago. Por favor no cierres esta ventana.';
+        if (r0.details) r0.details.setAttribute('hidden', '');
+        if (r0.actions) r0.actions.setAttribute('hidden', '');
+        if (r0.fill)    { r0.fill.style.transition = 'none'; r0.fill.style.width = '0%'; }
+        scmOpen();
+        sessionStorage.setItem('naylexPaymentCompleted', '1');
+
+        if (!txId) {
+            updateSavedCardModal({ status: 'PENDING', status_message: data.message || '' });
+            scmShowButtons('PENDING', orderUrl);
+            return;
+        }
+
+        const stopPolling = startPaymentPolling(
+            txId,
+            (tx) => updateSavedCardModal(tx),
+            (tx) => {
+                updateSavedCardModal(tx);
+                scmShowButtons(String(tx.status || '').toUpperCase(), orderUrl);
+            }
+        );
+
+        refs().btnRet?.addEventListener('click', () => {
+            stopPolling();
+            scmClose();
+            const btn  = document.querySelector('.payment-btn[form="payment-confirm-form"]');
+            const form = document.getElementById('payment-confirm-form');
+            if (btn)  { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg> Continuar al pago seguro'; }
+            if (form) form.dataset.processing = '0';
+            sessionStorage.removeItem('naylexPaymentSubmitted');
+        }, { once: true });
+    };
+}());
 
 document.addEventListener('DOMContentLoaded', initPaymentPage);
 </script>

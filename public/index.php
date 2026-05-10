@@ -271,6 +271,36 @@ switch ($action) {
         (new PedidoController())->predeterminarMetodoPagoUsuario();
         break;
 
+    case 'consultarEstadoPago':
+        try {
+            $txId = trim((string) ($_GET['id'] ?? ''));
+            if ($txId === '') {
+                throw new InvalidArgumentException('ID de transaccion requerido');
+            }
+            $wompi = new WompiApiModel();
+            $tx    = $wompi->obtenerTransaccion($txId);
+            $pm    = is_array($tx['payment_method'] ?? null) ? $tx['payment_method'] : [];
+            $extra = is_array($pm['extra'] ?? null) ? $pm['extra'] : [];
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success'         => true,
+                'status'          => strtoupper((string) ($tx['status'] ?? '')),
+                'status_message'  => (string) ($tx['status_message'] ?? ''),
+                'amount_in_cents' => (int) ($tx['amount_in_cents'] ?? 0),
+                'finalized_at'    => (string) ($tx['finalized_at'] ?? ''),
+                'payment_method'  => strtoupper((string) ($pm['type'] ?? $pm['payment_method_type'] ?? '')),
+                'last_four'       => (string) ($extra['last_four'] ?? $pm['last_four'] ?? ''),
+                'franchise'       => strtoupper((string) ($extra['brand'] ?? $pm['franchise'] ?? '')),
+                'reference'       => (string) ($tx['reference'] ?? ''),
+                'transaction_id'  => (string) ($tx['id'] ?? $txId),
+            ]);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit();
+
     case 'confirmarPedido':
         (new CheckoutController())->confirmarPedido();
         break;
