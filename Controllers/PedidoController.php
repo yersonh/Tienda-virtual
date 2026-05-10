@@ -1146,6 +1146,7 @@ class PedidoController {
             $aceptaciones = $api->obtenerAceptaciones();
             $this->responderPagoGuardado(true, 'Configuracion Wompi disponible', 200, [
                 'public_key' => $api->publicKey(),
+                'acceptance_token' => $aceptaciones['acceptance_token'],
                 'acceptance_permalink' => $aceptaciones['acceptance_permalink'],
                 'personal_auth_permalink' => $aceptaciones['personal_auth_permalink']
             ]);

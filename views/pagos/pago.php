@@ -2471,6 +2471,7 @@ function initPaymentPage() {
         }
 
         const config = await loadWompiCardConfig();
+        console.log(config);
         const baseUrl = String(config.public_key).startsWith('pub_test_')
             ? 'https://sandbox.wompi.co/v1'
             : 'https://production.wompi.co/v1';
@@ -2486,7 +2487,8 @@ function initPaymentPage() {
                 cvc,
                 exp_month: expMatch[1],
                 exp_year: expMatch[2].slice(-2),
-                card_holder: alias
+                card_holder: alias,
+                acceptance_token: config.acceptance_token
             })
         });
         const data = await response.json();
