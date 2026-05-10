@@ -21,21 +21,16 @@ class MetodoPagoUsuarioModel {
     }
 
     private function normalizarFila(array $row): array {
+
         $data = array_change_key_case($row, CASE_LOWER);
+
         $data['activo'] = (int) ($data['activo'] ?? 0);
         $data['es_predeterminado'] = (int) ($data['es_predeterminado'] ?? 0);
         $data['vencida'] = (int) ($data['vencida'] ?? 0);
+
         $data['id_usuario'] = (int) ($data['id_usuario'] ?? 0);
         $data['id_metodo'] = (int) ($data['id_metodo'] ?? 0);
         $data['id_metodo_pago_usuario'] = (int) ($data['id_metodo_pago_usuario'] ?? 0);
-        $data['id_fuente_wompi'] = (int) ($data['id_fuente_wompi'] ?? 0);
-        if (!empty($data['fecha_expiracion_texto'])) {
-            $fechaExpiracion = trim((string) $data['fecha_expiracion_texto']);
-            if (preg_match('/^(\d{4})-(\d{2})-\d{2}$/', $fechaExpiracion, $matches)) {
-                $fechaExpiracion = $matches[2] . '/' . $matches[1];
-            }
-            $data['fecha_expiracion_texto'] = $fechaExpiracion;
-        }
 
         return $data;
     }

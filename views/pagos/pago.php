@@ -1325,7 +1325,14 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                         $tarjetaActiva = $activoGuardado === 1 && !$tarjetaVencida;
                                         $tarjetaPredeterminada = (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1;
                                         ?>
-                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>" data-saved-card data-card-id="<?= $idGuardado ?>" data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>" data-active="<?= $tarjetaActiva ? 1 : 0 ?>" data-default="<?= $tarjetaPredeterminada ? 1 : 0 ?>">
+                                       <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>"
+                                                data-saved-card
+                                                data-card-id="<?= $idGuardado ?>"
+                                                data-card-method="<?= (int) ($metodoGuardado['id_metodo'] ?? 0) ?>"
+                                                data-active="<?= $tarjetaActiva ? 1 : 0 ?>"
+                                                data-default="<?= $tarjetaPredeterminada ? 1 : 0 ?>">
+
+                                            <?= '<!-- DEBUG METODO: ' . json_encode($metodoGuardado) . ' -->' ?>
                                             <input type="radio" name="saved_payment_choice" value="<?= $idGuardado ?>" <?= $seleccionadoGuardado && $tarjetaActiva ? 'checked' : '' ?> <?= !$tarjetaActiva ? 'disabled' : '' ?>>
                                             <span class="saved-payment-body">
                                                 <span class="saved-payment-brand">
@@ -2217,25 +2224,17 @@ function initPaymentPage() {
         if (!acceptance?.checked) {
             throw new Error('Debes aceptar las politicas para guardar la tarjeta');
         }
-        if (!/^\d{16}$/.test(number)) {
-            throw new Error('La tarjeta debe tener exactamente 16 digitos');
-        }
 
         const config = await loadWompiCardConfig();
-        const publicKey = String(config.public_key).trim();
-        const baseUrl = publicKey.startsWith('pub_test_')
+        const baseUrl = String(config.public_key).startsWith('pub_test_')
             ? 'https://sandbox.wompi.co/v1'
             : 'https://production.wompi.co/v1';
-
-        console.log('WOMPI CONFIG', config);
-        console.log('PUBLIC KEY', publicKey);
-
         const response = await fetch(`${baseUrl}/tokens/cards`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${publicKey}`
+                'Authorization': `Bearer ${config.public_key}`
             },
             body: JSON.stringify({
                 number,
@@ -2245,27 +2244,9 @@ function initPaymentPage() {
                 card_holder: alias
             })
         });
-
-        console.log('TOKEN RESPONSE STATUS', response.status);
-        const responseText = await response.text();
-        console.log('TOKEN RESPONSE RAW', responseText);
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (_) {
-            throw new Error(`Error inesperado del servidor de pagos (${response.status})`);
-        }
+        const data = await response.json();
         if (!response.ok || !data?.data?.id) {
-            if (data?.error) {
-                const errType = data.error.type || '';
-                const errMessages = Array.isArray(data.error.messages)
-                    ? Object.values(data.error.messages).flat().join(', ')
-                    : (data.error.reason || data.error.message || '');
-                const errDetail = errMessages || errType || JSON.stringify(data.error);
-                console.error('WOMPI TOKEN ERROR', data.error);
-                throw new Error(`Error Wompi: ${errDetail}`);
-            }
-            throw new Error(data?.message || `No se pudo tokenizar la tarjeta (${response.status})`);
+            throw new Error(data?.error?.reason || data?.message || 'No se pudo tokenizar la tarjeta');
         }
 
         const tokenData = data.data;
