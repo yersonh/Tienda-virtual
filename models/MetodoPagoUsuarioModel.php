@@ -193,6 +193,11 @@ class MetodoPagoUsuarioModel {
         }
 
         $soloActivos = $soloActivos === 1 ? 1 : 0;
+        $cache = $this->obtenerCache($idUsuario, $soloActivos);
+        if ($cache !== null) {
+            return $cache;
+        }
+
         try {
             $desactivadas = $this->desactivarVencidasUsuario($idUsuario);
             if ($desactivadas > 0) {
@@ -203,11 +208,6 @@ class MetodoPagoUsuarioModel {
         } catch (Throwable $e) {
             error_log('MetodoPagoUsuarioModel desactivar vencidas: ' . $e->getMessage());
             @oci_rollback($this->conn);
-        }
-
-        $cache = $this->obtenerCache($idUsuario, $soloActivos);
-        if ($cache !== null) {
-            return $cache;
         }
 
         $fechaExpiracionSelect = $this->fechaExpiracionSelect();
@@ -443,9 +443,7 @@ class MetodoPagoUsuarioModel {
             return false;
         }
 
-        $query = "DELETE FROM METODO_PAGO_USUARIO
-                  WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
-                    AND ID_USUARIO = :id_usuario";
+        $query = "BEGIN SP_ELIMINAR_METODO_PAGO(:id_metodo_pago_usuario, :id_usuario); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -461,12 +459,9 @@ class MetodoPagoUsuarioModel {
             throw new Exception($message);
         }
 
-        $affected = oci_num_rows($stmt) > 0;
         oci_free_statement($stmt);
-        if ($affected) {
-            $this->limpiarCache($idUsuario);
-        }
-        return $affected;
+        $this->limpiarCache($idUsuario);
+        return true;
     }
 
     public function cambiarActivo(int $idMetodoPagoUsuario, int $idUsuario, int $activo): bool {
@@ -526,17 +521,13 @@ class MetodoPagoUsuarioModel {
             throw new InvalidArgumentException('Fecha de expiracion invalida');
         }
 
-        if ($esPredeterminado === 1) {
-            $this->quitarPredeterminado($idUsuario);
-        }
-
-        $query = "UPDATE METODO_PAGO_USUARIO
-                  SET TITULAR = :titular,
-                      FECHA_EXPIRACION = :fecha_expiracion,
-                      ES_PREDETERMINADO = :es_predeterminado
-                  WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
-                    AND ID_USUARIO = :id_usuario
-                    AND ACTIVO = 1";
+        $query = "BEGIN SP_ACTUALIZAR_METODO_PAGO(
+                    :id_metodo_pago_usuario,
+                    :id_usuario,
+                    :titular,
+                    :fecha_expiracion,
+                    :es_predeterminado
+                  ); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -555,12 +546,9 @@ class MetodoPagoUsuarioModel {
             throw new Exception($message);
         }
 
-        $affected = oci_num_rows($stmt) > 0;
         oci_free_statement($stmt);
-        if ($affected) {
-            $this->limpiarCache($idUsuario);
-        }
-        return $affected;
+        $this->limpiarCache($idUsuario);
+        return true;
     }
 
     public function establecerPredeterminado(int $idMetodoPagoUsuario, int $idUsuario): bool {
@@ -569,14 +557,8 @@ class MetodoPagoUsuarioModel {
         }
 
         $this->desactivarVencidasUsuario($idUsuario);
-        $this->quitarPredeterminado($idUsuario);
 
-        $query = "UPDATE METODO_PAGO_USUARIO
-                SET ES_PREDETERMINADO = 1
-                WHERE ID_METODO_PAGO_USUARIO = :id_metodo_pago_usuario
-                    AND ID_USUARIO = :id_usuario
-                    AND ACTIVO = 1
-                    AND LAST_DAY(TO_DATE(FECHA_EXPIRACION, 'YYYY-MM-DD')) >= TRUNC(SYSDATE)";
+        $query = "BEGIN SP_PREDETERMINAR_METODO_PAGO(:id_metodo_pago_usuario, :id_usuario); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -592,14 +574,9 @@ class MetodoPagoUsuarioModel {
             throw new Exception($message);
         }
 
-        $affected = oci_num_rows($stmt) > 0;
-
         oci_free_statement($stmt);
 
-        if ($affected) {
-            $this->limpiarCache($idUsuario);
-        }
-
-        return $affected;
+        $this->limpiarCache($idUsuario);
+        return true;
     }
 }

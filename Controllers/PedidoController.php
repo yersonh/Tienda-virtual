@@ -625,28 +625,27 @@ class PedidoController {
     }
 
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
-        $venta = $this->expresionesResumenVenta();
-        $estadoSql = $this->estadoPedidoSql();
-
-        $query = "SELECT p.ID_PEDIDO,
-                         p.ID_ESTADO,
-                         $estadoSql AS ESTADO,
-                         {$venta['fecha']} AS FECHA,
-                         {$venta['total']} AS TOTAL,
-                         TO_CHAR(p.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA,
-                         dp.NOMBRE_RECEPTOR,
-                         dp.APELLIDO_RECEPTOR,
-                         dp.DIRECCION_ENVIO,
-                         dp.CIUDAD,
-                         dp.BARRIO,
-                         dp.TELEFONO_RECEPTOR,
-                         dp.TELEFONO_ALTERNO,
-                         dp.INFORMACION_ADICIONAL
-                  FROM PEDIDO p
-                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
-                  LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_DIRECCION_PEDIDO = p.ID_DIRECCION_PEDIDO
-                  WHERE v.ID_USUARIO = :id_usuario
-                    AND p.ID_PEDIDO = :id_pedido
+        $query = "SELECT fp.ID_PEDIDO,
+                         fp.ID_VENTA,
+                         fp.ID_ESTADO,
+                         fp.ESTADO_PEDIDO AS ESTADO,
+                         TO_CHAR(fp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
+                         NVL(fp.SUBTOTAL, 0) AS SUBTOTAL,
+                         NVL(fp.IVA, 0) AS IVA,
+                         NVL(fp.ENVIO, 0) AS ENVIO,
+                         NVL(fp.TOTAL, 0) AS TOTAL,
+                         TO_CHAR(fp.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA,
+                         fp.NOMBRE_RECEPTOR,
+                         fp.APELLIDO_RECEPTOR,
+                         fp.DIRECCION_ENVIO,
+                         fp.CIUDAD,
+                         fp.BARRIO,
+                         fp.TELEFONO_RECEPTOR,
+                         fp.TELEFONO_ALTERNO,
+                         fp.INFORMACION_ADICIONAL
+                  FROM V_FACTURA_PEDIDO fp
+                  WHERE fp.ID_USUARIO = :id_usuario
+                    AND fp.ID_PEDIDO = :id_pedido
                   FETCH FIRST 1 ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
@@ -1267,8 +1266,9 @@ class PedidoController {
         $items = isset($pedido['items']) && is_array($pedido['items']) ? $pedido['items'] : [];
         $subtotalItems = array_sum(array_map(fn($item) => (float) ($item['subtotal'] ?? 0), $items));
         $total = (float) ($pedido['total'] ?? 0);
-        $iva = $subtotalItems > 0 ? round($subtotalItems * 0.19, 2) : 0;
-        $envio = max(0, $total - $subtotalItems - $iva);
+        $subtotalItems = (float) ($pedido['subtotal'] ?? $subtotalItems);
+        $iva = (float) ($pedido['iva'] ?? ($subtotalItems > 0 ? round($subtotalItems * 0.19, 2) : 0));
+        $envio = (float) ($pedido['envio'] ?? max(0, $total - $subtotalItems - $iva));
         if ($subtotalItems <= 0) {
             $subtotalItems = max(0, round($total / 1.19, 2));
             $iva = max(0, $total - $subtotalItems);
@@ -1332,16 +1332,7 @@ class PedidoController {
             exit();
         }
 
-        $query = "UPDATE PEDIDO p
-                  SET p.ID_ESTADO = 5
-                  WHERE p.ID_PEDIDO = :id_pedido
-                    AND p.ID_ESTADO = 1
-                    AND EXISTS (
-                        SELECT 1
-                        FROM VENTA v
-                        WHERE v.ID_VENTA = p.ID_VENTA
-                          AND v.ID_USUARIO = :id_usuario
-                    )";
+        $query = "BEGIN SP_CANCELAR_PEDIDO(:id_pedido, :id_usuario); END;";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
@@ -1357,15 +1348,7 @@ class PedidoController {
             exit();
         }
 
-        $filas = oci_num_rows($stmt);
         oci_free_statement($stmt);
-
-        if ($filas < 1) {
-            oci_rollback($this->conn);
-            $_SESSION['error'] = 'Solo puedes cancelar pedidos pendientes';
-            header("Location: index.php?action=misPedidos&id=" . $idPedido);
-            exit();
-        }
 
         oci_commit($this->conn);
         $_SESSION['success'] = 'Pedido cancelado correctamente';

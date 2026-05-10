@@ -137,41 +137,6 @@ class DireccionPedidoModel {
         return compact('idUsuario', 'nombre', 'apellido', 'direccion', 'ciudad', 'barrio', 'telefono', 'telefonoAlt', 'info', 'predeterminada');
     }
 
-    private function usuarioTieneDirecciones(int $idUsuario): bool {
-        $query = "SELECT COUNT(*) AS TOTAL
-                  FROM DIRECCION_USUARIO
-                  WHERE ID_USUARIO = :id_usuario";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
-
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return (int) ($row['TOTAL'] ?? 0) > 0;
-    }
-
-    private function quitarPredeterminada(int $idUsuario): void {
-        $this->desactivarDmlParalelo();
-
-        $query = "UPDATE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ DIRECCION_USUARIO
-                  SET ES_PREDETERMINADA = 0
-                  WHERE ID_USUARIO = :id_usuario";
-
-        $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $error = oci_error($stmt);
-            oci_free_statement($stmt);
-            error_log($error['message'] ?? 'No se pudo actualizar la direccion predeterminada');
-            throw new Exception('No se pudo actualizar la direccion predeterminada');
-        }
-
-        oci_free_statement($stmt);
-    }
-
     public function obtenerDirecciones($idUsuario): array {
         $idUsuario = (int) $idUsuario;
         $this->ensureSession();
@@ -196,7 +161,7 @@ class DireccionPedidoModel {
                          INFO_ADICIONAL,
                          NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA,
                          CREATED_AT
-                  FROM DIRECCION_USUARIO
+                  FROM V_DIRECCIONES_USUARIO
                   WHERE ID_USUARIO = :id_usuario
                   ORDER BY ES_PREDETERMINADA DESC, ID_DIRECCION DESC";
 
@@ -232,7 +197,7 @@ class DireccionPedidoModel {
                          INFO_ADICIONAL,
                          NVL(ES_PREDETERMINADA, 0) AS ES_PREDETERMINADA,
                          CREATED_AT
-                  FROM DIRECCION_USUARIO
+                  FROM V_DIRECCIONES_USUARIO
                   WHERE ID_DIRECCION = :id_direccion";
 
         if ($idUsuario !== null) {
@@ -256,18 +221,21 @@ class DireccionPedidoModel {
         try {
             $this->desactivarDmlParalelo();
             $d = $this->validarDireccion($data);
-            $tieneDirecciones = $this->usuarioTieneDirecciones($d['idUsuario']);
             $d['predeterminada'] = $d['predeterminada'] === 1 ? 1 : 0;
 
-            if ($d['predeterminada'] === 1 && $tieneDirecciones) {
-                $this->quitarPredeterminada($d['idUsuario']);
-            }
-
-            $query = "INSERT /*+ NO_PARALLEL(DIRECCION_USUARIO) */ INTO DIRECCION_USUARIO
-                        (ID_USUARIO, NOMBRE, APELLIDO, DIRECCION, CIUDAD, BARRIO, TELEFONO, TELEFONO_ALT, INFO_ADICIONAL, ES_PREDETERMINADA, CREATED_AT)
-                      VALUES
-                        (:id_usuario, :nombre, :apellido, :direccion, :ciudad, :barrio, :telefono, :telefono_alt, :info, :predeterminada, SYSDATE)
-                      RETURNING ID_DIRECCION INTO :id_direccion";
+            $query = "BEGIN SP_GUARDAR_DIRECCION_USUARIO(
+                        :id_usuario,
+                        :nombre,
+                        :apellido,
+                        :direccion,
+                        :ciudad,
+                        :barrio,
+                        :telefono,
+                        :telefono_alt,
+                        :info,
+                        :predeterminada,
+                        :id_direccion
+                      ); END;";
 
             $stmt = oci_parse($this->conn, $query);
             $idDireccion = null;
@@ -329,26 +297,19 @@ class DireccionPedidoModel {
             $data['id_usuario'] = $idUsuario;
             $d = $this->validarDireccion($data);
 
-            if (!$this->obtenerDireccionPorId($idDireccion, $idUsuario)) {
-                return ['success' => false, 'message' => 'La direccion no existe'];
-            }
-
-            if ($d['predeterminada'] === 1) {
-                $this->quitarPredeterminada($idUsuario);
-            }
-
-            $query = "UPDATE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ DIRECCION_USUARIO
-                      SET NOMBRE = :nombre,
-                          APELLIDO = :apellido,
-                          DIRECCION = :direccion,
-                          CIUDAD = :ciudad,
-                          BARRIO = :barrio,
-                          TELEFONO = :telefono,
-                          TELEFONO_ALT = :telefono_alt,
-                          INFO_ADICIONAL = :info,
-                          ES_PREDETERMINADA = CASE WHEN :predeterminada = 1 THEN 1 ELSE ES_PREDETERMINADA END
-                      WHERE ID_DIRECCION = :id_direccion
-                      AND ID_USUARIO = :id_usuario";
+            $query = "BEGIN SP_ACTUALIZAR_DIRECCION_USUARIO(
+                        :id_direccion,
+                        :id_usuario,
+                        :nombre,
+                        :apellido,
+                        :direccion,
+                        :ciudad,
+                        :barrio,
+                        :telefono,
+                        :telefono_alt,
+                        :info,
+                        :predeterminada
+                      ); END;";
 
             $stmt = oci_parse($this->conn, $query);
             oci_bind_by_name($stmt, ':nombre', $d['nombre']);
@@ -390,60 +351,22 @@ class DireccionPedidoModel {
     public function eliminarDireccion(int $idDireccion, int $idUsuario): array {
         try {
             $this->desactivarDmlParalelo();
-            $direccion = $this->obtenerDireccionPorId($idDireccion, $idUsuario);
-            if (!$direccion) {
-                return ['success' => false, 'message' => 'La direccion no existe'];
-            }
+            $query = "BEGIN SP_ELIMINAR_DIRECCION_USUARIO(:id_direccion, :id_usuario); END;";
+            $stmt = oci_parse($this->conn, $query);
+            oci_bind_by_name($stmt, ':id_direccion', $idDireccion, -1, SQLT_INT);
+            oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
-            $queryCount = "SELECT COUNT(*) AS TOTAL
-                           FROM DIRECCION_USUARIO
-                           WHERE ID_USUARIO = :id_usuario";
-            $stmtCount = oci_parse($this->conn, $queryCount);
-            oci_bind_by_name($stmtCount, ':id_usuario', $idUsuario, -1, SQLT_INT);
-            oci_execute($stmtCount);
-            $rowCount = oci_fetch_assoc($stmtCount);
-            oci_free_statement($stmtCount);
-
-            if ((int) ($rowCount['TOTAL'] ?? 0) <= 1) {
-                return ['success' => false, 'message' => 'No puedes eliminar tu unica direccion'];
-            }
-
-            $queryDelete = "DELETE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ FROM DIRECCION_USUARIO
-                            WHERE ID_DIRECCION = :id_direccion
-                            AND ID_USUARIO = :id_usuario";
-            $stmtDelete = oci_parse($this->conn, $queryDelete);
-            oci_bind_by_name($stmtDelete, ':id_direccion', $idDireccion, -1, SQLT_INT);
-            oci_bind_by_name($stmtDelete, ':id_usuario', $idUsuario, -1, SQLT_INT);
-
-            if (!@oci_execute($stmtDelete, OCI_NO_AUTO_COMMIT)) {
-                $error = oci_error($stmtDelete);
-                oci_free_statement($stmtDelete);
+            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+                $error = oci_error($stmt);
+                oci_free_statement($stmt);
                 oci_rollback($this->conn);
                 error_log($error['message'] ?? 'No se pudo eliminar la direccion');
-                return ['success' => false, 'message' => 'No se pudo eliminar la direccion'];
+                $message = str_contains((string) ($error['message'] ?? ''), 'unica direccion')
+                    ? 'No puedes eliminar tu unica direccion'
+                    : 'No se pudo eliminar la direccion';
+                return ['success' => false, 'message' => $message];
             }
-            oci_free_statement($stmtDelete);
-
-            if ((int) $direccion['es_predeterminada'] === 1) {
-                $queryDefault = "UPDATE /*+ NO_PARALLEL(DIRECCION_USUARIO) */ DIRECCION_USUARIO
-                                 SET ES_PREDETERMINADA = 1
-                                 WHERE ID_DIRECCION = (
-                                     SELECT MIN(ID_DIRECCION)
-                                     FROM DIRECCION_USUARIO
-                                     WHERE ID_USUARIO = :id_usuario
-                                 )";
-                $stmtDefault = oci_parse($this->conn, $queryDefault);
-                oci_bind_by_name($stmtDefault, ':id_usuario', $idUsuario, -1, SQLT_INT);
-
-                if (!@oci_execute($stmtDefault, OCI_NO_AUTO_COMMIT)) {
-                    $error = oci_error($stmtDefault);
-                    oci_free_statement($stmtDefault);
-                    oci_rollback($this->conn);
-                    error_log($error['message'] ?? 'No se pudo asignar una direccion predeterminada');
-                    return ['success' => false, 'message' => 'No se pudo asignar una direccion predeterminada'];
-                }
-                oci_free_statement($stmtDefault);
-            }
+            oci_free_statement($stmt);
 
             oci_commit($this->conn);
             $this->limpiarCache($idUsuario);
@@ -545,23 +468,17 @@ class DireccionPedidoModel {
             return ['success' => false, 'message' => 'Todos los campos de direccion son obligatorios'];
         }
 
-        $query = "UPDATE DIRECCION_PEDIDO dp
-                  SET dp.NOMBRE_RECEPTOR = :nombre,
-                      dp.APELLIDO_RECEPTOR = :apellido,
-                      dp.DIRECCION_ENVIO = :direccion,
-                      dp.CIUDAD = :ciudad,
-                      dp.BARRIO = :barrio,
-                      dp.TELEFONO_RECEPTOR = :telefono,
-                      dp.TELEFONO_ALTERNO = :telefono_alt,
-                      dp.INFORMACION_ADICIONAL = :info,
-                      dp.UPDATED_AT = SYSDATE
-                  WHERE dp.ID_PEDIDO = :id_pedido
-                  AND EXISTS (
-                      SELECT 1
-                      FROM PEDIDO p
-                      WHERE p.ID_PEDIDO = dp.ID_PEDIDO
-                      AND p.ID_ESTADO = 1
-                  )";
+        $query = "BEGIN SP_ACTUALIZAR_DIRECCION_PEDIDO(
+                    :id_pedido,
+                    :nombre,
+                    :apellido,
+                    :direccion,
+                    :ciudad,
+                    :barrio,
+                    :telefono,
+                    :telefono_alt,
+                    :info
+                  ); END;";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':nombre', $nombre);
@@ -581,12 +498,7 @@ class DireccionPedidoModel {
             return ['success' => false, 'message' => 'No se pudo actualizar la direccion del pedido'];
         }
 
-        $rows = oci_num_rows($stmt);
         oci_free_statement($stmt);
-
-        if ($rows <= 0) {
-            return ['success' => false, 'message' => 'Solo puedes editar la direccion de pedidos pendientes'];
-        }
 
         return ['success' => true];
     }

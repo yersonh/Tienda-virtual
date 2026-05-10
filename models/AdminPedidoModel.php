@@ -8,43 +8,38 @@ class AdminPedidoModel {
     }
 
     public function obtenerTodos(?int $estado = null, ?string $fecha_desde = null, ?string $fecha_hasta = null): array {
-        $base = "SELECT p.ID_PEDIDO,
-                       p.ID_ESTADO,
-                       ep.NOMBRE AS ESTADO_NOMBRE,
-                       TO_CHAR(v.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
-                       NVL(v.TOTAL, 0) AS TOTAL,
-                       NVL(v.IVA, 0) AS IVA,
-                       NVL(v.ENVIO, 0) AS ENVIO,
-                       per.NOMBRES AS CLIENTE_NOMBRE,
-                       per.APELLIDOS AS CLIENTE_APELLIDO,
-                       dp.NOMBRE_RECEPTOR,
-                       dp.APELLIDO_RECEPTOR,
-                       dp.DIRECCION_ENVIO,
-                       dp.CIUDAD,
-                       dp.BARRIO,
-                       dp.TELEFONO_RECEPTOR,
-                       dp.INFORMACION_ADICIONAL,
-                       TO_CHAR(p.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA
-                FROM PEDIDO p
-                INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
-                LEFT JOIN ESTADO_PEDIDO ep ON ep.ID_ESTADO = p.ID_ESTADO
-                LEFT JOIN USUARIO u ON u.ID_USUARIO = v.ID_USUARIO
-                LEFT JOIN PERSONA per ON per.ID_PERSONA = u.ID_PERSONA
-                LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_PEDIDO = p.ID_PEDIDO";
+        $base = "SELECT vp.ID_PEDIDO,
+                       vp.ID_ESTADO,
+                       vp.ESTADO AS ESTADO_NOMBRE,
+                       TO_CHAR(vp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
+                       NVL(vp.TOTAL, 0) AS TOTAL,
+                       NVL(vp.IVA, 0) AS IVA,
+                       NVL(vp.ENVIO, 0) AS ENVIO,
+                       vp.CLIENTE_NOMBRE,
+                       vp.CLIENTE_APELLIDO,
+                       vp.NOMBRE_RECEPTOR,
+                       vp.APELLIDO_RECEPTOR,
+                       vp.DIRECCION_ENVIO,
+                       vp.CIUDAD,
+                       vp.BARRIO,
+                       vp.TELEFONO_RECEPTOR,
+                       vp.INFORMACION_ADICIONAL,
+                       TO_CHAR(vp.FECHA_ESTIMADA_ENTREGA, 'YYYY-MM-DD') AS FECHA_ESTIMADA_ENTREGA
+                FROM V_ADMIN_PEDIDOS vp";
 
         $where = [];
         $params = [];
 
         if ($estado !== null) {
-            $where[] = "p.ID_ESTADO = :estado";
+            $where[] = "vp.ID_ESTADO = :estado";
             $params[':estado'] = $estado;
         }
         if ($fecha_desde !== null && $fecha_desde !== '') {
-            $where[] = "TRUNC(v.FECHA) >= TO_DATE(:fecha_desde, 'YYYY-MM-DD')";
+            $where[] = "vp.FECHA >= TO_DATE(:fecha_desde, 'YYYY-MM-DD')";
             $params[':fecha_desde'] = $fecha_desde;
         }
         if ($fecha_hasta !== null && $fecha_hasta !== '') {
-            $where[] = "TRUNC(v.FECHA) <= TO_DATE(:fecha_hasta, 'YYYY-MM-DD')";
+            $where[] = "vp.FECHA < TO_DATE(:fecha_hasta, 'YYYY-MM-DD') + 1";
             $params[':fecha_hasta'] = $fecha_hasta;
         }
 
@@ -52,7 +47,7 @@ class AdminPedidoModel {
         if (!empty($where)) {
             $query .= " WHERE " . implode(" AND ", $where);
         }
-        $query .= " ORDER BY p.ID_PEDIDO DESC";
+        $query .= " ORDER BY vp.ID_PEDIDO DESC";
 
         $stmt = oci_parse($this->conn, $query);
 
