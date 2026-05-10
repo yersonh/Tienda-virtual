@@ -2479,7 +2479,8 @@ function initPaymentPage() {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.public_key}`
             },
             body: JSON.stringify({
                 number,
@@ -2490,7 +2491,8 @@ function initPaymentPage() {
                 acceptance_token: config.acceptance_token
             })
         });
-        console.log(await response.clone().text());
+        const rawText = await response.clone().text();
+        console.log('WOMPI RAW RESPONSE:', rawText);
         const data = await response.json();
         if (!response.ok || !data?.data?.id) {
             throw new Error(data?.error?.reason || data?.message || 'No se pudo tokenizar la tarjeta');
