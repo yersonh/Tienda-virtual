@@ -1394,23 +1394,14 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                 <div class="payment-layout">
                     <div class="payment-main">
                     <form id="payment-confirm-form" method="POST" action="index.php?action=procesarPago" novalidate>
-                        <?php if (isset($_SESSION['error'])): ?>
-                            <div class="payment-error" role="alert">
-                                <i class="fas fa-circle-exclamation"></i>
-                                <span><?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error']); ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if (isset($_SESSION['success'])): ?>
-                            <div class="payment-invoice-note payment-success-note" role="status">
-                                <i class="fas fa-circle-check"></i>
-                                <span><?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['success']); ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ($paymentExpiredNotice || $hayTarjetasVencidas): ?>
-                            <div class="payment-warning-note" role="status">
-                                <i class="fas fa-triangle-exclamation"></i>
-                                <span><?= htmlspecialchars((string) ($paymentExpiredNotice ?: 'Una tarjeta vencida fue desactivada por el sistema. Solo puedes eliminarla.'), ENT_QUOTES, 'UTF-8') ?></span>
-                            </div>
+                        <?php if(isset($_SESSION['error'])): ?>
+                        <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['error'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'error'));</script>
+                        <?php unset($_SESSION['error']); endif; ?>
+                        <?php if(isset($_SESSION['success'])): ?>
+                        <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['success'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'success'));</script>
+                        <?php unset($_SESSION['success']); endif; ?>
+                        <?php if($paymentExpiredNotice || $hayTarjetasVencidas): ?>
+                        <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode((string)($paymentExpiredNotice ?: 'Una tarjeta vencida fue desactivada automaticamente. Puedes eliminarla.'), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'warning'));</script>
                         <?php endif; ?>
 
                         <div class="payment-summary">
@@ -1503,6 +1494,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                         $activoGuardado = (int) ($metodoGuardado['activo'] ?? 0);
                                         $tarjetaVencida = (int) ($metodoGuardado['vencida'] ?? 0) === 1;
                                         $tarjetaActiva = $activoGuardado === 1 && !$tarjetaVencida;
+                                        if (!$tarjetaActiva) continue;
                                         $tarjetaPredeterminada = (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1;
                                         ?>
                                        <label class="saved-payment-card <?= $seleccionadoGuardado && $tarjetaActiva ? 'is-selected' : '' ?> <?= !$tarjetaActiva ? 'is-disabled' : '' ?>"
@@ -2338,22 +2330,8 @@ function initPaymentPage() {
         }
     });
 
-    function paymentNoticeClass(isError) {
-        return isError ? 'payment-error' : 'payment-invoice-note payment-success-note';
-    }
-
     function showPaymentNotice(message, isError = false) {
-        const main = document.querySelector('.payment-main');
-        const form = document.getElementById('payment-confirm-form');
-        if (!main || !form || !message) return;
-        main.querySelectorAll('[data-live-payment-notice]').forEach((item) => item.remove());
-        const notice = document.createElement('div');
-        notice.className = paymentNoticeClass(isError);
-        notice.dataset.livePaymentNotice = '1';
-        notice.setAttribute('role', isError ? 'alert' : 'status');
-        notice.innerHTML = `<i class="fas ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span></span>`;
-        notice.querySelector('span').textContent = message;
-        main.insertBefore(notice, form);
+        showToast(message, isError ? 'error' : 'success');
     }
 
     async function refreshPaymentMain(message = '', isError = false) {

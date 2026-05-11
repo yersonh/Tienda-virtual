@@ -488,10 +488,101 @@ textarea:focus {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* TOAST NOTIFICATIONS */
+.nxl-toast-container {
+    position: fixed;
+    top: 76px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.nxl-toast {
+    pointer-events: all;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 16px 13px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 260px;
+    max-width: 360px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 28px rgba(2,8,23,0.38);
+    border: 1px solid;
+    animation: nxlToastIn 220ms cubic-bezier(.22,.8,.4,1) both;
+}
+.nxl-toast.nxl-toast-out {
+    animation: nxlToastOut 200ms ease forwards;
+}
+.nxl-toast-success {
+    background: rgba(20,83,45,0.88);
+    border-color: rgba(34,197,94,0.42);
+    color: #dcfce7;
+}
+.nxl-toast-error {
+    background: rgba(127,29,29,0.88);
+    border-color: rgba(248,113,113,0.42);
+    color: #fecaca;
+}
+.nxl-toast-warning {
+    background: rgba(113,63,18,0.88);
+    border-color: rgba(250,204,21,0.42);
+    color: #fef9c3;
+}
+[data-theme="light"] .nxl-toast-success {
+    background: rgba(220,252,231,0.96);
+    border-color: rgba(34,197,94,0.46);
+    color: #14532d;
+    box-shadow: 0 8px 28px rgba(15,55,90,0.18);
+}
+[data-theme="light"] .nxl-toast-error {
+    background: rgba(254,226,226,0.96);
+    border-color: rgba(239,68,68,0.46);
+    color: #991b1b;
+    box-shadow: 0 8px 28px rgba(15,55,90,0.18);
+}
+[data-theme="light"] .nxl-toast-warning {
+    background: rgba(254,249,195,0.96);
+    border-color: rgba(202,138,4,0.46);
+    color: #713f12;
+    box-shadow: 0 8px 28px rgba(15,55,90,0.18);
+}
+.nxl-toast-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+.nxl-toast-text { flex: 1; line-height: 1.45; }
+.nxl-toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.55;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1;
+    margin-top: 1px;
+    transition: opacity 120ms;
+}
+.nxl-toast-close:hover { opacity: 1; }
+@keyframes nxlToastIn {
+    from { opacity: 0; transform: translateX(28px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes nxlToastOut {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to   { opacity: 0; transform: translateX(28px) scale(0.94); }
+}
 </style>
 </head>
 
 <body data-theme="dark">
+
+<div class="nxl-toast-container" id="nxl-toast-container" aria-live="polite" aria-atomic="false"></div>
 
 <!-- 🔥 NAVBAR -->
 <nav class="nav">
@@ -696,5 +787,25 @@ body.classList.toggle('light-mode', savedTheme === 'light');
 renderThemeIcon(savedTheme);
 syncActiveNavFromLocation();
 window.addEventListener('hashchange', syncActiveNavFromLocation);
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('nxl-toast-container');
+    if (!container || !message) return;
+    const icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation' };
+    const icon = icons[type] || 'fa-circle-check';
+    const toast = document.createElement('div');
+    toast.className = `nxl-toast nxl-toast-${type}`;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.innerHTML = `<i class="fas ${icon} nxl-toast-icon"></i><span class="nxl-toast-text"></span><button class="nxl-toast-close" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>`;
+    toast.querySelector('.nxl-toast-text').textContent = message;
+    container.appendChild(toast);
+    const dismiss = () => {
+        if (!toast.isConnected) return;
+        toast.classList.add('nxl-toast-out');
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    };
+    toast.querySelector('.nxl-toast-close').addEventListener('click', dismiss);
+    setTimeout(dismiss, 2000);
+}
 
 </script>
