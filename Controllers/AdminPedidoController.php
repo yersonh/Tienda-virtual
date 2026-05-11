@@ -58,15 +58,18 @@ class AdminPedidoController {
 
     public function obtenerPedidosJson() {
         Auth::soloAdmin();
-        $this->expirarPedidosPendientes();
         header('Content-Type: application/json; charset=utf-8');
 
-        $pedidos = $this->model->obtenerTodos(null, null, null) ?? [];
+        $estado      = isset($_GET['estado'])     && $_GET['estado']     !== '' ? (int)$_GET['estado']     : null;
+        $fecha_desde = isset($_GET['fecha_desde']) && $_GET['fecha_desde'] !== '' ? $_GET['fecha_desde']    : null;
+        $fecha_hasta = isset($_GET['fecha_hasta']) && $_GET['fecha_hasta'] !== '' ? $_GET['fecha_hasta']    : null;
+
+        $pedidos = $this->model->obtenerTodos($estado, $fecha_desde, $fecha_hasta) ?? [];
         $pedidosConDireccion = array_values(array_filter($pedidos, fn($p) => !empty($p['ciudad'])));
 
         echo json_encode([
             'success' => true,
-            'count' => count($pedidosConDireccion),
+            'count'   => count($pedidosConDireccion),
             'pedidos' => $pedidosConDireccion
         ]);
         exit();
