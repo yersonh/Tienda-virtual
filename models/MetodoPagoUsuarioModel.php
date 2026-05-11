@@ -641,12 +641,10 @@ class MetodoPagoUsuarioModel {
         return true;
     }
 
-    public function establecerPredeterminado(int $idMetodoPagoUsuario, int $idUsuario): bool {
+   public function establecerPredeterminado(int $idMetodoPagoUsuario, int $idUsuario): bool {
         if ($idMetodoPagoUsuario <= 0 || $idUsuario <= 0) {
             return false;
         }
-
-        $this->desactivarVencidasUsuario($idUsuario);
 
         $query = "BEGIN SP_PREDETERMINAR_METODO_PAGO(:id_metodo_pago_usuario, :id_usuario); END;";
 
@@ -658,14 +656,11 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':id_metodo_pago_usuario', $idMetodoPagoUsuario, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
-            @oci_rollback($this->conn);
             throw new Exception($message);
         }
-
-        @oci_commit($this->conn);
 
         oci_free_statement($stmt);
         $this->limpiarCache($idUsuario);
