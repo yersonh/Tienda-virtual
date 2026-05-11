@@ -672,45 +672,38 @@ function setWompiButtonLoading(loading, label) {
 }
 
 function openWompiCheckout(checkout) {
+    console.log('WidgetCheckout:', typeof WidgetCheckout);
+    console.log('checkout:', checkout);
+
     if (typeof WidgetCheckout === 'undefined') {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
 
+    if (!checkout?.public_key || !checkout?.reference || !checkout?.amount_in_cents || !checkout?.integrity_signature) {
+        console.error('Payload Wompi incompleto:', checkout);
+        throw new Error('No se pudo preparar la informacion del pago.');
+    }
+
     const widget = new WidgetCheckout({
-        currency:      checkout.currency,
+        currency: checkout.currency || 'COP',
         amountInCents: Number(checkout.amount_in_cents),
-        reference:     checkout.reference,
-        publicKey:     checkout.public_key,
+        reference: checkout.reference,
+        publicKey: checkout.public_key,
         signature: {
             integrity: checkout.integrity_signature
         },
         redirectUrl: checkout.redirect_url,
         paymentMethods: {
-            card:                 true,
-            nequi:                true,
-            pse:                  true,
-            bancolombia_transfer: true,
-            bancolombia_qr:       true,
-            cash:                 false,
-            suplus:               false,
-            addi:                 false
+            card: 'all',
+            nequi: true,
+            pse: true
         }
     });
 
     widget.open((result) => {
-        const transaction = result?.transaction || {};
-        const status      = String(transaction.status || '').toUpperCase();
-        sessionStorage.setItem(paymentCompletedKey, '1');
+        console.log('Wompi result:', result);
 
-        if (status === 'APPROVED') {
-            showToast('Pago aprobado. Estamos esperando la confirmacion final para activar factura e historial.', 'success');
-        } else if (status === 'PENDING') {
-            showToast('El pago quedo pendiente. Puedes revisar el estado desde tus pedidos.', 'info');
-        } else if (status) {
-            showToast('La transaccion quedo con estado ' + status + '. Puedes revisar el pedido desde tu historial.', 'error');
-        } else {
-            showToast('La pasarela cerro el checkout. Puedes revisar el estado desde tus pedidos.', 'info');
-        }
+        sessionStorage.setItem(paymentCompletedKey, '1');
 
         window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
     });

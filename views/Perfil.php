@@ -13,7 +13,6 @@ $inicialNombre = !empty($nombresArray[0]) ? strtoupper(substr($nombresArray[0], 
 $inicialApellido = !empty($apellidosArray[0]) ? strtoupper(substr($apellidosArray[0], 0, 1)) : '';
 
 $iniciales = $inicialNombre . $inicialApellido;
-$metodosPagoUsuario = isset($metodosPagoUsuario) && is_array($metodosPagoUsuario) ? $metodosPagoUsuario : [];
 ?>
 
 <div class="container-perfil">
@@ -105,31 +104,6 @@ $metodosPagoUsuario = isset($metodosPagoUsuario) && is_array($metodosPagoUsuario
         </button>
 
     </form>
-
-    <section class="perfil-payments">
-        <div class="perfil-payments-head">
-            <h3><?= htmlspecialchars('Metodos de pago guardados', ENT_QUOTES, 'UTF-8') ?></h3>
-            <a href="index.php?action=pago"><?= htmlspecialchars('Gestionar en checkout', ENT_QUOTES, 'UTF-8') ?></a>
-        </div>
-        <?php
-        $metodosActivosPerfil = array_values(array_filter($metodosPagoUsuario, fn($m) => (int)($m['activo'] ?? 0) === 1 && (int)($m['vencida'] ?? 0) !== 1));
-        ?>
-        <?php if (!empty($metodosActivosPerfil)): ?>
-            <div class="perfil-payment-list">
-                <?php foreach ($metodosActivosPerfil as $metodoPerfil): ?>
-                    <div class="perfil-payment-card">
-                        <strong><?= htmlspecialchars((string) ($metodoPerfil['franquicia'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> **** <?= htmlspecialchars((string) ($metodoPerfil['ultimos_4'] ?? '0000'), ENT_QUOTES, 'UTF-8') ?></strong>
-                        <span><?= htmlspecialchars((string) ($metodoPerfil['forma_pago'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars('Expira ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoPerfil['fecha_expiracion_texto'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
-                        <?php if ((int) ($metodoPerfil['es_predeterminado'] ?? 0) === 1): ?>
-                            <em><?= htmlspecialchars('Predeterminada', ENT_QUOTES, 'UTF-8') ?></em>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p class="perfil-payment-empty"><?= htmlspecialchars('Aun no tienes tarjetas guardadas. Podras guardar una tarjeta debito o credito al pagar.', ENT_QUOTES, 'UTF-8') ?></p>
-        <?php endif; ?>
-    </section>
 
 </div>
 

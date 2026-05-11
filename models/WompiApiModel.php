@@ -21,92 +21,12 @@ class WompiApiModel {
             : 'https://production.wompi.co/v1';
     }
 
-    public function publicKey(): string {
-        return $this->publicKey;
-    }
-
-    public function obtenerAceptaciones(): array {
-        $response = $this->request('GET', '/merchants/' . rawurlencode($this->publicKey), null, null);
-        $data = $response['data'] ?? [];
-        $acceptance = $data['presigned_acceptance'] ?? [];
-        $personal = $data['presigned_personal_data_auth'] ?? [];
-
-        $acceptanceToken = trim((string) ($acceptance['acceptance_token'] ?? ''));
-        $personalToken = trim((string) ($personal['acceptance_token'] ?? ''));
-        if ($acceptanceToken === '' || $personalToken === '') {
-            throw new RuntimeException('Wompi no retorno tokens de aceptacion completos');
-        }
-
-        return [
-            'acceptance_token' => $acceptanceToken,
-            'acceptance_permalink' => (string) ($acceptance['permalink'] ?? ''),
-            'accept_personal_auth' => $personalToken,
-            'personal_auth_permalink' => (string) ($personal['permalink'] ?? '')
-        ];
-    }
-
-    public function crearFuenteTarjeta(string $tokenWompi, string $customerEmail): array {
-        $aceptaciones = $this->obtenerAceptaciones();
-        $response = $this->request('POST', '/payment_sources', [
-            'type' => 'CARD',
-            'token' => $tokenWompi,
-            'customer_email' => $customerEmail,
-            'acceptance_token' => $aceptaciones['acceptance_token'],
-            'accept_personal_auth' => $aceptaciones['accept_personal_auth']
-        ], $this->privateKey);
-
-        $data = $response['data'] ?? [];
-        if (empty($data['id']) || strtoupper((string) ($data['status'] ?? '')) !== 'AVAILABLE') {
-            throw new RuntimeException('Wompi no dejo disponible la fuente de pago');
-        }
-
-        return $data;
-    }
-
-    public function crearTransaccionConFuente(
-        int $amountInCents,
-        string $currency,
-        string $reference,
-        string $customerEmail,
-        int $paymentSourceId,
-        int $installments = 1
-    ): array {
-        $aceptaciones = $this->obtenerAceptaciones();
-        $signature = hash('sha256', $reference . (string) $amountInCents . $currency . $this->integritySecret);
-
-        $response = $this->request('POST', '/transactions', [
-            'amount_in_cents' => $amountInCents,
-            'currency' => $currency,
-            'signature' => $signature,
-            'customer_email' => $customerEmail,
-            'reference' => $reference,
-            'payment_source_id' => $paymentSourceId,
-            'payment_method' => [
-                'installments' => max(1, $installments)
-            ],
-            'recurrent' => false,
-            'acceptance_token' => $aceptaciones['acceptance_token'],
-            'accept_personal_auth' => $aceptaciones['accept_personal_auth']
-        ], $this->privateKey);
-
-        return is_array($response['data'] ?? null) ? $response['data'] : $response;
-    }
-
     public function obtenerTransaccion(string $transactionId): array {
         if ($transactionId === '') {
             throw new InvalidArgumentException('ID de transaccion requerido');
         }
         $response = $this->request('GET', '/transactions/' . rawurlencode($transactionId), null, $this->privateKey);
         return is_array($response['data'] ?? null) ? $response['data'] : [];
-    }
-
-    public function anularFuentePago(int $paymentSourceId): array {
-        if ($paymentSourceId <= 0) {
-            throw new InvalidArgumentException('Fuente de pago Wompi invalida');
-        }
-
-        $response = $this->request('PUT', '/payment_sources/' . $paymentSourceId . '/void', null, $this->privateKey);
-        return is_array($response['data'] ?? null) ? $response['data'] : $response;
     }
 
     private function request(string $method, string $path, ?array $payload, ?string $bearer): array {
