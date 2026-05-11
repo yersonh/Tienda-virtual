@@ -838,7 +838,7 @@ BEGIN
     UPDATE METODO_PAGO_USUARIO
     SET TITULAR = SUBSTR(TRIM(p_titular), 1, 120),
         FECHA_EXPIRACION = TO_DATE(p_fecha_expiracion, 'MM/YYYY'),
-        ES_PREDETERMINADO = CASE WHEN NVL(p_es_predeterminado, 0) = 1 THEN 1 ELSE ES_PREDETERMINADO END
+        ES_PREDETERMINADO = CASE WHEN NVL(p_es_predeterminado, 0) = 1 THEN 1 ELSE 0 END
     WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
       AND ID_USUARIO = p_id_usuario
       AND ACTIVO = 1;

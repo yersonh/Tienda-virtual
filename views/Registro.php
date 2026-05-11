@@ -372,18 +372,12 @@ a:hover {
 
     <h2><?= htmlspecialchars('Registro', ENT_QUOTES, 'UTF-8') ?></h2>
 
-    <!-- MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
-        <div class="error" id="mensajeError">
-            <?= $_SESSION['error']; unset($_SESSION['error']); ?>
-        </div>
-    <?php endif; ?>
-
+    <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['error'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'error'));</script>
+    <?php unset($_SESSION['error']); endif; ?>
     <?php if(isset($_SESSION['success'])): ?>
-        <div class="success" id="mensajeSuccess">
-            <?= $_SESSION['success']; unset($_SESSION['success']); ?>
-        </div>
-    <?php endif; ?>
+    <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['success'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'success'));</script>
+    <?php unset($_SESSION['success']); endif; ?>
 
     <!-- FORMULARIO -->
    <form method="POST" action="index.php?action=guardarRegistro" id="registro-form">

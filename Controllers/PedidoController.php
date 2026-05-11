@@ -1025,18 +1025,6 @@ class PedidoController {
         $resumenCompra = $checkoutRapido['resumen'];
         $total = $resumenCompra['total'];
         $fechaEstimadaEntrega = $_SESSION['checkout_fecha_estimada_entrega'] ?? date('Y-m-d', strtotime('+' . $this->obtenerDiasEntregaPorCiudad((string) ($direccion['ciudad'] ?? '')) . ' days'));
-        $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario, 0);
-        if (empty($metodosPagoUsuario)) {
-            $this->metodoPagoUsuarioModel->invalidarCacheUsuario($idUsuario);
-            $metodosPagoUsuario = $this->metodoPagoUsuarioModel->obtenerPorUsuario($idUsuario, 0);
-        }
-        $metodoPagoPredeterminado = null;
-        foreach ($metodosPagoUsuario as $metodoGuardado) {
-            if ((int) ($metodoGuardado['activo'] ?? 0) === 1 && (int) ($metodoGuardado['es_predeterminado'] ?? 0) === 1) {
-                $metodoPagoPredeterminado = $metodoGuardado;
-                break;
-            }
-        }
 
         require_once __DIR__ . '/../views/pagos/pago.php';
     }

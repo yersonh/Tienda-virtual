@@ -295,20 +295,12 @@ if (session_status() === PHP_SESSION_NONE) {
             </p>
         </div>
 
-        <!-- MENSAJES -->
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="error-message">
-                <?= $_SESSION['error'];
-                unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="success-message" id="success-message">
-                <?= $_SESSION['success'];
-                unset($_SESSION['success']); ?>
-            </div>
-        <?php endif; ?>
+        <?php if(isset($_SESSION['error'])): ?>
+        <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['error'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'error'));</script>
+        <?php unset($_SESSION['error']); endif; ?>
+        <?php if(isset($_SESSION['success'])): ?>
+        <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['success'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'success'));</script>
+        <?php unset($_SESSION['success']); endif; ?>
 
         <!-- FORM -->
         <form method="POST" action="index.php?action=iniciarSesion">

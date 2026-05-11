@@ -18,18 +18,12 @@ $metodosPagoUsuario = isset($metodosPagoUsuario) && is_array($metodosPagoUsuario
 
 <div class="container-perfil">
 
-    <!-- 🔥 MENSAJES -->
     <?php if(isset($_SESSION['error'])): ?>
-        <div class="error">
-            <?= $_SESSION['error']; unset($_SESSION['error']); ?>
-        </div>
-    <?php endif; ?>
-
+    <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['error'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'error'));</script>
+    <?php unset($_SESSION['error']); endif; ?>
     <?php if(isset($_SESSION['success'])): ?>
-        <div class="success">
-            <?= $_SESSION['success']; unset($_SESSION['success']); ?>
-        </div>
-    <?php endif; ?>
+    <script>document.addEventListener('DOMContentLoaded',()=>showToast(<?= json_encode($_SESSION['success'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT) ?>,'success'));</script>
+    <?php unset($_SESSION['success']); endif; ?>
 
     <!-- 🔥 HEADER -->
     <div class="perfil-header">
@@ -117,9 +111,12 @@ $metodosPagoUsuario = isset($metodosPagoUsuario) && is_array($metodosPagoUsuario
             <h3><?= htmlspecialchars('Metodos de pago guardados', ENT_QUOTES, 'UTF-8') ?></h3>
             <a href="index.php?action=pago"><?= htmlspecialchars('Gestionar en checkout', ENT_QUOTES, 'UTF-8') ?></a>
         </div>
-        <?php if (!empty($metodosPagoUsuario)): ?>
+        <?php
+        $metodosActivosPerfil = array_values(array_filter($metodosPagoUsuario, fn($m) => (int)($m['activo'] ?? 0) === 1 && (int)($m['vencida'] ?? 0) !== 1));
+        ?>
+        <?php if (!empty($metodosActivosPerfil)): ?>
             <div class="perfil-payment-list">
-                <?php foreach ($metodosPagoUsuario as $metodoPerfil): ?>
+                <?php foreach ($metodosActivosPerfil as $metodoPerfil): ?>
                     <div class="perfil-payment-card">
                         <strong><?= htmlspecialchars((string) ($metodoPerfil['franquicia'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> **** <?= htmlspecialchars((string) ($metodoPerfil['ultimos_4'] ?? '0000'), ENT_QUOTES, 'UTF-8') ?></strong>
                         <span><?= htmlspecialchars((string) ($metodoPerfil['forma_pago'] ?? 'Tarjeta'), ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars('Expira ', ENT_QUOTES, 'UTF-8') ?><?= htmlspecialchars((string) ($metodoPerfil['fecha_expiracion_texto'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
