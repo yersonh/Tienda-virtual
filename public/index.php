@@ -62,7 +62,8 @@ $publicas = [
     'restablecer',
     'cambiarPassword',
     'wompiWebhook',
-    'expirarPedidosCron'
+    'expirarPedidosCron',
+    'tomarPedido'
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
@@ -352,6 +353,10 @@ switch ($action) {
 
     case 'expirarPedidosCron':
         (new PedidoLifecycleController())->expirarCron();
+        break;
+
+    case 'tomarPedido':
+        (new RepartidorController())->tomarPedido();
         break;
 
     case 'wompiWebhook':
