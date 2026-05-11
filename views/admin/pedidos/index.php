@@ -292,3 +292,43 @@
         background: rgba(239,68,68,0.25);
     }
 </style>
+
+<!-- Modal QR -->
+<div id="qr-overlay" onclick="cerrarQRSiFondo(event)">
+    <div id="qr-dialog">
+        <h3>QR del Pedido</h3>
+        <p>Pedido #<span id="qr-id-texto"></span></p>
+        <div id="qr-canvas-container"></div>
+        <button id="btn-cerrar-qr" onclick="cerrarQR()">Cerrar</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    function abrirQR(idPedido) {
+        document.getElementById('qr-id-texto').textContent = idPedido;
+
+        var container = document.getElementById('qr-canvas-container');
+        container.innerHTML = '';
+
+        document.getElementById('qr-overlay').classList.add('active');
+
+        new QRCode(container, {
+            text: String(idPedido),
+            width: 220,
+            height: 220,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    }
+
+    function cerrarQR() {
+        document.getElementById('qr-overlay').classList.remove('active');
+        document.getElementById('qr-canvas-container').innerHTML = '';
+    }
+
+    function cerrarQRSiFondo(e) {
+        if (e.target === document.getElementById('qr-overlay')) cerrarQR();
+    }
+</script>
