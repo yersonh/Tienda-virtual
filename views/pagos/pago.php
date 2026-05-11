@@ -672,35 +672,34 @@ function setWompiButtonLoading(loading, label) {
 }
 
 function openWompiCheckout(checkout) {
-    console.log('WidgetCheckout:', typeof WidgetCheckout);
-    console.log('checkout:', checkout);
-
     if (typeof WidgetCheckout === 'undefined') {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
 
-    if (!checkout?.public_key || !checkout?.reference || !checkout?.amount_in_cents || !checkout?.integrity_signature) {
-        console.error('Payload Wompi incompleto:', checkout);
+    const publicKey      = (typeof checkout?.public_key        === 'string') ? checkout.public_key.trim()        : '';
+    const reference      = (typeof checkout?.reference         === 'string') ? checkout.reference.trim()         : '';
+    const integrity      = (typeof checkout?.integrity_signature === 'string') ? checkout.integrity_signature.trim() : '';
+    const currency       = (typeof checkout?.currency          === 'string' && checkout.currency) ? checkout.currency : 'COP';
+    const amountInCents  = Math.round(Number(checkout?.amount_in_cents));
+    const redirectUrl    = (typeof checkout?.redirect_url      === 'string') ? checkout.redirect_url : '';
+
+    if (!publicKey || !reference || !integrity || !(amountInCents > 0)) {
+        console.error('Payload Wompi incompleto:', { publicKey, reference, integrity, amountInCents, raw: checkout });
         throw new Error('No se pudo preparar la informacion del pago.');
     }
 
     const widget = new WidgetCheckout({
-        currency: checkout.currency || 'COP',
-        amountInCents: Number(checkout.amount_in_cents),
-        reference: checkout.reference,
-        publicKey: checkout.public_key,
-        signature: {
-            integrity: checkout.integrity_signature
-        },
-        redirectUrl: checkout.redirect_url,
-    
+        currency,
+        amountInCents,
+        reference,
+        publicKey,
+        signature: { integrity },
+        redirectUrl,
     });
 
     widget.open((result) => {
         console.log('Wompi result:', result);
-
         sessionStorage.setItem(paymentCompletedKey, '1');
-
         window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
     });
 }

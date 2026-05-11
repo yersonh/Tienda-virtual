@@ -143,19 +143,31 @@ function openWompiRetry() {
         return;
     }
 
+    const publicKey     = (typeof wompiRetryCheckout?.public_key        === 'string') ? wompiRetryCheckout.public_key.trim()        : '';
+    const reference     = (typeof wompiRetryCheckout?.reference         === 'string') ? wompiRetryCheckout.reference.trim()         : '';
+    const integrity     = (typeof wompiRetryCheckout?.integrity_signature === 'string') ? wompiRetryCheckout.integrity_signature.trim() : '';
+    const currency      = (typeof wompiRetryCheckout?.currency          === 'string' && wompiRetryCheckout.currency) ? wompiRetryCheckout.currency : 'COP';
+    const amountInCents = Math.round(Number(wompiRetryCheckout?.amount_in_cents));
+    const redirectUrl   = (typeof wompiRetryCheckout?.redirect_url      === 'string') ? wompiRetryCheckout.redirect_url : '';
+
+    if (!publicKey || !reference || !integrity || !(amountInCents > 0)) {
+        console.error('Payload Wompi retry incompleto:', { publicKey, reference, integrity, amountInCents, raw: wompiRetryCheckout });
+        alert('No se pudo preparar la informacion del pago. Intenta de nuevo.');
+        return;
+    }
+
     const widget = new WidgetCheckout({
-        currency: wompiRetryCheckout.currency,
-        amountInCents: Number(wompiRetryCheckout.amount_in_cents),
-        reference: wompiRetryCheckout.reference,
-        publicKey: wompiRetryCheckout.public_key,
-        signature: {
-            integrity: wompiRetryCheckout.integrity_signature
-        },
-        redirectUrl: wompiRetryCheckout.redirect_url
+        currency,
+        amountInCents,
+        reference,
+        publicKey,
+        signature: { integrity },
+        redirectUrl,
     });
 
-    widget.open(() => {
-        window.location.href = wompiRetryCheckout.return_url || 'index.php?action=misPedidos&id=<?= $idPedidoRetry ?>';
+    widget.open((result) => {
+        console.log('Wompi retry result:', result);
+        window.location.href = wompiRetryCheckout.return_url || wompiRetryCheckout.redirect_url || 'index.php?action=misPedidos&id=<?= $idPedidoRetry ?>';
     });
 }
 
