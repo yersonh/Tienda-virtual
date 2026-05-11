@@ -1,4 +1,10 @@
 <!-- views/admin/pedidos/index.php -->
+<?php
+/** @var array $pedidos */
+/** @var array $estados */
+/** @var string|null $fecha_desde */
+/** @var string|null $fecha_hasta */
+?>
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h1 style="color: white; margin: 0;">Pedidos</h1>
@@ -54,6 +60,7 @@
                     <th>Ciudad</th>
                     <th>Dirección</th>
                     <th>Entrega Estimada</th>
+                    <th>QR</th>
                 </tr>
             </thead>
             <tbody>
@@ -95,11 +102,16 @@
                             <?= htmlspecialchars($pedido['direccion_envio'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?>
                         </td>
                         <td><?= htmlspecialchars($pedido['fecha_estimada_entrega'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></td>
+                        <td>
+                            <button class="btn-qr" onclick="abrirQR(<?= (int)$pedido['id_pedido'] ?>)">
+                                <i class="fas fa-qrcode"></i> QR
+                            </button>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">
+                        <td colspan="9" style="text-align: center; padding: 20px; color: #94a3b8;">
                             No hay pedidos disponibles
                         </td>
                     </tr>
@@ -203,4 +215,117 @@
             grid-template-columns: 1fr;
         }
     }
+    .btn-qr {
+        background: rgba(99,102,241,0.2);
+        border: 1px solid rgba(99,102,241,0.4);
+        color: #818cf8;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-qr:hover {
+        background: rgba(99,102,241,0.35);
+    }
+    #qr-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    #qr-overlay.active {
+        display: flex;
+    }
+    #qr-dialog {
+        background: #1e293b;
+        border: 1px solid rgba(99,102,241,0.3);
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
+        min-width: 280px;
+        position: relative;
+    }
+    #qr-dialog h3 {
+        color: #e2e8f0;
+        margin: 0 0 8px;
+        font-size: 18px;
+    }
+    #qr-dialog p {
+        color: #94a3b8;
+        margin: 0 0 20px;
+        font-size: 14px;
+    }
+    #qr-canvas-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    #qr-canvas-container canvas,
+    #qr-canvas-container img {
+        border-radius: 8px;
+    }
+    #btn-cerrar-qr {
+        background: rgba(239,68,68,0.15);
+        border: 1px solid rgba(239,68,68,0.3);
+        color: #f87171;
+        padding: 8px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    #btn-cerrar-qr:hover {
+        background: rgba(239,68,68,0.25);
+    }
 </style>
+
+<!-- Modal QR -->
+<div id="qr-overlay" onclick="cerrarQRSiFondo(event)">
+    <div id="qr-dialog">
+        <h3>QR del Pedido</h3>
+        <p id="qr-label">Pedido #<span id="qr-id-texto"></span></p>
+        <div id="qr-canvas-container"></div>
+        <button id="btn-cerrar-qr" onclick="cerrarQR()">Cerrar</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    let qrInstance = null;
+
+    function abrirQR(idPedido) {
+        document.getElementById('qr-id-texto').textContent = idPedido;
+
+        const container = document.getElementById('qr-canvas-container');
+        container.innerHTML = '';
+
+        qrInstance = new QRCode(container, {
+            text: String(idPedido),
+            width: 200,
+            height: 200,
+            colorDark: '#0f172a',
+            colorLight: '#f8fafc',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+
+        document.getElementById('qr-overlay').classList.add('active');
+    }
+
+    function cerrarQR() {
+        document.getElementById('qr-overlay').classList.remove('active');
+        document.getElementById('qr-canvas-container').innerHTML = '';
+        qrInstance = null;
+    }
+
+    function cerrarQRSiFondo(e) {
+        if (e.target === document.getElementById('qr-overlay')) cerrarQR();
+    }
+</script>
