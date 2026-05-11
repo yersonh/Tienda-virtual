@@ -12,10 +12,13 @@
 /** @var string|null $fecha_hasta */
 ?>
 <div style="padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">Pedidos</h1>
+    <div class="pedidos-header">
+        <div>
+            <h1 class="pedidos-titulo">Pedidos</h1>
+            <p class="pedidos-subtitulo">Gestión y seguimiento de órdenes</p>
+        </div>
         <a href="index.php?action=admin_pedidos_mapa" class="btn-mapa">
-            <i class="fas fa-map"></i> Ver Mapa
+            <i class="fas fa-map-marked-alt"></i> Ver Mapa
         </a>
     </div>
 
@@ -109,7 +112,7 @@
                         </td>
                         <td><?= htmlspecialchars($pedido['fecha_estimada_entrega'] ?? 'N/A', ENT_QUOTES, 'UTF-8') ?></td>
                         <td>
-                            <?php if ((int)($pedido['id_estado'] ?? 0) === 2): ?>
+                            <?php if (in_array((int)($pedido['id_estado'] ?? 0), [1, 2])): ?>
                             <button class="btn-qr" onclick="abrirQR(<?= (int)$pedido['id_pedido'] ?>)">
                                 <i class="fas fa-qrcode"></i> QR
                             </button>
@@ -130,6 +133,27 @@
 </div>
 
 <style>
+    .pedidos-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        background: rgba(30,41,59,0.6);
+        border: 1px solid rgba(56,189,248,0.1);
+        border-radius: 16px;
+        padding: 18px 24px;
+    }
+    .pedidos-titulo {
+        color: #f1f5f9;
+        margin: 0 0 4px;
+        font-size: 22px;
+        font-weight: 700;
+    }
+    .pedidos-subtitulo {
+        margin: 0;
+        font-size: 13px;
+        color: #64748b;
+    }
     .btn-mapa {
         background: linear-gradient(135deg, var(--accent), var(--accent-strong));
         color: #041522;
