@@ -224,12 +224,10 @@ BEGIN
         SET ID_ESTADO = 2
         WHERE ID_VENTA = p_id_venta
           AND ID_ESTADO = 1;
-    ELSIF v_estado IN ('DECLINED', 'ERROR', 'VOIDED') THEN
-        UPDATE PEDIDO
-        SET ID_ESTADO = 5
-        WHERE ID_VENTA = p_id_venta
-          AND ID_ESTADO = 1;
     END IF;
+    -- DECLINED / ERROR / VOIDED no cancelan el pedido inmediatamente.
+    -- El pedido queda en ID_ESTADO = 1 (Pendiente) para permitir reintentos.
+    -- SP_EXPIRAR_PEDIDOS lo cancela automaticamente despues de 15 minutos.
 END;
 /
 
@@ -255,7 +253,7 @@ BEGIN
     SET p.ID_ESTADO = 5
     WHERE p.ID_ESTADO = 1
       AND p.CREATED_AT IS NOT NULL
-      AND CAST(p.CREATED_AT AS TIMESTAMP) < SYSTIMESTAMP - INTERVAL '30' MINUTE
+      AND CAST(p.CREATED_AT AS TIMESTAMP) < SYSTIMESTAMP - INTERVAL '15' MINUTE
       AND NOT EXISTS (
           SELECT 1
           FROM PAGO pg

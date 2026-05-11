@@ -144,14 +144,30 @@ class CheckoutController {
         return $this->montoWompiCentavos($total);
     }
 
-    private function generarReferenciaWompi(int $idPedido, int $idVenta): string {
-        try {
-            $suffix = strtoupper(bin2hex(random_bytes(6)));
-        } catch (Throwable $e) {
-            $suffix = strtoupper(substr(hash('sha256', uniqid('', true) . microtime(true)), 0, 12));
+    private function contarIntentosWompi(int $idVenta): int {
+        $query = "SELECT NVL(REFERENCIA_WOMPI, '') AS REF
+                  FROM PAGO
+                  WHERE ID_VENTA = :id_venta
+                  FETCH FIRST 1 ROWS ONLY";
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            return 1;
         }
-
-        return sprintf('NVX-PED-%d-VENTA-%d-%s', $idPedido, $idVenta, $suffix);
+        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            oci_free_statement($stmt);
+            return 1;
+        }
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+        $ref = trim((string) ($row['REF'] ?? ''));
+        if ($ref === '') {
+            return 1;
+        }
+        if (preg_match('/TRY-(\d+)$/i', $ref, $m)) {
+            return (int) $m[1] + 1;
+        }
+        return 2;
     }
 
     private function firmaIntegridadWompi(string $referencia, int $amountInCents, string $currency, string $integritySecret): string {
@@ -231,7 +247,7 @@ class CheckoutController {
                          p.ID_ESTADO,
                          NVL(v.TOTAL, 0) AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (30 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (15 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
                   FROM PEDIDO p
                   INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
                   WHERE p.ID_PEDIDO = :id_pedido
@@ -266,7 +282,8 @@ class CheckoutController {
         $currency = 'COP';
         $realAmountInCents = $this->montoWompiCentavos($total);
         $amountInCents = $this->montoCheckoutWompiCentavos($total, $wompiTestMode);
-        $referencia = $this->generarReferenciaWompi($idPedido, $idVenta);
+        $tryNumber = $this->contarIntentosWompi($idVenta);
+        $referencia = sprintf('NVX-PED-%d-VENTA-%d-TRY-%d', $idPedido, $idVenta, $tryNumber);
         $integritySignature = $this->firmaIntegridadWompi($referencia, $amountInCents, $currency, $integritySecret);
         $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&id=' . $idPedido;
 

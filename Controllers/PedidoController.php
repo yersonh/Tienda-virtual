@@ -456,7 +456,7 @@ class PedidoController {
                          {$venta['fecha']} AS FECHA,
                          {$venta['total']} AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (30 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (15 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
                          CASE WHEN EXISTS (
                              SELECT 1
                              FROM PAGO pg
@@ -574,7 +574,7 @@ class PedidoController {
                          NVL(fp.ENVIO, 0) AS ENVIO,
                          NVL(fp.TOTAL, 0) AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (30 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (15 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
                          CASE WHEN EXISTS (
                              SELECT 1
                              FROM PAGO pg
