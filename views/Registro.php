@@ -6,6 +6,7 @@ $old = $_SESSION['old'] ?? [];
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title><?= htmlspecialchars('Registro', ENT_QUOTES, 'UTF-8') ?></title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
@@ -16,29 +17,32 @@ $old = $_SESSION['old'] ?? [];
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
+/* Tokens aligned with global navbar.php naming */
 :root {
     --bg-overlay-1: rgba(7,11,20,0.64);
     --bg-overlay-2: rgba(8,13,24,0.78);
     --card-bg: rgba(15,23,42,0.78);
-    --card-border: rgba(125,211,252,0.2);
-    --input-bg: rgba(15,23,42,0.72);
-    --input-text: #f8fafc;
-    --muted: #a8b5ca;
+    --border: rgba(125,211,252,0.2);
+    --soft-surface: rgba(15,23,42,0.72);
+    --text: #f8fafc;
+    --secondary: #a8b5ca;
     --accent: #38bdf8;
-    --accent-2: #2563eb;
+    --accent-strong: #2563eb;
     --shadow: 0 24px 70px rgba(2,6,23,0.46);
+    --radius: 14px;
+    --transition: 180ms ease;
     --page-bg-image: url('imagenes/Fondo.png');
 }
 [data-theme="light"] {
     --bg-overlay-1: rgba(255,255,255,0.78);
     --bg-overlay-2: rgba(241,245,249,0.9);
     --card-bg: rgba(255,255,255,0.9);
-    --card-border: rgba(14,165,233,0.18);
-    --input-bg: rgba(248,250,252,0.94);
-    --input-text: #122033;
-    --muted: #64748b;
+    --border: rgba(14,165,233,0.18);
+    --soft-surface: rgba(248,250,252,0.94);
+    --text: #122033;
+    --secondary: #64748b;
     --accent: #0284c7;
-    --accent-2: #2563eb;
+    --accent-strong: #2563eb;
     --shadow: 0 24px 60px rgba(100,116,139,0.2);
     --page-bg-image: url('imagenes/Fondoclaro.png');
 }
@@ -60,7 +64,7 @@ body {
     align-items:center;
     min-height:100vh;
     padding: 28px 16px;
-    color: var(--input-text);
+    color: var(--text);
 }
 
 /* 🔥 CONTENEDOR GLASS */
@@ -74,7 +78,7 @@ body {
     border-radius:26px;
     width:100%;
     box-shadow:var(--shadow);
-    border:1px solid var(--card-border);
+    border:1px solid var(--border);
     max-width:460px;
 }
 
@@ -100,7 +104,7 @@ h2 {
     left:16px;
     top:50%;
     transform:translateY(-50%);
-    color:var(--muted);
+    color:var(--secondary);
     width:18px;
     text-align:center;
     pointer-events:none;
@@ -111,8 +115,8 @@ h2 {
     padding:12px 44px 12px 48px;
     border-radius:10px;
     border:none;
-    background:var(--input-bg);
-    color:var(--input-text);
+    background:var(--soft-surface);
+    color:var(--text);
     box-sizing: border-box;
     padding-right: 40px;
     padding-left: 15px;   /* 🔥 quita espacio del icono izquierdo */
@@ -131,7 +135,7 @@ h2 {
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: var(--muted);
+    color: var(--secondary);
     cursor: pointer;
     padding: 0;
     display: flex;
@@ -202,9 +206,9 @@ h2 {
     width: 42px;
     height: 42px;
     border-radius: 12px;
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--border);
     background: var(--card-bg);
-    color: var(--input-text);
+    color: var(--text);
     cursor: pointer;
     font-size: 18px;
     backdrop-filter: blur(10px);
@@ -253,14 +257,14 @@ button:hover {
 .input-group input {
     padding: 14px 44px 14px 48px;
     border-radius: 14px;
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--border);
     font-weight: 700;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .input-group input::placeholder {
-    color: var(--muted);
+    color: var(--secondary);
     font-weight: 600;
 }
 
@@ -302,7 +306,7 @@ button:hover {
 button {
     padding: 14px;
     border-radius: 14px;
-    background: linear-gradient(135deg,var(--accent),var(--accent-2));
+    background: linear-gradient(135deg,var(--accent),var(--accent-strong));
     font-weight: 800;
     box-shadow: 0 16px 34px rgba(37,99,235,0.28);
     transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;

@@ -61,6 +61,7 @@ $publicas = [
     'tiendaFiltros',
     'productoDetalle',
     'stockProducto',
+    'productosRealtime',
     'recuperar',
     'solicitarRecuperacion',
     'restablecer',
@@ -167,6 +168,10 @@ switch ($action) {
 
     case 'stockProducto':
         (new TiendaController())->stockProductoJson();
+        break;
+
+    case 'productosRealtime':
+        (new TiendaController())->productosRealtimeJson();
         break;
 
     case 'agregarCarrito':

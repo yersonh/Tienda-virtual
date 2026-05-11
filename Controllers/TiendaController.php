@@ -564,6 +564,50 @@ class TiendaController {
         require_once __DIR__ . '/../views/tienda/detalle.php';
     }
 
+    public function productosRealtimeJson(): void {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store, max-age=0');
+
+        try {
+            $raw = trim((string) ($_GET['ids'] ?? ''));
+            if ($raw === '') {
+                echo json_encode(['success' => true, 'productos' => (object) []]);
+                exit();
+            }
+
+            $ids = array_values(array_unique(array_filter(
+                array_map('intval', explode(',', $raw)),
+                fn($id) => $id > 0
+            )));
+
+            if (empty($ids) || count($ids) > 60) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'IDs invalidos']);
+                exit();
+            }
+
+            $productos = $this->productoModel()->obtenerPorIds($ids);
+            $data = [];
+            foreach ($productos as $p) {
+                $ref = (int) ($p['id_referencia'] ?? 0);
+                if ($ref <= 0) continue;
+                $data[$ref] = [
+                    'id_referencia' => $ref,
+                    'stock'  => max(0, (int) ($p['stock_p'] ?? 0)),
+                    'precio' => (float) ($p['precio'] ?? 0),
+                    'estado' => (string) ($p['estado'] ?? '')
+                ];
+            }
+
+            echo json_encode(['success' => true, 'productos' => $data ?: (object) [], 'ts' => time()]);
+        } catch (Throwable $e) {
+            error_log('TiendaController::productosRealtimeJson: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false]);
+        }
+        exit();
+    }
+
     public function stockProductoJson(): void {
         header('Content-Type: application/json; charset=utf-8');
 

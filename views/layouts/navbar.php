@@ -591,10 +591,64 @@ textarea:focus {
 }
 
 /* =============================================
-   GLOBAL UTILS
+   GLOBAL UTILS + PERFORMANCE
    ============================================= */
-html { scroll-behavior: smooth; }
-img { max-width: 100%; height: auto; }
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+body {
+    overscroll-behavior-y: contain;
+    -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; display: block; }
+
+/* GPU compositing for animated elements */
+.side-panel,
+.filter-sidebar,
+.notif-dropdown,
+.mob-bottom-nav,
+.nxl-toast { will-change: transform; }
+
+/* Use only transform+opacity for transitions — no layout thrash */
+.nav-links a,
+.side-links a,
+.btn-ghost,
+.btn-primary,
+.cart-btn,
+.theme-toggle,
+.notif-btn,
+.side-menu-btn {
+    will-change: transform;
+}
+
+/* Scrollable containers */
+.option-list,
+.notif-list,
+.sidebar-body {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Global button touch target */
+button, [role="button"], a {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Form inputs — mobile font-size prevents iOS zoom */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),
+select,
+textarea {
+    min-height: 44px;
+}
+
+/* Responsive images */
+img, video {
+    max-width: 100%;
+    height: auto;
+}
 
 /* =============================================
    MOBILE SEARCH BAR (hidden desktop)
@@ -1055,10 +1109,11 @@ img { max-width: 100%; height: auto; }
         <span class="mob-label">Inicio</span>
     </a>
     <a href="index.php?action=tienda"
-       class="mob-nav-item <?= in_array($currentAction, ['tienda', 'productoDetalle', 'reacondicionados'], true) ? 'active' : '' ?>">
+       class="mob-nav-item <?= in_array($currentAction, ['tienda', 'productoDetalle'], true) ? 'active' : '' ?>">
         <i class="fas fa-store" aria-hidden="true"></i>
         <span class="mob-label">Productos</span>
     </a>
+    <?php if($logueado): ?>
     <a href="index.php?action=verCarrito"
        class="mob-nav-item <?= $currentAction === 'verCarrito' ? 'active' : '' ?>"
        aria-label="Carrito<?= $carritoCount > 0 ? ' (' . $carritoCount . ' items)' : '' ?>">
@@ -1068,7 +1123,6 @@ img { max-width: 100%; height: auto; }
         <?php endif; ?>
         <span class="mob-label">Carrito</span>
     </a>
-    <?php if($logueado): ?>
     <a href="index.php?action=misPedidos"
        class="mob-nav-item <?= $currentAction === 'misPedidos' ? 'active' : '' ?>">
         <i class="fas fa-bag-shopping" aria-hidden="true"></i>
@@ -1080,6 +1134,11 @@ img { max-width: 100%; height: auto; }
         <span class="mob-label">Perfil</span>
     </a>
     <?php else: ?>
+    <a href="index.php?action=reacondicionados"
+       class="mob-nav-item <?= $currentAction === 'reacondicionados' ? 'active' : '' ?>">
+        <i class="fas fa-tag" aria-hidden="true"></i>
+        <span class="mob-label">Ofertas</span>
+    </a>
     <a href="index.php?action=login"
        class="mob-nav-item <?= $currentAction === 'login' ? 'active' : '' ?>">
         <i class="fas fa-right-to-bracket" aria-hidden="true"></i>

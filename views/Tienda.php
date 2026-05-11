@@ -256,6 +256,8 @@
     display: grid;
     gap: 16px;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
 }
 .filter-group {
     display: grid;
@@ -567,17 +569,22 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
-    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 200ms ease, border-color 200ms ease;
     cursor: pointer;
     position: relative;
     flex: 0 0 280px;
     scroll-snap-align: start;
-    contain: content;
+    contain: layout style;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
 }
 .product-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--hover);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    transform: translateY(-3px);
+    border-color: var(--accent);
+}
+@media (hover: none) {
+    .product-card:hover { transform: none; }
+    .product-card:active { transform: scale(0.98); }
 }
 [data-theme="light"] .product-card {
     background: var(--card-bg);
@@ -604,7 +611,7 @@
 .card-img-wrap {
     background: #ffffff;
     border: 2px solid #000000;
-    height: 220px;
+    aspect-ratio: 4 / 3;
     border-radius: 18px;
     display: flex;
     align-items: center;
@@ -612,6 +619,7 @@
     overflow: hidden;
     position: relative;
     transition: background 0.6s ease;
+    contain: layout style;
 }
 [data-theme="light"] .card-img-wrap {
     background: #ffffff;
@@ -1023,10 +1031,96 @@
         width: 40px;
         height: 40px;
     }
+    /* Mobile: 2 cards side-by-side in carousel */
     .product-card {
-        flex-basis: 82vw;
-        max-width: 320px;
+        flex-basis: calc(50vw - 28px);
+        min-width: 148px;
+        max-width: 220px;
     }
+    /* Mobile detail/filtered grid: 2 columns */
+    .product-grid.detail-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        padding: 0 14px 16px !important;
+    }
+    .product-grid.detail-grid .product-card {
+        flex: initial;
+    }
+    /* Compact card body on mobile */
+    .card-body {
+        padding: 10px 12px 12px;
+    }
+    .card-name {
+        font-size: 12px;
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .card-meta {
+        gap: 6px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+    .meta-pill {
+        font-size: 10px;
+        padding: 2px 7px;
+    }
+    .card-compat { display: none; }
+    .card-price {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    /* Touch-sized add button */
+    .add-btn {
+        height: 38px;
+        min-height: 38px;
+        font-size: 11px;
+        border-radius: 9px;
+    }
+    .qty-btn {
+        width: 32px;
+        height: 38px;
+        font-size: 18px;
+    }
+    .qty-val { width: 26px; }
+    /* Image: fixed aspect-ratio on mobile */
+    .card-img-wrap {
+        height: auto;
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+    }
+    .card-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        max-width: unset;
+        max-height: unset;
+    }
+    /* Section header compact */
+    .section-header {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px 12px;
+    }
+    .section-title { font-size: 15px; }
+    .section-count { font-size: 10px; }
+    .see-all { display: none !important; }
+    /* Carousel padding */
+    .product-carousel { padding: 0 14px; }
+    /* Hero compact */
+    .hero { padding: 22px 14px 16px; }
+    .hero-title { font-size: 26px; letter-spacing: -1px; }
+    .hero-sub { font-size: 13px; }
+    /* Filters */
+    .filters { padding: 0 14px 16px; gap: 8px; }
+    /* Store card */
+    .store-card { margin: 12px auto 28px; }
+    /* Cat tabs */
+    .cat-tabs { padding: 0 14px 14px; gap: 6px; }
+    .cat-tab { font-size: 12px; padding: 6px 14px; }
 }
 
 </style>
@@ -1927,6 +2021,121 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     openFilterSidebar();
 }
 
+</script>
+
+<script>
+// TIEMPO REAL LIGERO — polling inteligente con IntersectionObserver
+(function () {
+    'use strict';
+
+    var visibleRefs = new Set();
+    var rtInterval = null;
+    var paused = false;
+
+    var io = ('IntersectionObserver' in window)
+        ? new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                var ref = parseInt(entry.target.dataset.reference || '0', 10);
+                if (!ref) return;
+                if (entry.isIntersecting) {
+                    visibleRefs.add(ref);
+                } else {
+                    visibleRefs.delete(ref);
+                }
+            });
+        }, { rootMargin: '300px 0px' })
+        : null;
+
+    function observeCards(root) {
+        root = root || document;
+        root.querySelectorAll('.product-card[data-reference]').forEach(function (card) {
+            if (io) io.observe(card);
+            else visibleRefs.add(parseInt(card.dataset.reference || '0', 10));
+        });
+    }
+
+    function patchCard(ref, data) {
+        var card = document.querySelector('.product-card[data-reference="' + ref + '"]');
+        if (!card) return;
+
+        var stock = Math.max(0, parseInt(data.stock || 0, 10));
+        if (card.dataset.stock === String(stock) && !data.precio) return;
+        card.dataset.stock = stock;
+
+        // Stock badge
+        var badge = card.querySelector('.meta-stock');
+        if (badge) {
+            var low = stock <= 4;
+            badge.classList.toggle('low', low);
+            var icon = low
+                ? '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.5 2.9 16.3A2 2 0 0 0 4.6 19h14.8a2 2 0 0 0 1.7-2.7L13.7 3.5a2 2 0 0 0-3.4 0z"/></svg>'
+                : '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>';
+            badge.innerHTML = '<span class="meta-icon" aria-hidden="true">' + icon + '</span>'
+                + (low ? 'Bajo ' : 'Disponible ') + stock + ' uds';
+        }
+
+        // Price
+        var precio = parseFloat(data.precio || 0);
+        if (precio > 0) {
+            card.dataset.precio = precio;
+            var priceEl = card.querySelector('.card-price');
+            if (priceEl) {
+                priceEl.innerHTML = '$' + Math.floor(precio).toLocaleString('es-CO') + ' <span>COP</span>';
+            }
+        }
+
+        // Sync qty/add controls
+        if (typeof syncProductControls === 'function') {
+            syncProductControls(ref, stock);
+        }
+    }
+
+    function fetchRealtime() {
+        if (paused || visibleRefs.size === 0) return;
+        var ids = Array.from(visibleRefs).slice(0, 50);
+        fetch('index.php?action=productosRealtime&ids=' + ids.join(','), {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }
+        })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+            if (!d || !d.success || !d.productos) return;
+            Object.keys(d.productos).forEach(function (ref) {
+                patchCard(parseInt(ref, 10), d.productos[ref]);
+            });
+        })
+        .catch(function () { /* silencioso — no interrumpir UI */ });
+    }
+
+    function startPolling() {
+        if (rtInterval) return;
+        rtInterval = setInterval(fetchRealtime, 8000);
+    }
+
+    function stopPolling() {
+        clearInterval(rtInterval);
+        rtInterval = null;
+    }
+
+    // Pause/resume con visibilidad de la pestaña
+    document.addEventListener('visibilitychange', function () {
+        paused = document.hidden;
+        if (!paused && !rtInterval) startPolling();
+    });
+
+    // Observar cards ya en el DOM
+    observeCards();
+    startPolling();
+
+    // Re-observar tras actualización de filtros
+    var _origApply = window.applyFilteredStoreResponse;
+    if (typeof _origApply === 'function') {
+        window.applyFilteredStoreResponse = function (data, viewParams, cat, requestKey) {
+            _origApply.call(this, data, viewParams, cat, requestKey);
+            setTimeout(function () { observeCards(); }, 80);
+        };
+    }
+})();
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
