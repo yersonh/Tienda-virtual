@@ -1851,416 +1851,393 @@ function redirectCompletedPaymentFromHistory(event) {
 
 window.addEventListener('pageshow', redirectCompletedPaymentFromHistory);
 
-function initPaymentPage() {
-    if (currentNavigation?.type !== 'back_forward') {
-        sessionStorage.removeItem(paymentCompletedKey);
-        sessionStorage.removeItem(paymentSubmittedKey);
+// ─── Module-level shared state ───────────────────────────────────────────────
+let _metodoInput = null;
+let _methodButtons = [];
+let _efectivo = null;
+let _tarjeta = null;
+let _savedPanel = null;
+let _savedMethodInput = null;
+let _savedCards = [];
+let _newCardFields = null;
+let _savedCardCvv = null;
+let _savedPaymentEmpty = null;
+let _savedPaymentTitle = null;
+let _savedPaymentSubtitle = null;
+let _standaloneCardForm = null;
+let _standaloneCardMethod = null;
+let _oneTimeCardMode = false;
+let _checkoutSaveCard = null;
+let _checkoutDefaultCard = null;
+let _wompiCardConfig = null;
+
+// ─── Pure utilities ───────────────────────────────────────────────────────────
+function setRequired(container, required) {
+    if (!container) return;
+    container.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.required = required;
+        field.disabled = !required;
+    });
+}
+
+function numericData(card, key) {
+    return Number(card?.dataset?.[key] || 0);
+}
+
+function selectedPaymentMethod() {
+    return Number(_metodoInput?.value || 0);
+}
+
+function isCardPaymentMethod(method) {
+    return method === 2 || method === 3;
+}
+
+function cardMatchesSelectedMethod(card) {
+    const method = selectedPaymentMethod();
+    return Boolean(card) && isCardPaymentMethod(method) && numericData(card, 'cardMethod') === method;
+}
+
+function showPaymentNotice(message, isError = false) {
+    showToast(message, isError ? 'error' : 'success');
+}
+
+function setWompiButtonLoading(loading, label = '') {
+    const button = document.querySelector('.payment-btn[form="payment-confirm-form"]');
+    if (!button) return;
+    button.disabled = loading;
+    if (loading) {
+        button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${label || 'Preparando pago'}`;
+    } else {
+        button.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg> Continuar al pago seguro';
+    }
+}
+
+function openWompiCheckout(checkout) {
+    if (typeof WidgetCheckout === 'undefined') {
+        throw new Error('No se pudo cargar la pasarela de pago');
     }
 
-    console.log('🔧 initPaymentPage ejecutado');
+    const widget = new WidgetCheckout({
+        currency: checkout.currency,
+        amountInCents: Number(checkout.amount_in_cents),
+        reference: checkout.reference,
+        publicKey: checkout.public_key,
+        signature: {
+            integrity: checkout.integrity_signature
+        },
+        redirectUrl: checkout.redirect_url,
+        paymentMethods: {
+            card: true,
+            nequi: true,
+            pse: true,
+            bancolombia_transfer: true,
+            bancolombia_qr: true,
+            cash: false,
+            suplus: false,
+            addi: false
+        }
+    });
 
-    const metodoInput = document.getElementById('metodo_pago');
-    const methodButtons = Array.from(document.querySelectorAll('.payment-method'));
-    const efectivo = document.getElementById('efectivo');
-    const tarjeta = document.getElementById('tarjeta');
+    widget.open((result) => {
+        const transaction = result?.transaction || {};
+        const status = String(transaction.status || '').toUpperCase();
+        sessionStorage.setItem(paymentCompletedKey, '1');
+
+        if (status === 'APPROVED') {
+            showPaymentNotice('Pago aprobado. Estamos esperando la confirmacion final para activar factura e historial.');
+        } else if (status) {
+            showPaymentNotice('La transaccion quedo con estado ' + status + '. Puedes revisar el pedido desde tu historial.', status !== 'PENDING');
+        } else {
+            showPaymentNotice('La pasarela cerro el checkout. Puedes revisar el estado desde tus pedidos.');
+        }
+
+        window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
+    });
+}
+
+function detectBrand(number) {
+    const digits = number.replace(/\D/g, '');
+    if (/^4\d{12}(\d{3})?(\d{3})?$/.test(digits)) return 'VISA';
+    if (/^(5[1-5]\d{14}|2(2[2-9]\d|[3-6]\d{2}|7[01]\d|720)\d{12})$/.test(digits)) return 'MASTERCARD';
+    return '';
+}
+
+async function loadWompiCardConfig() {
+    if (_wompiCardConfig) return _wompiCardConfig;
+    const response = await fetch('index.php?action=wompiTarjetasConfig', {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'fetch'
+        }
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success || !data.public_key) {
+        throw new Error(data.message || 'No se pudo cargar el servicio de tarjetas');
+    }
+    _wompiCardConfig = data;
+    document.querySelectorAll('[data-wompi-acceptance-link]').forEach((link) => {
+        link.href = data.acceptance_permalink || data.personal_auth_permalink || '#';
+    });
+    return data;
+}
+
+async function tokenizeStandaloneCard(form) {
+    const numberField = form.querySelector('#standalone-numero-tarjeta');
+    const holderField = form.querySelector('#standalone-titular-tarjeta');
+    const expField    = form.querySelector('#standalone-vencimiento-tarjeta');
+    const cvcField    = form.querySelector('#standalone-cvv-tarjeta');
+    const acceptance  = form.querySelector('#standalone-wompi-acceptance');
+    const number = numberField?.value.replace(/\D/g, '') || '';
+    const alias  = holderField?.value.trim() || '';
+    const exp    = expField?.value.trim() || '';
+    const cvc    = cvcField?.value.replace(/\D/g, '') || '';
+    const brand    = detectBrand(number);
+    const expMatch = exp.match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
+
+    if (!brand)    { throw new Error('Solo se permiten tarjetas VISA o MASTERCARD'); }
+    if (!expMatch) { throw new Error('Ingresa el vencimiento en formato MM/YYYY'); }
+
+    const expMonth = parseInt(expMatch[1], 10);
+    const expYear  = parseInt(expMatch[2], 10);
+    const now = new Date();
+    if (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < now.getMonth() + 1)) {
+        throw new Error('La tarjeta ingresada se encuentra vencida');
+    }
+    if (alias.length < 3 || cvc.length < 3) {
+        throw new Error('Completa alias y CVV para tokenizar la tarjeta');
+    }
+    if (!acceptance?.checked) {
+        throw new Error('Debes aceptar las politicas para guardar la tarjeta');
+    }
+
+    const config  = await loadWompiCardConfig();
+    console.log(config);
+    const baseUrl = String(config.public_key).startsWith('pub_test_')
+        ? 'https://sandbox.wompi.co/v1'
+        : 'https://production.wompi.co/v1';
+    const response = await fetch(`${baseUrl}/tokens/cards`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.public_key}`
+        },
+        body: JSON.stringify({
+            number,
+            cvc,
+            exp_month: expMatch[1],
+            exp_year:  expMatch[2].slice(-2),
+            card_holder: alias,
+            acceptance_token: config.acceptance_token
+        })
+    });
+    const rawText = await response.clone().text();
+    console.log('WOMPI RAW RESPONSE:', rawText);
+    const data = await response.json();
+    if (!response.ok || !data?.data?.id) {
+        throw new Error(data?.error?.reason || data?.message || 'No se pudo tokenizar la tarjeta');
+    }
+
+    const tokenData = data.data;
+    form.querySelector('#standalone-token-wompi').value      = tokenData.id;
+    form.querySelector('#standalone-marca').value            = String(tokenData.brand || brand).toUpperCase();
+    form.querySelector('#standalone-ultimos-4').value        = String(tokenData.last_four || number.slice(-4));
+    form.querySelector('#standalone-fecha-expiracion').value =
+        `${String(tokenData.exp_month || expMatch[1]).padStart(2, '0')}/20${String(tokenData.exp_year || expMatch[2].slice(-2)).slice(-2)}`;
+
+    numberField.value = '';
+    cvcField.value    = '';
+}
+
+// ─── Saved card state helpers ─────────────────────────────────────────────────
+function setSavedCardCvvActive(active) {
+    if (!_savedCardCvv) return;
+    _savedCardCvv.classList.toggle('is-visible', false);
+    _savedCardCvv.querySelectorAll('input').forEach((field) => {
+        field.disabled = true;
+        field.required = false;
+    });
+}
+
+function setNewCardFieldsEnabled(enabled) {
+    if (!_newCardFields) return;
+    _newCardFields.classList.toggle('is-hidden', !enabled);
+    _newCardFields.querySelectorAll('input').forEach((field) => {
+        field.disabled = !enabled;
+        field.required = enabled;
+    });
+    if (_checkoutSaveCard) {
+        _checkoutSaveCard.required = false;
+    }
+    if (_checkoutDefaultCard) {
+        _checkoutDefaultCard.required = false;
+        _checkoutDefaultCard.disabled = !enabled || !_checkoutSaveCard?.checked;
+        if (_checkoutDefaultCard.disabled) {
+            _checkoutDefaultCard.checked = false;
+        }
+    }
+}
+
+function clearActiveSavedCard() {
+    if (_savedMethodInput) {
+        _savedMethodInput.value = '';
+    }
+    _savedCards.forEach((card) => {
+        card.classList.remove('is-selected');
+        const input = card.querySelector('input[type="radio"]');
+        if (input) input.checked = false;
+    });
+    setSavedCardCvvActive(false);
+}
+
+function setActiveSavedCard(radio, options = {}) {
+    const { syncMethod = true, scrollCvv = false } = options;
+    if (!radio || radio.disabled) { clearActiveSavedCard(); return; }
+
+    const card = radio.closest('[data-saved-card]');
+    if (!card || numericData(card, 'active') !== 1) { clearActiveSavedCard(); return; }
+
+    const cardMethod = numericData(card, 'cardMethod');
+    if (syncMethod && isCardPaymentMethod(cardMethod)) {
+        _metodoInput.value = String(cardMethod);
+        if (_standaloneCardMethod) {
+            _standaloneCardMethod.value = String(cardMethod);
+        }
+    }
+
+    if (!cardMatchesSelectedMethod(card)) { clearActiveSavedCard(); return; }
+
+    _savedCards.forEach((item) => {
+        const input    = item.querySelector('input[type="radio"]');
+        const selected = item === card;
+        item.classList.toggle('is-selected', selected);
+        if (input) input.checked = selected;
+    });
+
+    if (_savedMethodInput) { _savedMethodInput.value = radio.value; }
+    setNewCardFieldsEnabled(false);
+    setSavedCardCvvActive(false);
+
+    if (scrollCvv) {
+        _savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function syncSavedCardsByMethod() {
+    const selectedMethod = selectedPaymentMethod();
+    const isCardMethod   = isCardPaymentMethod(selectedMethod);
+    let visibleCount  = 0;
+    let selectedRadio = null;
+
+    _savedCards.forEach((card) => {
+        const matches = isCardMethod && numericData(card, 'cardMethod') === selectedMethod;
+        const input   = card.querySelector('input[type="radio"]');
+        card.classList.toggle('is-hidden-by-method', !matches);
+        if (matches) { visibleCount += 1; }
+        if (matches && input && _savedMethodInput && input.value === _savedMethodInput.value && numericData(card, 'active') === 1) {
+            selectedRadio = input;
+        }
+    });
+
+    if (_savedPaymentEmpty) {
+        _savedPaymentEmpty.classList.toggle('is-visible', isCardMethod && visibleCount === 0);
+    }
+    if (_savedPaymentTitle)    { _savedPaymentTitle.textContent    = 'Tarjetas guardadas'; }
+    if (_savedPaymentSubtitle) { _savedPaymentSubtitle.textContent = 'Selecciona una tarjeta activa o registra una nueva.'; }
+
+    return { isCardMethod, visibleCount, selectedRadio };
+}
+
+function syncPaymentFields() {
+    const method = selectedPaymentMethod();
+    _efectivo?.classList.toggle('is-visible', false);
+    _tarjeta?.classList.toggle('is-visible', isCardPaymentMethod(method) && _oneTimeCardMode);
+    const oneTimeCardToggle = document.getElementById('one-time-card-toggle');
+    if (oneTimeCardToggle) {
+        oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
+    }
+    const savedState = syncSavedCardsByMethod();
+    if (_savedPanel) { _savedPanel.classList.toggle('is-visible', savedState.isCardMethod); }
+    setRequired(_efectivo, false);
+    setNewCardFieldsEnabled(isCardPaymentMethod(method) && _oneTimeCardMode);
+
+    if (savedState.isCardMethod) {
+        if (savedState.selectedRadio) {
+            _oneTimeCardMode = false;
+            setActiveSavedCard(savedState.selectedRadio, { syncMethod: false });
+        } else {
+            clearActiveSavedCard();
+        }
+    } else {
+        _oneTimeCardMode = false;
+        clearActiveSavedCard();
+    }
+
+    _methodButtons.forEach((button) => {
+        const active = Number(button.dataset.method || 0) === method;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-checked', active ? '1' : '0');
+    });
+}
+
+async function refreshPaymentMain(message = '', isError = false) {
+    const response = await fetch('index.php?action=pago', {
+        headers: {
+            'Accept': 'text/html',
+            'X-Requested-With': 'fetch'
+        }
+    });
+    const html = await response.text();
+    const doc  = new DOMParser().parseFromString(html, 'text/html');
+    const nextMain    = doc.querySelector('.payment-main');
+    const currentMain = document.querySelector('.payment-main');
+    if (nextMain && currentMain) {
+        currentMain.replaceWith(nextMain);
+        initSavedCardsSection();
+        initCardManagementForms();
+        showPaymentNotice(message, isError);
+    }
+}
+
+async function submitPaymentAjaxForm(form) {
+    const submitter = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
+    if (submitter) { submitter.disabled = true; }
+
+    try {
+        if (form.id === 'standalone-card-form') {
+            await tokenizeStandaloneCard(form);
+        }
+
+        const response = await fetch(form.action, {
+            method: form.method || 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'fetch'
+            },
+            body: new FormData(form)
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudo completar la accion');
+        }
+        await refreshPaymentMain(data.message || 'Accion completada');
+    } catch (error) {
+        showPaymentNotice(error.message || 'No se pudo completar la accion', true);
+    } finally {
+        if (submitter) { submitter.disabled = false; }
+    }
+}
+
+// ─── Init A: Main payment form — Wompi Widget ─────────────────────────────────
+function initMainPaymentForm() {
     const paymentForm = document.getElementById('payment-confirm-form');
+    console.log('🔧 initMainPaymentForm ejecutado');
     console.log('📋 paymentForm encontrado:', paymentForm);
 
-    if (paymentForm) {
-        paymentForm.dataset.processing = '0';
-    }
-    const savedPanel = document.getElementById('saved-payment-panel');
-    const savedMethodInput = document.getElementById('id_metodo_pago_usuario');
-    const savedCards = Array.from(document.querySelectorAll('[data-saved-card]'));
-    const newCardToggle = document.getElementById('new-card-toggle');
-    const newCardFields = document.getElementById('new-card-fields');
-    const savedCardCvv = document.getElementById('saved-card-cvv');
-    const savedPaymentEmpty = document.getElementById('saved-payment-empty');
-    const savedPaymentTitle = document.getElementById('saved-payment-title');
-    const savedPaymentSubtitle = document.getElementById('saved-payment-subtitle');
-    const standaloneCardForm = document.getElementById('standalone-card-form');
-    const standaloneCardMethod = document.getElementById('standalone-card-method');
-    const oneTimeCardToggle = document.getElementById('one-time-card-toggle');
-    const checkoutSaveCard = document.getElementById('checkout-save-card');
-    const checkoutDefaultCard = document.getElementById('checkout-default-card');
-    let oneTimeCardMode = false;
-    let wompiCardConfig = null;
+    if (!paymentForm) return;
+    paymentForm.dataset.processing = '0';
 
-    function setRequired(container, required) {
-        if (!container) return;
-        container.querySelectorAll('input, select, textarea').forEach((field) => {
-            field.required = required;
-            field.disabled = !required;
-        });
-    }
-
-    function numericData(card, key) {
-        return Number(card?.dataset?.[key] || 0);
-    }
-
-    function selectedPaymentMethod() {
-        return Number(metodoInput?.value || 0);
-    }
-
-    function isCardPaymentMethod(method) {
-        return method === 2 || method === 3;
-    }
-
-    function cardMatchesSelectedMethod(card) {
-        const method = selectedPaymentMethod();
-        return Boolean(card) && isCardPaymentMethod(method) && numericData(card, 'cardMethod') === method;
-    }
-
-    function setSavedCardCvvActive(active) {
-        if (!savedCardCvv) return;
-        savedCardCvv.classList.toggle('is-visible', false);
-        savedCardCvv.querySelectorAll('input').forEach((field) => {
-            field.disabled = true;
-            field.required = false;
-        });
-    }
-
-    function setNewCardFieldsEnabled(enabled) {
-        if (!newCardFields) return;
-        newCardFields.classList.toggle('is-hidden', !enabled);
-        newCardFields.querySelectorAll('input').forEach((field) => {
-            field.disabled = !enabled;
-            field.required = enabled;
-        });
-        if (checkoutSaveCard) {
-            checkoutSaveCard.required = false;
-        }
-        if (checkoutDefaultCard) {
-            checkoutDefaultCard.required = false;
-            checkoutDefaultCard.disabled = !enabled || !checkoutSaveCard?.checked;
-            if (checkoutDefaultCard.disabled) {
-                checkoutDefaultCard.checked = false;
-            }
-        }
-    }
-
-    function clearActiveSavedCard() {
-        if (savedMethodInput) {
-            savedMethodInput.value = '';
-        }
-        savedCards.forEach((card) => {
-            card.classList.remove('is-selected');
-            const input = card.querySelector('input[type="radio"]');
-            if (input) input.checked = false;
-        });
-        setSavedCardCvvActive(false);
-    }
-
-    function setActiveSavedCard(radio, options = {}) {
-        const { syncMethod = true, scrollCvv = false } = options;
-        if (!radio || radio.disabled) {
-            clearActiveSavedCard();
-            return;
-        }
-
-        const card = radio.closest('[data-saved-card]');
-        if (!card || numericData(card, 'active') !== 1) {
-            clearActiveSavedCard();
-            return;
-        }
-
-        const cardMethod = numericData(card, 'cardMethod');
-        if (syncMethod && isCardPaymentMethod(cardMethod)) {
-            metodoInput.value = String(cardMethod);
-            if (standaloneCardMethod) {
-                standaloneCardMethod.value = String(cardMethod);
-            }
-        }
-
-        if (!cardMatchesSelectedMethod(card)) {
-            clearActiveSavedCard();
-            return;
-        }
-
-        savedCards.forEach((item) => {
-            const input = item.querySelector('input[type="radio"]');
-            const selected = item === card;
-            item.classList.toggle('is-selected', selected);
-            if (input) input.checked = selected;
-        });
-
-        if (savedMethodInput) {
-            savedMethodInput.value = radio.value;
-        }
-        setNewCardFieldsEnabled(false);
-        setSavedCardCvvActive(false);
-
-        if (scrollCvv) {
-            savedCardCvv?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    function syncSavedCardsByMethod() {
-        const selectedMethod = selectedPaymentMethod();
-        const isCardMethod = isCardPaymentMethod(selectedMethod);
-        let visibleCount = 0;
-        let selectedRadio = null;
-
-        savedCards.forEach((card) => {
-            const matches = isCardMethod && numericData(card, 'cardMethod') === selectedMethod;
-            const input = card.querySelector('input[type="radio"]');
-            card.classList.toggle('is-hidden-by-method', !matches);
-            if (matches) {
-                visibleCount += 1;
-            }
-            if (matches && input && savedMethodInput && input.value === savedMethodInput.value && numericData(card, 'active') === 1) {
-                selectedRadio = input;
-            }
-        });
-
-        if (savedPaymentEmpty) {
-            savedPaymentEmpty.classList.toggle('is-visible', isCardMethod && visibleCount === 0);
-        }
-        if (savedPaymentTitle) {
-            savedPaymentTitle.textContent = isCardMethod ? 'Tarjetas guardadas' : 'Tarjetas guardadas';
-        }
-        if (savedPaymentSubtitle) {
-            savedPaymentSubtitle.textContent = 'Selecciona una tarjeta activa o registra una nueva.';
-        }
-
-        return { isCardMethod, visibleCount, selectedRadio };
-    }
-
-    function syncPaymentFields() {
-        const method = selectedPaymentMethod();
-        const val = String(method);
-        efectivo?.classList.toggle('is-visible', false);
-        tarjeta?.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
-        if (oneTimeCardToggle) {
-            oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
-        }
-        const savedState = syncSavedCardsByMethod();
-        if (savedPanel) {
-            savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
-        }
-        setRequired(efectivo, false);
-        setNewCardFieldsEnabled(isCardPaymentMethod(method) && oneTimeCardMode);
-
-        if (savedState.isCardMethod) {
-            if (savedState.selectedRadio) {
-                oneTimeCardMode = false;
-                setActiveSavedCard(savedState.selectedRadio, { syncMethod: false });
-            } else {
-                clearActiveSavedCard();
-            }
-        } else {
-            oneTimeCardMode = false;
-            clearActiveSavedCard();
-        }
-
-        methodButtons.forEach((button) => {
-            const active = Number(button.dataset.method || 0) === method;
-            button.classList.toggle('is-active', active);
-            button.setAttribute('aria-checked', active ? '1' : '0');
-        });
-    }
-
-    methodButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const previousMethod = metodoInput.value;
-            const nextMethod = Number(button.dataset.method || 0);
-            metodoInput.value = String(nextMethod);
-            if (standaloneCardForm && Number(previousMethod || 0) !== nextMethod) {
-                oneTimeCardMode = false;
-                standaloneCardForm.classList.remove('is-visible');
-                standaloneCardForm.reset();
-                if (standaloneCardMethod && isCardPaymentMethod(nextMethod)) {
-                    standaloneCardMethod.value = String(nextMethod);
-                }
-            }
-            if (!isCardPaymentMethod(nextMethod) && savedMethodInput) {
-                savedMethodInput.value = '';
-            }
-            syncPaymentFields();
-        });
-
-        button.addEventListener('keydown', (event) => {
-            if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
-            event.preventDefault();
-            const index = methodButtons.indexOf(button);
-            const direction = event.key === 'ArrowRight' ? 1 : -1;
-            const next = methodButtons[(index + direction + methodButtons.length) % methodButtons.length];
-            next.focus();
-            next.click();
-        });
-    });
-
-    savedCards.forEach((card) => {
-        card.addEventListener('click', () => {
-            const input = card.querySelector('input[type="radio"]');
-            if (!input) return;
-            oneTimeCardMode = false;
-            setActiveSavedCard(input);
-            syncPaymentFields();
-        });
-    });
-
-    document.querySelectorAll('input[name="saved_payment_choice"]').forEach((radio) => {
-        radio.addEventListener('change', () => {
-            oneTimeCardMode = false;
-            setActiveSavedCard(radio);
-            syncPaymentFields();
-        });
-    });
-
-    document.querySelectorAll('[data-use-saved-payment]').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const card = button.closest('[data-saved-card]');
-            const input = card.querySelector('input[type="radio"]');
-            if (!input) return;
-            oneTimeCardMode = false;
-            setActiveSavedCard(input, { scrollCvv: true });
-            syncPaymentFields();
-        });
-    });
-
-    document.querySelectorAll('[data-edit-payment]').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const card = button.closest('[data-saved-card]');
-            const panel = card?.querySelector('[data-payment-edit-panel]');
-            if (!panel) return;
-            document.querySelectorAll('[data-payment-edit-panel]').forEach((item) => {
-                if (item !== panel) item.classList.remove('is-visible');
-            });
-            panel.classList.toggle('is-visible');
-        });
-    });
-
-    document.querySelectorAll('[data-cancel-edit-payment]').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            event.stopPropagation();
-            button.closest('[data-payment-edit-panel]')?.classList.remove('is-visible');
-        });
-    });
-
-    newCardToggle?.addEventListener('click', () => {
-        const method = selectedPaymentMethod();
-        if (standaloneCardMethod && isCardPaymentMethod(method)) {
-            standaloneCardMethod.value = String(method);
-        }
-        oneTimeCardMode = false;
-        tarjeta?.classList.remove('is-visible');
-        setNewCardFieldsEnabled(false);
-        standaloneCardForm?.classList.add('is-visible');
-        standaloneCardForm?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    oneTimeCardToggle?.addEventListener('click', () => {
-        oneTimeCardMode = true;
-        standaloneCardForm?.classList.remove('is-visible');
-        standaloneCardForm?.reset();
-        clearActiveSavedCard();
-        syncPaymentFields();
-        newCardFields?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    checkoutSaveCard?.addEventListener('change', () => {
-        if (!checkoutDefaultCard) return;
-        checkoutDefaultCard.disabled = !checkoutSaveCard.checked;
-        if (checkoutDefaultCard.disabled) {
-            checkoutDefaultCard.checked = false;
-        }
-    });
-
-    syncPaymentFields();
-
-    document.getElementById('numero_tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 19);
-        event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-    });
-
-    document.getElementById('standalone-numero-tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
-        event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-    });
-
-    document.getElementById('vencimiento_tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
-        event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
-    });
-
-    document.getElementById('standalone-vencimiento-tarjeta')?.addEventListener('input', (event) => {
-        const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
-        event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
-    });
-
-    document.getElementById('standalone-cvv-tarjeta')?.addEventListener('input', (event) => {
-        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
-    });
-
-    document.querySelectorAll('[data-edit-exp]').forEach((field) => {
-        field.addEventListener('input', (event) => {
-            const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
-            event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
-        });
-    });
-
-    document.getElementById('cvv_tarjeta')?.addEventListener('input', (event) => {
-        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
-    });
-
-    function setWompiButtonLoading(loading, label = '') {
-        const button = document.querySelector('.payment-btn[form="payment-confirm-form"]');
-        if (!button) return;
-        button.disabled = loading;
-        if (loading) {
-            button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${label || 'Preparando pago'}`;
-        } else {
-            button.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg> Continuar al pago seguro';
-        }
-    }
-
-    function openWompiCheckout(checkout) {
-        if (typeof WidgetCheckout === 'undefined') {
-            throw new Error('No se pudo cargar la pasarela de pago');
-        }
-
-        const widget = new WidgetCheckout({
-            currency: checkout.currency,
-            amountInCents: Number(checkout.amount_in_cents),
-            reference: checkout.reference,
-            publicKey: checkout.public_key,
-            signature: {
-                integrity: checkout.integrity_signature
-            },
-            redirectUrl: checkout.redirect_url,
-            paymentMethods: {
-                card: true,
-                nequi: true,
-                pse: true,
-                bancolombia_transfer: true,
-                bancolombia_qr: true,
-                cash: false,
-                suplus: false,
-                addi: false
-            }
-        });
-
-        widget.open((result) => {
-            const transaction = result?.transaction || {};
-            const status = String(transaction.status || '').toUpperCase();
-            sessionStorage.setItem(paymentCompletedKey, '1');
-
-            if (status === 'APPROVED') {
-                showPaymentNotice('Pago aprobado. Estamos esperando la confirmacion final para activar factura e historial.');
-            } else if (status) {
-                showPaymentNotice('La transaccion quedo con estado ' + status + '. Puedes revisar el pedido desde tu historial.', status !== 'PENDING');
-            } else {
-                showPaymentNotice('La pasarela cerro el checkout. Puedes revisar el estado desde tus pedidos.');
-            }
-
-            window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
-        });
-    }
-
-    paymentForm?.addEventListener('submit', async (event) => {
+    paymentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         console.log('✅ SUBMIT PAYMENT FORM DISPARADO');
@@ -2270,17 +2247,17 @@ function initPaymentPage() {
         console.log('metodo_pago:', document.getElementById('metodo_pago')?.value);
 
         if (paymentForm.dataset.processing === '1') {
-            console.warn('⚠️ BLOQUEADO: paymentForm ya está procesando, ignorando submit');
+            console.warn('⚠️ BLOQUEADO: paymentForm ya esta procesando, ignorando submit');
             return;
         }
 
-        const method = selectedPaymentMethod();
+        const method   = selectedPaymentMethod();
         const expField = document.getElementById('vencimiento_tarjeta');
-        if (isCardPaymentMethod(method) && oneTimeCardMode && expField && expField.value) {
+        if (isCardPaymentMethod(method) && _oneTimeCardMode && expField && expField.value) {
             const expMatch = expField.value.trim().match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
             if (expMatch) {
                 const expMonth = parseInt(expMatch[1], 10);
-                const expYear = parseInt(expMatch[2], 10);
+                const expYear  = parseInt(expMatch[2], 10);
                 const now = new Date();
                 if (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < now.getMonth() + 1)) {
                     showPaymentNotice('La tarjeta ingresada se encuentra vencida', true);
@@ -2349,171 +2326,184 @@ function initPaymentPage() {
             showPaymentNotice(error.message || 'No se pudo abrir el pago', true);
         }
     });
+}
 
-    function showPaymentNotice(message, isError = false) {
-        showToast(message, isError ? 'error' : 'success');
-    }
+// ─── Init B: Saved cards section ──────────────────────────────────────────────
+function initSavedCardsSection() {
+    _metodoInput          = document.getElementById('metodo_pago');
+    _methodButtons        = Array.from(document.querySelectorAll('.payment-method'));
+    _efectivo             = document.getElementById('efectivo');
+    _tarjeta              = document.getElementById('tarjeta');
+    _savedPanel           = document.getElementById('saved-payment-panel');
+    _savedMethodInput     = document.getElementById('id_metodo_pago_usuario');
+    _savedCards           = Array.from(document.querySelectorAll('[data-saved-card]'));
+    _newCardFields        = document.getElementById('new-card-fields');
+    _savedCardCvv         = document.getElementById('saved-card-cvv');
+    _savedPaymentEmpty    = document.getElementById('saved-payment-empty');
+    _savedPaymentTitle    = document.getElementById('saved-payment-title');
+    _savedPaymentSubtitle = document.getElementById('saved-payment-subtitle');
+    _standaloneCardForm   = document.getElementById('standalone-card-form');
+    _standaloneCardMethod = document.getElementById('standalone-card-method');
+    _checkoutSaveCard     = document.getElementById('checkout-save-card');
+    _checkoutDefaultCard  = document.getElementById('checkout-default-card');
+    _oneTimeCardMode      = false;
 
-    async function refreshPaymentMain(message = '', isError = false) {
-        const response = await fetch('index.php?action=pago', {
-            headers: {
-                'Accept': 'text/html',
-                'X-Requested-With': 'fetch'
+    const newCardToggle    = document.getElementById('new-card-toggle');
+    const oneTimeCardToggle = document.getElementById('one-time-card-toggle');
+
+    _methodButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const previousMethod = _metodoInput.value;
+            const nextMethod = Number(button.dataset.method || 0);
+            _metodoInput.value = String(nextMethod);
+            if (_standaloneCardForm && Number(previousMethod || 0) !== nextMethod) {
+                _oneTimeCardMode = false;
+                _standaloneCardForm.classList.remove('is-visible');
+                _standaloneCardForm.reset();
+                if (_standaloneCardMethod && isCardPaymentMethod(nextMethod)) {
+                    _standaloneCardMethod.value = String(nextMethod);
+                }
             }
+            if (!isCardPaymentMethod(nextMethod) && _savedMethodInput) {
+                _savedMethodInput.value = '';
+            }
+            syncPaymentFields();
         });
-        const html = await response.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const nextMain = doc.querySelector('.payment-main');
-        const currentMain = document.querySelector('.payment-main');
-        if (nextMain && currentMain) {
-            currentMain.replaceWith(nextMain);
-            initPaymentPage();
-            showPaymentNotice(message, isError);
-        }
-    }
 
-    async function submitPaymentAjaxForm(form) {
-        const submitter = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
-        if (submitter) {
-            submitter.disabled = true;
-        }
+        button.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+            event.preventDefault();
+            const index     = _methodButtons.indexOf(button);
+            const direction = event.key === 'ArrowRight' ? 1 : -1;
+            const next      = _methodButtons[(index + direction + _methodButtons.length) % _methodButtons.length];
+            next.focus();
+            next.click();
+        });
+    });
 
-        try {
-            if (form.id === 'standalone-card-form') {
-                await tokenizeStandaloneCard(form);
-            }
+    _savedCards.forEach((card) => {
+        card.addEventListener('click', () => {
+            const input = card.querySelector('input[type="radio"]');
+            if (!input) return;
+            _oneTimeCardMode = false;
+            setActiveSavedCard(input);
+            syncPaymentFields();
+        });
+    });
 
-            const response = await fetch(form.action, {
-                method: form.method || 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'fetch'
-                },
-                body: new FormData(form)
+    document.querySelectorAll('input[name="saved_payment_choice"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+            _oneTimeCardMode = false;
+            setActiveSavedCard(radio);
+            syncPaymentFields();
+        });
+    });
+
+    document.querySelectorAll('[data-use-saved-payment]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const card  = button.closest('[data-saved-card]');
+            const input = card.querySelector('input[type="radio"]');
+            if (!input) return;
+            _oneTimeCardMode = false;
+            setActiveSavedCard(input, { scrollCvv: true });
+            syncPaymentFields();
+        });
+    });
+
+    document.querySelectorAll('[data-edit-payment]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const card  = button.closest('[data-saved-card]');
+            const panel = card?.querySelector('[data-payment-edit-panel]');
+            if (!panel) return;
+            document.querySelectorAll('[data-payment-edit-panel]').forEach((item) => {
+                if (item !== panel) item.classList.remove('is-visible');
             });
-            const data = await response.json();
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'No se pudo completar la accion');
-            }
-            await refreshPaymentMain(data.message || 'Accion completada');
-        } catch (error) {
-            showPaymentNotice(error.message || 'No se pudo completar la accion', true);
-        } finally {
-            if (submitter) {
-                submitter.disabled = false;
-            }
-        }
-    }
-
-    function detectBrand(number) {
-        const digits = number.replace(/\D/g, '');
-        if (/^4\d{12}(\d{3})?(\d{3})?$/.test(digits)) return 'VISA';
-        if (/^(5[1-5]\d{14}|2(2[2-9]\d|[3-6]\d{2}|7[01]\d|720)\d{12})$/.test(digits)) return 'MASTERCARD';
-        return '';
-    }
-
-    async function loadWompiCardConfig() {
-        if (wompiCardConfig) return wompiCardConfig;
-        const response = await fetch('index.php?action=wompiTarjetasConfig', {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'fetch'
-            }
+            panel.classList.toggle('is-visible');
         });
-        const data = await response.json();
-        if (!response.ok || !data.success || !data.public_key) {
-            throw new Error(data.message || 'No se pudo cargar el servicio de tarjetas');
-        }
-        wompiCardConfig = data;
-        document.querySelectorAll('[data-wompi-acceptance-link]').forEach((link) => {
-            link.href = data.acceptance_permalink || data.personal_auth_permalink || '#';
+    });
+
+    document.querySelectorAll('[data-cancel-edit-payment]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            button.closest('[data-payment-edit-panel]')?.classList.remove('is-visible');
         });
-        return data;
-    }
+    });
 
-    async function tokenizeStandaloneCard(form) {
-        const numberField = form.querySelector('#standalone-numero-tarjeta');
-        const holderField = form.querySelector('#standalone-titular-tarjeta');
-        const expField = form.querySelector('#standalone-vencimiento-tarjeta');
-        const cvcField = form.querySelector('#standalone-cvv-tarjeta');
-        const acceptance = form.querySelector('#standalone-wompi-acceptance');
-        const number = numberField?.value.replace(/\D/g, '') || '';
-        const alias = holderField?.value.trim() || '';
-        const exp = expField?.value.trim() || '';
-        const cvc = cvcField?.value.replace(/\D/g, '') || '';
-        const brand = detectBrand(number);
-        const expMatch = exp.match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
-
-        if (!brand) {
-            throw new Error('Solo se permiten tarjetas VISA o MASTERCARD');
+    newCardToggle?.addEventListener('click', () => {
+        const method = selectedPaymentMethod();
+        if (_standaloneCardMethod && isCardPaymentMethod(method)) {
+            _standaloneCardMethod.value = String(method);
         }
-        if (!expMatch) {
-            throw new Error('Ingresa el vencimiento en formato MM/YYYY');
-        }
+        _oneTimeCardMode = false;
+        _tarjeta?.classList.remove('is-visible');
+        setNewCardFieldsEnabled(false);
+        _standaloneCardForm?.classList.add('is-visible');
+        _standaloneCardForm?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
 
-        const expMonth = parseInt(expMatch[1], 10);
-        const expYear = parseInt(expMatch[2], 10);
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth() + 1;
+    oneTimeCardToggle?.addEventListener('click', () => {
+        _oneTimeCardMode = true;
+        _standaloneCardForm?.classList.remove('is-visible');
+        _standaloneCardForm?.reset();
+        clearActiveSavedCard();
+        syncPaymentFields();
+        _newCardFields?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
 
-        if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
-            throw new Error('La tarjeta ingresada se encuentra vencida');
-        }
+    _checkoutSaveCard?.addEventListener('change', () => {
+        if (!_checkoutDefaultCard) return;
+        _checkoutDefaultCard.disabled = !_checkoutSaveCard.checked;
+        if (_checkoutDefaultCard.disabled) { _checkoutDefaultCard.checked = false; }
+    });
 
-        if (alias.length < 3 || cvc.length < 3) {
-            throw new Error('Completa alias y CVV para tokenizar la tarjeta');
-        }
-        if (!acceptance?.checked) {
-            throw new Error('Debes aceptar las politicas para guardar la tarjeta');
-        }
+    document.getElementById('numero_tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 19);
+        event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    });
 
-        const config = await loadWompiCardConfig();
-        console.log(config);
-        const baseUrl = String(config.public_key).startsWith('pub_test_')
-            ? 'https://sandbox.wompi.co/v1'
-            : 'https://production.wompi.co/v1';
-        const response = await fetch(`${baseUrl}/tokens/cards`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.public_key}`
-            },
-            body: JSON.stringify({
-                number,
-                cvc,
-                exp_month: expMatch[1],
-                exp_year: expMatch[2].slice(-2),
-                card_holder: alias,
-                acceptance_token: config.acceptance_token
-            })
+    document.getElementById('standalone-numero-tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 16);
+        event.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    });
+
+    document.getElementById('vencimiento_tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
+        event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+    });
+
+    document.getElementById('standalone-vencimiento-tarjeta')?.addEventListener('input', (event) => {
+        const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
+        event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+    });
+
+    document.getElementById('standalone-cvv-tarjeta')?.addEventListener('input', (event) => {
+        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    document.querySelectorAll('[data-edit-exp]').forEach((field) => {
+        field.addEventListener('input', (event) => {
+            const digits = event.target.value.replace(/\D/g, '').slice(0, 6);
+            event.target.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
         });
-        const rawText = await response.clone().text();
-        console.log('WOMPI RAW RESPONSE:', rawText);
-        const data = await response.json();
-        if (!response.ok || !data?.data?.id) {
-            throw new Error(data?.error?.reason || data?.message || 'No se pudo tokenizar la tarjeta');
-        }
+    });
 
-        const tokenData = data.data;
-        form.querySelector('#standalone-token-wompi').value = tokenData.id;
-        form.querySelector('#standalone-marca').value = String(tokenData.brand || brand).toUpperCase();
-        form.querySelector('#standalone-ultimos-4').value = String(tokenData.last_four || number.slice(-4));
-        form.querySelector('#standalone-fecha-expiracion').value = `${String(tokenData.exp_month || expMatch[1]).padStart(2, '0')}/20${String(tokenData.exp_year || expMatch[2].slice(-2)).slice(-2)}`;
+    document.getElementById('cvv_tarjeta')?.addEventListener('input', (event) => {
+        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
+    });
 
-        numberField.value = '';
-        cvcField.value = '';
-    }
+    syncPaymentFields();
+}
 
+// ─── Init C: Card management forms (delete / edit / default / add new) ────────
+function initCardManagementForms() {
     document.querySelectorAll('form[id^="delete-payment-"], form[id^="default-payment-"], form[id^="edit-payment-"], #standalone-card-form').forEach((form) => {
         form.addEventListener('submit', (event) => {
             event.preventDefault();
             submitPaymentAjaxForm(form);
         });
     });
-
-    loadWompiCardConfig().catch(() => {});
 
     document.querySelectorAll('[data-confirm-cancel-payment]').forEach((form) => {
         form.addEventListener('submit', (event) => {
@@ -2689,7 +2679,16 @@ function initPaymentPage() {
     };
 }());
 
-document.addEventListener('DOMContentLoaded', initPaymentPage);
+document.addEventListener('DOMContentLoaded', () => {
+    if (currentNavigation?.type !== 'back_forward') {
+        sessionStorage.removeItem(paymentCompletedKey);
+        sessionStorage.removeItem(paymentSubmittedKey);
+    }
+    initMainPaymentForm();
+    initSavedCardsSection();
+    initCardManagementForms();
+    loadWompiCardConfig().catch(() => {});
+});
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
