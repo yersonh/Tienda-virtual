@@ -427,7 +427,8 @@ body[data-theme="light"] {
 }
 
 .card-img-wrap {
-    background: #12162a;
+    background: #ffffff;
+    border: 2px solid #000000;
     height: 220px;
     border-radius: 18px;
     display: flex;
@@ -439,7 +440,8 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .card-img-wrap {
-    background: linear-gradient(180deg, #f8fbff, #eef5fb);
+    background: #ffffff;
+    border-color: #000000;
 }
 
 .card-img-wrap::after {
