@@ -164,50 +164,75 @@ class UploadHelper {
         return 'image.php?folder=' . $carpeta . '&path=' . urlencode($archivo);
     }
     
+    // Ruta base para el volumen de devoluciones en Railway
+    public static function getDevolucionesBasePath(): string {
+        // Railway monta el volumen en /volume/
+        $volumePath = '/volume/devoluciones/';
+        if (is_dir($volumePath) || @mkdir($volumePath, 0755, true)) {
+            return $volumePath;
+        }
+        // Fallback local (desarrollo)
+        $localPath = __DIR__ . '/../../public/uploads/devoluciones/';
+        if (!is_dir($localPath)) {
+            @mkdir($localPath, 0755, true);
+        }
+        return $localPath;
+    }
+
     // Crear directorio para imágenes de devoluciones
-    public static function ensureDevolucionesDirectory() {
-        $path = self::getBasePath() . 'devoluciones/';
+    public static function ensureDevolucionesDirectory(): string {
+        $path = self::getDevolucionesBasePath();
         if (!is_dir($path)) {
-            mkdir($path, 0755, true);
+            @mkdir($path, 0755, true);
         }
         return $path;
     }
 
-    // Procesar imagen subida para devoluciones
-    public static function procesarImagenDevolucion($archivo, $id_devolucion_detalle, $orden) {
-        if (!in_array($archivo['type'], self::$config['allowed_types'])) {
-            throw new Exception("Tipo de archivo no permitido. Tipos permitidos: JPG, PNG, GIF, WEBP");
+    // Procesar imagen subida para devoluciones (segura: mime real, uniqid, volume path)
+    public static function procesarImagenDevolucion(array $archivo, int $id_devolucion_detalle, int $orden): string {
+        // Validar errores PHP upload
+        if (($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            throw new Exception('Error en la subida del archivo (código ' . ($archivo['error'] ?? -1) . ').');
         }
 
-        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-        if (!in_array($extension, self::$config['allowed_extensions'])) {
-            throw new Exception("Extensión no permitida");
+        // Validar tamaño
+        if (($archivo['size'] ?? 0) > self::$config['max_size']) {
+            throw new Exception('El archivo excede el tamaño máximo de 5 MB.');
         }
 
-        if ($archivo['size'] > self::$config['max_size']) {
-            throw new Exception("El archivo excede el tamaño máximo de 5MB");
+        // Verificar MIME real (no confiar en el tipo declarado por el cliente)
+        $mimeReal = mime_content_type($archivo['tmp_name']);
+        $mimeExtMap = [
+            'image/jpeg' => 'jpg',
+            'image/jpg'  => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+        ];
+        if (!isset($mimeExtMap[$mimeReal])) {
+            throw new Exception('Tipo de archivo no permitido. Solo se aceptan JPG, PNG y WEBP.');
         }
 
-        $nombre        = time() . '_devd_' . $id_devolucion_detalle . '_' . $orden . '.' . $extension;
-        $directorio    = self::ensureDevolucionesDirectory();
-        $rutaAbsoluta  = $directorio . $nombre;
-        $rutaRelativa  = 'uploads/devoluciones/' . $nombre;
+        $extension    = $mimeExtMap[$mimeReal];
+        $nombre       = uniqid('DEV_', true) . '.' . $extension;
+        $directorio   = self::ensureDevolucionesDirectory();
+        $rutaAbsoluta = $directorio . $nombre;
+        // Ruta relativa guardada en Oracle: /devoluciones/archivo.ext
+        $rutaRelativa = '/devoluciones/' . $nombre;
 
-        if (move_uploaded_file($archivo['tmp_name'], $rutaAbsoluta)) {
-            self::redimensionarImagen($rutaAbsoluta, $extension);
-            return $rutaRelativa;
+        if (!move_uploaded_file($archivo['tmp_name'], $rutaAbsoluta)) {
+            throw new Exception('No se pudo guardar la imagen de devolución. Verifica permisos en ' . $directorio);
         }
 
-        throw new Exception("Error al guardar la imagen de devolución");
+        error_log('[UploadHelper] imagen devolución guardada: ' . $rutaAbsoluta);
+        return $rutaRelativa;
     }
 
-    // Obtener la URL para imágenes de devoluciones
-    public static function getDevolucionImageUrl($rutaRelativa) {
+    // Obtener la URL para imágenes de devoluciones (usa image.php como proxy)
+    public static function getDevolucionImageUrl(string $rutaRelativa): string {
         if (empty($rutaRelativa)) {
             return self::getDefaultPhoto();
         }
-        $partes  = explode('/', $rutaRelativa);
-        $archivo = end($partes);
+        $archivo = basename($rutaRelativa);
         return 'image.php?folder=devoluciones&path=' . urlencode($archivo);
     }
 

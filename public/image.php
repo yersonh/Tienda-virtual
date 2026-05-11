@@ -9,24 +9,39 @@ if (empty($ruta)) {
     die('Imagen no encontrada');
 }
 
-// Limpiar la ruta para evitar ataques (path traversal)
-$ruta = basename($ruta);
+// Limpiar la ruta para evitar path-traversal
+$ruta    = basename($ruta);
 $carpeta = $_GET['folder'] ?? 'productos';
 
-// Validar carpeta permitida
-$carpetasPermitidas = ['productos', 'profiles', 'temp'];
-if (!in_array($carpeta, $carpetasPermitidas)) {
-    header("HTTP/1.0 403 Forbidden");
+// Carpetas permitidas y su ruta base en Railway
+$carpetasConfig = [
+    'productos'    => '/uploads/productos/',
+    'profiles'     => '/uploads/profiles/',
+    'temp'         => '/uploads/temp/',
+    // Devoluciones usa el volumen separado en /volume/
+    'devoluciones' => '/volume/devoluciones/',
+];
+
+if (!isset($carpetasConfig[$carpeta])) {
+    header('HTTP/1.0 403 Forbidden');
     die('Acceso denegado');
 }
 
-// Construir la ruta absoluta en el volumen
-$rutaArchivo = '/uploads/' . $carpeta . '/' . $ruta;
+$baseDir     = $carpetasConfig[$carpeta];
+$rutaArchivo = $baseDir . $ruta;
 
-// Verificar si el archivo existe
+// Para devoluciones, si no existe en /volume/ intentar fallback local (dev)
+if ($carpeta === 'devoluciones' && !file_exists($rutaArchivo)) {
+    $fallback = __DIR__ . '/../public/uploads/devoluciones/' . $ruta;
+    if (file_exists($fallback)) {
+        $rutaArchivo = $fallback;
+    }
+}
+
+// Verificar que el archivo existe
 if (!file_exists($rutaArchivo)) {
-    header("HTTP/1.0 404 Not Found");
-    die('Archivo no encontrado: ' . $rutaArchivo);
+    header('HTTP/1.0 404 Not Found');
+    die('Archivo no encontrado');
 }
 
 $modifiedTime = filemtime($rutaArchivo);

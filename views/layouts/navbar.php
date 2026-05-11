@@ -12,6 +12,17 @@ $carritoCount = $logueado
 
 $currentAction = $_GET['action'] ?? 'nosotros';
 
+// Unread notification count for bell badge
+$notifNoLeidas = 0;
+if ($logueado) {
+    try {
+        require_once __DIR__ . '/../../config/database.php';
+        require_once __DIR__ . '/../../models/NotificacionModel.php';
+        $notifNoLeidas = (new NotificacionModel(Database::getConnection()))
+            ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
+    } catch (Throwable $_e) { /* silencioso */ }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -801,6 +812,104 @@ img { max-width: 100%; height: auto; }
     .cart-grid { grid-template-columns: 1fr !important; }
     .cart-summary { position: relative !important; top: auto !important; }
 }
+
+/* =============================================
+   NOTIFICATION BELL
+   ============================================= */
+.notif-anchor { position: relative; }
+.notif-btn {
+    position: relative;
+    background: var(--soft-surface);
+    border: 1px solid var(--border);
+    color: var(--secondary);
+    width: 42px; height: 42px;
+    border-radius: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+    transition: transform var(--transition), border-color var(--transition), color var(--transition), background var(--transition);
+}
+.notif-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+.notif-badge {
+    position: absolute;
+    top: -7px; right: -7px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px; font-weight: 900;
+    min-width: 18px; height: 18px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 3px; line-height: 1;
+    pointer-events: none;
+}
+.notif-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: -4px;
+    width: min(360px, calc(100vw - 28px));
+    background: rgba(7, 13, 26, 0.97);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(2,6,23,0.46);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9000;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 420px;
+}
+[data-theme="light"] .notif-dropdown {
+    background: rgba(247,252,255,0.98);
+    box-shadow: 0 24px 60px rgba(15,55,90,0.18);
+}
+.notif-dropdown.is-open { display: flex; }
+.notif-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.notif-head-title { font-weight: 900; font-size: 14px; }
+.notif-mark-read {
+    background: none; border: none;
+    color: var(--accent); font-size: 12px; font-weight: 800;
+    cursor: pointer; padding: 4px 8px; border-radius: 8px;
+    font-family: inherit;
+    transition: background var(--transition);
+}
+.notif-mark-read:hover { background: rgba(34,211,238,0.1); }
+.notif-list { overflow-y: auto; flex: 1; }
+.notif-empty {
+    padding: 32px 16px; text-align: center;
+    color: var(--secondary); font-size: 13px;
+}
+.notif-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(56,189,248,0.07);
+    text-decoration: none; color: var(--text);
+    transition: background var(--transition);
+}
+.notif-item:hover { background: var(--soft-surface); }
+.notif-item.unread { background: rgba(34,211,238,0.04); }
+.notif-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 5px;
+}
+.notif-dot.info    { background: #38bdf8; }
+.notif-dot.success { background: #4ade80; }
+.notif-dot.warning { background: #fbbf24; }
+.notif-dot.error   { background: #f87171; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-titulo  { font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.3; }
+.notif-mensaje { font-size: 12px; color: var(--secondary); margin-top: 2px; line-height: 1.4;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-fecha   { font-size: 10px; color: var(--secondary); margin-top: 4px; opacity: 0.75; }
+@media (max-width: 640px) {
+    .notif-btn { width: 40px !important; height: 40px !important; }
+    .notif-dropdown { right: -2px; width: calc(100vw - 24px); max-height: 360px; }
+}
 </style>
 </head>
 
@@ -874,6 +983,21 @@ img { max-width: 100%; height: auto; }
         <button class="btn-primary" onclick="location.href='index.php?action=registro'"><?= htmlspecialchars('Registro', ENT_QUOTES, 'UTF-8') ?></button>
       <?php endif; ?>
       <?php if($logueado): ?>
+      <div class="notif-anchor" id="notif-anchor">
+          <button class="notif-btn" id="notif-toggle-btn" aria-label="Notificaciones" type="button">
+              <i class="fas fa-bell"></i>
+              <span class="notif-badge" id="notif-badge"<?= $notifNoLeidas > 0 ? '' : ' style="display:none"' ?>><?= min($notifNoLeidas, 99) ?></span>
+          </button>
+          <div class="notif-dropdown" id="notif-dropdown" role="dialog" aria-label="Notificaciones">
+              <div class="notif-head">
+                  <span class="notif-head-title">Notificaciones</span>
+                  <button class="notif-mark-read" id="notif-mark-read" type="button">Marcar le&#237;das</button>
+              </div>
+              <div class="notif-list" id="notif-list">
+                  <div class="notif-empty">Cargando...</div>
+              </div>
+          </div>
+      </div>
         <button class="cart-btn" onclick="location.href='index.php?action=verCarrito'" aria-label="<?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?>">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="9" cy="20" r="1"></circle>
@@ -1102,5 +1226,102 @@ function showToast(message, type = 'success') {
     toast.querySelector('.nxl-toast-close').addEventListener('click', dismiss);
     setTimeout(dismiss, 2000);
 }
+
+// ── NOTIFICATION BELL ─────────────────────────────────────────────────────────
+(function () {
+    var btn      = document.getElementById('notif-toggle-btn');
+    var dropdown = document.getElementById('notif-dropdown');
+    var list     = document.getElementById('notif-list');
+    var badge    = document.getElementById('notif-badge');
+    var markBtn  = document.getElementById('notif-mark-read');
+    var anchor   = document.getElementById('notif-anchor');
+    if (!btn || !dropdown) return;
+
+    var loaded = false;
+
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function setBadge(n) {
+        n = parseInt(n, 10) || 0;
+        if (!badge) return;
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.style.display = n > 0 ? 'flex' : 'none';
+    }
+    function renderItems(items) {
+        if (!items || items.length === 0) {
+            list.innerHTML = '<div class="notif-empty">Sin notificaciones aún.</div>';
+            return;
+        }
+        var colorMap = { info:'info', success:'success', warning:'warning', error:'error' };
+        list.innerHTML = items.map(function (it) {
+            var url    = it.url && it.url.trim() ? it.url.trim() : null;
+            var tag    = url ? 'a' : 'div';
+            var href   = url ? ' href="' + escHtml(url) + '"' : '';
+            var cls    = 'notif-item' + (it.leida == 0 ? ' unread' : '');
+            var dot    = colorMap[it.tipo] || 'info';
+            return '<' + tag + href + ' class="' + cls + '">'
+                + '<span class="notif-dot ' + dot + '"></span>'
+                + '<div class="notif-body">'
+                +   '<div class="notif-titulo">'  + escHtml(it.titulo || '') + '</div>'
+                + (it.mensaje ? '<div class="notif-mensaje">' + escHtml(it.mensaje) + '</div>' : '')
+                +   '<div class="notif-fecha">'   + escHtml(it.fecha_creacion || '') + '</div>'
+                + '</div>'
+                + '</' + tag + '>';
+        }).join('');
+    }
+    function fetchNotifs() {
+        fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.ok) { renderItems(d.items); setBadge(d.no_leidas); }
+                else { list.innerHTML = '<div class="notif-empty">Sin notificaciones.</div>'; }
+                loaded = true;
+            })
+            .catch(function () {
+                list.innerHTML = '<div class="notif-empty">Error al cargar.</div>';
+                loaded = true;
+            });
+    }
+    function openDropdown()  { dropdown.classList.add('is-open'); if (!loaded) fetchNotifs(); }
+    function closeDropdown() { dropdown.classList.remove('is-open'); }
+
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dropdown.classList.contains('is-open') ? closeDropdown() : openDropdown();
+    });
+    document.addEventListener('click', function (e) {
+        if (anchor && !anchor.contains(e.target)) closeDropdown();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDropdown();
+    });
+
+    if (markBtn) {
+        markBtn.addEventListener('click', function () {
+            fetch('index.php?action=marcarNotificacionesLeidas', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (d.ok) {
+                    setBadge(0);
+                    list.querySelectorAll('.notif-item.unread').forEach(function (el) {
+                        el.classList.remove('unread');
+                    });
+                }
+            });
+        });
+    }
+
+    // Refresh badge every 90 s without reopening the dropdown
+    setInterval(function () {
+        fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
+    }, 90000);
+})();
 
 </script>

@@ -201,7 +201,7 @@ class DevolucionModel {
     }
 
     private function obtenerImagenesDetalle(int $idDevolucionDetalle): array {
-        $sql = "SELECT ID_IMAGEN, URL
+        $sql = "SELECT ID_IMAGEN, RUTA_IMAGEN, TIPO_USUARIO, TO_CHAR(FECHA_SUBIDA,'DD/MM/YYYY') AS FECHA_SUBIDA
                   FROM DEVOLUCION_IMAGEN
                  WHERE ID_DEVOLUCION_DETALLE = :id_det
                  ORDER BY ID_IMAGEN";
@@ -288,14 +288,15 @@ class DevolucionModel {
         return (int) $outId;
     }
 
-    public function guardarImagenDevolucion(int $idDevolucionDetalle, string $rutaRelativa): void {
+    public function guardarImagenDevolucion(int $idDevolucionDetalle, string $rutaRelativa, string $tipoUsuario = 'CLIENTE'): void {
         $sql = "INSERT INTO DEVOLUCION_IMAGEN
-                       (ID_IMAGEN, ID_DEVOLUCION_DETALLE, URL)
-                VALUES (SEQ_DEVOLUCION_IMAGEN.NEXTVAL, :id_det, :url)";
+                       (ID_IMAGEN, ID_DEVOLUCION_DETALLE, RUTA_IMAGEN, TIPO_USUARIO, FECHA_SUBIDA)
+                VALUES (SEQ_DEVOLUCION_IMAGEN.NEXTVAL, :id_det, :ruta, :tipo, SYSDATE)";
 
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_det', $idDevolucionDetalle, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':url',    $rutaRelativa);
+        oci_bind_by_name($stmt, ':ruta',   $rutaRelativa);
+        oci_bind_by_name($stmt, ':tipo',   $tipoUsuario);
         $this->exec($stmt);
         oci_free_statement($stmt);
     }

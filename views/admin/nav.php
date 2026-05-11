@@ -2,6 +2,14 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+$adminNotifNoLeidas = 0;
+try {
+    require_once __DIR__ . '/../../config/database.php';
+    require_once __DIR__ . '/../../models/NotificacionModel.php';
+    $adminNotifNoLeidas = (new NotificacionModel(Database::getConnection()))
+        ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
+} catch (Throwable $_ae) { /* silencioso */ }
 ?>
 
 <!DOCTYPE html>
@@ -443,6 +451,96 @@ if (session_status() === PHP_SESSION_NONE) {
     .main-content .table td {
         border-color: var(--panel-line);
     }
+
+    /* ── ADMIN NOTIFICATION BELL ── */
+    .admin-notif-wrap { position: relative; }
+    .admin-notif-btn {
+        position: relative;
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-line);
+        color: var(--sidebar-text);
+        width: 40px; height: 40px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; flex-shrink: 0;
+        transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .admin-notif-btn:hover { border-color: #38bdf8; color: #38bdf8; }
+    .admin-notif-badge {
+        position: absolute;
+        top: -6px; right: -6px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 10px; font-weight: 900;
+        min-width: 17px; height: 17px;
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0 3px; line-height: 1;
+        pointer-events: none;
+    }
+    .admin-notif-dropdown {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        width: min(340px, calc(100vw - 28px));
+        background: rgba(7, 11, 20, 0.97);
+        border: 1px solid var(--panel-line);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(2,6,23,0.48);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        z-index: 9000;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        max-height: 380px;
+    }
+    [data-theme="light"] .admin-notif-dropdown {
+        background: rgba(247,252,255,0.98);
+        box-shadow: 0 20px 50px rgba(15,55,90,0.18);
+    }
+    .admin-notif-dropdown.is-open { display: flex; }
+    .admin-notif-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px 8px;
+        border-bottom: 1px solid var(--panel-line);
+        flex-shrink: 0;
+        font-size: 13px; font-weight: 900;
+    }
+    .admin-notif-mark {
+        background: none; border: none;
+        color: #38bdf8; font-size: 12px; font-weight: 800;
+        cursor: pointer; padding: 3px 7px; border-radius: 7px;
+        font-family: inherit;
+        transition: background 0.15s;
+    }
+    .admin-notif-mark:hover { background: rgba(56,189,248,0.12); }
+    .admin-notif-list { overflow-y: auto; flex: 1; }
+    .admin-notif-empty {
+        padding: 28px 14px; text-align: center;
+        color: var(--panel-muted); font-size: 13px;
+    }
+    .admin-notif-item {
+        display: flex; gap: 10px; align-items: flex-start;
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(125,211,252,0.07);
+        text-decoration: none; color: var(--sidebar-text);
+        transition: background 0.15s;
+        font-size: 13px;
+    }
+    .admin-notif-item:hover { background: var(--panel-soft); }
+    .admin-notif-item.unread { background: rgba(56,189,248,0.05); }
+    .admin-nd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .admin-nd.info    { background: #38bdf8; }
+    .admin-nd.success { background: #4ade80; }
+    .admin-nd.warning { background: #fbbf24; }
+    .admin-nd.error   { background: #f87171; }
+    .admin-nb { flex: 1; min-width: 0; }
+    .admin-nt { font-weight: 800; line-height: 1.3; }
+    .admin-nm { color: var(--panel-muted); margin-top: 2px; line-height: 1.4;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-nf { font-size: 10px; color: var(--panel-muted); margin-top: 3px; opacity: 0.75; }
 </style>
 </head>
 <body data-theme="dark">
@@ -474,6 +572,9 @@ if (session_status() === PHP_SESSION_NONE) {
                 <a href="index.php?action=admin_devoluciones" class="nav-link">
                     <i class="fas fa-rotate-left"></i>
                     <span><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></span>
+                    <?php if ($adminNotifNoLeidas > 0): ?>
+                    <span class="nav-badge"><?= min($adminNotifNoLeidas, 99) ?></span>
+                    <?php endif; ?>
                 </a>
             </div>
 
@@ -531,12 +632,27 @@ if (session_status() === PHP_SESSION_NONE) {
     </aside>
 
     <main class="main-content">
-        <!-- MOBILE HEADER — hamburger + logo, visible only on ≤768px -->
+        <!-- MOBILE HEADER — hamburger + logo + notifications, visible only on ≤768px -->
         <div class="admin-mobile-header">
             <button class="admin-hamburger" id="admin-sidebar-toggle" type="button" aria-label="Abrir menu">
                 <i class="fas fa-bars"></i>
             </button>
             <span class="admin-mobile-logo">NAYLEX STORE</span>
+            <div class="admin-notif-wrap" id="admin-notif-wrap">
+                <button class="admin-notif-btn" id="admin-notif-btn" type="button" aria-label="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span class="admin-notif-badge" id="admin-notif-badge"<?= $adminNotifNoLeidas > 0 ? '' : ' style="display:none"' ?>><?= min($adminNotifNoLeidas, 99) ?></span>
+                </button>
+                <div class="admin-notif-dropdown" id="admin-notif-dropdown">
+                    <div class="admin-notif-head">
+                        <span>Notificaciones</span>
+                        <button class="admin-notif-mark" id="admin-notif-mark" type="button">Marcar le&#237;das</button>
+                    </div>
+                    <div class="admin-notif-list" id="admin-notif-list">
+                        <div class="admin-notif-empty">Cargando...</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="admin-sidebar-backdrop" id="admin-sidebar-backdrop"></div>
 
@@ -574,6 +690,99 @@ adminThemeToggle.addEventListener('click', () => {
 });
 
 applyAdminTheme(localStorage.getItem('theme') || 'dark');
+
+// Admin notification bell
+(function () {
+    var btn      = document.getElementById('admin-notif-btn');
+    var dropdown = document.getElementById('admin-notif-dropdown');
+    var list     = document.getElementById('admin-notif-list');
+    var badge    = document.getElementById('admin-notif-badge');
+    var markBtn  = document.getElementById('admin-notif-mark');
+    var wrap     = document.getElementById('admin-notif-wrap');
+    if (!btn || !dropdown) return;
+
+    var loaded = false;
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function setBadge(n) {
+        n = parseInt(n, 10) || 0;
+        if (!badge) return;
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.style.display = n > 0 ? 'flex' : 'none';
+    }
+    function renderItems(items) {
+        if (!items || items.length === 0) {
+            list.innerHTML = '<div class="admin-notif-empty">Sin notificaciones.</div>';
+            return;
+        }
+        var cm = { info:'info', success:'success', warning:'warning', error:'error' };
+        list.innerHTML = items.map(function (it) {
+            var url  = it.url && it.url.trim() ? it.url.trim() : null;
+            var tag  = url ? 'a' : 'div';
+            var href = url ? ' href="' + escHtml(url) + '"' : '';
+            var cls  = 'admin-notif-item' + (it.leida == 0 ? ' unread' : '');
+            var dot  = cm[it.tipo] || 'info';
+            return '<' + tag + href + ' class="' + cls + '">'
+                + '<span class="admin-nd ' + dot + '"></span>'
+                + '<div class="admin-nb">'
+                +   '<div class="admin-nt">' + escHtml(it.titulo || '') + '</div>'
+                + (it.mensaje ? '<div class="admin-nm">' + escHtml(it.mensaje) + '</div>' : '')
+                +   '<div class="admin-nf">' + escHtml(it.fecha_creacion || '') + '</div>'
+                + '</div>'
+                + '</' + tag + '>';
+        }).join('');
+    }
+    function fetchNotifs() {
+        fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.ok) { renderItems(d.items); setBadge(d.no_leidas); }
+                else { list.innerHTML = '<div class="admin-notif-empty">Sin notificaciones.</div>'; }
+                loaded = true;
+            })
+            .catch(function () {
+                list.innerHTML = '<div class="admin-notif-empty">Error al cargar.</div>';
+                loaded = true;
+            });
+    }
+    function openDropdown()  { dropdown.classList.add('is-open'); if (!loaded) fetchNotifs(); }
+    function closeDropdown() { dropdown.classList.remove('is-open'); }
+
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dropdown.classList.contains('is-open') ? closeDropdown() : openDropdown();
+    });
+    document.addEventListener('click', function (e) {
+        if (wrap && !wrap.contains(e.target)) closeDropdown();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDropdown();
+    });
+    if (markBtn) {
+        markBtn.addEventListener('click', function () {
+            fetch('index.php?action=marcarNotificacionesLeidas', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (d.ok) {
+                    setBadge(0);
+                    list.querySelectorAll('.admin-notif-item.unread').forEach(function (el) {
+                        el.classList.remove('unread');
+                    });
+                }
+            });
+        });
+    }
+    setInterval(function () {
+        fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
+    }, 90000);
+})();
 
 // Mobile sidebar toggle
 (function() {

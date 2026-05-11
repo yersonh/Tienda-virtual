@@ -19,6 +19,42 @@ $motivosLabel = [
 ];
 ?>
 
+<style>
+.dev-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+}
+.dev-gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(56,189,248,.22);
+    cursor: pointer;
+    background: rgba(15,23,42,.6);
+}
+.dev-gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: transform .25s ease, filter .25s ease;
+}
+.dev-gallery-zoom {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(2,6,23,.55);
+    opacity: 0;
+    transition: opacity .2s ease;
+    color: #fff; font-size: 18px;
+}
+.dev-gallery-item:hover img { transform: scale(1.07); filter: brightness(.85); }
+.dev-gallery-item:hover .dev-gallery-zoom { opacity: 1; }
+@media (max-width: 640px) {
+    .dev-gallery { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+}
+</style>
+
 <div style="padding:20px;max-width:1000px;">
     <!-- Mensajes -->
     <?php if (!empty($_SESSION['success'])): ?>
@@ -144,13 +180,14 @@ $motivosLabel = [
                     <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:8px;">
                         Fotos adjuntas por el cliente
                     </div>
-                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <div class="dev-gallery">
                         <?php foreach ($imagenes as $img): ?>
-                            <?php $imgUrl = UploadHelper::getDevolucionImageUrl($img['url'] ?? ''); ?>
-                            <img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') ?>"
-                                 alt="Imagen devolución" loading="lazy"
-                                 style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid rgba(56,189,248,.2);cursor:pointer;"
-                                 onclick="adOpenLightbox(this.src)">
+                            <?php $imgUrl = UploadHelper::getDevolucionImageUrl($img['ruta_imagen'] ?? ''); ?>
+                            <div class="dev-gallery-item" onclick="adOpenLightbox('<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') ?>')">
+                                <img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                     alt="Imagen devolución" loading="lazy">
+                                <span class="dev-gallery-zoom"><i class="fas fa-magnifying-glass-plus"></i></span>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 </div>

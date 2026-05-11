@@ -432,6 +432,15 @@ switch ($action) {
         (new DevolucionController())->adminSacarInventario();
         break;
 
+    // ── Notificaciones ─────────────────────────────────────────────────────────
+    case 'notificaciones_json':
+        (new NotificacionController())->listarJson();
+        break;
+
+    case 'marcarNotificacionesLeidas':
+        (new NotificacionController())->marcarLeidas();
+        break;
+
     default:
         header("Location: index.php?action=login");
         exit();

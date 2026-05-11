@@ -219,7 +219,7 @@ $motivosLabel = [
                                 <div style="color:var(--secondary);font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:8px;">Fotos adjuntas</div>
                                 <div class="dev-img-grid">
                                     <?php foreach ($imagenes as $img): ?>
-                                        <?php $imgUrl = UploadHelper::getDevolucionImageUrl($img['url'] ?? ''); ?>
+                                        <?php $imgUrl = UploadHelper::getDevolucionImageUrl($img['ruta_imagen'] ?? ''); ?>
                                         <img class="dev-img-thumb" src="<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') ?>"
                                              alt="Imagen devolución" loading="lazy"
                                              onclick="openLightbox(this.src)">
