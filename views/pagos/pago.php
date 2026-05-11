@@ -693,11 +693,7 @@ function openWompiCheckout(checkout) {
             integrity: checkout.integrity_signature
         },
         redirectUrl: checkout.redirect_url,
-        paymentMethods: {
-            card: true,
-            nequi: true,
-            pse: true
-        }
+    
     });
 
     widget.open((result) => {
