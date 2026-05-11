@@ -28,7 +28,7 @@ class ProductoModel {
         return $normalized;
     }
 
-    private function anexarCompatibilidades(array $productos): array {
+    private function anexarCompatibilidades(array $productos, int $limitePorProducto = 3): array {
         $productosIds = array_values(array_unique(array_filter(array_map(
             fn($producto) => (int) ($producto['id_producto'] ?? 0),
             $productos
@@ -56,21 +56,28 @@ class ProductoModel {
         $placeholdersSql = implode(',', $placeholders);
 
         $referenciaActiva = $this->activeReferenciaCondition('r');
-        $vehiculoQuery = "SELECT r.id_producto,
-                                 cv.id_referencia,
-                                 cv.marca_vehiculo,
-                                 cv.modelo_vehiculo,
-                                 cv.ano_inicio,
-                                 cv.ano_fin
-                          FROM referencia_producto r
-                          INNER JOIN compatibilidad_vehiculo cv ON cv.id_referencia = r.id_referencia
-                          WHERE r.id_producto IN ($placeholdersSql)
-                          AND $referenciaActiva
-                          ORDER BY cv.marca_vehiculo, cv.modelo_vehiculo, cv.ano_inicio";
+        
+        // Optimizamos: usamos ROW_NUMBER para traer solo lo necesario por producto
+        $vehiculoQuery = "SELECT id_producto, id_referencia, marca_vehiculo, modelo_vehiculo, ano_inicio, ano_fin
+                          FROM (
+                              SELECT r.id_producto,
+                                     cv.id_referencia,
+                                     cv.marca_vehiculo,
+                                     cv.modelo_vehiculo,
+                                     cv.ano_inicio,
+                                     cv.ano_fin,
+                                     ROW_NUMBER() OVER (PARTITION BY r.id_producto ORDER BY cv.marca_vehiculo, cv.modelo_vehiculo) as rn
+                              FROM referencia_producto r
+                              INNER JOIN compatibilidad_vehiculo cv ON cv.id_referencia = r.id_referencia
+                              WHERE r.id_producto IN ($placeholdersSql)
+                              AND $referenciaActiva
+                          ) WHERE rn <= :limit_compat";
+                          
         $stmt = oci_parse($this->conn, $vehiculoQuery);
         foreach ($bindValues as $param => $value) {
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
+        oci_bind_by_name($stmt, ':limit_compat', $limitePorProducto, -1, SQLT_INT);
         oci_execute($stmt);
         while ($row = oci_fetch_assoc($stmt)) {
             $item = $this->normalizeRow($row);
@@ -81,20 +88,25 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        $maquinariaQuery = "SELECT r.id_producto,
-                                   cm.id_referencia,
-                                   cm.tipo_maquinaria,
-                                   cm.marca_maquinaria,
-                                   cm.modelo_maquinaria
-                            FROM referencia_producto r
-                            INNER JOIN compatibilidad_maquinaria cm ON cm.id_referencia = r.id_referencia
-                            WHERE r.id_producto IN ($placeholdersSql)
-                            AND $referenciaActiva
-                            ORDER BY cm.tipo_maquinaria, cm.marca_maquinaria, cm.modelo_maquinaria";
+        $maquinariaQuery = "SELECT id_producto, id_referencia, tipo_maquinaria, marca_maquinaria, modelo_maquinaria
+                            FROM (
+                                SELECT r.id_producto,
+                                       cm.id_referencia,
+                                       cm.tipo_maquinaria,
+                                       cm.marca_maquinaria,
+                                       cm.modelo_maquinaria,
+                                       ROW_NUMBER() OVER (PARTITION BY r.id_producto ORDER BY cm.tipo_maquinaria, cm.marca_maquinaria) as rn
+                                FROM referencia_producto r
+                                INNER JOIN compatibilidad_maquinaria cm ON cm.id_referencia = r.id_referencia
+                                WHERE r.id_producto IN ($placeholdersSql)
+                                AND $referenciaActiva
+                            ) WHERE rn <= :limit_compat";
+                            
         $stmt = oci_parse($this->conn, $maquinariaQuery);
         foreach ($bindValues as $param => $value) {
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
+        oci_bind_by_name($stmt, ':limit_compat', $limitePorProducto, -1, SQLT_INT);
         oci_execute($stmt);
         while ($row = oci_fetch_assoc($stmt)) {
             $item = $this->normalizeRow($row);
@@ -873,29 +885,21 @@ class ProductoModel {
         return $results;
     }
 
-    public function buscarProductosAvanzado(array $filters): array {
+    public function contarProductosAvanzado(array $filters): int {
         $binds = [];
-        $columns = $this->productoColumns('p');
-        $imageJoin = $this->primeraImagenJoin();
-        $referenciaJoin = $this->referenciaJoin();
-        $stockJoin = $this->stockReferenciaJoin();
-
         $where = " WHERE " . $this->activeProductoCondition('p');
 
-        // 1. Filtro de Texto (Nombre, Código, Descripción)
         if (!empty($filters['query'])) {
             $search = '%' . strtoupper(trim((string)$filters['query'])) . '%';
             $where .= " AND (UPPER(p.NOMBRE) LIKE :search_query OR UPPER(p.CODIGO) LIKE :search_query OR UPPER(p.DESCRIPCION) LIKE :search_query)";
             $binds[] = ['param' => ':search_query', 'value' => $search, 'type' => SQLT_CHR];
         }
 
-        // 2. Filtro de Categoría
         if (!empty($filters['categoria'])) {
             $where .= " AND UPPER(TRIM(c.NOMBRE)) = UPPER(TRIM(:cat_name))";
             $binds[] = ['param' => ':cat_name', 'value' => (string)$filters['categoria'], 'type' => SQLT_CHR];
         }
 
-        // 3. Rango de Precios
         if (!empty($filters['precio_min'])) {
             $where .= " AND p.PRECIO >= :p_min";
             $binds[] = ['param' => ':p_min', 'value' => (float)$filters['precio_min'], 'type' => SQLT_CHR];
@@ -905,17 +909,14 @@ class ProductoModel {
             $binds[] = ['param' => ':p_max', 'value' => (float)$filters['precio_max'], 'type' => SQLT_CHR];
         }
 
-        // 4. Compatibilidad (Vehículo / Maquinaria)
         $tipoCompat = $filters['compatibilidad_tipo'] ?? '';
         if ($tipoCompat === 'vehiculo') {
             $subWhere = " WHERE 1=1";
             $marcas = $this->normalizeFilterList($filters['vehiculo_marca'] ?? []);
             $modelos = $this->normalizeFilterList($filters['vehiculo_modelo'] ?? []);
             $anos = $this->normalizeFilterList($filters['vehiculo_ano'] ?? [], true);
-
             $subWhere .= $this->buildInCondition('MARCA_VEHICULO', 'v_m', $marcas, $binds);
             $subWhere .= $this->buildInCondition('MODELO_VEHICULO', 'v_mod', $modelos, $binds);
-            
             if (!empty($anos)) {
                 $anioParts = [];
                 foreach ($anos as $idx => $year) {
@@ -925,24 +926,83 @@ class ProductoModel {
                 }
                 $subWhere .= ' AND (' . implode(' OR ', $anioParts) . ')';
             }
-
             $where .= " AND p.ID_PRODUCTO IN (SELECT DISTINCT ID_PRODUCTO FROM V_COMPATIBILIDADES_VEHICULO $subWhere)";
         } elseif ($tipoCompat === 'maquinaria') {
             $subWhere = " WHERE 1=1";
             $tipos = $this->normalizeFilterList($filters['maquinaria_tipo'] ?? []);
             $marcas = $this->normalizeFilterList($filters['maquinaria_marca'] ?? []);
             $modelos = $this->normalizeFilterList($filters['maquinaria_modelo'] ?? []);
-
             $subWhere .= $this->buildUpperInCondition('TIPO_MAQUINARIA', 'm_t', $tipos, $binds);
             $subWhere .= $this->buildUpperInCondition('MARCA_MAQUINARIA', 'm_m', $marcas, $binds);
             $subWhere .= $this->buildUpperInCondition('MODELO_MAQUINARIA', 'm_mod', $modelos, $binds);
+            $where .= " AND p.ID_PRODUCTO IN (SELECT DISTINCT rp.ID_PRODUCTO FROM REFERENCIA_PRODUCTO rp INNER JOIN COMPATIBILIDAD_MAQUINARIA cm ON cm.ID_REFERENCIA = rp.ID_REFERENCIA $subWhere)";
+        }
 
-            $where .= " AND p.ID_PRODUCTO IN (
-                SELECT DISTINCT rp.ID_PRODUCTO 
-                FROM REFERENCIA_PRODUCTO rp 
-                INNER JOIN COMPATIBILIDAD_MAQUINARIA cm ON cm.ID_REFERENCIA = rp.ID_REFERENCIA 
-                $subWhere
-            )";
+        $query = "SELECT COUNT(*) FROM PRODUCTO p INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA $where";
+        $stmt = oci_parse($this->conn, $query);
+        $this->bindDynamicValues($stmt, $binds);
+        oci_execute($stmt);
+        $row = oci_fetch_array($stmt, OCI_NUM);
+        oci_free_statement($stmt);
+        return (int) ($row[0] ?? 0);
+    }
+
+    public function buscarProductosAvanzado(array $filters, int $limit = 0, int $offset = 0): array {
+        $binds = [];
+        $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
+
+        $where = " WHERE " . $this->activeProductoCondition('p');
+
+        if (!empty($filters['query'])) {
+            $search = '%' . strtoupper(trim((string)$filters['query'])) . '%';
+            $where .= " AND (UPPER(p.NOMBRE) LIKE :search_query OR UPPER(p.CODIGO) LIKE :search_query OR UPPER(p.DESCRIPCION) LIKE :search_query)";
+            $binds[] = ['param' => ':search_query', 'value' => $search, 'type' => SQLT_CHR];
+        }
+
+        if (!empty($filters['categoria'])) {
+            $where .= " AND UPPER(TRIM(c.NOMBRE)) = UPPER(TRIM(:cat_name))";
+            $binds[] = ['param' => ':cat_name', 'value' => (string)$filters['categoria'], 'type' => SQLT_CHR];
+        }
+
+        if (!empty($filters['precio_min'])) {
+            $where .= " AND p.PRECIO >= :p_min";
+            $binds[] = ['param' => ':p_min', 'value' => (float)$filters['precio_min'], 'type' => SQLT_CHR];
+        }
+        if (!empty($filters['precio_max'])) {
+            $where .= " AND p.PRECIO <= :p_max";
+            $binds[] = ['param' => ':p_max', 'value' => (float)$filters['precio_max'], 'type' => SQLT_CHR];
+        }
+
+        $tipoCompat = $filters['compatibilidad_tipo'] ?? '';
+        if ($tipoCompat === 'vehiculo') {
+            $subWhere = " WHERE 1=1";
+            $marcas = $this->normalizeFilterList($filters['vehiculo_marca'] ?? []);
+            $modelos = $this->normalizeFilterList($filters['vehiculo_modelo'] ?? []);
+            $anos = $this->normalizeFilterList($filters['vehiculo_ano'] ?? [], true);
+            $subWhere .= $this->buildInCondition('MARCA_VEHICULO', 'v_m', $marcas, $binds);
+            $subWhere .= $this->buildInCondition('MODELO_VEHICULO', 'v_mod', $modelos, $binds);
+            if (!empty($anos)) {
+                $anioParts = [];
+                foreach ($anos as $idx => $year) {
+                    $p = ':v_a' . $idx;
+                    $anioParts[] = "$p BETWEEN ANO_INICIO AND ANO_FIN";
+                    $binds[] = ['param' => $p, 'value' => $year, 'type' => SQLT_INT];
+                }
+                $subWhere .= ' AND (' . implode(' OR ', $anioParts) . ')';
+            }
+            $where .= " AND p.ID_PRODUCTO IN (SELECT DISTINCT ID_PRODUCTO FROM V_COMPATIBILIDADES_VEHICULO $subWhere)";
+        } elseif ($tipoCompat === 'maquinaria') {
+            $subWhere = " WHERE 1=1";
+            $tipos = $this->normalizeFilterList($filters['maquinaria_tipo'] ?? []);
+            $marcas = $this->normalizeFilterList($filters['maquinaria_marca'] ?? []);
+            $modelos = $this->normalizeFilterList($filters['maquinaria_modelo'] ?? []);
+            $subWhere .= $this->buildUpperInCondition('TIPO_MAQUINARIA', 'm_t', $tipos, $binds);
+            $subWhere .= $this->buildUpperInCondition('MARCA_MAQUINARIA', 'm_m', $marcas, $binds);
+            $subWhere .= $this->buildUpperInCondition('MODELO_MAQUINARIA', 'm_mod', $modelos, $binds);
+            $where .= " AND p.ID_PRODUCTO IN (SELECT DISTINCT rp.ID_PRODUCTO FROM REFERENCIA_PRODUCTO rp INNER JOIN COMPATIBILIDAD_MAQUINARIA cm ON cm.ID_REFERENCIA = rp.ID_REFERENCIA $subWhere)";
         }
 
         $query = "SELECT $columns
@@ -953,6 +1013,12 @@ class ProductoModel {
                   $imageJoin
                   $where
                   ORDER BY c.NOMBRE, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.NOMBRE";
+
+        if ($limit > 0) {
+            $query .= " OFFSET :offset_val ROWS FETCH NEXT :limit_val ROWS ONLY";
+            $binds[] = ['param' => ':offset_val', 'value' => $offset, 'type' => SQLT_INT];
+            $binds[] = ['param' => ':limit_val', 'value' => $limit, 'type' => SQLT_INT];
+        }
 
         $stmt = oci_parse($this->conn, $query);
         $this->bindDynamicValues($stmt, $binds);
@@ -969,6 +1035,8 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        return $this->anexarCompatibilidades($results);
+        // Si es catálogo completo (muchos productos), limitamos compatibilidades a 3 por producto para ahorrar memoria/red
+        $limiteCompat = ($limit > 0) ? 3 : 10;
+        return $this->anexarCompatibilidades($results, $limiteCompat);
     }
 }

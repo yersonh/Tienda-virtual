@@ -17,6 +17,8 @@ class WompiModel {
         $statusWompi = strtoupper(trim((string) ($transaction['status'] ?? '')));
         $estadoPago = $this->estadoPagoDesdeWompi($statusWompi);
 
+        error_log("[Wompi Notification] Processing TX: $idTransaccion, Ref: $referencia, Status: $statusWompi -> Internal: $estadoPago");
+
         if ($idTransaccion === '' || $referencia === '') {
             throw new InvalidArgumentException('Transaccion Wompi sin id o referencia');
         }
@@ -26,9 +28,15 @@ class WompiModel {
         $target = $this->buscarPagoExistente($idTransaccion, $referencia);
         if ($target === null) {
             $target = $this->buscarVentaPorReferencia($referencia);
+            if ($target) {
+                error_log("[Wompi Notification] Found target by reference: " . ($target['id_venta'] ?? 'N/A'));
+            }
+        } else {
+            error_log("[Wompi Notification] Found existing payment for TX/Ref: " . ($target['id_pago'] ?? 'N/A'));
         }
 
         if ($target === null || (int) ($target['id_venta'] ?? 0) <= 0) {
+            error_log("[Wompi Notification] ERROR: No target found for reference $referencia");
             throw new Exception('No se encontro una venta o pedido asociado a la referencia Wompi: ' . $referencia);
         }
 
@@ -40,11 +48,13 @@ class WompiModel {
 
         $pagoActual = $idPago > 0 ? $this->obtenerPagoPorId($idPago) : null;
         if ($this->pagoYaProcesado($pagoActual, $idTransaccion, $referencia, $estadoPago)) {
+            error_log("[Wompi Notification] Payment $idPago already processed as $estadoPago. Updating JSON only.");
             $this->actualizarJsonPago($idPago, $rawJson);
             oci_commit($this->conn);
             return;
         }
 
+        error_log("[Wompi Notification] Calling SP_PROCESAR_PAGO for Venta $idVenta, Status $estadoPago");
         $this->procesarPagoWompi(
             $idVenta,
             $this->idMetodoPago($metodoReal),
@@ -56,6 +66,7 @@ class WompiModel {
         );
 
         oci_commit($this->conn);
+        error_log("[Wompi Notification] TX $idTransaccion processed successfully.");
     }
 
     public function registrarTransaccionAprobada(array $transaction, string $rawJson): void {

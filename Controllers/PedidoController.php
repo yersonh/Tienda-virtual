@@ -458,7 +458,14 @@ class PedidoController {
         $estadoSql = $this->estadoPedidoSql();
 
         $query = "SELECT p.ID_PEDIDO,
-                         p.ID_ESTADO,
+                         CASE 
+                            WHEN p.ID_ESTADO = 1 AND EXISTS (
+                                SELECT 1 FROM PAGO pg 
+                                WHERE pg.ID_VENTA = p.ID_VENTA 
+                                AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+                            ) THEN 2
+                            ELSE p.ID_ESTADO
+                         END AS ID_ESTADO,
                          $estadoSql AS ESTADO,
                          {$venta['fecha']} AS FECHA,
                          {$venta['total']} AS TOTAL,
@@ -573,8 +580,22 @@ class PedidoController {
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
         $query = "SELECT fp.ID_PEDIDO,
                          fp.ID_VENTA,
-                         p.ID_ESTADO,
-                         fp.ESTADO_PEDIDO AS ESTADO,
+                         CASE 
+                            WHEN p.ID_ESTADO = 1 AND EXISTS (
+                                SELECT 1 FROM PAGO pg 
+                                WHERE pg.ID_VENTA = p.ID_VENTA 
+                                AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+                            ) THEN 2
+                            ELSE p.ID_ESTADO
+                         END AS ID_ESTADO,
+                         CASE 
+                            WHEN p.ID_ESTADO = 1 AND EXISTS (
+                                SELECT 1 FROM PAGO pg 
+                                WHERE pg.ID_VENTA = p.ID_VENTA 
+                                AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+                            ) THEN 'Procesado'
+                            ELSE fp.ESTADO_PEDIDO
+                         END AS ESTADO,
                          TO_CHAR(fp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
                          NVL(fp.SUBTOTAL, 0) AS SUBTOTAL,
                          NVL(fp.IVA, 0) AS IVA,
@@ -630,6 +651,7 @@ class PedidoController {
         $detalle = $this->expresionesDetalleVenta();
 
         $query = "SELECT dv.ID_PRODUCTO,
+                         dv.ID_REFERENCIA,
                          {$detalle['nombre']} AS NOMBRE,
                          dv.CANTIDAD,
                          {$detalle['precio']} AS PRECIO,
@@ -1237,10 +1259,12 @@ class PedidoController {
 
                 $stock = $stockMap[$idProd];
                 $cantidadSolicitada = (int) $item['cantidad'];
+                $idRef = (int) ($item['id_referencia'] ?? 0);
+                $idRef = $idRef > 0 ? $idRef : null;
 
                 if ($stock > 0) {
                     $cantidadReal = min($cantidadSolicitada, $stock);
-                    $this->carritoModel->agregar($idUsuario, $idProd, $cantidadReal);
+                    $this->carritoModel->agregarAlCarrito($idUsuario, $idProd, $cantidadReal, $idRef);
                     $agregados++;
                 } else {
                     $sinStock++;

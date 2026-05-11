@@ -371,9 +371,10 @@ class TiendaController {
         ];
     }
 
-    private function obtenerDatosTienda(bool $forzarActualizacionCatalogo = false): array {
+    private function obtenerDatosTienda(bool $forzarActualizacionCatalogo = false, int $page = 1, int $limit = 24): array {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
+        $offset = ($page - 1) * $limit;
 
         $filters = [
             'query' => $_GET['filtro'] ?? '',
@@ -389,12 +390,10 @@ class TiendaController {
             'maquinaria_modelo' => array_merge($this->obtenerValoresGet('modelo'), $this->obtenerValoresGet('maquinaria_modelo'))
         ];
 
-        // Normalizar tipos de maquinaria (unificar si vienen de diferentes keys)
         $filters['maquinaria_tipo'] = array_values(array_unique($filters['maquinaria_tipo']));
         $filters['maquinaria_marca'] = array_values(array_unique($filters['maquinaria_marca']));
         $filters['maquinaria_modelo'] = array_values(array_unique($filters['maquinaria_modelo']));
 
-        // Determinar tipo de compatibilidad si no está explícito
         if (empty($filters['compatibilidad_tipo'])) {
             if (!empty($filters['vehiculo_marca']) || !empty($filters['vehiculo_modelo']) || !empty($filters['vehiculo_ano'])) {
                 $filters['compatibilidad_tipo'] = 'vehiculo';
@@ -403,8 +402,11 @@ class TiendaController {
             }
         }
 
-        // Ejecutar búsqueda avanzada en SQL (OCI8)
-        $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado($filters);
+        // 1. Obtener TOTAL para paginaciÃ³n
+        $totalProductos = $this->productoModel()->contarProductosAvanzado($filters);
+        
+        // 2. Ejecutar bÃºsqueda paginada
+        $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado($filters, $limit, $offset);
 
         // Variables para la vista
         $filtro = $filters['query'];
@@ -420,22 +422,22 @@ class TiendaController {
         $maquinaria_modelos = $filters['maquinaria_modelo'];
         $compatibilidad_activa = !empty($compatibilidad_tipo);
 
-        // Opciones para los filtros (Dropdowns Dinámicos)
-        // Estas opciones se calculan a partir de los resultados actuales para mantener "Dependent Dropdowns"
+        // Opciones para los filtros (Dropdowns DinÃ¡micos)
+        // NOTA: Para que los dropdowns sean correctos, deberÃ­amos traer las opciones 
+        // de TODO el set filtrado, no solo de la pÃ¡gina. 
+        // Por ahora, si es la primera pÃ¡gina o carga total, calculamos.
+        // OptimizaciÃ³n futura: traer estas opciones vía SQL independiente.
         $todasCategorias = $this->construirCategoriasDisponibles($productosResultadoFinal);
         $rangoPrecios = $this->construirRangoPrecios($productosResultadoFinal);
         $opcionesVehiculo = $this->construirOpcionesCompatibilidadVehiculo($productosResultadoFinal, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
         $opcionesMaquinaria = $this->construirOpcionesCompatibilidadMaquinaria($productosResultadoFinal, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos);
 
-        // Agrupar por categoría para el renderizado
         $categorias = [];
         foreach ($productosResultadoFinal as $p) {
             $cat = $p['categoria_nombre'] ?? 'Sin categoria';
             $categorias[$cat][] = $p;
         }
 
-        // El orden ya viene de SQL (por categoría, stock y nombre), pero mantenemos usort por si acaso
-        // aunque el usort original ya no es estrictamente necesario si el SQL es correcto.
         foreach ($categorias as &$productosCategoria) {
             $productosCategoria = $this->ordenarProductosCategoria($productosCategoria);
         }
@@ -460,7 +462,10 @@ class TiendaController {
             'opcionesMaquinaria',
             'rangoPrecios',
             'categorias',
-            'todasCategorias'
+            'todasCategorias',
+            'totalProductos',
+            'page',
+            'limit'
         );
     }
 
@@ -482,7 +487,8 @@ class TiendaController {
     }
 
     public function index() {
-        extract($this->obtenerDatosTienda());
+        $page = (int) ($_GET['page'] ?? 1);
+        extract($this->obtenerDatosTienda(false, $page));
         require_once __DIR__ . '/../views/Tienda.php';
 
         // Ã°Å¸â€Â¥ AGRUPAR
@@ -495,7 +501,8 @@ class TiendaController {
         try {
             $modoCompatibilidad = $_GET['compatibilidad_tipo'] ?? '';
             $forzarCatalogo = isset($_GET['_refresh_catalog']);
-            extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo', $forzarCatalogo));
+            $page = (int) ($_GET['page'] ?? 1);
+            extract($this->obtenerDatosTienda($forzarCatalogo, $page));
             $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 
             ob_start();
@@ -526,7 +533,13 @@ class TiendaController {
                         'modelos' => $maquinaria_modelos
                     ]
                 ],
-                'categorias' => array_map('count', $categorias)
+                'categorias' => array_map('count', $categorias),
+                'pagination' => [
+                    'total' => $totalProductos,
+                    'page' => $page,
+                    'limit' => $limit,
+                    'has_more' => ($page * $limit) < $totalProductos
+                ]
             ]);
         } catch (Throwable $e) {
             error_log('TiendaController::filtrosAjax: ' . $e->getMessage());

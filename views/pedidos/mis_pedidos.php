@@ -15,31 +15,38 @@ function orderDateText($value): string {
 
 function orderStepIndex(array $pedido): int {
     $estado = strtolower((string) ($pedido['estado'] ?? ''));
-    if (str_contains($estado, 'cancel')) return 1;
-
-    $idEstado = (int) ($pedido['id_estado'] ?? 0);
-    if ($idEstado > 0) {
-        return max(1, min(4, $idEstado));
-    }
-
+    
+    // Si el texto dice procesado, es al menos paso 2
     if (str_contains($estado, 'entreg')) return 4;
     if (str_contains($estado, 'envi') || str_contains($estado, 'ruta') || str_contains($estado, 'camino') || str_contains($estado, 'despach')) return 3;
     if (str_contains($estado, 'proces') || str_contains($estado, 'pag') || str_contains($estado, 'apro')) return 2;
+    
+    $idEstado = (int) ($pedido['id_estado'] ?? 0);
+    if ($idEstado === 5) return 0; // Cancelado
+    if ($idEstado === 4) return 4;
+    if ($idEstado === 3) return 3;
+    if ($idEstado === 2) return 2;
+    if ($idEstado === 1) return 1;
+
     return 1;
 }
 
 function statusClass(string $estado, int $idEstado = 0): string {
+    $estadoStr = strtolower(trim($estado));
+    
+    // Si el texto dice procesado/pagado, es procesado independientemente del ID
+    if (str_contains($estadoStr, 'proces') || str_contains($estadoStr, 'pag') || str_contains($estadoStr, 'apro')) return 'is-processed';
+    if (str_contains($estadoStr, 'envi') || str_contains($estadoStr, 'ruta') || str_contains($estadoStr, 'camino') || str_contains($estadoStr, 'despach')) return 'is-shipped';
+    if (str_contains($estadoStr, 'entreg')) return 'is-done';
+    if (str_contains($estadoStr, 'cancel')) return 'is-canceled';
+
+    // Fallback al ID
     if ($idEstado === 1) return 'is-pending';
     if ($idEstado === 2) return 'is-processed';
     if ($idEstado === 3) return 'is-shipped';
     if ($idEstado === 4) return 'is-done';
     if ($idEstado === 5) return 'is-canceled';
 
-    $estado = strtolower($estado);
-    if (str_contains($estado, 'cancel')) return 'is-canceled';
-    if (str_contains($estado, 'entreg')) return 'is-done';
-    if (str_contains($estado, 'envi') || str_contains($estado, 'ruta') || str_contains($estado, 'camino') || str_contains($estado, 'despach')) return 'is-shipped';
-    if (str_contains($estado, 'proces') || str_contains($estado, 'pag') || str_contains($estado, 'apro')) return 'is-processed';
     return 'is-pending';
 }
 

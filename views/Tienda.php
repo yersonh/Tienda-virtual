@@ -1144,6 +1144,68 @@
     .product-card.out-of-stock .btn-add-cart::after {
         content: ' (Agotado)';
     }
+
+    /* PAGINACION */
+    .load-more-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 42px 32px 64px;
+    }
+    .load-info {
+        font-size: 13px;
+        color: var(--secondary);
+    }
+    .btn-load-more {
+        background: rgba(34,211,238,0.1);
+        border: 1px solid rgba(34,211,238,0.3);
+        color: var(--accent);
+        padding: 12px 36px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: 'Space Grotesk', sans-serif;
+        cursor: pointer;
+        transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-load-more:hover:not(:disabled) {
+        background: rgba(34,211,238,0.2);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(34,211,238,0.25);
+    }
+    .btn-load-more:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    .btn-load-more:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        filter: grayscale(0.5);
+    }
+    .btn-load-more .spinner {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.75s linear infinite;
+    }
+    .btn-load-more.loading .spinner { display: block; }
+    .btn-load-more.loading .text { opacity: 0.7; }
+
+    #store-results {
+        position: relative;
+        transition: opacity 0.3s ease;
+    }
+    #store-results.loading-overlay {
+        opacity: 0.6;
+        pointer-events: none;
+    }
 </style>
 
 <div class="store-card">
@@ -1232,6 +1294,16 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
 
 <div id="store-results">
     <?php require __DIR__ . '/partials/tienda_productos.php'; ?>
+</div>
+
+<div class="load-more-wrap" id="pagination-wrap">
+    <?php if(($totalProductos ?? 0) > ($limit ?? 24)): ?>
+        <div class="load-info">Mostrando <span id="count-loaded"><?= count($productosResultadoFinal ?? []) ?></span> de <?= $totalProductos ?> productos</div>
+        <button class="btn-load-more" id="btn-load-more" onclick="loadNextPage()">
+            <span class="spinner"></span>
+            <span class="text">Cargar más productos</span>
+        </button>
+    <?php endif; ?>
 </div>
 </div>
 
@@ -1579,6 +1651,11 @@ const clearSidebarFiltersBtn = document.getElementById('clear-sidebar-filters');
 const optionSearchInputs = Array.from(document.querySelectorAll('[data-option-search]'));
 const tabsCategoria = Array.from(document.querySelectorAll('.cat-tab'));
 let categoriaActiva = <?= json_encode($categoria_filtro ?? '') ?>;
+let currentPage = <?= (int) ($page ?? 1) ?>;
+let totalProducts = <?= (int) ($totalProductos ?? 0) ?>;
+let productsPerPage = <?= (int) ($limit ?? 24) ?>;
+let isLoadingMore = false;
+
 let filterTimer = null;
 let filterAbortController = null;
 let filterRequestId = 0;
@@ -1754,90 +1831,110 @@ function applyLocalStoreFilters() {
     const max = precioMax ? Number(precioMax.value.replace(/\D/g, '')) || 0 : 0;
     const cat = ((categoria ? categoria.value : '') || categoriaActiva || '').toLowerCase();
 
+    // Solo aplicamos filtros locales si no hay filtros de compatibilidad activos,
+    // ya que no tenemos todos los datos de compatibilidad en el DOM para filtrar localmente.
+    const isCompatActive = compatibilityType && compatibilityType.value !== '';
+
+    let visibleCount = 0;
     document.querySelectorAll('.product-card').forEach((card) => {
         const name = (card.dataset.nombre || '').toLowerCase();
         const code = (card.dataset.codigo || '').toLowerCase();
         const description = (card.dataset.descripcion || '').toLowerCase();
         const cardCat = (card.dataset.categoria || '').toLowerCase();
         const price = Number(card.dataset.precio || 0);
+
         const matchText = !texto || name.includes(texto) || code.includes(texto) || description.includes(texto);
         const matchMin = !min || price >= min;
         const matchMax = !max || price <= max;
         const matchCat = !cat || cardCat === cat;
-        card.style.display = matchText && matchMin && matchMax && matchCat ? '' : 'none';
+
+        // Si hay filtros de compatibilidad en el servidor, no podemos filtrar localmente por ellos.
+        // Pero sÃ­ podemos seguir filtrando por texto/precio sobre lo que ya trajo el servidor.
+        const isVisible = matchText && matchMin && matchMax && matchCat;
+        card.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount++;
     });
 
     document.querySelectorAll('.category-section').forEach((section) => {
-        const visibleCards = Array.from(section.querySelectorAll('.product-card')).some((card) => card.style.display !== 'none');
-        section.style.display = visibleCards ? '' : 'none';
+        const hasVisible = Array.from(section.querySelectorAll('.product-card')).some(c => c.style.display !== 'none');
+        section.style.display = hasVisible ? '' : 'none';
     });
+
+    // Si no hay resultados visibles locales pero el servidor dice que hay mÃ¡s,
+    // el usuario verÃ¡ el loading del fetch.
 }
 
-async function fetchFilteredStore(force = false) {
-    applyLocalStoreFilters();
+async function fetchFilteredStore(force = false, append = false) {
+    if (!append) {
+        currentPage = 1;
+        applyLocalStoreFilters();
+    }
 
     const cat = (categoria ? categoria.value : '') || categoriaActiva;
     const viewParams = buildFilterParams(cat);
     const requestParams = new URLSearchParams(viewParams);
     requestParams.set('action', 'tiendaFiltros');
-    if (force) {
-        requestParams.set('_refresh_catalog', '1');
-    }
+    requestParams.set('page', currentPage);
+
+    if (force) requestParams.set('_refresh_catalog', '1');
+
     const requestKey = requestParams.toString();
     const currentRequestId = ++filterRequestId;
 
-    if (filterAbortController) {
-        filterAbortController.abort();
+    if (filterAbortController) filterAbortController.abort();
+
+    if (!force && !append && requestKey === lastAppliedRequestKey) return;
+
+    const resultsContainer = document.getElementById('store-results');
+    const loadBtn = document.getElementById('btn-load-more');
+
+    if (append) {
+        if (loadBtn) {
+            loadBtn.disabled = true;
+            loadBtn.classList.add('loading');
+        }
+        isLoadingMore = true;
+    } else {
+        if (resultsContainer) resultsContainer.classList.add('loading-overlay');
+        setFilterLoading(true);
     }
 
-    if (!force && requestKey === lastAppliedRequestKey) {
-        return;
-    }
-
-    setFilterLoading(true);
     try {
         filterAbortController = new AbortController();
-
         const response = await fetch(`index.php?${requestParams.toString()}`, {
             signal: filterAbortController.signal,
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'fetch'
-            }
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }
         });
-        const raw = await response.text();
-        let data = null;
-        try {
-            data = JSON.parse(raw);
-        } catch (parseError) {
-            throw new Error(raw ? 'La respuesta de filtros no es JSON valido' : 'Respuesta vacia al filtrar');
-        }
 
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'No se pudieron actualizar los filtros');
-        }
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Error al filtrar');
 
-        if (currentRequestId !== filterRequestId) {
-            return;
-        }
+        if (currentRequestId !== filterRequestId && !append) return;
 
-        applyFilteredStoreResponse(data, viewParams, cat, requestKey);
+        applyFilteredStoreResponse(data, viewParams, cat, requestKey, append);
     } catch (error) {
         if (error.name === 'AbortError') return;
         console.error(error);
-        if (!force && !document.querySelector('.product-card')) {
-            const fallbackParams = new URLSearchParams(viewParams);
-            fallbackParams.set('action', 'tienda');
-            window.location.href = `index.php?${fallbackParams.toString()}${cat ? '#category-detail' : ''}`;
-        }
     } finally {
         if (currentRequestId === filterRequestId) {
             setFilterLoading(false);
+            if (resultsContainer) resultsContainer.classList.remove('loading-overlay');
         }
+        if (loadBtn) {
+            loadBtn.disabled = false;
+            loadBtn.classList.remove('loading');
+        }
+        isLoadingMore = false;
     }
 }
 
-function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
+async function loadNextPage() {
+    if (isLoadingMore) return;
+    currentPage++;
+    await fetchFilteredStore(false, true);
+}
+
+function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '', append = false) {
     if (requestKey) {
         lastAppliedRequestKey = requestKey;
     }
@@ -1850,12 +1947,34 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
     }
 
     const results = document.getElementById('store-results');
-    if (results && results.innerHTML !== (data.productos_html || '')) {
-        results.innerHTML = data.productos_html || '';
+    if (results) {
+        if (append) {
+            results.insertAdjacentHTML('beforeend', data.productos_html || '');
+        } else {
+            results.innerHTML = data.productos_html || '';
+        }
         observeLazyImages(results);
         applyLocalStoreFilters();
     }
 
+    // Actualizar paginacion
+    if (data.pagination) {
+        totalProducts = data.pagination.total;
+        currentPage = data.pagination.page;
+        productsPerPage = data.pagination.limit;
+        
+        const wrap = document.getElementById('pagination-wrap');
+        const loadedSpan = document.getElementById('count-loaded');
+        const currentCount = document.querySelectorAll('.product-card').length;
+        
+        if (wrap) {
+            const hasMore = (currentPage * productsPerPage) < totalProducts;
+            wrap.style.display = hasMore ? '' : 'none';
+            if (loadedSpan) loadedSpan.textContent = currentCount;
+        }
+    }
+
+    if (!append) {
         renderCategoryFilters(data.categorias_disponibles || [], activeCat);
         renderPriceRange(data.rango_precios || null);
         applyLocalStoreFilters();
@@ -1875,9 +1994,11 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
         if (openFiltersBtn) {
             openFiltersBtn.classList.toggle('active', Boolean(data.compatibilidad_activa));
         }
+    }
 
     const urlParams = new URLSearchParams(viewParams);
     urlParams.set('action', 'tienda');
+    if (currentPage > 1) urlParams.set('page', currentPage);
     window.history.replaceState({}, '', `index.php?${urlParams.toString()}${activeCat ? '#category-detail' : ''}`);
 }
 
