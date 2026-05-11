@@ -661,12 +661,15 @@ class MetodoPagoUsuarioModel {
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
+            @oci_rollback($this->conn);
             throw new Exception($message);
         }
 
-        oci_free_statement($stmt);
+        @oci_commit($this->conn);
 
+        oci_free_statement($stmt);
         $this->limpiarCache($idUsuario);
+
         return true;
     }
 }
