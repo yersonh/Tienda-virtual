@@ -492,12 +492,12 @@ class MetodoPagoUsuarioModel {
 
     private function existeDuplicadoActivo(int $idUsuario, string $franquicia, string $ultimos4, string $fechaExpiracion): bool {
         $query = "SELECT COUNT(*) AS TOTAL
-                  FROM METODO_PAGO_USUARIO
-                  WHERE ID_USUARIO = :id_usuario
+                FROM METODO_PAGO_USUARIO
+                WHERE ID_USUARIO = :id_usuario
                     AND ACTIVO = 1
                     AND UPPER(FRANQUICIA) = :franquicia
                     AND ULTIMOS_4 = :ultimos_4
-                    AND TO_CHAR(FECHA_EXPIRACION, 'MM/YYYY') = :fecha_expiracion";
+                    AND FECHA_EXPIRACION = :fecha_expiracion";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -517,9 +517,9 @@ class MetodoPagoUsuarioModel {
 
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
+
         return ((int) ($row['TOTAL'] ?? 0)) > 0;
     }
-
     private function obtenerIdPorToken(string $tokenPago, int $idUsuario): int {
         $tokenColumn = $this->columnaExiste('TOKEN_WOMPI') ? 'TOKEN_WOMPI' : 'TOKEN_PAGO';
         $query = "SELECT ID_METODO_PAGO_USUARIO
