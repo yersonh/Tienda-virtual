@@ -137,11 +137,7 @@ class CheckoutController {
     }
 
     private function montoCheckoutWompiCentavos(float $total, bool $testMode): int {
-        if ($testMode) {
-            return 1500 * 100;
-        }
-
-        return $this->montoWompiCentavos($total);
+        return 1500 * 100;
     }
 
     private function contarIntentosWompi(int $idVenta): int {
