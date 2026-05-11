@@ -474,6 +474,7 @@ class MetodoPagoUsuarioModel {
                     AND FECHA_EXPIRACION = :fecha_expiracion";
 
         $stmt = oci_parse($this->conn, $query);
+
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
@@ -483,7 +484,7 @@ class MetodoPagoUsuarioModel {
         oci_bind_by_name($stmt, ':ultimos_4', $ultimos4);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
             throw new Exception($message);
@@ -494,6 +495,7 @@ class MetodoPagoUsuarioModel {
 
         return ((int) ($row['TOTAL'] ?? 0)) > 0;
     }
+
     private function obtenerIdPorToken(string $tokenPago, int $idUsuario): int {
         $tokenColumn = $this->columnaExiste('TOKEN_WOMPI') ? 'TOKEN_WOMPI' : 'TOKEN_PAGO';
         $query = "SELECT ID_METODO_PAGO_USUARIO
