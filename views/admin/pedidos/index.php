@@ -307,16 +307,17 @@
         const container = document.getElementById('qr-canvas-container');
         container.innerHTML = '';
 
+        // Mostrar el overlay ANTES de generar el QR para que el canvas tenga dimensiones reales
+        document.getElementById('qr-overlay').classList.add('active');
+
         qrInstance = new QRCode(container, {
             text: String(idPedido),
-            width: 200,
-            height: 200,
-            colorDark: '#0f172a',
-            colorLight: '#f8fafc',
+            width: 220,
+            height: 220,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.M
         });
-
-        document.getElementById('qr-overlay').classList.add('active');
     }
 
     function cerrarQR() {
