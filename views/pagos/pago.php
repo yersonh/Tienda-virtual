@@ -694,7 +694,7 @@ function openWompiCheckout(checkout) {
         },
         redirectUrl: checkout.redirect_url,
         paymentMethods: {
-            card: 'all',
+            card: true,
             nequi: true,
             pse: true
         }
