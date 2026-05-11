@@ -998,10 +998,24 @@ function orderProductImage(?string $imagen): ?string {
                         <label for="order-date-filter"><?= htmlspecialchars('Filtrar por fecha', ENT_QUOTES, 'UTF-8') ?></label>
                         <input type="date" id="order-date-filter" aria-label="<?= htmlspecialchars('Seleccionar fecha del pedido', ENT_QUOTES, 'UTF-8') ?>">
                     </div>
+                    <div class="orders-date-filter">
+                        <label for="order-estado-filter"><?= htmlspecialchars('Filtrar por estado', ENT_QUOTES, 'UTF-8') ?></label>
+                        <select id="order-estado-filter" style="min-height:42px;min-width:180px;border:1px solid var(--border);border-radius:12px;background:rgba(15,23,42,.7);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px;font-weight:700;">
+                            <option value=""><?= htmlspecialchars('Todos los estados', ENT_QUOTES, 'UTF-8') ?></option>
+                            <?php
+                            $estadosUnicos = array_unique(array_map(fn($p) => (string) ($p['estado'] ?? ''), $pedidos));
+                            sort($estadosUnicos);
+                            foreach ($estadosUnicos as $est):
+                                if ($est === '') continue;
+                            ?>
+                                <option value="<?= htmlspecialchars($est, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($est, ENT_QUOTES, 'UTF-8') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div class="orders-toolbar">
                         <button class="orders-btn" type="button" id="clear-order-date-filter">
                             <i class="fas fa-xmark"></i>
-                            <?= htmlspecialchars('Limpiar fecha', ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars('Limpiar filtros', ENT_QUOTES, 'UTF-8') ?>
                         </button>
                         <span class="orders-filter-result" id="order-filter-result"><?= count($pedidos) ?> <?= htmlspecialchars(count($pedidos) === 1 ? 'pedido visible' : 'pedidos visibles', ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
@@ -1034,7 +1048,7 @@ function orderProductImage(?string $imagen): ?string {
                         $hayCarrusel = count($itemsCarrusel) > 1;
                         $cantidadProductos = (int) ($pedido['cantidad_productos'] ?? array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $itemsPreview)));
                         ?>
-                        <article class="orders-card" data-order-date="<?= htmlspecialchars($fechaFiltro, ENT_QUOTES, 'UTF-8') ?>">
+                        <article class="orders-card" data-order-date="<?= htmlspecialchars($fechaFiltro, ENT_QUOTES, 'UTF-8') ?>" data-order-estado="<?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?>">
                             <div>
                                 <div class="order-id">#<?= $idPedido ?></div>
                                 <div class="order-muted"><?= htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') ?></div>
@@ -1148,20 +1162,23 @@ document.querySelectorAll('.delivery-step').forEach((step) => {
     });
 });
 
-const orderDateFilter = document.getElementById('order-date-filter');
+const orderDateFilter   = document.getElementById('order-date-filter');
+const orderEstadoFilter = document.getElementById('order-estado-filter');
 const clearOrderDateFilter = document.getElementById('clear-order-date-filter');
 const orderFilterResult = document.getElementById('order-filter-result');
 const ordersFilterEmpty = document.getElementById('orders-filter-empty');
 const orderCards = Array.from(document.querySelectorAll('.orders-card[data-order-date]'));
 
-function applyOrderDateFilter() {
-    const selectedDate = orderDateFilter ? orderDateFilter.value : '';
+function applyOrderFilters() {
+    const selectedDate   = orderDateFilter   ? orderDateFilter.value   : '';
+    const selectedEstado = orderEstadoFilter ? orderEstadoFilter.value : '';
     let visibleCount = 0;
 
     orderCards.forEach((card) => {
-        const visible = selectedDate === '' || card.dataset.orderDate === selectedDate;
-        card.hidden = !visible;
-        if (visible) visibleCount += 1;
+        const dateOk   = selectedDate   === '' || card.dataset.orderDate   === selectedDate;
+        const estadoOk = selectedEstado === '' || card.dataset.orderEstado === selectedEstado;
+        card.hidden = !(dateOk && estadoOk);
+        if (!card.hidden) visibleCount += 1;
     });
 
     if (orderFilterResult) {
@@ -1172,12 +1189,12 @@ function applyOrderDateFilter() {
     }
 }
 
-orderDateFilter?.addEventListener('change', applyOrderDateFilter);
+orderDateFilter?.addEventListener('change', applyOrderFilters);
+orderEstadoFilter?.addEventListener('change', applyOrderFilters);
 clearOrderDateFilter?.addEventListener('click', () => {
-    if (orderDateFilter) {
-        orderDateFilter.value = '';
-    }
-    applyOrderDateFilter();
+    if (orderDateFilter)   orderDateFilter.value   = '';
+    if (orderEstadoFilter) orderEstadoFilter.value = '';
+    applyOrderFilters();
 });
 
 document.querySelectorAll('[data-order-strip]').forEach((strip) => {
