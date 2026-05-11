@@ -1857,11 +1857,18 @@ function initPaymentPage() {
         sessionStorage.removeItem(paymentSubmittedKey);
     }
 
+    console.log('🔧 initPaymentPage ejecutado');
+
     const metodoInput = document.getElementById('metodo_pago');
     const methodButtons = Array.from(document.querySelectorAll('.payment-method'));
     const efectivo = document.getElementById('efectivo');
     const tarjeta = document.getElementById('tarjeta');
     const paymentForm = document.getElementById('payment-confirm-form');
+    console.log('📋 paymentForm encontrado:', paymentForm);
+
+    if (paymentForm) {
+        paymentForm.dataset.processing = '0';
+    }
     const savedPanel = document.getElementById('saved-payment-panel');
     const savedMethodInput = document.getElementById('id_metodo_pago_usuario');
     const savedCards = Array.from(document.querySelectorAll('[data-saved-card]'));
@@ -2255,7 +2262,15 @@ function initPaymentPage() {
 
     paymentForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        console.log('✅ SUBMIT PAYMENT FORM DISPARADO');
+        console.log('ACTION:', paymentForm.action);
+        console.log('DATA:', Object.fromEntries(new FormData(paymentForm).entries()));
+        console.log('id_metodo_pago_usuario:', document.getElementById('id_metodo_pago_usuario')?.value);
+        console.log('metodo_pago:', document.getElementById('metodo_pago')?.value);
+
         if (paymentForm.dataset.processing === '1') {
+            console.warn('⚠️ BLOQUEADO: paymentForm ya está procesando, ignorando submit');
             return;
         }
 
@@ -2279,15 +2294,20 @@ function initPaymentPage() {
         setWompiButtonLoading(true, 'Preparando pago');
 
         try {
+            const formData = new FormData(paymentForm);
+            console.log('📡 fetch POST →', paymentForm.action);
+            console.log('📦 payload:', Object.fromEntries(formData.entries()));
             const response = await fetch(paymentForm.action, {
                 method: paymentForm.method || 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'fetch'
                 },
-                body: new FormData(paymentForm)
+                body: formData
             });
+            console.log('📥 response status:', response.status, response.url);
             const text = await response.text();
+            console.log('📥 response text (primeros 300 chars):', text.slice(0, 300));
             let data = null;
             try {
                 data = JSON.parse(text);
