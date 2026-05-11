@@ -155,7 +155,7 @@
         color: #64748b;
     }
     .btn-mapa {
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(135deg, #38bdf8, #0ea5e9);
         color: #041522;
         padding: 10px 20px;
         border-radius: 12px;
@@ -165,11 +165,12 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 10px 20px rgba(34, 211, 238, 0.22);
+        box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+        white-space: nowrap;
     }
     .btn-mapa:hover {
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 14px 28px rgba(34, 211, 238, 0.32);
+        box-shadow: 0 14px 28px rgba(56, 189, 248, 0.45);
         color: #041522;
     }
     .filter-card {
