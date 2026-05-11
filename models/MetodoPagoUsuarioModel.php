@@ -169,9 +169,9 @@ class MetodoPagoUsuarioModel {
         }
 
         $query = "UPDATE METODO_PAGO_USUARIO
-                  SET ACTIVO = 0,
-                      ES_PREDETERMINADO = 0
-                  WHERE ID_USUARIO = :id_usuario
+                SET ACTIVO = 0,
+                    ES_PREDETERMINADO = 0
+                WHERE ID_USUARIO = :id_usuario
                     AND ID_METODO IN (2, 3, 5)
                     AND ACTIVO = 1
                     AND REGEXP_LIKE(FECHA_EXPIRACION, '^(0[1-9]|1[0-2])/[0-9]{4}$')
@@ -184,15 +184,15 @@ class MetodoPagoUsuarioModel {
 
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
             throw new Exception($message);
         }
 
         $affected = oci_num_rows($stmt);
-        @oci_commit($this->conn);
         oci_free_statement($stmt);
+
         if ($affected > 0) {
             $this->limpiarCache($idUsuario);
         }
@@ -522,29 +522,50 @@ class MetodoPagoUsuarioModel {
         return (int) ($row['ID_METODO_PAGO_USUARIO'] ?? 0);
     }
 
-    public function eliminar(int $idMetodoPagoUsuario, int $idUsuario): bool {
+   public function eliminar(int $idMetodoPagoUsuario, int $idUsuario): bool {
         if ($idMetodoPagoUsuario <= 0 || $idUsuario <= 0) {
             return false;
         }
 
-        $query = "BEGIN SP_ELIMINAR_METODO_PAGO(:id_metodo_pago_usuario, :id_usuario); END;";
+        $query = "BEGIN SP_ELIMINAR_METODO_PAGO(
+                        :id_metodo_pago_usuario,
+                        :id_usuario
+                ); END;";
 
         $stmt = oci_parse($this->conn, $query);
+
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
 
-        oci_bind_by_name($stmt, ':id_metodo_pago_usuario', $idMetodoPagoUsuario, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        oci_bind_by_name(
+            $stmt,
+            ':id_metodo_pago_usuario',
+            $idMetodoPagoUsuario,
+            -1,
+            SQLT_INT
+        );
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        oci_bind_by_name(
+            $stmt,
+            ':id_usuario',
+            $idUsuario,
+            -1,
+            SQLT_INT
+        );
+
+        if (!@oci_execute($stmt)) {
             $message = $this->oracleErrorMessage($stmt);
+
             oci_free_statement($stmt);
+
             throw new Exception($message);
         }
 
         oci_free_statement($stmt);
+
         $this->limpiarCache($idUsuario);
+
         return true;
     }
 
@@ -606,8 +627,12 @@ class MetodoPagoUsuarioModel {
         if (!preg_match('/^(0[1-9]|1[0-2])\/\d{4}$/', $fechaExpiracion)) {
             throw new InvalidArgumentException('Ingresa la expiracion en formato MM/YYYY');
         }
+
         $expParts = explode('/', $fechaExpiracion);
-        if ((int)$expParts[1] < (int)date('Y') || ((int)$expParts[1] === (int)date('Y') && (int)$expParts[0] < (int)date('m'))) {
+        if (
+            (int)$expParts[1] < (int)date('Y') ||
+            ((int)$expParts[1] === (int)date('Y') && (int)$expParts[0] < (int)date('m'))
+        ) {
             throw new InvalidArgumentException('La tarjeta ingresada se encuentra vencida');
         }
 
@@ -617,20 +642,20 @@ class MetodoPagoUsuarioModel {
                     :titular,
                     :fecha_expiracion,
                     :es_predeterminado
-                  ); END;";
+                ); END;";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
             throw new Exception($this->oracleErrorMessage());
         }
 
+        oci_bind_by_name($stmt, ':id_metodo_pago_usuario', $idMetodoPagoUsuario, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':titular', $titular);
         oci_bind_by_name($stmt, ':fecha_expiracion', $fechaExpiracion);
         oci_bind_by_name($stmt, ':es_predeterminado', $esPredeterminado, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_metodo_pago_usuario', $idMetodoPagoUsuario, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+        if (!@oci_execute($stmt)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
             throw new Exception($message);
@@ -638,6 +663,7 @@ class MetodoPagoUsuarioModel {
 
         oci_free_statement($stmt);
         $this->limpiarCache($idUsuario);
+
         return true;
     }
 
