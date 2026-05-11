@@ -428,23 +428,38 @@ body[data-theme="light"] {
 
 .card-img-wrap {
     background: #12162a;
-    height: 170px;
+    height: 220px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    position: relative;
+    transition: background 0.6s ease;
 }
 
 [data-theme="light"] .card-img-wrap {
     background: linear-gradient(180deg, #f8fbff, #eef5fb);
 }
 
+.card-img-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.25));
+    pointer-events: none;
+    z-index: 2;
+}
+
 .card-img-wrap img {
-    width: 100%;
-    height: 100%;
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    height: auto;
     object-fit: contain;
-    padding: 16px;
     transition: transform 0.3s;
+    position: relative;
+    z-index: 1;
 }
 
 .product-card:hover .card-img-wrap img {
@@ -1667,6 +1682,7 @@ body[data-theme="light"] {
             <?php endif; ?>
         </section>
 
+    <script src="https://cdn.jsdelivr.net/npm/color-thief-browser/dist/color-thief.umd.js"></script>
     <script>
     let cart = <?= json_encode($carritoVista) ?>;
     const i18n = {
@@ -1893,7 +1909,25 @@ body[data-theme="light"] {
         return false;
     }
 
+    function applyDynamicBg(img) {
+        try {
+            if (!window.ColorThief || !img || !img.naturalWidth) return;
+            const wrapper = img.closest('.card-img-wrap');
+            if (!wrapper) return;
+            const [r, g, b] = new ColorThief().getColor(img);
+            wrapper.style.background = `radial-gradient(circle at center, rgba(${r},${g},${b},0.45), rgba(5,10,25,0.95))`;
+        } catch (e) {}
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.card-img-wrap img').forEach(img => {
+            if (img.complete && img.naturalWidth > 0) {
+                applyDynamicBg(img);
+            } else {
+                img.addEventListener('load', () => applyDynamicBg(img), { once: true });
+            }
+        });
+
         const modelTabs = Array.from(document.querySelectorAll('[data-model-tab]'));
         const modelPanels = Array.from(document.querySelectorAll('[data-model-panel]'));
         let modelFrameObserver = null;

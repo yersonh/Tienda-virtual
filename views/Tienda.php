@@ -603,22 +603,35 @@
 }
 .card-img-wrap {
     background: #12162a;
-    height: 170px;
+    height: 220px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     position: relative;
+    transition: background 0.6s ease;
 }
 [data-theme="light"] .card-img-wrap {
     background: linear-gradient(180deg, #f8fbff, #eef5fb);
 }
+.card-img-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.25));
+    pointer-events: none;
+    z-index: 2;
+}
 .card-img-wrap img {
-    width: 100%;
-    height: 100%;
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    height: auto;
     object-fit: contain;
-    padding: 16px;
     transition: transform 0.3s;
+    position: relative;
+    z-index: 1;
 }
 .product-card:hover .card-img-wrap img { transform: scale(1.06); }
 .card-placeholder {
@@ -1141,6 +1154,7 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
     </div>
 </aside>
 
+<script src="https://cdn.jsdelivr.net/npm/color-thief-browser/dist/color-thief.umd.js"></script>
 <script>
 let cart = {};
 cart = <?= json_encode($carritoVista) ?>;
@@ -1456,6 +1470,16 @@ let lastSearchValue = buscador ? buscador.value : '';
 let lastMinValue = precioMin ? precioMin.value : '';
 let lastMaxValue = precioMax ? precioMax.value : '';
 
+function applyDynamicBg(img) {
+    try {
+        if (!window.ColorThief || !img || !img.naturalWidth) return;
+        const wrapper = img.closest('.card-img-wrap');
+        if (!wrapper) return;
+        const [r, g, b] = new ColorThief().getColor(img);
+        wrapper.style.background = `radial-gradient(circle at center, rgba(${r},${g},${b},0.45), rgba(5,10,25,0.95))`;
+    } catch (e) {}
+}
+
 const productImageObserver = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries, observer) => {
         entries.forEach((entry) => {
@@ -1464,6 +1488,7 @@ const productImageObserver = 'IntersectionObserver' in window
             if (img.dataset.src) {
                 img.src = img.dataset.src;
                 img.removeAttribute('data-src');
+                img.addEventListener('load', () => applyDynamicBg(img), { once: true });
             }
             observer.unobserve(img);
         });
@@ -1479,6 +1504,7 @@ function observeLazyImages(root = document) {
 
         img.src = img.dataset.src;
         img.removeAttribute('data-src');
+        img.addEventListener('load', () => applyDynamicBg(img), { once: true });
     });
 }
 
