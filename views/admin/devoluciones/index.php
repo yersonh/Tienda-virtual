@@ -74,10 +74,7 @@ function adDevEstadoStyle(string $nombre): array {
                             <td style="padding:12px;font-weight:600;color:#38bdf8;">#<?= (int) $dev['id_devolucion'] ?></td>
                             <td style="padding:12px;">#<?= (int) $dev['id_pedido'] ?></td>
                             <td style="padding:12px;">
-                                <?= htmlspecialchars(
-                                    trim(($dev['cliente_nombre'] ?? '') . ' ' . ($dev['cliente_apellido'] ?? '')),
-                                    ENT_QUOTES, 'UTF-8'
-                                ) ?>
+                                <?= htmlspecialchars($dev['cliente'] ?? '', ENT_QUOTES, 'UTF-8') ?>
                             </td>
                             <td style="padding:12px;"><?= htmlspecialchars($dev['fecha_solicitud'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
                             <td style="padding:12px;">
