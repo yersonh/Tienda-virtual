@@ -371,74 +371,71 @@ class TiendaController {
         ];
     }
 
-    private function obtenerDatosTienda(bool $incluirOpcionesVehiculo = true, bool $forzarActualizacionCatalogo = false): array {
+    private function obtenerDatosTienda(bool $forzarActualizacionCatalogo = false): array {
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
 
-        $filtro = $_GET['filtro'] ?? '';
-        $precio_min = preg_replace('/\D/', '', $_GET['precio_min'] ?? '');
-        $precio_max = preg_replace('/\D/', '', $_GET['precio_max'] ?? '');
-        $categoria_filtro = $_GET['categoria'] ?? '';
-        $compatibilidad_tipo = $_GET['compatibilidad_tipo'] ?? '';
-        $compatibilidad_tipo = in_array($compatibilidad_tipo, ['vehiculo', 'maquinaria'], true) ? $compatibilidad_tipo : '';
-        $vehiculo_marcas = $this->obtenerValoresGet('vehiculo_marca');
-        $vehiculo_modelos = $this->obtenerValoresGet('vehiculo_modelo');
-        $vehiculo_anos = $this->obtenerValoresGet('vehiculo_ano', true);
-        $maquinaria_tipos = array_merge($this->obtenerValoresGet('tipo'), $this->obtenerValoresGet('maquinaria_tipo'));
-        $maquinaria_marcas = array_merge($this->obtenerValoresGet('marca'), $this->obtenerValoresGet('maquinaria_marca'));
-        $maquinaria_modelos = array_merge($this->obtenerValoresGet('modelo'), $this->obtenerValoresGet('maquinaria_modelo'));
-        $maquinaria_tipos = array_values(array_unique($maquinaria_tipos));
-        $maquinaria_marcas = array_values(array_unique($maquinaria_marcas));
-        $maquinaria_modelos = array_values(array_unique($maquinaria_modelos));
-        $hayFiltroVehiculo = !empty($vehiculo_marcas) || !empty($vehiculo_modelos) || !empty($vehiculo_anos);
-        $hayFiltroMaquinaria = !empty($maquinaria_tipos) || !empty($maquinaria_marcas) || !empty($maquinaria_modelos);
-        $compatibilidad_activa = false;
+        $filters = [
+            'query' => $_GET['filtro'] ?? '',
+            'precio_min' => $_GET['precio_min'] ?? '',
+            'precio_max' => $_GET['precio_max'] ?? '',
+            'categoria' => $_GET['categoria'] ?? '',
+            'compatibilidad_tipo' => $_GET['compatibilidad_tipo'] ?? '',
+            'vehiculo_marca' => $this->obtenerValoresGet('vehiculo_marca'),
+            'vehiculo_modelo' => $this->obtenerValoresGet('vehiculo_modelo'),
+            'vehiculo_ano' => $this->obtenerValoresGet('vehiculo_ano', true),
+            'maquinaria_tipo' => array_merge($this->obtenerValoresGet('tipo'), $this->obtenerValoresGet('maquinaria_tipo')),
+            'maquinaria_marca' => array_merge($this->obtenerValoresGet('marca'), $this->obtenerValoresGet('maquinaria_marca')),
+            'maquinaria_modelo' => array_merge($this->obtenerValoresGet('modelo'), $this->obtenerValoresGet('maquinaria_modelo'))
+        ];
 
-        if ($compatibilidad_tipo === '' && $hayFiltroVehiculo) {
-            $compatibilidad_tipo = 'vehiculo';
-        }
-        if ($compatibilidad_tipo === '' && $hayFiltroMaquinaria) {
-            $compatibilidad_tipo = 'maquinaria';
-        }
+        // Normalizar tipos de maquinaria (unificar si vienen de diferentes keys)
+        $filters['maquinaria_tipo'] = array_values(array_unique($filters['maquinaria_tipo']));
+        $filters['maquinaria_marca'] = array_values(array_unique($filters['maquinaria_marca']));
+        $filters['maquinaria_modelo'] = array_values(array_unique($filters['maquinaria_modelo']));
 
-        $productosResultadoFinal = $this->filtrarProductosGenerales(
-            $this->obtenerCatalogoCacheado(!empty($filtro), $forzarActualizacionCatalogo),
-            trim((string) $filtro),
-            $precio_min,
-            $precio_max,
-            trim((string) $categoria_filtro)
-        );
-
-        if (($compatibilidad_tipo === 'vehiculo' && $hayFiltroVehiculo) || ($compatibilidad_tipo === 'maquinaria' && $hayFiltroMaquinaria)) {
-            $compatibilidad_activa = true;
-            $productosResultadoFinal = $this->filtrarPorCompatibilidad(
-                $productosResultadoFinal,
-                $compatibilidad_tipo,
-                $vehiculo_marcas,
-                $vehiculo_modelos,
-                $vehiculo_anos,
-                $maquinaria_tipos,
-                $maquinaria_marcas,
-                $maquinaria_modelos
-            );
+        // Determinar tipo de compatibilidad si no está explícito
+        if (empty($filters['compatibilidad_tipo'])) {
+            if (!empty($filters['vehiculo_marca']) || !empty($filters['vehiculo_modelo']) || !empty($filters['vehiculo_ano'])) {
+                $filters['compatibilidad_tipo'] = 'vehiculo';
+            } elseif (!empty($filters['maquinaria_tipo']) || !empty($filters['maquinaria_marca']) || !empty($filters['maquinaria_modelo'])) {
+                $filters['compatibilidad_tipo'] = 'maquinaria';
+            }
         }
 
+        // Ejecutar búsqueda avanzada en SQL (OCI8)
+        $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado($filters);
+
+        // Variables para la vista
+        $filtro = $filters['query'];
+        $precio_min = $filters['precio_min'];
+        $precio_max = $filters['precio_max'];
+        $categoria_filtro = $filters['categoria'];
+        $compatibilidad_tipo = $filters['compatibilidad_tipo'];
+        $vehiculo_marcas = $filters['vehiculo_marca'];
+        $vehiculo_modelos = $filters['vehiculo_modelo'];
+        $vehiculo_anos = $filters['vehiculo_ano'];
+        $maquinaria_tipos = $filters['maquinaria_tipo'];
+        $maquinaria_marcas = $filters['maquinaria_marca'];
+        $maquinaria_modelos = $filters['maquinaria_modelo'];
+        $compatibilidad_activa = !empty($compatibilidad_tipo);
+
+        // Opciones para los filtros (Dropdowns Dinámicos)
+        // Estas opciones se calculan a partir de los resultados actuales para mantener "Dependent Dropdowns"
         $todasCategorias = $this->construirCategoriasDisponibles($productosResultadoFinal);
         $rangoPrecios = $this->construirRangoPrecios($productosResultadoFinal);
         $opcionesVehiculo = $this->construirOpcionesCompatibilidadVehiculo($productosResultadoFinal, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
         $opcionesMaquinaria = $this->construirOpcionesCompatibilidadMaquinaria($productosResultadoFinal, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos);
 
-        $categoria_filtro = trim((string) $categoria_filtro);
-        if ($categoria_filtro !== '' && !$this->categoriaEnOpciones($categoria_filtro, $todasCategorias)) {
-            $categoria_filtro = '';
-        }
-
+        // Agrupar por categoría para el renderizado
         $categorias = [];
-
         foreach ($productosResultadoFinal as $p) {
             $cat = $p['categoria_nombre'] ?? 'Sin categoria';
             $categorias[$cat][] = $p;
         }
+
+        // El orden ya viene de SQL (por categoría, stock y nombre), pero mantenemos usort por si acaso
+        // aunque el usort original ya no es estrictamente necesario si el SQL es correcto.
         foreach ($categorias as &$productosCategoria) {
             $productosCategoria = $this->ordenarProductosCategoria($productosCategoria);
         }

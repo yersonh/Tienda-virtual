@@ -131,114 +131,154 @@
 
 <style>
     .btn-mapa {
-        background: linear-gradient(135deg, #38bdf8, #3b82f6);
-        color: white;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #041522;
         padding: 10px 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         text-decoration: none;
-        font-weight: 600;
-        transition: 0.3s;
+        font-weight: 800;
+        transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        box-shadow: 0 10px 20px rgba(34, 211, 238, 0.22);
     }
     .btn-mapa:hover {
-        transform: translateY(-2px);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 14px 28px rgba(34, 211, 238, 0.32);
+        color: #041522;
     }
     .filter-card {
-        background: rgba(30,41,59,0.8);
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
     }
-    .filter-group {
-        display: flex;
-        flex-direction: column;
+    .filter-group label {
+        display: block;
+        color: var(--accent);
+        font-weight: 800;
+        margin-bottom: 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .filter-group select, .filter-group input {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--soft-surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s;
+    }
+    .filter-group select:focus, .filter-group input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12);
+        outline: none;
     }
     .btn-filtrar {
-        background: rgba(34,211,238,0.2);
-        border: 1px solid rgba(34,211,238,0.4);
-        color: #38bdf8;
-        padding: 10px 20px;
-        border-radius: 8px;
+        background: rgba(34, 211, 238, 0.12);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        padding: 10px 24px;
+        border-radius: 12px;
         cursor: pointer;
-        font-weight: 600;
-        transition: 0.3s;
-        height: 40px;
+        font-weight: 800;
+        transition: all 0.2s;
+        height: 46px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 13px;
     }
     .btn-filtrar:hover {
-        background: rgba(34,211,238,0.3);
+        background: var(--accent);
+        color: #041522;
+        transform: translateY(-2px);
     }
     .btn-limpiar {
-        background: rgba(239,68,68,0.1);
-        border: 1px solid rgba(239,68,68,0.3);
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.2);
         color: #f87171;
-        padding: 10px 20px;
-        border-radius: 8px;
+        padding: 10px 24px;
+        border-radius: 12px;
         text-decoration: none;
-        font-weight: 600;
-        height: 40px;
+        font-weight: 800;
+        height: 46px;
         display: flex;
         align-items: center;
-        transition: 0.3s;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 13px;
     }
     .btn-limpiar:hover {
-        background: rgba(239,68,68,0.2);
+        background: rgba(239, 68, 68, 0.15);
+        transform: translateY(-2px);
     }
     .table-container {
-        background: rgba(30,41,59,0.8);
-        border-radius: 16px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
         overflow-x: auto;
-        padding: 20px;
+        padding: 24px;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
     }
     .pedidos-table {
         width: 100%;
-        border-collapse: collapse;
-        color: #e2e8f0;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: var(--text);
     }
     .pedidos-table th {
         text-align: left;
-        padding: 12px;
-        border-bottom: 1px solid rgba(56,189,248,0.2);
-        color: #38bdf8;
-        font-weight: 600;
+        padding: 16px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--accent);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
     }
     .pedidos-table td {
-        padding: 12px;
-        border-bottom: 1px solid rgba(56,189,248,0.1);
+        padding: 16px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
     }
-    .pedidos-table tr:hover {
-        background: rgba(56,189,248,0.05);
-    }
-    @media (max-width: 1200px) {
-        .filter-card form {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-    @media (max-width: 768px) {
-        .filter-card form {
-            grid-template-columns: 1fr;
-        }
+    .pedidos-table tr:hover td {
+        background: rgba(34, 211, 238, 0.03);
     }
     .btn-qr {
-        background: rgba(99,102,241,0.2);
-        border: 1px solid rgba(99,102,241,0.4);
-        color: #818cf8;
-        padding: 6px 12px;
-        border-radius: 8px;
+        background: var(--soft-surface);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        padding: 8px 14px;
+        border-radius: 10px;
         cursor: pointer;
-        font-weight: 600;
-        font-size: 13px;
-        transition: 0.2s;
+        font-weight: 800;
+        font-size: 12px;
+        transition: all 0.2s;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        text-transform: uppercase;
     }
     .btn-qr:hover {
-        background: rgba(99,102,241,0.35);
+        background: var(--accent);
+        color: #041522;
+        transform: scale(1.05);
     }
 </style>
 

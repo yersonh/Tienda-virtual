@@ -225,7 +225,14 @@ SELECT
     v.ENVIO,
     v.TOTAL,
 
-    ep.NOMBRE AS ESTADO_PEDIDO,
+    CASE 
+        WHEN pe.ID_ESTADO = 1 AND EXISTS (
+            SELECT 1 FROM PAGO pg 
+            WHERE pg.ID_VENTA = pe.ID_VENTA 
+            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+        ) THEN 'Procesado'
+        ELSE ep.NOMBRE 
+    END AS ESTADO_PEDIDO,
 
     dp.NOMBRE_RECEPTOR,
     dp.APELLIDO_RECEPTOR,
@@ -280,7 +287,14 @@ SELECT
     pe.ID_PEDIDO,
     pe.ID_VENTA,
     pe.ID_ESTADO,
-    ep.NOMBRE AS ESTADO,
+    CASE 
+        WHEN pe.ID_ESTADO = 1 AND EXISTS (
+            SELECT 1 FROM PAGO pg 
+            WHERE pg.ID_VENTA = pe.ID_VENTA 
+            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+        ) THEN 'Procesado'
+        ELSE ep.NOMBRE 
+    END AS ESTADO,
     v.ID_USUARIO,
     per.NOMBRES AS CLIENTE_NOMBRE,
     per.APELLIDOS AS CLIENTE_APELLIDO,

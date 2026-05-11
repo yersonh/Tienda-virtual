@@ -269,7 +269,14 @@ SELECT
     p.ID_ESTADO,
     v.FECHA,
     v.TOTAL,
-    e.NOMBRE AS ESTADO,
+    CASE 
+        WHEN p.ID_ESTADO = 1 AND EXISTS (
+            SELECT 1 FROM PAGO pg 
+            WHERE pg.ID_VENTA = p.ID_VENTA 
+            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+        ) THEN 'Procesado'
+        ELSE e.NOMBRE 
+    END AS ESTADO,
     v.ID_USUARIO
 FROM PEDIDO p
 JOIN VENTA v ON p.ID_VENTA = v.ID_VENTA

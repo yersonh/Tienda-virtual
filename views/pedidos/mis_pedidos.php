@@ -764,6 +764,10 @@ function orderProductImage(?string $imagen): ?string {
                             </button>
                         </form>
                     <?php endif; ?>
+                    <a class="orders-btn primary" href="index.php?action=volverAComprar&id=<?= (int) $pedidoDetalle['id_pedido'] ?>">
+                        <i class="fas fa-rotate-right"></i>
+                        <?= htmlspecialchars('Volver a comprar', ENT_QUOTES, 'UTF-8') ?>
+                    </a>
                 <?php endif; ?>
             </div>
         </div>

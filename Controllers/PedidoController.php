@@ -11,6 +11,7 @@ class PedidoController {
     private $carritoModel;
     private $direccionPedidoModel;
     private $pedidoLifecycleModel;
+    private $productoModel;
     private $ventaColumnasCache = null;
 
     public function __construct() {
@@ -18,6 +19,7 @@ class PedidoController {
         $this->carritoModel = new CarritoModel($this->conn);
         $this->direccionPedidoModel = new DireccionPedidoModel($this->conn);
         $this->pedidoLifecycleModel = new PedidoLifecycleModel($this->conn);
+        $this->productoModel = new ProductoModel($this->conn);
     }
 
     private function ensureSession() {
@@ -419,12 +421,17 @@ class PedidoController {
     }
 
     private function estadoPedidoSql(): string {
-        return "CASE p.ID_ESTADO
-                    WHEN 1 THEN 'Pendiente'
-                    WHEN 2 THEN 'Procesado'
-                    WHEN 3 THEN 'Enviado'
-                    WHEN 4 THEN 'Entregado'
-                    WHEN 5 THEN 'Cancelado'
+        return "CASE 
+                    WHEN p.ID_ESTADO = 1 AND EXISTS (
+                        SELECT 1 FROM PAGO pg 
+                        WHERE pg.ID_VENTA = p.ID_VENTA 
+                        AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+                    ) THEN 'Procesado'
+                    WHEN p.ID_ESTADO = 1 THEN 'Pendiente'
+                    WHEN p.ID_ESTADO = 2 THEN 'Procesado'
+                    WHEN p.ID_ESTADO = 3 THEN 'Enviado'
+                    WHEN p.ID_ESTADO = 4 THEN 'Entregado'
+                    WHEN p.ID_ESTADO = 5 THEN 'Cancelado'
                     ELSE 'Pendiente'
                 END";
     }
@@ -1171,6 +1178,97 @@ class PedidoController {
         oci_commit($this->conn);
         $_SESSION['success'] = 'Pedido cancelado correctamente';
         header("Location: index.php?action=misPedidos");
+        exit();
+    }
+
+    public function volverAComprar() {
+        $this->ensureSession();
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $_SESSION['error'] = 'Debes iniciar sesion para volver a comprar';
+            header("Location: index.php?action=login");
+            exit();
+        }
+
+        $idPedido = (int) ($_GET['id'] ?? 0);
+        if ($idPedido <= 0) {
+            $_SESSION['error'] = 'Pedido invalido';
+            header("Location: index.php?action=misPedidos");
+            exit();
+        }
+
+        try {
+            $pedido = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
+            if (!$pedido || empty($pedido['items'])) {
+                throw new Exception('No se encontraron productos en este pedido');
+            }
+
+            $items = $pedido['items'];
+            $idsProductos = array_column($items, 'id_producto');
+            $productosTienda = $this->productoModel->obtenerPorIds($idsProductos);
+            
+            $stockMap = [];
+            $estadoMap = [];
+            foreach ($productosTienda as $p) {
+                $idProd = (int) $p['id_producto'];
+                $stockMap[$idProd] = (int) ($p['stock_p'] ?? 0);
+                $estadoMap[$idProd] = strtoupper(trim((string)($p['estado'] ?? '')));
+            }
+
+            $agregados = 0;
+            $sinStock = 0;
+            $noActivos = 0;
+
+            foreach ($items as $item) {
+                $idProd = (int) $item['id_producto'];
+                
+                // Validar existencia en catálogo actual
+                if (!isset($stockMap[$idProd])) {
+                    $noActivos++;
+                    continue;
+                }
+
+                // Validar estado (Activo / True)
+                $estado = $estadoMap[$idProd];
+                if ($estado !== 'ACTIVO' && $estado !== 'TRUE') {
+                    $noActivos++;
+                    continue;
+                }
+
+                $stock = $stockMap[$idProd];
+                $cantidadSolicitada = (int) $item['cantidad'];
+
+                if ($stock > 0) {
+                    $cantidadReal = min($cantidadSolicitada, $stock);
+                    $this->carritoModel->agregar($idUsuario, $idProd, $cantidadReal);
+                    $agregados++;
+                } else {
+                    $sinStock++;
+                }
+            }
+
+            if ($agregados > 0) {
+                oci_commit($this->conn);
+                $msg = "$agregados productos agregados al carrito.";
+                $extra = [];
+                if ($sinStock > 0) $extra[] = "$sinStock sin stock";
+                if ($noActivos > 0) $extra[] = "$noActivos ya no disponibles";
+                
+                if (!empty($extra)) {
+                    $msg .= " (" . implode(', ', $extra) . " fueron omitidos).";
+                }
+                
+                $_SESSION['success'] = $msg;
+                header("Location: index.php?action=verCarrito");
+            } else {
+                $_SESSION['error'] = 'Los productos de este pedido ya no estan disponibles o estan agotados.';
+                header("Location: index.php?action=misPedidos&id=" . $idPedido);
+            }
+        } catch (Throwable $e) {
+            error_log('volverAComprar: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error al intentar volver a comprar: ' . $e->getMessage();
+            header("Location: index.php?action=misPedidos&id=" . $idPedido);
+        }
         exit();
     }
 }

@@ -872,4 +872,103 @@ class ProductoModel {
 
         return $results;
     }
+
+    public function buscarProductosAvanzado(array $filters): array {
+        $binds = [];
+        $columns = $this->productoColumns('p');
+        $imageJoin = $this->primeraImagenJoin();
+        $referenciaJoin = $this->referenciaJoin();
+        $stockJoin = $this->stockReferenciaJoin();
+
+        $where = " WHERE " . $this->activeProductoCondition('p');
+
+        // 1. Filtro de Texto (Nombre, Código, Descripción)
+        if (!empty($filters['query'])) {
+            $search = '%' . strtoupper(trim((string)$filters['query'])) . '%';
+            $where .= " AND (UPPER(p.NOMBRE) LIKE :search_query OR UPPER(p.CODIGO) LIKE :search_query OR UPPER(p.DESCRIPCION) LIKE :search_query)";
+            $binds[] = ['param' => ':search_query', 'value' => $search, 'type' => SQLT_CHR];
+        }
+
+        // 2. Filtro de Categoría
+        if (!empty($filters['categoria'])) {
+            $where .= " AND UPPER(TRIM(c.NOMBRE)) = UPPER(TRIM(:cat_name))";
+            $binds[] = ['param' => ':cat_name', 'value' => (string)$filters['categoria'], 'type' => SQLT_CHR];
+        }
+
+        // 3. Rango de Precios
+        if (!empty($filters['precio_min'])) {
+            $where .= " AND p.PRECIO >= :p_min";
+            $binds[] = ['param' => ':p_min', 'value' => (float)$filters['precio_min'], 'type' => SQLT_CHR];
+        }
+        if (!empty($filters['precio_max'])) {
+            $where .= " AND p.PRECIO <= :p_max";
+            $binds[] = ['param' => ':p_max', 'value' => (float)$filters['precio_max'], 'type' => SQLT_CHR];
+        }
+
+        // 4. Compatibilidad (Vehículo / Maquinaria)
+        $tipoCompat = $filters['compatibilidad_tipo'] ?? '';
+        if ($tipoCompat === 'vehiculo') {
+            $subWhere = " WHERE 1=1";
+            $marcas = $this->normalizeFilterList($filters['vehiculo_marca'] ?? []);
+            $modelos = $this->normalizeFilterList($filters['vehiculo_modelo'] ?? []);
+            $anos = $this->normalizeFilterList($filters['vehiculo_ano'] ?? [], true);
+
+            $subWhere .= $this->buildInCondition('MARCA_VEHICULO', 'v_m', $marcas, $binds);
+            $subWhere .= $this->buildInCondition('MODELO_VEHICULO', 'v_mod', $modelos, $binds);
+            
+            if (!empty($anos)) {
+                $anioParts = [];
+                foreach ($anos as $idx => $year) {
+                    $p = ':v_a' . $idx;
+                    $anioParts[] = "$p BETWEEN ANO_INICIO AND ANO_FIN";
+                    $binds[] = ['param' => $p, 'value' => $year, 'type' => SQLT_INT];
+                }
+                $subWhere .= ' AND (' . implode(' OR ', $anioParts) . ')';
+            }
+
+            $where .= " AND p.ID_PRODUCTO IN (SELECT DISTINCT ID_PRODUCTO FROM V_COMPATIBILIDADES_VEHICULO $subWhere)";
+        } elseif ($tipoCompat === 'maquinaria') {
+            $subWhere = " WHERE 1=1";
+            $tipos = $this->normalizeFilterList($filters['maquinaria_tipo'] ?? []);
+            $marcas = $this->normalizeFilterList($filters['maquinaria_marca'] ?? []);
+            $modelos = $this->normalizeFilterList($filters['maquinaria_modelo'] ?? []);
+
+            $subWhere .= $this->buildUpperInCondition('TIPO_MAQUINARIA', 'm_t', $tipos, $binds);
+            $subWhere .= $this->buildUpperInCondition('MARCA_MAQUINARIA', 'm_m', $marcas, $binds);
+            $subWhere .= $this->buildUpperInCondition('MODELO_MAQUINARIA', 'm_mod', $modelos, $binds);
+
+            $where .= " AND p.ID_PRODUCTO IN (
+                SELECT DISTINCT rp.ID_PRODUCTO 
+                FROM REFERENCIA_PRODUCTO rp 
+                INNER JOIN COMPATIBILIDAD_MAQUINARIA cm ON cm.ID_REFERENCIA = rp.ID_REFERENCIA 
+                $subWhere
+            )";
+        }
+
+        $query = "SELECT $columns
+                  FROM PRODUCTO p
+                  INNER JOIN CATEGORIA_PRODUCTO c ON c.ID_CATEGORIA = p.ID_CATEGORIA
+                  $referenciaJoin
+                  $stockJoin
+                  $imageJoin
+                  $where
+                  ORDER BY c.NOMBRE, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.NOMBRE";
+
+        $stmt = oci_parse($this->conn, $query);
+        $this->bindDynamicValues($stmt, $binds);
+        
+        if (!@oci_execute($stmt)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception("Error en busqueda avanzada: " . ($error['message'] ?? 'Oracle Error'));
+        }
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $this->anexarCompatibilidades($results);
+    }
 }
