@@ -163,27 +163,6 @@ class MetodoPagoUsuarioModel {
         $this->limpiarCache($idUsuario);
     }
 
-    private function quitarPredeterminado(int $idUsuario): void {
-        $query = "UPDATE METODO_PAGO_USUARIO
-                  SET ES_PREDETERMINADO = 0
-                  WHERE ID_USUARIO = :id_usuario";
-
-        $stmt = oci_parse($this->conn, $query);
-        if (!$stmt) {
-            throw new Exception($this->oracleErrorMessage());
-        }
-
-        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $message = $this->oracleErrorMessage($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($message);
-        }
-
-        oci_free_statement($stmt);
-    }
-
     public function desactivarVencidasUsuario(int $idUsuario): int {
         if ($idUsuario <= 0 || !$this->columnaExiste('FECHA_EXPIRACION')) {
             return 0;
@@ -193,7 +172,7 @@ class MetodoPagoUsuarioModel {
                   SET ACTIVO = 0,
                       ES_PREDETERMINADO = 0
                   WHERE ID_USUARIO = :id_usuario
-                    AND ID_METODO IN (2, 3)
+                    AND ID_METODO IN (2, 3, 5)
                     AND ACTIVO = 1
                     AND REGEXP_LIKE(FECHA_EXPIRACION, '^(0[1-9]|1[0-2])/[0-9]{4}$')
                     AND TO_DATE('01/' || FECHA_EXPIRACION, 'DD/MM/YYYY') < TRUNC(SYSDATE, 'MM')";
@@ -271,7 +250,7 @@ class MetodoPagoUsuarioModel {
                          {$fechaCreacionSelect} AS FECHA_CREACION
                   FROM METODO_PAGO_USUARIO mpu
                   WHERE mpu.ID_USUARIO = :id_usuario
-                    AND mpu.ID_METODO IN (2, 3)";
+                    AND mpu.ID_METODO IN (2, 3, 5)";
 
         if ($soloActivos === 1) {
             $query .= " AND mpu.ACTIVO = 1";
@@ -359,6 +338,7 @@ class MetodoPagoUsuarioModel {
                          CASE mpu.ID_METODO
                              WHEN 2 THEN 'Tarjeta debito'
                              WHEN 3 THEN 'Tarjeta credito'
+                             WHEN 5 THEN 'Wompi'
                              ELSE 'Tarjeta'
                          END AS FORMA_PAGO,
                          mpu.TITULAR,
@@ -428,10 +408,7 @@ class MetodoPagoUsuarioModel {
             throw new InvalidArgumentException('Esta tarjeta ya esta guardada para tu usuario');
         }
 
-        if ($esPredeterminado === 1) {
-            $this->quitarPredeterminado($idUsuario);
-        }
-    
+          
         $query = "BEGIN SP_GUARDAR_METODO_PAGO(
             :id_usuario,
             :id_metodo,
@@ -482,9 +459,6 @@ class MetodoPagoUsuarioModel {
 
         oci_free_statement($stmt);
         $idMetodoPagoUsuario = $this->obtenerIdPorToken($tokenWompi, $idUsuario);
-        if ($esPredeterminado === 1 && $idMetodoPagoUsuario > 0) {
-            $this->establecerPredeterminado($idMetodoPagoUsuario, $idUsuario);
-        }
         $this->limpiarCache($idUsuario);
 
         return $idMetodoPagoUsuario;
