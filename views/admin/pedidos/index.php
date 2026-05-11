@@ -5,6 +5,12 @@
 /** @var string|null $fecha_desde */
 /** @var string|null $fecha_hasta */
 ?>
+<?php
+/** @var array $pedidos */
+/** @var array $estados */
+/** @var string|null $fecha_desde */
+/** @var string|null $fecha_hasta */
+?>
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h1 style="color: white; margin: 0;">Pedidos</h1>
@@ -286,46 +292,3 @@
         background: rgba(239,68,68,0.25);
     }
 </style>
-
-<!-- Modal QR -->
-<div id="qr-overlay" onclick="cerrarQRSiFondo(event)">
-    <div id="qr-dialog">
-        <h3>QR del Pedido</h3>
-        <p id="qr-label">Pedido #<span id="qr-id-texto"></span></p>
-        <div id="qr-canvas-container"></div>
-        <button id="btn-cerrar-qr" onclick="cerrarQR()">Cerrar</button>
-    </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-    let qrInstance = null;
-
-    function abrirQR(idPedido) {
-        document.getElementById('qr-id-texto').textContent = idPedido;
-
-        const container = document.getElementById('qr-canvas-container');
-        container.innerHTML = '';
-
-        qrInstance = new QRCode(container, {
-            text: String(idPedido),
-            width: 200,
-            height: 200,
-            colorDark: '#0f172a',
-            colorLight: '#f8fafc',
-            correctLevel: QRCode.CorrectLevel.M
-        });
-
-        document.getElementById('qr-overlay').classList.add('active');
-    }
-
-    function cerrarQR() {
-        document.getElementById('qr-overlay').classList.remove('active');
-        document.getElementById('qr-canvas-container').innerHTML = '';
-        qrInstance = null;
-    }
-
-    function cerrarQRSiFondo(e) {
-        if (e.target === document.getElementById('qr-overlay')) cerrarQR();
-    }
-</script>
