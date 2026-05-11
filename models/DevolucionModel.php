@@ -27,10 +27,22 @@ class DevolucionModel {
         }
     }
 
+    private function normalizeRow(array $row): array {
+        $out = [];
+        foreach ($row as $key => $value) {
+            if ($value instanceof OCILob) {
+                $loaded = $value->load();
+                $value  = ($loaded === false) ? '' : (string) $loaded;
+            }
+            $out[strtolower($key)] = $value;
+        }
+        return $out;
+    }
+
     private function rows($stmt): array {
         $rows = [];
         while ($row = oci_fetch_assoc($stmt)) {
-            $rows[] = array_change_key_case($row, CASE_LOWER);
+            $rows[] = $this->normalizeRow($row);
         }
         return $rows;
     }
@@ -87,7 +99,7 @@ class DevolucionModel {
         $this->exec($stmt);
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+        return $row ? $this->normalizeRow($row) : null;
     }
 
     public function obtenerDevolucionesPorUsuario(int $idUsuario): array {
@@ -141,7 +153,7 @@ class DevolucionModel {
             return null;
         }
 
-        $devolucion = array_change_key_case($row, CASE_LOWER);
+        $devolucion = $this->normalizeRow($row);
         $devolucion['detalles'] = $this->obtenerDetallesDevolucion($idDevolucion);
 
         // Monto estimado = precio_unitario × cantidad_aprobada por cada detalle con aprobación
@@ -180,7 +192,7 @@ class DevolucionModel {
         $this->exec($stmt);
         $detalles = [];
         while ($row = oci_fetch_assoc($stmt)) {
-            $detalle = array_change_key_case($row, CASE_LOWER);
+            $detalle = $this->normalizeRow($row);
             $detalle['imagenes'] = $this->obtenerImagenesDetalle((int) $detalle['id_devolucion_detalle']);
             $detalles[] = $detalle;
         }
@@ -411,7 +423,7 @@ class DevolucionModel {
         }
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+        return $row ? $this->normalizeRow($row) : null;
     }
 
     public function obtenerPrecioUnitarioDetalle(int $idDetalle): float {
