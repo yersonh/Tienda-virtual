@@ -356,53 +356,54 @@ class CheckoutController {
         ];
     }
 
+    private function eliminarPagoPendienteSinReferencia(int $idVenta): void {
+        $query = "DELETE FROM PAGO
+                  WHERE ID_VENTA = :id_venta
+                    AND (REFERENCIA_WOMPI IS NULL OR TRIM(TO_CHAR(REFERENCIA_WOMPI)) = '')
+                    AND (ID_TRANSACCION_WOMPI IS NULL OR TRIM(TO_CHAR(ID_TRANSACCION_WOMPI)) = '')
+                    AND UPPER(TRIM(NVL(TO_CHAR(ESTADO), ''))) NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO')";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            return;
+        }
+
+        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+        @oci_execute($stmt, OCI_NO_AUTO_COMMIT);
+        oci_free_statement($stmt);
+    }
+
     public function confirmarPedido(): void {
         $this->ensureSession();
-        $jsonRequest = $this->isJsonRequest();
 
         $idUsuario = $this->getUsuarioId();
         if ($idUsuario <= 0) {
-            if ($jsonRequest) {
-                $this->jsonResponse(401, [
-                    'success' => false,
-                    'message' => 'Debes iniciar sesion para finalizar el pago',
-                    'redirect' => 'index.php?action=login'
-                ]);
-            }
-            $_SESSION['error'] = 'Debes iniciar sesion para finalizar el pago';
-            header('Location: index.php?action=login');
-            exit();
+            $this->jsonResponse(401, [
+                'success'  => false,
+                'message'  => 'Debes iniciar sesion para finalizar el pago',
+                'redirect' => 'index.php?action=login'
+            ]);
         }
 
         $idMetodo = $this->metodoPendienteWompi();
 
         $idDireccion = (int) ($_SESSION['checkout_direccion_id'] ?? 0);
         if ($idDireccion <= 0) {
-            if ($jsonRequest) {
-                $this->jsonResponse(400, [
-                    'success' => false,
-                    'message' => 'Selecciona una direccion antes de pagar',
-                    'redirect' => 'index.php?action=ConfirmarPedido'
-                ]);
-            }
-            $_SESSION['error'] = 'Selecciona una direccion antes de pagar';
-            header('Location: index.php?action=ConfirmarPedido');
-            exit();
+            $this->jsonResponse(400, [
+                'success'  => false,
+                'message'  => 'Selecciona una direccion antes de pagar',
+                'redirect' => 'index.php?action=ConfirmarPedido'
+            ]);
         }
 
         $direccion = $this->direccionPedidoModel->obtenerDireccionPorId($idDireccion, $idUsuario);
         if (!$direccion) {
             unset($_SESSION['checkout_direccion_id'], $_SESSION['checkout_direccion_snapshot']);
-            if ($jsonRequest) {
-                $this->jsonResponse(400, [
-                    'success' => false,
-                    'message' => 'La direccion seleccionada no esta disponible',
-                    'redirect' => 'index.php?action=ConfirmarPedido'
-                ]);
-            }
-            $_SESSION['error'] = 'La direccion seleccionada no esta disponible';
-            header('Location: index.php?action=ConfirmarPedido');
-            exit();
+            $this->jsonResponse(400, [
+                'success'  => false,
+                'message'  => 'La direccion seleccionada no esta disponible',
+                'redirect' => 'index.php?action=ConfirmarPedido'
+            ]);
         }
 
         try {
@@ -420,17 +421,28 @@ class CheckoutController {
             );
 
             $idPedido = (int) ($resultadoPedido['id_pedido'] ?? 0);
-            $idVenta = (int) ($resultadoPedido['id_venta'] ?? 0);
-            $pedido = $idPedido > 0 ? $this->pedidoModel->obtenerPorId($idPedido) : ($idVenta > 0 ? $this->pedidoModel->obtenerPorVenta($idVenta) : null);
+            $idVenta  = (int) ($resultadoPedido['id_venta']  ?? 0);
+            $pedido   = $idPedido > 0
+                ? $this->pedidoModel->obtenerPorId($idPedido)
+                : ($idVenta > 0 ? $this->pedidoModel->obtenerPorVenta($idVenta) : null);
+
             if (!$pedido) {
                 throw new Exception('No se encontro el pedido creado por SP_CREAR_PEDIDO_COMPLETO');
             }
+
             $idPedido = (int) ($pedido['id_pedido'] ?? $idPedido);
-            $idVenta = (int) ($pedido['id_venta'] ?? $idVenta);
+            $idVenta  = (int) ($pedido['id_venta']  ?? $idVenta);
 
             if ($idPedido <= 0 || $idVenta <= 0) {
                 throw new Exception('No se pudo preparar el pedido para Wompi');
             }
+
+            // Eliminar cualquier PAGO creado por el SP sin referencia Wompi —
+            // el registro real de PAGO solo debe crearse desde el webhook.
+            $this->eliminarPagoPendienteSinReferencia($idVenta);
+
+            // Asegurar que el pedido quede en estado 1 (pendiente) tras el SP.
+            $this->pedidoModel->mantenerPendienteTx($idPedido);
 
             $checkoutPayload = $this->checkoutPayloadWompi($idPedido, $idVenta, (float) $resumen['total']);
 
@@ -440,50 +452,36 @@ class CheckoutController {
             $this->limpiarSesionCheckout();
             $_SESSION['carrito_count'] = array_sum($this->carritoModel->obtenerMapaCarritoUsuario($idUsuario));
             $_SESSION['wompi_pedido_pendiente'] = [
-                'id_pedido' => $idPedido,
-                'id_venta' => $idVenta,
-                'referencia' => $checkoutPayload['reference'],
-                'amount_in_cents' => $checkoutPayload['amount_in_cents'],
+                'id_pedido'          => $idPedido,
+                'id_venta'           => $idVenta,
+                'referencia'         => $checkoutPayload['reference'],
+                'amount_in_cents'    => $checkoutPayload['amount_in_cents'],
                 'real_amount_in_cents' => $checkoutPayload['real_amount_in_cents'],
-                'test_mode' => $checkoutPayload['test_mode'],
-                'fecha' => date('Y-m-d H:i:s'),
-                'total' => $resumen['total'],
-                'currency' => $checkoutPayload['currency']
+                'test_mode'          => $checkoutPayload['test_mode'],
+                'fecha'              => date('Y-m-d H:i:s'),
+                'total'              => $resumen['total'],
+                'currency'           => $checkoutPayload['currency']
             ];
 
-            $payload = [
+            $this->jsonResponse(200, [
                 'success'   => true,
                 'message'   => 'Pedido pendiente creado. Completa el pago en Wompi.',
                 'id_pedido' => $idPedido,
                 'id_venta'  => $idVenta,
                 'checkout'  => $checkoutPayload
-            ];
-
-            if ($jsonRequest) {
-                $this->jsonResponse(200, $payload);
-            }
-
-            $_SESSION['success'] = 'Pedido pendiente creado. Completa el pago en Wompi para activar la factura.';
-            header('Location: index.php?action=misPedidos&id=' . $idPedido);
-            exit();
+            ]);
         } catch (Throwable $e) {
             oci_rollback($this->conn);
-            error_log($e->getMessage());
+            error_log('confirmarPedido: ' . $e->getMessage());
 
             $message = $e instanceof InvalidArgumentException || $e instanceof RuntimeException
                 ? $e->getMessage()
                 : 'No se pudo preparar el pago con Wompi. Intenta de nuevo.';
 
-            if ($jsonRequest) {
-                $this->jsonResponse(400, [
-                    'success' => false,
-                    'message' => $message
-                ]);
-            }
-
-            $_SESSION['error'] = $message;
-            header('Location: index.php?action=pago');
-            exit();
+            $this->jsonResponse(400, [
+                'success' => false,
+                'message' => $message
+            ]);
         }
     }
 

@@ -723,10 +723,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const paymentForm = document.getElementById('payment-confirm-form');
-    if (!paymentForm) return;
-    paymentForm.dataset.processing = '0';
+        if (!paymentForm) return;
 
-    paymentForm.addEventListener('submit', async (event) => {
+        if (paymentForm.dataset.listenerAttached === '1') {
+            return;
+        }
+
+        paymentForm.dataset.listenerAttached = '1';
+        paymentForm.dataset.processing = '0';
+
+        paymentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
         if (paymentForm.dataset.processing === '1') return;
