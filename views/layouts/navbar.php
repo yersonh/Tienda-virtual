@@ -17,6 +17,7 @@ $currentAction = $_GET['action'] ?? 'nosotros';
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NAYLEX Store</title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
@@ -577,6 +578,229 @@ textarea:focus {
     from { opacity: 1; transform: translateX(0) scale(1); }
     to   { opacity: 0; transform: translateX(28px) scale(0.94); }
 }
+
+/* =============================================
+   GLOBAL UTILS
+   ============================================= */
+html { scroll-behavior: smooth; }
+img { max-width: 100%; height: auto; }
+
+/* =============================================
+   MOBILE SEARCH BAR (hidden desktop)
+   ============================================= */
+.mob-search-wrap {
+    display: none;
+    position: sticky;
+    top: 60px;
+    z-index: 98;
+    padding: 8px 14px 10px;
+    background: rgba(7, 13, 26, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(56, 189, 248, 0.10);
+}
+[data-theme="light"] .mob-search-wrap {
+    background: rgba(247, 252, 255, 0.96);
+    border-bottom-color: rgba(8, 145, 178, 0.10);
+}
+.mob-search-form {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.mob-search-form .mob-search-icon {
+    position: absolute;
+    left: 13px;
+    color: var(--secondary);
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 1;
+}
+.mob-search-bar {
+    width: 100%;
+    background: var(--soft-surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 500;
+    padding: 10px 14px 10px 36px;
+    border-radius: 999px;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    -webkit-appearance: none;
+    appearance: none;
+}
+.mob-search-bar::placeholder { color: var(--secondary); opacity: 0.85; }
+.mob-search-bar:focus {
+    border-color: var(--accent-strong);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+}
+
+/* =============================================
+   BOTTOM NAV (hidden by default — mobile only)
+   ============================================= */
+.mob-bottom-nav { display: none; }
+
+/* =============================================
+   BREAKPOINT 640px — MOBILE FIRST
+   ============================================= */
+@media (max-width: 640px) {
+
+    /* Body: space for fixed bottom nav */
+    body {
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Compact, single-row nav */
+    .nav {
+        padding: 10px 14px !important;
+        gap: 10px !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }
+    .nav-logo {
+        font-size: 17px !important;
+        flex: 1;
+        min-width: 0;
+        margin-right: 0 !important;
+    }
+    .nav-links { display: none !important; }
+    .nav-actions {
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+    }
+    .nav-actions .btn-ghost,
+    .nav-actions .btn-primary { display: none !important; }
+    .side-menu-btn,
+    .cart-btn,
+    .theme-toggle {
+        width: 40px !important;
+        height: 40px !important;
+        flex-shrink: 0;
+    }
+
+    /* Show mobile search bar */
+    .mob-search-wrap { display: block; }
+
+    /* Bottom nav */
+    .mob-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: calc(60px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(7, 13, 26, 0.97);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border-top: 1px solid rgba(56, 189, 248, 0.16);
+        box-shadow: 0 -8px 28px rgba(2, 6, 23, 0.38);
+        z-index: 150;
+        align-items: stretch;
+        justify-content: space-around;
+    }
+    [data-theme="light"] .mob-bottom-nav {
+        background: rgba(247, 252, 255, 0.98);
+        border-top-color: rgba(8, 145, 178, 0.16);
+        box-shadow: 0 -6px 20px rgba(15, 55, 90, 0.10);
+    }
+    .mob-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        flex: 1;
+        text-decoration: none;
+        color: var(--secondary);
+        font-weight: 700;
+        padding: 6px 2px;
+        min-width: 0;
+        position: relative;
+        transition: color var(--transition);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mob-nav-item i {
+        font-size: 19px;
+        line-height: 1.1;
+        transition: transform var(--transition), filter var(--transition);
+    }
+    .mob-nav-item .mob-label {
+        font-size: 9.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 64px;
+        letter-spacing: 0.01em;
+    }
+    .mob-nav-item.active,
+    .mob-nav-item:active { color: var(--accent); }
+    .mob-nav-item.active i {
+        filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.5));
+        transform: translateY(-2px);
+    }
+    .mob-cart-badge {
+        position: absolute;
+        top: 3px;
+        right: calc(50% - 22px);
+        background: linear-gradient(135deg, #22d3ee, #38bdf8);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 900;
+        min-width: 16px; height: 16px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0 3px;
+        box-shadow: 0 3px 8px rgba(14, 165, 233, 0.4);
+        pointer-events: none;
+    }
+
+    /* Toast: above bottom nav on mobile */
+    .nxl-toast-container {
+        top: auto !important;
+        bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+        right: 12px;
+    }
+    .nxl-toast {
+        min-width: 220px;
+        max-width: calc(100vw - 24px);
+    }
+
+    /* Tables: horizontal scroll */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Container full-width */
+    .container {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    /* iOS input zoom prevention */
+    input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),
+    select,
+    textarea { font-size: 16px !important; }
+
+    /* Touchable form controls */
+    .form-control,
+    .form-select {
+        min-height: 46px !important;
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+    }
+}
+
+/* =============================================
+   TABLET (641-980px) — cart stack
+   ============================================= */
+@media (max-width: 980px) {
+    .cart-grid { grid-template-columns: 1fr !important; }
+    .cart-summary { position: relative !important; top: auto !important; }
+}
 </style>
 </head>
 
@@ -663,6 +887,21 @@ textarea:focus {
     </div>
 </nav>
 
+<!-- MOBILE SEARCH BAR — visible only on ≤640px -->
+<div class="mob-search-wrap" role="search">
+    <form class="mob-search-form" action="index.php" method="GET">
+        <input type="hidden" name="action" value="tienda">
+        <i class="fas fa-magnifying-glass mob-search-icon" aria-hidden="true"></i>
+        <input
+            type="search"
+            name="busqueda"
+            class="mob-search-bar"
+            placeholder="Buscar repuesto..."
+            autocomplete="off"
+            value="<?= htmlspecialchars($_GET['busqueda'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+    </form>
+</div>
+
 <div class="side-backdrop" id="side-backdrop"></div>
 <aside class="side-panel" id="side-panel" aria-hidden="true">
   <div class="side-head">
@@ -683,6 +922,52 @@ textarea:focus {
     <?php endif; ?>
   </div>
 </aside>
+
+<!-- MOBILE BOTTOM NAVIGATION — visible only on ≤640px -->
+<nav class="mob-bottom-nav" aria-label="Navegacion movil">
+    <a href="index.php?action=inicio"
+       class="mob-nav-item <?= in_array($currentAction, ['inicio', 'nosotros'], true) ? 'active' : '' ?>">
+        <i class="fas fa-house" aria-hidden="true"></i>
+        <span class="mob-label">Inicio</span>
+    </a>
+    <a href="index.php?action=tienda"
+       class="mob-nav-item <?= in_array($currentAction, ['tienda', 'productoDetalle', 'reacondicionados'], true) ? 'active' : '' ?>">
+        <i class="fas fa-store" aria-hidden="true"></i>
+        <span class="mob-label">Productos</span>
+    </a>
+    <a href="index.php?action=verCarrito"
+       class="mob-nav-item <?= $currentAction === 'verCarrito' ? 'active' : '' ?>"
+       aria-label="Carrito<?= $carritoCount > 0 ? ' (' . $carritoCount . ' items)' : '' ?>">
+        <i class="fas fa-cart-shopping" aria-hidden="true"></i>
+        <?php if($carritoCount > 0): ?>
+        <span class="mob-cart-badge" aria-hidden="true"><?= $carritoCount ?></span>
+        <?php endif; ?>
+        <span class="mob-label">Carrito</span>
+    </a>
+    <?php if($logueado): ?>
+    <a href="index.php?action=misPedidos"
+       class="mob-nav-item <?= $currentAction === 'misPedidos' ? 'active' : '' ?>">
+        <i class="fas fa-bag-shopping" aria-hidden="true"></i>
+        <span class="mob-label">Pedidos</span>
+    </a>
+    <a href="index.php?action=perfil"
+       class="mob-nav-item <?= $currentAction === 'perfil' ? 'active' : '' ?>">
+        <i class="fas fa-user" aria-hidden="true"></i>
+        <span class="mob-label">Perfil</span>
+    </a>
+    <?php else: ?>
+    <a href="index.php?action=login"
+       class="mob-nav-item <?= $currentAction === 'login' ? 'active' : '' ?>">
+        <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
+        <span class="mob-label">Login</span>
+    </a>
+    <a href="index.php?action=registro"
+       class="mob-nav-item <?= $currentAction === 'registro' ? 'active' : '' ?>">
+        <i class="fas fa-user-plus" aria-hidden="true"></i>
+        <span class="mob-label">Registro</span>
+    </a>
+    <?php endif; ?>
+</nav>
 
 <script>
 const themeToggle = document.getElementById('theme-toggle');

@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title><?= htmlspecialchars('Panel Admin - NAYLEX Store', ENT_QUOTES, 'UTF-8') ?></title>
 <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
@@ -231,18 +231,96 @@ if (session_status() === PHP_SESSION_NONE) {
         border-radius: 4px;
     }
 
+    /* ─── ADMIN MOBILE ELEMENTS (hidden desktop) ─── */
+    .admin-mobile-header { display: none; }
+    .admin-sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.56);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 220ms ease;
+    }
+    .admin-sidebar-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     @media (max-width: 768px) {
         .admin-sidebar {
             transform: translateX(-100%);
             width: 260px;
+            z-index: 1000;
         }
-        
+        .admin-sidebar.mobile-open { transform: translateX(0); }
+
         .main-content {
             margin-left: 0;
+            padding: 0 16px 28px;
         }
-        
-        .admin-sidebar.mobile-open {
-            transform: translateX(0);
+
+        .admin-sidebar-backdrop { display: block; }
+
+        .admin-mobile-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(7, 11, 20, 0.94);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--panel-line);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin: 0 -16px 20px;
+        }
+        [data-theme="light"] .admin-mobile-header {
+            background: rgba(255, 255, 255, 0.96);
+        }
+        .admin-hamburger {
+            background: var(--panel-soft);
+            border: 1px solid var(--panel-line);
+            color: var(--sidebar-text);
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .admin-hamburger:hover,
+        .admin-hamburger:active {
+            border-color: #38bdf8;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+        }
+        .admin-mobile-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #38bdf8;
+            flex: 1;
+            letter-spacing: -0.03em;
+        }
+
+        /* Responsive table scroll in admin */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* iOS input zoom */
+        input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),
+        select, textarea { font-size: 16px !important; }
+
+        /* Touchable controls */
+        .form-control, .form-select {
+            min-height: 46px !important;
+            padding: 12px 14px !important;
         }
     }
 
@@ -453,6 +531,15 @@ if (session_status() === PHP_SESSION_NONE) {
     </aside>
 
     <main class="main-content">
+        <!-- MOBILE HEADER — hamburger + logo, visible only on ≤768px -->
+        <div class="admin-mobile-header">
+            <button class="admin-hamburger" id="admin-sidebar-toggle" type="button" aria-label="Abrir menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="admin-mobile-logo">NAYLEX STORE</span>
+        </div>
+        <div class="admin-sidebar-backdrop" id="admin-sidebar-backdrop"></div>
+
         <?php
         if (isset($contenido) && !empty($contenido)) {
             echo $contenido;
@@ -487,6 +574,27 @@ adminThemeToggle.addEventListener('click', () => {
 });
 
 applyAdminTheme(localStorage.getItem('theme') || 'dark');
+
+// Mobile sidebar toggle
+(function() {
+    var toggle   = document.getElementById('admin-sidebar-toggle');
+    var sidebar  = document.querySelector('.admin-sidebar');
+    var backdrop = document.getElementById('admin-sidebar-backdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+
+    function openSidebar()  { sidebar.classList.add('mobile-open');    backdrop.classList.add('is-open'); }
+    function closeSidebar() { sidebar.classList.remove('mobile-open'); backdrop.classList.remove('is-open'); }
+
+    toggle.addEventListener('click', openSidebar);
+    backdrop.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSidebar();
+    });
+    // Close when any nav-link is tapped on mobile
+    document.querySelector('.nav-menu').addEventListener('click', function(e) {
+        if (e.target.closest('.nav-link') && window.innerWidth <= 768) closeSidebar();
+    });
+})();
 </script>
 
 </body>

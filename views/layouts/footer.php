@@ -88,6 +88,12 @@ body{
     }
 }
 
+@media(max-width:640px){
+
+    /* Bottom nav replaces footer on mobile */
+    .app-footer{ display:none !important; }
+}
+
 </style>
 
 <div class="app-footer">
