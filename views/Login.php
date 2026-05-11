@@ -273,6 +273,28 @@ if (session_status() === PHP_SESSION_NONE) {
             background: #dcfce7;
         }
 
+        .login-btn.btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        .login-btn.btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 480px) {
             .login-container {
                 padding: 30px 22px;
@@ -403,6 +425,14 @@ if (session_status() === PHP_SESSION_NONE) {
                     successMessage.style.display = 'none';
                 }, 400);
             }, 3000);
+        }
+        const loginForm = document.querySelector('form[action="index.php?action=iniciarSesion"]');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function() {
+                const btn = this.querySelector('.login-btn');
+                btn.classList.add('btn-loading');
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Iniciando...';
+            });
         }
     </script>
 

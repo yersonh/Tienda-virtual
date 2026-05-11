@@ -477,9 +477,11 @@ class CarritoModel {
 
     public function obtenerTotalItemsCarrito($idUsuario): int {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-        $query = "SELECT NVL(SUM(CANTIDAD), 0) AS TOTAL_ITEMS
-                  FROM V_CARRITO_USUARIO
-                  WHERE ID_USUARIO = :ID_USUARIO";
+        // Optimizamos: consultamos directamente DETALLE_CARRITO y CARRITO para evitar el JOIN con PRODUCTO de la vista
+        $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS
+                  FROM CARRITO c
+                  JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  WHERE c.ID_USUARIO = :ID_USUARIO";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -489,23 +491,9 @@ class CarritoModel {
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $message = $this->oracleErrorMessage($stmt);
+            $error = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
-            if (!$this->esObjetoOracleNoVisible($message)) {
-                throw new Exception($message);
-            }
-
-            $query = "SELECT NVL(SUM(dc.CANTIDAD), 0) AS TOTAL_ITEMS
-                      FROM CARRITO c
-                      LEFT JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                      WHERE c.ID_USUARIO = :ID_USUARIO";
-            $stmt = oci_parse($this->conn, $query);
-            oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
-            if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-                $message = $this->oracleErrorMessage($stmt);
-                oci_free_statement($stmt);
-                throw new Exception($message);
-            }
+            throw new Exception($error);
         }
 
         $row = oci_fetch_assoc($stmt) ?: [];
