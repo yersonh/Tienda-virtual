@@ -120,7 +120,7 @@ class DevolucionModel {
                        d.REEMBOLSO_ERROR,
                        ed.NOMBRE AS ESTADO_NOMBRE
                   FROM DEVOLUCION d
-                 INNER JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO = d.ID_ESTADO_DEVOLUCION
+                 INNER JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO_DEVOLUCION = d.ID_ESTADO_DEVOLUCION
                  WHERE d.ID_DEVOLUCION = :id_devolucion";
 
         if ($idUsuario !== null) {
@@ -211,7 +211,7 @@ class DevolucionModel {
                  WHERE ID_PEDIDO              = :id_pedido
                    AND ID_USUARIO             = :id_usuario
                    AND ID_ESTADO_DEVOLUCION NOT IN (
-                       SELECT ID_ESTADO FROM ESTADO_DEVOLUCION
+                       SELECT ID_ESTADO_DEVOLUCION FROM ESTADO_DEVOLUCION
                         WHERE UPPER(NOMBRE) LIKE '%RECHAZ%'
                    )
                  FETCH FIRST 1 ROWS ONLY";
@@ -308,7 +308,7 @@ class DevolucionModel {
     }
 
     public function obtenerEstados(): array {
-        $stmt = $this->parse("SELECT ID_ESTADO, NOMBRE FROM ESTADO_DEVOLUCION ORDER BY ID_ESTADO");
+        $stmt = $this->parse("SELECT ID_ESTADO_DEVOLUCION, NOMBRE FROM ESTADO_DEVOLUCION ORDER BY ID_ESTADO_DEVOLUCION");
         $this->exec($stmt);
         $result = $this->rows($stmt);
         oci_free_statement($stmt);

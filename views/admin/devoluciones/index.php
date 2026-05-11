@@ -30,8 +30,8 @@ function adDevEstadoStyle(string $nombre): array {
                         style="width:100%;padding:10px;background:rgba(15,23,42,.8);border:1px solid rgba(56,189,248,.2);border-radius:8px;color:white;font-size:14px;">
                     <option value="">Todos</option>
                     <?php foreach ($estados as $est): ?>
-                        <option value="<?= (int) $est['id_estado'] ?>"
-                            <?= $estadoFiltro === (int) $est['id_estado'] ? 'selected' : '' ?>>
+                        <option value="<?= (int) $est['id_estado_devolucion'] ?>"
+                            <?= $estadoFiltro === (int) $est['id_estado_devolucion'] ? 'selected' : '' ?>>
                             <?= htmlspecialchars($est['nombre'], ENT_QUOTES, 'UTF-8') ?>
                         </option>
                     <?php endforeach; ?>
