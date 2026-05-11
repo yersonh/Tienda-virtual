@@ -164,6 +164,53 @@ class UploadHelper {
         return 'image.php?folder=' . $carpeta . '&path=' . urlencode($archivo);
     }
     
+    // Crear directorio para imágenes de devoluciones
+    public static function ensureDevolucionesDirectory() {
+        $path = self::getBasePath() . 'devoluciones/';
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+        return $path;
+    }
+
+    // Procesar imagen subida para devoluciones
+    public static function procesarImagenDevolucion($archivo, $id_devolucion_detalle, $orden) {
+        if (!in_array($archivo['type'], self::$config['allowed_types'])) {
+            throw new Exception("Tipo de archivo no permitido. Tipos permitidos: JPG, PNG, GIF, WEBP");
+        }
+
+        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+        if (!in_array($extension, self::$config['allowed_extensions'])) {
+            throw new Exception("Extensión no permitida");
+        }
+
+        if ($archivo['size'] > self::$config['max_size']) {
+            throw new Exception("El archivo excede el tamaño máximo de 5MB");
+        }
+
+        $nombre        = time() . '_devd_' . $id_devolucion_detalle . '_' . $orden . '.' . $extension;
+        $directorio    = self::ensureDevolucionesDirectory();
+        $rutaAbsoluta  = $directorio . $nombre;
+        $rutaRelativa  = 'uploads/devoluciones/' . $nombre;
+
+        if (move_uploaded_file($archivo['tmp_name'], $rutaAbsoluta)) {
+            self::redimensionarImagen($rutaAbsoluta, $extension);
+            return $rutaRelativa;
+        }
+
+        throw new Exception("Error al guardar la imagen de devolución");
+    }
+
+    // Obtener la URL para imágenes de devoluciones
+    public static function getDevolucionImageUrl($rutaRelativa) {
+        if (empty($rutaRelativa)) {
+            return self::getDefaultPhoto();
+        }
+        $partes  = explode('/', $rutaRelativa);
+        $archivo = end($partes);
+        return 'image.php?folder=devoluciones&path=' . urlencode($archivo);
+    }
+
     // Obtener configuración
     public static function getConfig() {
         return self::$config;

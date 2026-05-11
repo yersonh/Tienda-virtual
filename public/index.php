@@ -30,6 +30,10 @@ spl_autoload_register(function (string $class): void {
         $paths[] = __DIR__ . '/../models/' . $class . '.php';
     }
 
+    if (str_ends_with($class, 'Service')) {
+        $paths[] = __DIR__ . '/../services/' . $class . '.php';
+    }
+
     if ($class === 'Auth') {
         $paths[] = __DIR__ . '/../middleware/Auth.php';
     }
@@ -63,7 +67,8 @@ $publicas = [
     'cambiarPassword',
     'wompiWebhook',
     'expirarPedidosCron',
-    'tomarPedido'
+    'tomarPedido',
+    'reacondicionados',
 ];
 
 if (empty($_SESSION['logueado']) && !in_array($action, $publicas, true)) {
@@ -361,6 +366,70 @@ switch ($action) {
 
     case 'wompiWebhook':
         (new WompiController())->webhook();
+        break;
+
+    // ── Devoluciones (usuario) ──────────────────────────────────────────────
+    case 'solicitarDevolucion':
+        (new DevolucionController())->solicitarForm();
+        break;
+
+    case 'enviarDevolucion':
+        (new DevolucionController())->enviarSolicitud();
+        break;
+
+    case 'misDevoluciones':
+        (new DevolucionController())->misDevoluciones();
+        break;
+
+    case 'devolucionDetalle':
+        (new DevolucionController())->verDetalle();
+        break;
+
+    // ── Reacondicionados (público) ──────────────────────────────────────────
+    case 'reacondicionados':
+        (new DevolucionController())->ofertasPublicas();
+        break;
+
+    // ── Devoluciones (admin) ────────────────────────────────────────────────
+    case 'admin_devoluciones':
+        (new DevolucionController())->adminIndex();
+        break;
+
+    case 'admin_devolucion_detalle':
+        (new DevolucionController())->adminDetalle();
+        break;
+
+    case 'admin_aprobar_devolucion':
+        (new DevolucionController())->adminAprobar();
+        break;
+
+    case 'admin_rechazar_devolucion':
+        (new DevolucionController())->adminRechazar();
+        break;
+
+    case 'admin_producto_recibido':
+        (new DevolucionController())->adminProductoRecibido();
+        break;
+
+    // ── Reacondicionados (admin) ────────────────────────────────────────────
+    case 'admin_reacondicionados':
+        (new DevolucionController())->adminInventarioReacondicionado();
+        break;
+
+    case 'admin_ofertar_reacondicionado':
+        (new DevolucionController())->adminOfertarItem();
+        break;
+
+    case 'admin_reofertar_reacondicionado':
+        (new DevolucionController())->adminReofertarItem();
+        break;
+
+    case 'admin_stock_muerto':
+        (new DevolucionController())->adminStockMuerto();
+        break;
+
+    case 'admin_sacar_inventario':
+        (new DevolucionController())->adminSacarInventario();
         break;
 
     default:

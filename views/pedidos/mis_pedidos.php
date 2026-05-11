@@ -848,6 +848,11 @@ function orderProductImage(?string $imagen): ?string {
                             <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('El pedido ya esta en camino.', ENT_QUOTES, 'UTF-8') ?></p>
                         <?php elseif ((int) ($pedidoDetalle['id_estado'] ?? 0) === 4): ?>
                             <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('No es posible cancelar este pedido porque ya fue entregado.', ENT_QUOTES, 'UTF-8') ?></p>
+                            <a class="orders-btn secondary" href="index.php?action=solicitarDevolucion&id_pedido=<?= (int) $pedidoDetalle['id_pedido'] ?>"
+                               style="margin-top:8px;background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.4);color:#a5b4fc;">
+                                <i class="fas fa-rotate-left"></i>
+                                <?= htmlspecialchars('Solicitar devolucion', ENT_QUOTES, 'UTF-8') ?>
+                            </a>
                         <?php elseif ((int) ($pedidoDetalle['id_estado'] ?? 0) === 5): ?>
                             <p class="orders-sub" style="margin-top:12px;"><?= htmlspecialchars('Pedido cancelado.', ENT_QUOTES, 'UTF-8') ?></p>
                         <?php endif; ?>
@@ -1076,6 +1081,12 @@ function orderProductImage(?string $imagen): ?string {
                                             <?= htmlspecialchars('Cancelar pedido', ENT_QUOTES, 'UTF-8') ?>
                                         </button>
                                     </form>
+                                <?php elseif ((int) ($pedido['id_estado'] ?? 0) === 4): ?>
+                                    <a class="orders-btn secondary" href="index.php?action=solicitarDevolucion&id_pedido=<?= $idPedido ?>"
+                                       style="background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.4);color:#a5b4fc;">
+                                        <i class="fas fa-rotate-left"></i>
+                                        <?= htmlspecialchars('Devolucion', ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
                                 <?php elseif ((int) ($pedido['id_estado'] ?? 0) === 5): ?>
                                     <span class="orders-btn is-disabled">
                                         <i class="fas fa-ban"></i>

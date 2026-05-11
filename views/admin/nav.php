@@ -393,6 +393,27 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
 
             <div class="nav-item">
+                <a href="index.php?action=admin_devoluciones" class="nav-link">
+                    <i class="fas fa-rotate-left"></i>
+                    <span><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="index.php?action=admin_reacondicionados" class="nav-link">
+                    <i class="fas fa-recycle"></i>
+                    <span><?= htmlspecialchars('Reacondicionados', ENT_QUOTES, 'UTF-8') ?></span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="index.php?action=admin_stock_muerto" class="nav-link">
+                    <i class="fas fa-skull"></i>
+                    <span><?= htmlspecialchars('Stock Muerto', ENT_QUOTES, 'UTF-8') ?></span>
+                </a>
+            </div>
+
+            <div class="nav-item">
                 <a href="#" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span><?= htmlspecialchars('Clientes', ENT_QUOTES, 'UTF-8') ?></span>
