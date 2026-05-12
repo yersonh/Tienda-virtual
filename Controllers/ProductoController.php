@@ -54,28 +54,63 @@ class ProductoController {
     // Guardar producto nuevo
     public function guardar() {
         Auth::soloAdmin();
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        try {
             $datos = [
-                'nombre' => $_POST['nombre'],
-                'codigo' => $_POST['codigo'],
-                'descripcion' => $_POST['descripcion'],
-                'precio' => $_POST['precio'],
-                'stock' => $_POST['stock'],
-                'estado' => $_POST['estado'],
-                'id_categoria' => $_POST['id_categoria']
+                'nombre'       => trim($_POST['nombre'] ?? ''),
+                'codigo'       => trim($_POST['codigo'] ?? ''),
+                'descripcion'  => trim($_POST['descripcion'] ?? ''),
+                'precio'       => $_POST['precio'] ?? '0',
+                'estado'       => $_POST['estado'] ?? '1',
+                'id_categoria' => $_POST['id_categoria'] ?? 0,
             ];
-            
-            $id_producto = $this->model->crear($datos);
-            
-            // Guardar imágenes usando UploadHelper
+
+            // 1. Insertar PRODUCTO (sin auto-commit)
+            $id_producto = $this->model->crear($datos, false);
+
+            // 2. Insertar REFERENCIA_PRODUCTO
+            $refDatos = [
+                'numero_referencia' => trim($_POST['numero_referencia'] ?? ''),
+                'marca'             => trim($_POST['ref_marca'] ?? ''),
+                'fabricante'        => trim($_POST['fabricante'] ?? ''),
+                'especificaciones'  => trim($_POST['especificaciones'] ?? ''),
+            ];
+            $id_referencia = $this->model->crearReferencia($id_producto, $refDatos);
+
+            // 3. Compatibilidades vehiculo
+            $vehiculos = $_POST['vehiculos'] ?? [];
+            foreach ($vehiculos as $v) {
+                if (empty($v['marca_vehiculo']) && empty($v['modelo_vehiculo'])) continue;
+                $this->model->crearCompatibilidadVehiculo($id_referencia, $v);
+            }
+
+            // 4. Compatibilidades maquinaria
+            $maquinarias = $_POST['maquinaria'] ?? [];
+            foreach ($maquinarias as $m) {
+                if (empty($m['tipo_maquinaria']) && empty($m['marca_maquinaria'])) continue;
+                $this->model->crearCompatibilidadMaquinaria($id_referencia, $m);
+            }
+
+            // 5. Commit de la transaccion
+            $this->model->commit();
+
+            // 6. Guardar imagenes (fuera de la transaccion Oracle; son archivos del SO)
             if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
                 $this->guardarImagenes($id_producto, $_FILES['imagenes']);
             }
-            
+
             $this->invalidarCacheCatalogo();
-            $_SESSION['success'] = "Producto creado exitosamente";
-            header("Location: index.php?action=productos");
+            $_SESSION['success'] = 'Producto creado exitosamente';
+            header('Location: index.php?action=productos');
+            exit();
+
+        } catch (Exception $e) {
+            $this->model->rollback();
+            error_log('Error al crear producto: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error al guardar el producto: ' . $e->getMessage();
+            header('Location: index.php?action=productos_crear');
             exit();
         }
     }
@@ -83,7 +118,7 @@ class ProductoController {
     // Mostrar formulario editar
     public function editar() {
         Auth::soloAdmin();
-        $id = $_GET['id'] ?? 0;
+        $id = (int) ($_GET['id'] ?? 0);
         $producto = $this->model->obtenerPorId($id);
 
         if (!$producto) {
@@ -92,8 +127,10 @@ class ProductoController {
             exit();
         }
 
-        $imagenes = $this->model->obtenerImagenes($id) ?? [];
-        $categorias = $this->model->obtenerCategorias() ?? [];
+        $imagenes       = $this->model->obtenerImagenes($id) ?? [];
+        $categorias     = $this->model->obtenerCategorias() ?? [];
+        $referencia     = $this->model->obtenerReferencia($id) ?? [];
+        $compatibilidades = $this->model->obtenerTodasCompatibilidades($id);
 
         ob_start();
         require_once __DIR__ . '/../views/admin/productos/editar.php';
@@ -105,29 +142,67 @@ class ProductoController {
     // Actualizar producto
     public function actualizar() {
         Auth::soloAdmin();
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = $_POST['id_producto'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $id = (int) ($_POST['id_producto'] ?? 0);
+
+        try {
             $datos = [
-                'nombre' => $_POST['nombre'],
-                'codigo' => $_POST['codigo'],
-                'descripcion' => $_POST['descripcion'],
-                'precio' => $_POST['precio'],
-                'stock' => $_POST['stock'],
-                'estado' => $_POST['estado'],
-                'id_categoria' => $_POST['id_categoria']
+                'nombre'       => trim($_POST['nombre'] ?? ''),
+                'codigo'       => trim($_POST['codigo'] ?? ''),
+                'descripcion'  => trim($_POST['descripcion'] ?? ''),
+                'precio'       => $_POST['precio'] ?? '0',
+                'estado'       => $_POST['estado'] ?? '1',
+                'id_categoria' => $_POST['id_categoria'] ?? 0,
             ];
-            
+
+            // 1. Actualizar PRODUCTO
             $this->model->actualizar($id, $datos);
-            
-            // Guardar nuevas imágenes usando UploadHelper
+
+            // 2. Actualizar REFERENCIA_PRODUCTO
+            $refDatos = [
+                'numero_referencia' => trim($_POST['numero_referencia'] ?? ''),
+                'marca'             => trim($_POST['ref_marca'] ?? ''),
+                'fabricante'        => trim($_POST['fabricante'] ?? ''),
+                'especificaciones'  => trim($_POST['especificaciones'] ?? ''),
+            ];
+            $this->model->actualizarReferencia($id, $refDatos);
+
+            // 3. Reemplazar compatibilidades: borrar todo y re-insertar
+            $referencia = $this->model->obtenerReferencia($id);
+            $idReferencia = (int) ($referencia['id_referencia'] ?? 0);
+
+            if ($idReferencia > 0) {
+                $this->model->eliminarCompatibilidadesPorReferencia($idReferencia);
+
+                foreach ($_POST['vehiculos'] ?? [] as $v) {
+                    if (empty($v['marca_vehiculo']) && empty($v['modelo_vehiculo'])) continue;
+                    $this->model->crearCompatibilidadVehiculo($idReferencia, $v);
+                }
+                foreach ($_POST['maquinaria'] ?? [] as $m) {
+                    if (empty($m['tipo_maquinaria']) && empty($m['marca_maquinaria'])) continue;
+                    $this->model->crearCompatibilidadMaquinaria($idReferencia, $m);
+                }
+            }
+
+            $this->model->commit();
+
+            // 4. Imágenes nuevas (fuera de la transacción Oracle)
             if (isset($_FILES['imagenes']) && !empty($_FILES['imagenes']['name'][0])) {
                 $this->guardarImagenes($id, $_FILES['imagenes']);
             }
-            
+
             $this->invalidarCacheCatalogo();
-            $_SESSION['success'] = "Producto actualizado exitosamente";
-            header("Location: index.php?action=productos");
+            $_SESSION['success'] = 'Producto actualizado exitosamente';
+            header('Location: index.php?action=productos');
+            exit();
+
+        } catch (Exception $e) {
+            $this->model->rollback();
+            error_log('Error al actualizar producto: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error al actualizar el producto: ' . $e->getMessage();
+            header('Location: index.php?action=productos_editar&id=' . $id);
             exit();
         }
     }
