@@ -448,7 +448,8 @@ class DevolucionModel {
     public function obtenerTransaccionWompiPorPedido(int $idPedido): ?array {
         $sql = "SELECT pa.ID_TRANSACCION_WOMPI,
                        pa.REFERENCIA_WOMPI,
-                       NVL(v.TOTAL, 0) AS TOTAL
+                       NVL(v.TOTAL, 0)     AS TOTAL,
+                       NVL(pa.METODO_REAL, 'DESCONOCIDO') AS METODO_REAL
                   FROM PAGO   pa
                  INNER JOIN PEDIDO  pe ON pe.ID_VENTA = pa.ID_VENTA
                  INNER JOIN VENTA   v  ON v.ID_VENTA  = pa.ID_VENTA
