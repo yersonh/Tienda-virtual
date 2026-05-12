@@ -73,11 +73,11 @@
                                    class="btn-accion btn-editar" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="index.php?action=productos_eliminar&id=<?= (int) $producto['id_producto'] ?>"
+                                <button type="button"
                                    class="btn-accion btn-eliminar" title="Eliminar"
-                                   onclick="return confirm('¿Eliminar este producto?')">
+                                   onclick="abrirModalEliminar(<?= (int) $producto['id_producto'] ?>, '<?= htmlspecialchars(addslashes($producto['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?>')">
                                     <i class="fas fa-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -206,4 +206,80 @@
         font-weight: 600;
         font-size: 14px;
     }
+    .btn-accion[type="button"] {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+    /* Modal eliminar producto */
+    .modal-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+        z-index: 9999; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        border: 1px solid rgba(239,68,68,0.3);
+        border-radius: 20px;
+        padding: 32px;
+        width: 90%; max-width: 420px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        animation: modal-in 0.2s ease;
+    }
+    @keyframes modal-in {
+        from { opacity: 0; transform: scale(0.95) translateY(8px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-icon { text-align: center; margin-bottom: 16px; }
+    .modal-icon i { font-size: 44px; color: #ef4444; }
+    .modal-title { color: white; text-align: center; margin: 0 0 6px; font-size: 18px; font-weight: 700; }
+    .modal-nombre { color: #38bdf8; text-align: center; font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+    .modal-desc { color: #94a3b8; text-align: center; font-size: 13px; margin: 0 0 24px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: center; }
+    .modal-btn-cancel {
+        background: rgba(100,116,139,0.2); color: #94a3b8;
+        border: none; padding: 10px 24px; border-radius: 10px;
+        cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s;
+    }
+    .modal-btn-cancel:hover { background: rgba(100,116,139,0.4); }
+    .modal-btn-confirm {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white; text-decoration: none;
+        padding: 10px 24px; border-radius: 10px;
+        font-weight: 600; font-size: 14px; transition: 0.2s;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .modal-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(239,68,68,0.4); color: white; }
 </style>
+
+<!-- Modal confirmación eliminar producto -->
+<div id="modalEliminar" class="modal-overlay" onclick="cerrarModalEliminar(event)">
+    <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3 class="modal-title">Eliminar producto</h3>
+        <p class="modal-nombre" id="modalNombreProducto"></p>
+        <p class="modal-desc">Esta acción eliminará el producto, sus imágenes y todas sus compatibilidades. No se puede deshacer.</p>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="cerrarModalEliminar()">Cancelar</button>
+            <a id="modalConfirmarBtn" href="#" class="modal-btn-confirm">
+                <i class="fas fa-trash"></i> Eliminar
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalEliminar(id, nombre) {
+    document.getElementById('modalNombreProducto').textContent = nombre;
+    document.getElementById('modalConfirmarBtn').href = 'index.php?action=productos_eliminar&id=' + id;
+    document.getElementById('modalEliminar').classList.add('active');
+}
+function cerrarModalEliminar(e) {
+    if (!e || e.target === document.getElementById('modalEliminar')) {
+        document.getElementById('modalEliminar').classList.remove('active');
+    }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModalEliminar(); });
+</script>
