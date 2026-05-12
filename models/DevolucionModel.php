@@ -317,11 +317,28 @@ class DevolucionModel {
     // ─── ADMIN: LECTURA ───────────────────────────────────────────────────────
 
     public function obtenerDevolucionesAdmin(?int $idEstado = null): array {
-        $sql = "SELECT * FROM V_DEVOLUCIONES_ADMIN";
-        if ($idEstado !== null) {
-            $sql .= " WHERE ID_ESTADO_DEVOLUCION = :id_estado";
-        }
-        $sql .= " ORDER BY FECHA_SOLICITUD DESC";
+        $where = $idEstado !== null ? " WHERE d.ID_ESTADO_DEVOLUCION = :id_estado" : "";
+
+        $sql = "SELECT d.ID_DEVOLUCION,
+                       d.ID_PEDIDO,
+                       d.ID_USUARIO,
+                       d.ID_ESTADO_DEVOLUCION,
+                       TO_CHAR(d.FECHA_SOLICITUD, 'DD/MM/YYYY') AS FECHA_SOLICITUD,
+                       ed.NOMBRE                                 AS ESTADO_NOMBRE,
+                       NVL(
+                           TRIM(NVL(per.NOMBRES,'') || ' ' || NVL(per.APELLIDOS,'')),
+                           u.USERNAME
+                       )                                         AS CLIENTE,
+                       u.USERNAME,
+                       NVL(d.REEMBOLSO_REALIZADO, 0)             AS REEMBOLSO_REALIZADO,
+                       d.REEMBOLSO_ESTADO,
+                       d.REEMBOLSO_ID_WOMPI
+                  FROM DEVOLUCION d
+                 INNER JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO_DEVOLUCION = d.ID_ESTADO_DEVOLUCION
+                 INNER JOIN USUARIO u            ON u.ID_USUARIO            = d.ID_USUARIO
+                 INNER JOIN PERSONA per          ON per.ID_PERSONA          = u.ID_PERSONA"
+               . $where
+               . " ORDER BY d.FECHA_SOLICITUD DESC";
 
         $stmt = $this->parse($sql);
         if ($idEstado !== null) {

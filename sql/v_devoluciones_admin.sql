@@ -1,4 +1,4 @@
--- Recrear V_DEVOLUCIONES_ADMIN agregando alias CLIENTE
+-- Recrear V_DEVOLUCIONES_ADMIN con CLIENTE robusto ante NULLs
 -- Ejecutar en Oracle SQL Developer / SQLcl contra el esquema de produccion
 
 CREATE OR REPLACE VIEW V_DEVOLUCIONES_ADMIN AS
@@ -14,8 +14,12 @@ SELECT
     ed.NOMBRE                                          AS ESTADO_NOMBRE,
     per.NOMBRES,
     per.APELLIDOS,
-    per.NOMBRES || ' ' || per.APELLIDOS                AS CLIENTE,
+    NVL(
+        TRIM(NVL(per.NOMBRES,'') || ' ' || NVL(per.APELLIDOS,'')),
+        u.USERNAME
+    )                                                  AS CLIENTE,
     per.CORREO,
+    u.USERNAME,
     NVL(d.REEMBOLSO_REALIZADO, 0)                      AS REEMBOLSO_REALIZADO,
     d.REEMBOLSO_ESTADO,
     d.REEMBOLSO_ID_WOMPI
