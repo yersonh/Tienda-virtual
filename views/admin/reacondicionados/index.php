@@ -7,8 +7,8 @@ require_once __DIR__ . '/../../../config/UploadHelper.php';
 
 function reacAdminCard(array $item, string $accion, string $label, string $color): string {
     $id       = (int)    ($item['id_item_reacondicionado'] ?? 0);
-    $nombre   = htmlspecialchars((string) ($item['producto_nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
-    $ref      = htmlspecialchars((string) ($item['numero_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $nombre   = htmlspecialchars((string) ($item['producto'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
+    $ref      = htmlspecialchars((string) ($item['nombre_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
     $numDev   = (int)    ($item['numero_devoluciones']  ?? 1);
     $precOrig = (float)  ($item['precio_original']      ?? 0);
     $precFinal = (float) ($item['precio_final']         ?? 0);
@@ -263,8 +263,8 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
 <?php
 function reacAdminCard(array $item, string $accion, string $label, string $color): string {
     $id       = (int)    ($item['id_item_reacondicionado'] ?? 0);
-    $nombre   = htmlspecialchars((string) ($item['producto_nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
-    $ref      = htmlspecialchars((string) ($item['numero_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $nombre   = htmlspecialchars((string) ($item['producto'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
+    $ref      = htmlspecialchars((string) ($item['nombre_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
     $numDev   = (int)    ($item['numero_devoluciones']  ?? 1);
     $precOrig = (float)  ($item['precio_original']      ?? 0);
     $precFinal = (float) ($item['precio_final']         ?? 0);
@@ -366,7 +366,7 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
                         $id = (int) ($item['id_item_reacondicionado'] ?? 0);
                         echo '<div class="reac-card" style="border-color: rgba(239,68,68,0.3);">';
                         echo '<div class="reac-info">';
-                        echo '<div class="reac-name">' . htmlspecialchars($item['producto_nombre'] ?? 'Producto', ENT_QUOTES, 'UTF-8') . '</div>';
+                        echo '<div class="reac-name">' . htmlspecialchars($item['producto'] ?? 'Producto', ENT_QUOTES, 'UTF-8') . '</div>';
                         echo '<div style="color:#f87171; font-size:12px; margin-bottom:16px;"><i class="fas fa-triangle-exclamation"></i> 3.ª dev. → Stock Muerto automático</div>';
                         echo '<form method="POST" action="index.php?action=admin_sacar_inventario">';
                         echo '<input type="hidden" name="id_item" value="' . $id . '">';
@@ -413,7 +413,7 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
                 <?php foreach ($itemsOferta15 as $item): ?>
                     <?php
                     $id = (int) ($item['id_item_reacondicionado'] ?? 0);
-                    $nombre = htmlspecialchars((string) ($item['producto_nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
+                    $nombre = htmlspecialchars((string) ($item['producto'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
                     $imagen  = (string) ($item['imagen'] ?? '');
                     $imgUrl2 = $imagen !== '' ? htmlspecialchars(UploadHelper::getImageUrl($imagen), ENT_QUOTES, 'UTF-8') : null;
                     ?>

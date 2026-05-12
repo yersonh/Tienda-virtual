@@ -344,6 +344,15 @@ class DevolucionModel {
         return $result;
     }
 
+    public function contarPendientesAdmin(): int {
+        $sql = "SELECT COUNT(*) AS TOTAL FROM DEVOLUCION WHERE ID_ESTADO_DEVOLUCION = 1";
+        $stmt = $this->parse($sql);
+        $this->exec($stmt);
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+        return (int) ($row['TOTAL'] ?? 0);
+    }
+
     // ─── ADMIN: ESCRITURA ─────────────────────────────────────────────────────
 
     public function actualizarCantidadAprobada(int $idDevolucionDetalle, int $cantidadAprobada): void {
@@ -473,8 +482,8 @@ class DevolucionModel {
                        ir.ESTADO,
                        NVL(ir.DISPONIBLE, 0)       AS DISPONIBLE,
                        TO_CHAR(ir.FECHA_INGRESO, 'DD/MM/YYYY') AS FECHA_INGRESO,
-                       p.NOMBRE AS PRODUCTO_NOMBRE,
-                       rp.NUMERO_REFERENCIA,
+                       p.NOMBRE AS PRODUCTO,
+                       rp.NUMERO_REFERENCIA AS NOMBRE_REFERENCIA,
                        (SELECT pi.URL FROM PRODUCTO_IMAGEN pi
                          WHERE pi.ID_PRODUCTO = ir.ID_PRODUCTO
                          ORDER BY pi.ORDEN
@@ -540,7 +549,7 @@ class DevolucionModel {
                        DISPONIBLE   = 1,
                        PRECIO_FINAL = PRECIO_ORIGINAL * 0.85
                  WHERE ID_ITEM_REACONDICIONADO = :id_item
-                   AND NUMERO_DEVOLUCIONES     = 2";
+                   AND NUMERO_DEVOLUCIONES     >= 2"; // Permitir reofertar si tiene 2 o mas (aunque a 3 pasa a stock muerto)
 
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_item', $idItem, -1, SQLT_INT);

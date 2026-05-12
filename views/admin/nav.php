@@ -10,6 +10,13 @@ try {
     $adminNotifNoLeidas = (new NotificacionModel(Database::getConnection()))
         ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
 } catch (Throwable $_ae) { /* silencioso */ }
+
+// Contador de devoluciones pendientes para el badge del menu
+$adminDevPendientes = 0;
+try {
+    require_once __DIR__ . '/../../models/DevolucionModel.php';
+    $adminDevPendientes = (new DevolucionModel(Database::getConnection()))->contarPendientesAdmin();
+} catch (Throwable $_de) { }
 ?>
 
 <!DOCTYPE html>
@@ -284,6 +291,18 @@ try {
             top: 0;
             z-index: 100;
             margin: 0 -16px 20px;
+        }
+
+        /* En escritorio (769px+), ocultamos el hamburger y logo movil, pero mantenemos la barra para la campana */
+        @media (min-width: 769px) {
+            .admin-mobile-header {
+                background: transparent;
+                border-bottom: none;
+                margin: 0 0 20px 0;
+                justify-content: flex-end; /* Campana a la derecha */
+                padding: 0;
+            }
+            .admin-hamburger, .admin-mobile-logo { display: none; }
         }
         [data-theme="light"] .admin-mobile-header {
             background: rgba(255, 255, 255, 0.96);
@@ -572,8 +591,8 @@ try {
                 <a href="index.php?action=admin_devoluciones" class="nav-link">
                     <i class="fas fa-rotate-left"></i>
                     <span><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></span>
-                    <?php if ($adminNotifNoLeidas > 0): ?>
-                    <span class="nav-badge"><?= min($adminNotifNoLeidas, 99) ?></span>
+                    <?php if ($adminDevPendientes > 0): ?>
+                    <span class="nav-badge" title="Pendientes" style="background: #fbbf24; color: #1a1000;"><?= min($adminDevPendientes, 99) ?></span>
                     <?php endif; ?>
                 </a>
             </div>
@@ -777,11 +796,12 @@ applyAdminTheme(localStorage.getItem('theme') || 'dark');
             });
         });
     }
+    // Refresh badge every 30 s without reopening the dropdown
     setInterval(function () {
         fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
-    }, 90000);
+    }, 30000);
 })();
 
 // Mobile sidebar toggle
