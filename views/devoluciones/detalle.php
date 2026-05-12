@@ -143,8 +143,12 @@ $motivosLabel = [
                 <strong style="color:var(--accent-strong)">$<?= number_format((float) $devolucion['monto_reembolso_estimado']) ?> COP</strong>
             </div>
             <?php endif; ?>
-            <?php $reemEstado = (string) ($devolucion['reembolso_estado'] ?? ''); ?>
-            <?php if ($reemEstado !== ''): ?>
+            <?php
+            $reemEstado   = (string) ($devolucion['reembolso_estado']       ?? '');
+            $idEstadoDev  = (int)    ($devolucion['id_estado_devolucion']   ?? 0);
+            $esPendiente  = $idEstadoDev === 1;
+            ?>
+            <?php if ($reemEstado !== '' && !$esPendiente): ?>
             <div class="dev-stat">
                 <span>Estado reembolso</span>
                 <strong style="color:<?= $reemEstado === 'REALIZADO' ? 'var(--accent-strong)' : '#fbbf24' ?>">

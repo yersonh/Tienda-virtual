@@ -32,7 +32,7 @@ $rutaArchivo = $baseDir . $ruta;
 
 // Para devoluciones, si no existe en /volume/ intentar fallback local (dev)
 if ($carpeta === 'devoluciones' && !file_exists($rutaArchivo)) {
-    $fallback = __DIR__ . '/../public/uploads/devoluciones/' . $ruta;
+    $fallback = __DIR__ . '/uploads/devoluciones/' . $ruta;
     if (file_exists($fallback)) {
         $rutaArchivo = $fallback;
     }
