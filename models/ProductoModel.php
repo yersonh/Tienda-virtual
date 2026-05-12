@@ -797,67 +797,72 @@ class ProductoModel {
         return (int) $id;
     }
 
-    public function crearReferencia(int $idProducto, array $datos): int {
-        // ID generado por secuencia explícita; RETURNING devuelve el valor asignado
-        $query = "INSERT INTO referencia_producto
-                    (id_referencia, id_producto, numero_referencia, marca, fabricante, especificaciones, estado)
-                  VALUES
-                    (SEQ_REFERENCIA_PRODUCTO.NEXTVAL, :id_producto, :numero_referencia, :marca, :fabricante, :especificaciones, :estado)
-                  RETURNING id_referencia INTO :id_referencia";
+    private function nextval(string $sequence): int {
+        $stmt = oci_parse($this->conn, "SELECT {$sequence}.NEXTVAL FROM DUAL");
+        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
+        $row = oci_fetch_array($stmt, OCI_NUM + OCI_RETURN_NULLS);
+        oci_free_statement($stmt);
+        return (int) ($row[0] ?? 0);
+    }
 
+    public function crearReferencia(int $idProducto, array $datos): int {
+        $idRef      = $this->nextval('SEQ_REFERENCIA_PRODUCTO');
         $numeroRef  = $datos['numero_referencia'] ?? '';
         $marca      = $datos['marca']             ?? '';
         $fabricante = $datos['fabricante']        ?? '';
         $especif    = $datos['especificaciones']  ?? '';
         $estado     = 'Activo';
-        $idRef      = null;
 
-        $stmt = oci_parse($this->conn, $query);
+        $stmt = oci_parse($this->conn,
+            "INSERT INTO referencia_producto
+               (id_referencia, id_producto, numero_referencia, marca, fabricante, especificaciones, estado)
+             VALUES
+               (:id_referencia, :id_producto, :numero_referencia, :marca, :fabricante, :especificaciones, :estado)");
+
+        oci_bind_by_name($stmt, ':id_referencia',     $idRef,      -1, SQLT_INT);
         oci_bind_by_name($stmt, ':id_producto',       $idProducto, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':numero_referencia', $numeroRef,  -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':marca',             $marca,      -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':fabricante',        $fabricante, -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':especificaciones',  $especif,    -1, SQLT_CHR);
         oci_bind_by_name($stmt, ':estado',            $estado,     -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':id_referencia',     $idRef,      -1, SQLT_INT);
 
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $err = oci_error($stmt);
             oci_free_statement($stmt);
-            throw new Exception('Error al crear referencia: ' . ($err['message'] ?? 'desconocido') .
-                '. Asegurate de haber ejecutado sql/referencia_compat_sequences.sql en Oracle.');
+            throw new Exception('Error al crear referencia (id=' . $idRef . '): ' . ($err['message'] ?? 'desconocido'));
         }
         oci_free_statement($stmt);
-
-        return (int) $idRef;
+        return $idRef;
     }
 
     public function crearCompatibilidadVehiculo(int $idReferencia, array $datos): void {
-        // id_compatibilidad asignado por SEQ_COMPATIBILIDAD_VEHICULO
+        $idCompat = $this->nextval('SEQ_COMPATIBILIDAD_VEHICULO');
         $query = "INSERT INTO compatibilidad_vehiculo
                     (id_compatibilidad, id_referencia, marca_vehiculo, modelo_vehiculo, ano_inicio, ano_fin, motor, transmision, notas, stock_p)
                   VALUES
-                    (SEQ_COMPATIBILIDAD_VEHICULO.NEXTVAL, :id_referencia, :marca_vehiculo, :modelo_vehiculo, :ano_inicio, :ano_fin, :motor, :transmision, :notas, :stock_p)";
+                    (:id_compatibilidad, :id_referencia, :marca_vehiculo, :modelo_vehiculo, :ano_inicio, :ano_fin, :motor, :transmision, :notas, :stock_p)";
 
         $marcaV   = $datos['marca_vehiculo']   ?? '';
         $modeloV  = $datos['modelo_vehiculo']  ?? '';
-        $anoIni   = (int) ($datos['ano_inicio'] ?? 0);
-        $anoFin   = (int) ($datos['ano_fin']    ?? 0);
+        $anoIni   = isset($datos['ano_inicio']) && $datos['ano_inicio'] !== '' ? (int)$datos['ano_inicio'] : null;
+        $anoFin   = isset($datos['ano_fin'])    && $datos['ano_fin']    !== '' ? (int)$datos['ano_fin']    : null;
         $motor    = $datos['motor']             ?? '';
         $transm   = $datos['transmision']       ?? '';
         $notas    = $datos['notas']             ?? '';
         $stock    = (int) ($datos['stock_p']    ?? 0);
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_referencia',   $idReferencia, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':marca_vehiculo',  $marcaV,       -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':modelo_vehiculo', $modeloV,      -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':ano_inicio',      $anoIni,       -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':ano_fin',         $anoFin,       -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':motor',           $motor,        -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':transmision',     $transm,       -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':notas',           $notas,        -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':stock_p',         $stock,        -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_compatibilidad', $idCompat,    -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_referencia',     $idReferencia,-1, SQLT_INT);
+        oci_bind_by_name($stmt, ':marca_vehiculo',    $marcaV,      -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':modelo_vehiculo',   $modeloV,     -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':ano_inicio',        $anoIni,      -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ano_fin',           $anoFin,      -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':motor',             $motor,       -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':transmision',       $transm,      -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':notas',             $notas,       -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':stock_p',           $stock,       -1, SQLT_INT);
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $err = oci_error($stmt);
             oci_free_statement($stmt);
@@ -867,31 +872,33 @@ class ProductoModel {
     }
 
     public function crearCompatibilidadMaquinaria(int $idReferencia, array $datos): void {
-        // id_compatibilidad asignado por SEQ_COMPATIBILIDAD_MAQUINARIA
+        $idCompat = $this->nextval('SEQ_COMPATIBILIDAD_MAQUINARIA');
+        // PK real de la tabla es ID_COMPATIBILIDAD_MAQ
         $query = "INSERT INTO compatibilidad_maquinaria
-                    (id_compatibilidad, id_referencia, tipo_maquinaria, marca_maquinaria, modelo_maquinaria, componente, ano_inicio, ano_fin, notas, stock_p)
+                    (id_compatibilidad_maq, id_referencia, tipo_maquinaria, marca_maquinaria, modelo_maquinaria, componente, ano_inicio, ano_fin, notas, stock_p)
                   VALUES
-                    (SEQ_COMPATIBILIDAD_MAQUINARIA.NEXTVAL, :id_referencia, :tipo_maquinaria, :marca_maquinaria, :modelo_maquinaria, :componente, :ano_inicio, :ano_fin, :notas, :stock_p)";
+                    (:id_compatibilidad_maq, :id_referencia, :tipo_maquinaria, :marca_maquinaria, :modelo_maquinaria, :componente, :ano_inicio, :ano_fin, :notas, :stock_p)";
 
         $tipo     = $datos['tipo_maquinaria']   ?? '';
         $marcaM   = $datos['marca_maquinaria']  ?? '';
         $modeloM  = $datos['modelo_maquinaria'] ?? '';
         $componen = $datos['componente']         ?? '';
-        $anoIni   = (int) ($datos['ano_inicio'] ?? 0);
-        $anoFin   = (int) ($datos['ano_fin']    ?? 0);
-        $notas    = $datos['notas']             ?? '';
-        $stock    = (int) ($datos['stock_p']    ?? 0);
+        $anoIni   = isset($datos['ano_inicio']) && $datos['ano_inicio'] !== '' ? (int)$datos['ano_inicio'] : null;
+        $anoFin   = isset($datos['ano_fin'])    && $datos['ano_fin']    !== '' ? (int)$datos['ano_fin']    : null;
+        $notas    = $datos['notas']              ?? '';
+        $stock    = (int) ($datos['stock_p']     ?? 0);
 
         $stmt = oci_parse($this->conn, $query);
-        oci_bind_by_name($stmt, ':id_referencia',    $idReferencia, -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':tipo_maquinaria',  $tipo,         -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':marca_maquinaria', $marcaM,       -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':modelo_maquinaria',$modeloM,      -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':componente',       $componen,     -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':ano_inicio',       $anoIni,       -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':ano_fin',          $anoFin,       -1, SQLT_INT);
-        oci_bind_by_name($stmt, ':notas',            $notas,        -1, SQLT_CHR);
-        oci_bind_by_name($stmt, ':stock_p',          $stock,        -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_compatibilidad_maq', $idCompat,    -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_referencia',         $idReferencia,-1, SQLT_INT);
+        oci_bind_by_name($stmt, ':tipo_maquinaria',       $tipo,        -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':marca_maquinaria',      $marcaM,      -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':modelo_maquinaria',     $modeloM,     -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':componente',            $componen,    -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':ano_inicio',            $anoIni,      -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':ano_fin',               $anoFin,      -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':notas',                 $notas,       -1, SQLT_CHR);
+        oci_bind_by_name($stmt, ':stock_p',               $stock,       -1, SQLT_INT);
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $err = oci_error($stmt);
             oci_free_statement($stmt);

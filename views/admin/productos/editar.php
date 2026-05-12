@@ -73,14 +73,14 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
             <h2 class="seccion-titulo"><i class="fas fa-tag"></i> Referencia del Producto</h2>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="numero_referencia">Número de Referencia</label>
-                    <input type="text" id="numero_referencia" name="numero_referencia"
+                    <label for="numero_referencia">Número de Referencia *</label>
+                    <input type="text" id="numero_referencia" name="numero_referencia" required
                            value="<?= htmlspecialchars($referencia['numero_referencia'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                            placeholder="Ej: REF-4521">
                 </div>
                 <div class="form-group">
-                    <label for="ref_marca">Marca</label>
-                    <input type="text" id="ref_marca" name="ref_marca"
+                    <label for="ref_marca">Marca *</label>
+                    <input type="text" id="ref_marca" name="ref_marca" required
                            value="<?= htmlspecialchars($referencia['marca'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                            placeholder="Ej: Bosch">
                 </div>
@@ -112,8 +112,8 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
                 <div class="compat-row compat-row-vehiculo" id="veh-pre-<?= $i ?>">
                     <div><div class="compat-label">Marca</div><input type="text" name="vehiculos[pre<?= $i ?>][marca_vehiculo]" value="<?= htmlspecialchars($v['marca_vehiculo'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Toyota"></div>
                     <div><div class="compat-label">Modelo</div><input type="text" name="vehiculos[pre<?= $i ?>][modelo_vehiculo]" value="<?= htmlspecialchars($v['modelo_vehiculo'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Hilux"></div>
-                    <div><div class="compat-label">Año inicio</div><input type="number" name="vehiculos[pre<?= $i ?>][ano_inicio]" value="<?= (int)($v['ano_inicio'] ?? 0) ?>" placeholder="2015" min="1900" max="2100"></div>
-                    <div><div class="compat-label">Año fin</div><input type="number" name="vehiculos[pre<?= $i ?>][ano_fin]" value="<?= (int)($v['ano_fin'] ?? 0) ?>" placeholder="2023" min="1900" max="2100"></div>
+                    <div><div class="compat-label">Año inicio</div><input type="number" name="vehiculos[pre<?= $i ?>][ano_inicio]" value="<?= (!empty($v['ano_inicio']) ? (int)$v['ano_inicio'] : '') ?>" placeholder="2015" min="1900" max="2100"></div>
+                    <div><div class="compat-label">Año fin</div><input type="number" name="vehiculos[pre<?= $i ?>][ano_fin]" value="<?= (!empty($v['ano_fin']) ? (int)$v['ano_fin'] : '') ?>" placeholder="2023" min="1900" max="2100"></div>
                     <div><div class="compat-label">Motor</div><input type="text" name="vehiculos[pre<?= $i ?>][motor]" value="<?= htmlspecialchars($v['motor'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="2.8L TD"></div>
                     <div><div class="compat-label">Transmisión</div><input type="text" name="vehiculos[pre<?= $i ?>][transmision]" value="<?= htmlspecialchars($v['transmision'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Manual"></div>
                     <div><div class="compat-label">Notas</div><input type="text" name="vehiculos[pre<?= $i ?>][notas]" value="<?= htmlspecialchars($v['notas'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Opcional"></div>
@@ -140,8 +140,8 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
                     <div><div class="compat-label">Marca</div><input type="text" name="maquinaria[pre<?= $i ?>][marca_maquinaria]" value="<?= htmlspecialchars($m['marca_maquinaria'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="John Deere"></div>
                     <div><div class="compat-label">Modelo</div><input type="text" name="maquinaria[pre<?= $i ?>][modelo_maquinaria]" value="<?= htmlspecialchars($m['modelo_maquinaria'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="5075E"></div>
                     <div><div class="compat-label">Componente</div><input type="text" name="maquinaria[pre<?= $i ?>][componente]" value="<?= htmlspecialchars($m['componente'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Motor"></div>
-                    <div><div class="compat-label">Año inicio</div><input type="number" name="maquinaria[pre<?= $i ?>][ano_inicio]" value="<?= (int)($m['ano_inicio'] ?? 0) ?>" placeholder="2010" min="1900" max="2100"></div>
-                    <div><div class="compat-label">Año fin</div><input type="number" name="maquinaria[pre<?= $i ?>][ano_fin]" value="<?= (int)($m['ano_fin'] ?? 0) ?>" placeholder="2023" min="1900" max="2100"></div>
+                    <div><div class="compat-label">Año inicio</div><input type="number" name="maquinaria[pre<?= $i ?>][ano_inicio]" value="<?= (!empty($m['ano_inicio']) ? (int)$m['ano_inicio'] : '') ?>" placeholder="2010" min="1900" max="2100"></div>
+                    <div><div class="compat-label">Año fin</div><input type="number" name="maquinaria[pre<?= $i ?>][ano_fin]" value="<?= (!empty($m['ano_fin']) ? (int)$m['ano_fin'] : '') ?>" placeholder="2023" min="1900" max="2100"></div>
                     <div><div class="compat-label">Notas</div><input type="text" name="maquinaria[pre<?= $i ?>][notas]" value="<?= htmlspecialchars($m['notas'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="Opcional"></div>
                     <div><div class="compat-label">Stock</div><input type="number" name="maquinaria[pre<?= $i ?>][stock_p]" value="<?= (int)($m['stock_p'] ?? 0) ?>" min="0"></div>
                     <button type="button" class="btn-remove-row" onclick="eliminarFila('maq-pre-<?= $i ?>', 'lista-maquinaria', 'hint-maquinaria')">×</button>

@@ -61,12 +61,12 @@
             <h2 class="seccion-titulo"><i class="fas fa-tag"></i> Referencia del Producto</h2>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="numero_referencia">Número de Referencia</label>
-                    <input type="text" id="numero_referencia" name="numero_referencia" placeholder="Ej: REF-4521">
+                    <label for="numero_referencia">Número de Referencia *</label>
+                    <input type="text" id="numero_referencia" name="numero_referencia" required placeholder="Ej: REF-4521">
                 </div>
                 <div class="form-group">
-                    <label for="ref_marca">Marca</label>
-                    <input type="text" id="ref_marca" name="ref_marca" placeholder="Ej: Bosch">
+                    <label for="ref_marca">Marca *</label>
+                    <input type="text" id="ref_marca" name="ref_marca" required placeholder="Ej: Bosch">
                 </div>
                 <div class="form-group">
                     <label for="fabricante">Fabricante</label>

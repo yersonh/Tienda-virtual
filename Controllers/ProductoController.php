@@ -79,17 +79,15 @@ class ProductoController {
             ];
             $id_referencia = $this->model->crearReferencia($id_producto, $refDatos);
 
-            // 3. Compatibilidades vehiculo
-            $vehiculos = $_POST['vehiculos'] ?? [];
-            foreach ($vehiculos as $v) {
-                if (empty($v['marca_vehiculo']) && empty($v['modelo_vehiculo'])) continue;
+            // 3. Compatibilidades vehiculo (MARCA_VEHICULO y MODELO_VEHICULO son NOT NULL)
+            foreach ($_POST['vehiculos'] ?? [] as $v) {
+                if (empty(trim($v['marca_vehiculo'] ?? '')) || empty(trim($v['modelo_vehiculo'] ?? ''))) continue;
                 $this->model->crearCompatibilidadVehiculo($id_referencia, $v);
             }
 
-            // 4. Compatibilidades maquinaria
-            $maquinarias = $_POST['maquinaria'] ?? [];
-            foreach ($maquinarias as $m) {
-                if (empty($m['tipo_maquinaria']) && empty($m['marca_maquinaria'])) continue;
+            // 4. Compatibilidades maquinaria (MARCA_MAQUINARIA y MODELO_MAQUINARIA son NOT NULL)
+            foreach ($_POST['maquinaria'] ?? [] as $m) {
+                if (empty(trim($m['marca_maquinaria'] ?? '')) || empty(trim($m['modelo_maquinaria'] ?? ''))) continue;
                 $this->model->crearCompatibilidadMaquinaria($id_referencia, $m);
             }
 
@@ -160,28 +158,32 @@ class ProductoController {
             // 1. Actualizar PRODUCTO
             $this->model->actualizar($id, $datos);
 
-            // 2. Actualizar REFERENCIA_PRODUCTO
+            // 2. Upsert REFERENCIA_PRODUCTO (crear si no existe, actualizar si ya existe)
             $refDatos = [
                 'numero_referencia' => trim($_POST['numero_referencia'] ?? ''),
                 'marca'             => trim($_POST['ref_marca'] ?? ''),
                 'fabricante'        => trim($_POST['fabricante'] ?? ''),
                 'especificaciones'  => trim($_POST['especificaciones'] ?? ''),
             ];
-            $this->model->actualizarReferencia($id, $refDatos);
+            $referencia = $this->model->obtenerReferencia($id);
+            if (empty($referencia)) {
+                $idReferencia = $this->model->crearReferencia($id, $refDatos);
+            } else {
+                $this->model->actualizarReferencia($id, $refDatos);
+                $idReferencia = (int)($referencia['id_referencia'] ?? 0);
+            }
 
             // 3. Reemplazar compatibilidades: borrar todo y re-insertar
-            $referencia = $this->model->obtenerReferencia($id);
-            $idReferencia = (int) ($referencia['id_referencia'] ?? 0);
 
             if ($idReferencia > 0) {
                 $this->model->eliminarCompatibilidadesPorReferencia($idReferencia);
 
                 foreach ($_POST['vehiculos'] ?? [] as $v) {
-                    if (empty($v['marca_vehiculo']) && empty($v['modelo_vehiculo'])) continue;
+                    if (empty(trim($v['marca_vehiculo'] ?? '')) || empty(trim($v['modelo_vehiculo'] ?? ''))) continue;
                     $this->model->crearCompatibilidadVehiculo($idReferencia, $v);
                 }
                 foreach ($_POST['maquinaria'] ?? [] as $m) {
-                    if (empty($m['tipo_maquinaria']) && empty($m['marca_maquinaria'])) continue;
+                    if (empty(trim($m['marca_maquinaria'] ?? '')) || empty(trim($m['modelo_maquinaria'] ?? ''))) continue;
                     $this->model->crearCompatibilidadMaquinaria($idReferencia, $m);
                 }
             }
