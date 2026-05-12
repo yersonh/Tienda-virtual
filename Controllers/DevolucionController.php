@@ -493,6 +493,8 @@ class DevolucionController {
                 oci_commit($this->conn);
                 $_SESSION['success'] = 'Reembolso reintentado exitosamente.';
             } else {
+                // Commit necesario para persistir el REEMBOLSO_ERROR actualizado en DEVOLUCION
+                oci_commit($this->conn);
                 $_SESSION['error'] = 'No se pudo procesar el reembolso: ' . implode(', ', array_unique($errores));
             }
 

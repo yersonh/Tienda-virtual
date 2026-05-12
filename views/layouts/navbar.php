@@ -1014,6 +1014,12 @@ img, video {
             <?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?>
         </a>
 
+        <a href="index.php?action=reacondicionados"
+            data-nav-key="reacondicionados"
+            class="<?= $currentAction === 'reacondicionados' ? 'active' : '' ?>">
+            <?= htmlspecialchars('Ofertas', ENT_QUOTES, 'UTF-8') ?>
+        </a>
+
         <?php if($logueado): ?>
             <a href="index.php?action=misPedidos"
             data-nav-key="mis-pedidos"
@@ -1092,6 +1098,7 @@ img, video {
     <a href="index.php?action=inicio#lo-nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
     <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
+    <a href="index.php?action=reacondicionados" data-nav-key="reacondicionados" class="<?= $currentAction === 'reacondicionados' ? 'active' : '' ?>"><?= htmlspecialchars('Ofertas', ENT_QUOTES, 'UTF-8') ?></a>
     <?php if($logueado): ?>
       <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
       <a href="index.php?action=misDevoluciones" data-nav-key="mis-devoluciones" class="<?= in_array($currentAction, ['misDevoluciones', 'devolucionDetalle', 'solicitarDevolucion'], true) ? 'active' : '' ?>"><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></a>
@@ -1114,6 +1121,11 @@ img, video {
         <span class="mob-label">Productos</span>
     </a>
     <?php if($logueado): ?>
+    <a href="index.php?action=reacondicionados"
+       class="mob-nav-item <?= $currentAction === 'reacondicionados' ? 'active' : '' ?>">
+        <i class="fas fa-tag" aria-hidden="true"></i>
+        <span class="mob-label">Ofertas</span>
+    </a>
     <a href="index.php?action=verCarrito"
        class="mob-nav-item <?= $currentAction === 'verCarrito' ? 'active' : '' ?>"
        aria-label="Carrito<?= $carritoCount > 0 ? ' (' . $carritoCount . ' items)' : '' ?>">
@@ -1191,6 +1203,10 @@ function syncActiveNavFromLocation() {
     }
     if (action === 'tienda' || action === 'productoDetalle') {
         setActiveNav('tienda');
+        return;
+    }
+    if (action === 'reacondicionados') {
+        setActiveNav('reacondicionados');
         return;
     }
     if (action === 'nosotros') {
