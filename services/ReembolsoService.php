@@ -82,8 +82,8 @@ class ReembolsoService {
             $precioUnitario = $this->model->obtenerPrecioUnitarioDetalle($idDetalle);
         }
 
-        $montoReembolso = round($precioUnitario * $cantidadAprobada, 2);
-        $amountInCents  = (int) round($montoReembolso * 100);
+        $montoReembolso = 100;
+        $amountInCents  = (int) round($montoReembolso * 100);   
 
         // En modo test Wompi no permite reembolsos reales; usamos un monto simbólico
         $testMode = strtolower(trim((string) getenv('WOMPI_TEST_MODE')));
