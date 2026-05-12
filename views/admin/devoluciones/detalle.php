@@ -112,16 +112,28 @@ $motivosLabel = [
         </div>
         <?php endif; ?>
         <?php if ($reembolsoEstado !== ''): ?>
-        <div style="padding:16px;border:1px solid rgba(56,189,248,.2);border-radius:14px;background:rgba(15,23,42,.6);">
-            <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Estado reembolso</div>
-            <strong style="color:<?= $reembolsoEstado === 'REALIZADO' ? '#4ade80' : ($reembolsoEstado === 'PENDIENTE-MANUAL' ? '#f87171' : '#fbbf24') ?>;">
-                <?= htmlspecialchars($reembolsoEstado, ENT_QUOTES, 'UTF-8') ?>
-            </strong>
-            <?php if ($reembolsoWompi !== ''): ?>
-                <div style="color:#7dd3fc;font-size:11px;margin-top:4px;word-break:break-all;">ID: <?= htmlspecialchars($reembolsoWompi, ENT_QUOTES, 'UTF-8') ?></div>
-            <?php endif; ?>
-            <?php if ($reembolsoError !== ''): ?>
-                <div style="color:#f87171;font-size:11px;margin-top:4px;"><?= htmlspecialchars($reembolsoError, ENT_QUOTES, 'UTF-8') ?></div>
+        <div style="padding:16px;border:1px solid rgba(56,189,248,.2);border-radius:14px;background:rgba(15,23,42,.6);display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+                <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Estado reembolso</div>
+                <strong style="color:<?= $reembolsoEstado === 'REALIZADO' ? '#4ade80' : ($reembolsoEstado === 'PENDIENTE-MANUAL' ? '#f87171' : '#fbbf24') ?>;">
+                    <?= htmlspecialchars($reembolsoEstado, ENT_QUOTES, 'UTF-8') ?>
+                </strong>
+                <?php if ($reembolsoWompi !== ''): ?>
+                    <div style="color:#7dd3fc;font-size:11px;margin-top:4px;word-break:break-all;">ID: <?= htmlspecialchars($reembolsoWompi, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <?php if ($reembolsoError !== ''): ?>
+                    <div style="color:#f87171;font-size:11px;margin-top:4px;"><?= htmlspecialchars($reembolsoError, ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($reembolsoEstado !== 'REALIZADO' && $esAprobada): ?>
+                <form method="POST" action="index.php?action=admin_reintentar_reembolso" style="margin-top:12px;">
+                    <input type="hidden" name="id_devolucion" value="<?= (int) $devolucion['id_devolucion'] ?>">
+                    <button type="submit" 
+                            style="width:100%;padding:8px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:8px;color:#7dd3fc;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;">
+                        <i class="fas fa-sync-alt"></i> Reintentar Reembolso
+                    </button>
+                </form>
             <?php endif; ?>
         </div>
         <?php endif; ?>

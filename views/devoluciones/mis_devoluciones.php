@@ -70,6 +70,25 @@ function devEstadoClass(string $nombre): string {
             <div class="dev-alert error"><?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error']); ?></div>
         <?php endif; ?>
 
+        <!-- Filtros -->
+        <div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;align-items:center;">
+            <a href="index.php?action=misDevoluciones" 
+               style="padding:7px 16px;border-radius:999px;font-size:13px;font-weight:800;text-decoration:none;border:1px solid <?= !isset($_GET['estado']) ? 'var(--accent)' : 'var(--border)' ?>;background:<?= !isset($_GET['estado']) ? 'rgba(20,216,189,.12)' : 'rgba(255,255,255,.06)' ?>;color:<?= !isset($_GET['estado']) ? 'var(--accent)' : 'var(--secondary)' ?>;">
+                Todas
+            </a>
+            <?php foreach ($estados as $est): ?>
+                <?php 
+                $idEst = (int) ($est['id_estado_devolucion'] ?? 0);
+                $nomEst = htmlspecialchars((string) ($est['nombre'] ?? ''), ENT_QUOTES, 'UTF-8');
+                $isSelected = isset($_GET['estado']) && (int)$_GET['estado'] === $idEst;
+                ?>
+                <a href="index.php?action=misDevoluciones&estado=<?= $idEst ?>" 
+                   style="padding:7px 16px;border-radius:999px;font-size:13px;font-weight:800;text-decoration:none;border:1px solid <?= $isSelected ? 'var(--accent)' : 'var(--border)' ?>;background:<?= $isSelected ? 'rgba(20,216,189,.12)' : 'rgba(255,255,255,.06)' ?>;color:<?= $isSelected ? 'var(--accent)' : 'var(--secondary)' ?>;">
+                    <?= $nomEst ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
         <?php if (empty($devoluciones)): ?>
             <div class="dev-empty">
                 <i class="fas fa-box-open" style="font-size:40px;margin-bottom:12px;display:block;color:var(--secondary)"></i>

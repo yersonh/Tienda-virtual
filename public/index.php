@@ -416,6 +416,10 @@ switch ($action) {
         (new DevolucionController())->adminProductoRecibido();
         break;
 
+    case 'admin_reintentar_reembolso':
+        (new DevolucionController())->adminReintentarReembolso();
+        break;
+
     // ── Reacondicionados (admin) ────────────────────────────────────────────
     case 'admin_reacondicionados':
         (new DevolucionController())->adminInventarioReacondicionado();

@@ -102,27 +102,24 @@ class DevolucionModel {
         return $row ? $this->normalizeRow($row) : null;
     }
 
-    public function obtenerDevolucionesPorUsuario(int $idUsuario): array {
-        $sql = "SELECT d.ID_DEVOLUCION,
-                       d.ID_PEDIDO,
-                       d.ID_USUARIO,
-                       d.ID_ESTADO_DEVOLUCION,
-                       ed.NOMBRE AS ESTADO_NOMBRE,
-                       TO_CHAR(d.FECHA_SOLICITUD, 'DD/MM/YYYY HH24:MI') AS FECHA_SOLICITUD,
-                       TO_CHAR(d.FECHA_APROBACION, 'DD/MM/YYYY HH24:MI') AS FECHA_APROBACION,
-                       TO_CHAR(d.FECHA_RECEPCION, 'DD/MM/YYYY HH24:MI') AS FECHA_RECEPCION,
-                       TO_CHAR(d.FECHA_REEMBOLSO, 'DD/MM/YYYY HH24:MI') AS FECHA_REEMBOLSO,
-                       NVL(d.REEMBOLSO_REALIZADO, 0) AS REEMBOLSO_REALIZADO,
-                       d.REEMBOLSO_ESTADO,
-                       d.OBSERVACION_CLIENTE,
-                       d.OBSERVACION_ADMIN
+    public function obtenerDevolucionesPorUsuario(int $idUsuario, ?int $idEstado = null): array {
+        $sql = "SELECT d.ID_DEVOLUCION, d.ID_PEDIDO, d.ID_ESTADO_DEVOLUCION, d.FECHA_SOLICITUD,
+                       d.REEMBOLSO_ID_WOMPI, d.REEMBOLSO_ESTADO, d.MONTO_REEMBOLSO,
+                       ed.NOMBRE AS ESTADO_NOMBRE
                 FROM DEVOLUCION d
-                INNER JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO_DEVOLUCION = d.ID_ESTADO_DEVOLUCION
-                WHERE d.ID_USUARIO = :id_usuario
-                ORDER BY d.FECHA_SOLICITUD DESC";
+                JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO_DEVOLUCION = d.ID_ESTADO_DEVOLUCION
+                WHERE d.ID_USUARIO = :id_usuario";
+
+        if ($idEstado !== null) {
+            $sql .= " AND d.ID_ESTADO_DEVOLUCION = :id_estado";
+        }
+        $sql .= " ORDER BY d.FECHA_SOLICITUD DESC, d.ID_DEVOLUCION DESC";
 
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+        if ($idEstado !== null) {
+            oci_bind_by_name($stmt, ':id_estado', $idEstado, -1, SQLT_INT);
+        }
         $this->exec($stmt);
         $result = $this->rows($stmt);
         oci_free_statement($stmt);

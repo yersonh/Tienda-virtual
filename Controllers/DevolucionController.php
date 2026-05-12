@@ -124,11 +124,14 @@ class DevolucionController {
     /** GET ?action=misDevoluciones */
     public function misDevoluciones(): void {
         $idUsuario = $this->userId();
+        $idEstado  = isset($_GET['estado']) && $_GET['estado'] !== '' ? (int) $_GET['estado'] : null;
         try {
-            $devoluciones = $this->model->obtenerDevolucionesPorUsuario($idUsuario);
+            $devoluciones = $this->model->obtenerDevolucionesPorUsuario($idUsuario, $idEstado);
+            $estados      = $this->model->obtenerEstados();
         } catch (Throwable $e) {
             error_log('DevolucionController::misDevoluciones – ' . $e->getMessage());
             $devoluciones = [];
+            $estados      = [];
         }
         require_once __DIR__ . '/../views/devoluciones/mis_devoluciones.php';
     }
@@ -444,5 +447,61 @@ class DevolucionController {
             $_SESSION['error'] = 'Error: ' . $e->getMessage();
         }
         $this->redirect('index.php?action=admin_reacondicionados');
+    }
+    /**
+     * POST ?action=admin_reintentar_reembolso
+     * Permite reintentar el reembolso Wompi si falló inicialmente.
+     */
+    public function adminReintentarReembolso(): void {
+        Auth::soloAdmin();
+        $this->requirePost();
+
+        $idDevolucion = (int) ($_POST['id_devolucion'] ?? 0);
+        if ($idDevolucion <= 0) {
+            $this->redirect('index.php?action=admin_devoluciones');
+        }
+
+        try {
+            $devolucion = $this->model->obtenerDevolucionPorId($idDevolucion);
+            if (!$devolucion) {
+                throw new Exception('Devolución no encontrada.');
+            }
+
+            // Buscamos detalles que estén en estado RECIBIDO o APROBADO pero cuyo reembolso no sea REALIZADO
+            $detalles = $devolucion['detalles'] ?? [];
+            $exito    = false;
+            $errores  = [];
+
+            // Si ya hay un reembolso realizado, no hacemos nada
+            if (($devolucion['reembolso_estado'] ?? '') === 'REALIZADO') {
+                throw new Exception('El reembolso ya ha sido marcado como REALIZADO.');
+            }
+
+            foreach ($detalles as $det) {
+                // Reintentamos con el primer detalle que encontremos que amerite reembolso
+                // (Normalmente es uno por devolución o se procesa por la devolución entera)
+                $estado = $this->reembolsoService->procesarReembolso($idDevolucion, $det);
+                if ($estado === 'REALIZADO') {
+                    $exito = true;
+                    break; 
+                } else {
+                    $errores[] = "Error: $estado";
+                }
+            }
+
+            if ($exito) {
+                oci_commit($this->conn);
+                $_SESSION['success'] = 'Reembolso reintentado exitosamente.';
+            } else {
+                $_SESSION['error'] = 'No se pudo procesar el reembolso: ' . implode(', ', array_unique($errores));
+            }
+
+        } catch (Throwable $e) {
+            @oci_rollback($this->conn);
+            error_log('DevolucionController::adminReintentarReembolso – ' . $e->getMessage());
+            $_SESSION['error'] = $e->getMessage();
+        }
+
+        $this->redirect('index.php?action=admin_devolucion_detalle&id=' . $idDevolucion);
     }
 }
