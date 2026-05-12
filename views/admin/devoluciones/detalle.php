@@ -221,8 +221,6 @@ $motivosLabel = [
                         </small>
                     </form>
                 </div>
-            <?php elseif ($esAprobada && $detEstado === 'APROBADO' && $cantApro > 0 && !$recibido): ?>
-                <!-- cantidad_aprobada ya seteada, igual mostramos el botón -->
             <?php endif; ?>
         </div>
     <?php endforeach; ?>

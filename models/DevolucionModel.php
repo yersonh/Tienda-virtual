@@ -545,8 +545,7 @@ class DevolucionModel {
                        DESCUENTO    = 15,
                        DISPONIBLE   = 1,
                        PRECIO_FINAL = PRECIO_ORIGINAL * 0.85
-                 WHERE ID_ITEM_REACONDICIONADO = :id_item
-                   AND NUMERO_DEVOLUCIONES     >= 2"; // Permitir reofertar si tiene 2 o mas (aunque a 3 pasa a stock muerto)
+                 WHERE ID_ITEM_REACONDICIONADO = :id_item";
 
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_item', $idItem, -1, SQLT_INT);

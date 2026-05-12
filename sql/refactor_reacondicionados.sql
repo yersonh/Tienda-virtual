@@ -47,12 +47,12 @@ BEGIN
                    FECHA_INGRESO         = SYSDATE
              WHERE ID_ITEM_REACONDICIONADO = v_id_item_existente;
         ELSE
-            -- Regresar a PENDIENTE de decision
+            -- Regresar a PENDIENTE de decision: DISPONIBLE=0 hasta que admin decida ofertarlo
             UPDATE INVENTARIO_REACONDICIONADO
                SET NUMERO_DEVOLUCIONES   = v_num_devoluciones,
                    ID_DEVOLUCION_DETALLE = p_id_devolucion_detalle,
                    ESTADO                = 'PENDIENTE',
-                   DISPONIBLE            = 1,
+                   DISPONIBLE            = 0,
                    DESCUENTO             = 0,
                    PRECIO_FINAL          = v_precio_original,
                    FECHA_INGRESO         = SYSDATE
@@ -62,6 +62,7 @@ BEGIN
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             -- CASO NUEVO: Insertar primer registro
+            -- DISPONIBLE=0: el admin debe decidir ofertarlo antes de que aparezca en tienda
             INSERT INTO INVENTARIO_REACONDICIONADO (
                 ID_ITEM_REACONDICIONADO, ID_PRODUCTO, ID_REFERENCIA, ID_DEVOLUCION_DETALLE,
                 NUMERO_DEVOLUCIONES, DESCUENTO, PRECIO_ORIGINAL, PRECIO_FINAL,
@@ -69,7 +70,7 @@ BEGIN
             ) VALUES (
                 SEQ_REACONDICIONADO.NEXTVAL, v_id_producto, v_id_referencia, p_id_devolucion_detalle,
                 1, 0, v_precio_original, v_precio_original,
-                'PENDIENTE', 1, SYSDATE
+                'PENDIENTE', 0, SYSDATE
             );
     END;
 

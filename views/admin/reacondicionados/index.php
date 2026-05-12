@@ -3,66 +3,6 @@
 /** @var array $itemsPendientes  Items recibidos pendientes de decisión (estado=PENDIENTE) */
 /** @var array $itemsOferta10    Items actualmente en OFERTA_10 */
 /** @var array $itemsOferta15    Items actualmente en OFERTA_15 */
-require_once __DIR__ . '/../../../config/UploadHelper.php';
-
-function reacAdminCard(array $item, string $accion, string $label, string $color): string {
-    $id       = (int)    ($item['id_item_reacondicionado'] ?? 0);
-    $nombre   = htmlspecialchars((string) ($item['producto'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
-    $ref      = htmlspecialchars((string) ($item['nombre_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $numDev   = (int)    ($item['numero_devoluciones']  ?? 1);
-    $precOrig = (float)  ($item['precio_original']      ?? 0);
-    $precFinal = (float) ($item['precio_final']         ?? 0);
-    $descuento = (int)   ($item['descuento']             ?? 0);
-    $fecha    = htmlspecialchars((string) ($item['fecha_ingreso'] ?? '-'), ENT_QUOTES, 'UTF-8');
-    $imagen   = (string) ($item['imagen'] ?? '');
-    $imgUrl   = $imagen !== '' ? htmlspecialchars(UploadHelper::getImageUrl($imagen), ENT_QUOTES, 'UTF-8') : null;
-
-    $html  = '<div style="border:1px solid rgba(56,189,248,.18);border-radius:14px;background:rgba(15,23,42,.6);overflow:hidden;">';
-
-    // Imagen
-    $html .= '<div style="height:140px;background:rgba(148,163,184,.1);overflow:hidden;position:relative;">';
-    if ($imgUrl) {
-        $html .= '<img src="' . $imgUrl . '" alt="' . $nombre . '" style="width:100%;height:100%;object-fit:cover;">';
-    } else {
-        $html .= '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;"><i class="fas fa-box" style="font-size:32px;"></i></div>';
-    }
-    $html .= '<span style="position:absolute;top:8px;right:8px;background:rgba(99,102,241,.85);color:white;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:800;">' . $numDev . '.ª dev.</span>';
-    if ($descuento > 0) {
-        $html .= '<span style="position:absolute;top:8px;left:8px;background:rgba(234,179,8,.9);color:#1a1000;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:800;">-' . $descuento . '%</span>';
-    }
-    $html .= '</div>';
-
-    // Info
-    $html .= '<div style="padding:14px 16px;">';
-    $html .= '<div style="font-weight:800;color:white;margin-bottom:4px;">' . $nombre . '</div>';
-    if ($ref !== '') {
-        $html .= '<div style="color:#94a3b8;font-size:12px;margin-bottom:8px;">Ref. ' . $ref . '</div>';
-    }
-    $html .= '<div style="display:flex;justify-content:space-between;font-size:13px;color:#94a3b8;margin-bottom:4px;">';
-    $html .= '<span>Precio orig.</span><strong style="color:white;">$' . number_format($precOrig) . '</strong></div>';
-    if ($precFinal > 0) {
-        $html .= '<div style="display:flex;justify-content:space-between;font-size:13px;color:#94a3b8;margin-bottom:8px;">';
-        $html .= '<span>Precio oferta</span><strong style="color:#4ade80;">$' . number_format($precFinal) . '</strong></div>';
-    }
-    $html .= '<div style="color:#94a3b8;font-size:11px;margin-bottom:12px;">Ingresado: ' . $fecha . '</div>';
-
-    // Botón acción
-    $html .= '<form method="POST" action="index.php?action=' . $accion . '">';
-    $html .= '<input type="hidden" name="id_item" value="' . $id . '">';
-    $html .= '<button type="submit" style="width:100%;padding:9px;background:' . $color . ';border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;" onclick="return confirm(\'¿Confirmar esta acción?\')">';
-    $html .= '<i class="fas fa-tag"></i> ' . $label;
-    $html .= '</button></form>';
-
-    // Botón "Sacar del inventario"
-    $html .= '<form method="POST" action="index.php?action=admin_sacar_inventario" style="margin-top:6px;">';
-    $html .= '<input type="hidden" name="id_item" value="' . $id . '">';
-    $html .= '<button type="submit" style="width:100%;padding:7px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-weight:700;cursor:pointer;font-size:12px;" onclick="return confirm(\'¿Mover a stock muerto?\')">';
-    $html .= '<i class="fas fa-trash-can"></i> Sacar del inventario';
-    $html .= '</button></form>';
-
-    $html .= '</div></div>';
-    return $html;
-}
 ?>
 
 <style>
@@ -261,6 +201,8 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
 </style>
 
 <?php
+require_once __DIR__ . '/../../../config/UploadHelper.php';
+
 function reacAdminCard(array $item, string $accion, string $label, string $color): string {
     $id       = (int)    ($item['id_item_reacondicionado'] ?? 0);
     $nombre   = htmlspecialchars((string) ($item['producto'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
@@ -432,7 +374,7 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
                             </div>
                             <form method="POST" action="index.php?action=admin_sacar_inventario">
                                 <input type="hidden" name="id_item" value="<?= $id ?>">
-                                <button type="submit" onclick="return confirm(\'¿Mover a stock muerto?\')" class="btn-reac-action btn-sacar">
+                                <button type="submit" onclick="return confirm('¿Mover a stock muerto?')" class="btn-reac-action btn-sacar">
                                     <i class="fas fa-trash-can"></i> Sacar
                                 </button>
                             </form>
