@@ -103,9 +103,23 @@ class DevolucionModel {
     }
 
     public function obtenerDevolucionesPorUsuario(int $idUsuario): array {
-        $sql = "SELECT * FROM V_DEVOLUCIONES_USUARIO
-                 WHERE ID_USUARIO = :id_usuario
-                 ORDER BY FECHA_SOLICITUD DESC";
+        $sql = "SELECT d.ID_DEVOLUCION,
+                       d.ID_PEDIDO,
+                       d.ID_USUARIO,
+                       d.ID_ESTADO_DEVOLUCION,
+                       ed.NOMBRE AS ESTADO_NOMBRE,
+                       TO_CHAR(d.FECHA_SOLICITUD, 'DD/MM/YYYY HH24:MI') AS FECHA_SOLICITUD,
+                       TO_CHAR(d.FECHA_APROBACION, 'DD/MM/YYYY HH24:MI') AS FECHA_APROBACION,
+                       TO_CHAR(d.FECHA_RECEPCION, 'DD/MM/YYYY HH24:MI') AS FECHA_RECEPCION,
+                       TO_CHAR(d.FECHA_REEMBOLSO, 'DD/MM/YYYY HH24:MI') AS FECHA_REEMBOLSO,
+                       NVL(d.REEMBOLSO_REALIZADO, 0) AS REEMBOLSO_REALIZADO,
+                       d.REEMBOLSO_ESTADO,
+                       d.OBSERVACION_CLIENTE,
+                       d.OBSERVACION_ADMIN
+                FROM DEVOLUCION d
+                INNER JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO_DEVOLUCION = d.ID_ESTADO_DEVOLUCION
+                WHERE d.ID_USUARIO = :id_usuario
+                ORDER BY d.FECHA_SOLICITUD DESC";
 
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
@@ -209,6 +223,8 @@ class DevolucionModel {
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_det', $idDevolucionDetalle, -1, SQLT_INT);
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $e = oci_error($stmt);
+            error_log("DevolucionModel::obtenerImagenesDetalle (ID Detalle: $idDevolucionDetalle) - " . ($e['message'] ?? 'Error desconocido'));
             oci_free_statement($stmt);
             return [];
         }
@@ -419,6 +435,8 @@ class DevolucionModel {
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $e = oci_error($stmt);
+            error_log("DevolucionModel::obtenerTransaccionWompiPorPedido (Pedido: $idPedido) - " . ($e['message'] ?? 'Error desconocido'));
             oci_free_statement($stmt);
             return null;
         }
