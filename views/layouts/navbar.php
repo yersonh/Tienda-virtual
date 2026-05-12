@@ -1375,12 +1375,12 @@ function showToast(message, type = 'success') {
         });
     }
 
-    // Refresh badge every 90 s without reopening the dropdown
+    // Refresh badge every 30 s without reopening the dropdown
     setInterval(function () {
         fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
-    }, 90000);
+    }, 30000);
 })();
 
 </script>

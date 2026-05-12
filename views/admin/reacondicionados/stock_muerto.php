@@ -40,8 +40,8 @@ $items = $items ?? [];
             <?php foreach ($items as $item): ?>
                 <?php
                 $id        = (int)   ($item['id_item_reacondicionado'] ?? 0);
-                $nombre    = htmlspecialchars((string) ($item['producto_nombre'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
-                $ref       = htmlspecialchars((string) ($item['numero_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
+                $nombre    = htmlspecialchars((string) ($item['producto'] ?? 'Producto'), ENT_QUOTES, 'UTF-8');
+                $ref       = htmlspecialchars((string) ($item['nombre_referencia'] ?? ''), ENT_QUOTES, 'UTF-8');
                 $numDev    = (int)   ($item['numero_devoluciones'] ?? 0);
                 $precOrig  = (float) ($item['precio_original'] ?? 0);
                 $fecha     = htmlspecialchars((string) ($item['fecha_ingreso'] ?? '-'), ENT_QUOTES, 'UTF-8');
