@@ -103,8 +103,9 @@ class DevolucionModel {
     }
 
     public function obtenerDevolucionesPorUsuario(int $idUsuario, ?int $idEstado = null): array {
-        $sql = "SELECT d.ID_DEVOLUCION, d.ID_PEDIDO, d.ID_ESTADO_DEVOLUCION, d.FECHA_SOLICITUD,
-                       d.REEMBOLSO_ID_WOMPI, d.REEMBOLSO_ESTADO, d.MONTO_REEMBOLSO,
+        $sql = "SELECT d.ID_DEVOLUCION, d.ID_PEDIDO, d.ID_ESTADO_DEVOLUCION,
+                       TO_CHAR(d.FECHA_SOLICITUD, 'DD/MM/YYYY') AS FECHA_SOLICITUD,
+                       d.REEMBOLSO_ID_WOMPI, d.REEMBOLSO_ESTADO,
                        ed.NOMBRE AS ESTADO_NOMBRE
                 FROM DEVOLUCION d
                 JOIN ESTADO_DEVOLUCION ed ON ed.ID_ESTADO_DEVOLUCION = d.ID_ESTADO_DEVOLUCION
@@ -283,7 +284,7 @@ class DevolucionModel {
                         ID_PRODUCTO, ID_REFERENCIA, CANTIDAD,
                         MOTIVO, COMENTARIO, ESTADO, PRODUCTO_RECIBIDO)
                 VALUES (SEQ_DEVOLUCION_DETALLE.NEXTVAL, :id_devolucion, :id_detalle,
-                        :id_producto, :id_referencia, :cantidad,
+                        :id_producto, NULLIF(:id_referencia, 0), :cantidad,
                         :motivo, :comentario, 'PENDIENTE', 0)
                 RETURNING ID_DEVOLUCION_DETALLE INTO :out_id";
 

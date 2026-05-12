@@ -115,7 +115,7 @@ class NotificacionModel {
     public function obtenerIdAdmin(): ?int {
         $sql  = "SELECT MIN(u.ID_USUARIO) AS ID_ADMIN
                    FROM USUARIO u
-                  WHERE u.ID_TIPO_USUARIO = 1";
+                  WHERE u.ID_TIPO = 1";
         $stmt = @oci_parse($this->conn, $sql);
         if (!$stmt) {
             return null;

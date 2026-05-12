@@ -31,13 +31,14 @@ class DevolucionService {
             throw new Exception('Selecciona al menos un producto para devolver.');
         }
 
-        $idDevolucion = $this->model->crearDevolucion($idPedido, $idUsuario);
+        $idDevolucion  = $this->model->crearDevolucion($idPedido, $idUsuario);
+        $detallesCreados = 0;
 
         foreach ($seleccionados as $idDetalle) {
-            $cantidad     = (int)    ($post['cantidad_'    . $idDetalle] ?? 0);
-            $motivo       = trim((string) ($post['motivo_'      . $idDetalle] ?? ''));
-            $comentario   = trim((string) ($post['comentario_'  . $idDetalle] ?? ''));
-            $idProducto   = (int)    ($post['id_producto_'  . $idDetalle] ?? 0);
+            $cantidad     = (int)    ($post['cantidad_'      . $idDetalle] ?? 0);
+            $motivo       = trim((string) ($post['motivo_'        . $idDetalle] ?? ''));
+            $comentario   = trim((string) ($post['comentario_'    . $idDetalle] ?? ''));
+            $idProducto   = (int)    ($post['id_producto_'   . $idDetalle] ?? 0);
             $idReferencia = (int)    ($post['id_referencia_' . $idDetalle] ?? 0);
 
             if ($cantidad <= 0 || $idProducto <= 0 || $motivo === '') {
@@ -48,8 +49,14 @@ class DevolucionService {
                 $idDevolucion, $idDetalle, $idProducto, $idReferencia,
                 $cantidad, $motivo, $comentario
             );
+            $detallesCreados++;
 
             $this->procesarImagenes($files, $idDetalle, $idDevDet);
+        }
+
+        if ($detallesCreados === 0) {
+            oci_rollback($this->conn);
+            throw new Exception('No se registró ningún producto válido para devolver. Verifica cantidad y motivo.');
         }
 
         oci_commit($this->conn);
