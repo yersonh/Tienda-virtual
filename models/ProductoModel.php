@@ -232,7 +232,7 @@ class ProductoModel {
         return $this->anexarCompatibilidades($results);
     }
 
-    public function obtenerTodos() {
+    public function obtenerTodos(bool $conCompatibilidades = false) {
         $columns = $this->productoColumns('p');
         $imageJoin = $this->primeraImagenJoin();
         $referenciaJoin = $this->referenciaJoin();
@@ -253,7 +253,7 @@ class ProductoModel {
         }
         oci_free_statement($stmt);
 
-        return $this->anexarCompatibilidades($results);
+        return $conCompatibilidades ? $this->anexarCompatibilidades($results) : $results;
     }
 
     public function obtenerPorId($id) {
@@ -1038,7 +1038,15 @@ class ProductoModel {
         $query = "DELETE FROM producto WHERE id_producto = :id";
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':id', $id, -1, SQLT_INT);
-        oci_execute($stmt);
+        if (!@oci_execute($stmt)) {
+            $err = oci_error($stmt);
+            oci_free_statement($stmt);
+            $msg = $err['message'] ?? '';
+            if (str_contains($msg, 'ORA-02292')) {
+                throw new Exception('El producto tiene ventas o pedidos asociados y no puede eliminarse. Puedes desactivarlo desde Editar.');
+            }
+            throw new Exception('Error al eliminar el producto: ' . $msg);
+        }
         oci_free_statement($stmt);
     }
 

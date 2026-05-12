@@ -23,7 +23,7 @@ class ProductoController {
     // Listar productos
     public function index() {
         Auth::soloAdmin();
-        $productos = $this->model->obtenerTodos() ?? [];
+        $productos = $this->model->obtenerTodos(false) ?? [];
 
         foreach ($productos as $key => $producto) {
             $imagen = $producto['imagen'] ?? null;
@@ -231,30 +231,30 @@ class ProductoController {
     // Eliminar producto COMPLETO (con todas sus imágenes)
     public function eliminar() {
         Auth::soloAdmin();
-        $id = $_GET['id'] ?? 0;
-        
-        // Eliminar archivos del servidor usando UploadHelper
-        $imagenes = $this->model->obtenerImagenes($id);
-        foreach ($imagenes as $img) {
-            // Extraer la ruta relativa del volumen
-            $rutaRelativa = str_replace('/uploads/', '', $img['url']);
-            $rutaAbsoluta = UploadHelper::getBasePath() . $rutaRelativa;
-            
-            if (file_exists($rutaAbsoluta)) {
-                unlink($rutaAbsoluta);
-                error_log("Archivo eliminado: " . $rutaAbsoluta);
+        $id = (int) ($_GET['id'] ?? 0);
+
+        try {
+            // Intentar borrar primero (falla rápido si hay FK violation)
+            $this->model->eliminar($id);
+
+            // Solo si el DELETE fue exitoso, borramos archivos e imágenes
+            $imagenes = $this->model->obtenerImagenes($id);
+            foreach ($imagenes as $img) {
+                $rutaRelativa = str_replace('/uploads/', '', $img['url']);
+                $rutaAbsoluta = UploadHelper::getBasePath() . $rutaRelativa;
+                if (file_exists($rutaAbsoluta)) {
+                    unlink($rutaAbsoluta);
+                }
             }
+            $this->model->eliminarImagenes($id);
+
+            $this->invalidarCacheCatalogo();
+            $_SESSION['success'] = 'Producto eliminado exitosamente';
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
         }
-        
-        // Eliminar TODAS las imágenes de la BD
-        $this->model->eliminarImagenes($id);
-        
-        // Eliminar el producto
-        $this->model->eliminar($id);
-        
-        $this->invalidarCacheCatalogo();
-        $_SESSION['success'] = "Producto eliminado exitosamente";
-        header("Location: index.php?action=productos");
+
+        header('Location: index.php?action=productos');
         exit();
     }
 

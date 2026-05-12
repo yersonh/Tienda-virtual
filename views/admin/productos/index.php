@@ -13,6 +13,9 @@
     <?php if (isset($_SESSION['success'])): ?>
         <div class="alert-success"><?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['success']); ?></div>
     <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert-error"><?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error']); ?></div>
+    <?php endif; ?>
 
     <div class="table-container">
         <table class="productos-table">
@@ -202,6 +205,16 @@
         padding: 14px 20px;
         border-radius: 12px;
         border: 1px solid rgba(34,197,94,0.25);
+        margin-bottom: 20px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .alert-error {
+        background: rgba(239,68,68,0.12);
+        color: #f87171;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(239,68,68,0.25);
         margin-bottom: 20px;
         font-weight: 600;
         font-size: 14px;
