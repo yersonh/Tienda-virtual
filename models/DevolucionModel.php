@@ -446,28 +446,48 @@ class DevolucionModel {
     // ─── WOMPI ────────────────────────────────────────────────────────────────
 
     public function obtenerTransaccionWompiPorPedido(int $idPedido): ?array {
-        $sql = "SELECT pa.ID_TRANSACCION_WOMPI,
+        $sql = "SELECT pa.ID_PAGO,
+                       pa.ID_VENTA,
+                       pa.ESTADO,
+                       pa.ID_TRANSACCION_WOMPI,
                        pa.REFERENCIA_WOMPI,
-                       NVL(v.TOTAL, 0)     AS TOTAL,
-                       NVL(pa.METODO_REAL, 'DESCONOCIDO') AS METODO_REAL
+                       NVL(pa.METODO_REAL, 'DESCONOCIDO') AS METODO_REAL,
+                       NVL(v.TOTAL, 0)                    AS TOTAL
                   FROM PAGO   pa
                  INNER JOIN PEDIDO  pe ON pe.ID_VENTA = pa.ID_VENTA
                  INNER JOIN VENTA   v  ON v.ID_VENTA  = pa.ID_VENTA
-                 WHERE pe.ID_PEDIDO = :id_pedido
-                   AND UPPER(TRIM(pa.ESTADO)) = 'APPROVED'
+                 WHERE pe.ID_PEDIDO            = :id_pedido
+                   AND pa.ESTADO               = 'APPROVED'
+                   AND pa.ID_TRANSACCION_WOMPI IS NOT NULL
                  FETCH FIRST 1 ROWS ONLY";
 
         $stmt = $this->parse($sql);
         oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $e = oci_error($stmt);
-            error_log("DevolucionModel::obtenerTransaccionWompiPorPedido (Pedido: $idPedido) - " . ($e['message'] ?? 'Error desconocido'));
+            error_log("[DevolucionModel] obtenerTransaccionWompiPorPedido ERROR (id_pedido=$idPedido): " . ($e['message'] ?? 'Error desconocido'));
             oci_free_statement($stmt);
             return null;
         }
         $row = oci_fetch_assoc($stmt);
         oci_free_statement($stmt);
-        return $row ? $this->normalizeRow($row) : null;
+
+        if (!$row) {
+            error_log("[DevolucionModel] obtenerTransaccionWompiPorPedido: sin resultado para id_pedido=$idPedido");
+            return null;
+        }
+
+        $result = $this->normalizeRow($row);
+
+        error_log('[DevolucionModel] obtenerTransaccionWompiPorPedido ══════════');
+        error_log('[DevolucionModel]   id_pedido            : ' . $idPedido);
+        error_log('[DevolucionModel]   id_pago              : ' . ($result['id_pago']              ?? 'NULL'));
+        error_log('[DevolucionModel]   id_venta             : ' . ($result['id_venta']             ?? 'NULL'));
+        error_log('[DevolucionModel]   estado               : ' . ($result['estado']               ?? 'NULL'));
+        error_log('[DevolucionModel]   id_transaccion_wompi : ' . ($result['id_transaccion_wompi'] ?? 'NULL'));
+        error_log('[DevolucionModel]   metodo_real          : ' . ($result['metodo_real']          ?? 'NULL'));
+
+        return $result;
     }
 
     public function obtenerPrecioUnitarioDetalle(int $idDetalle): float {
