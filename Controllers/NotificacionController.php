@@ -33,10 +33,22 @@ class NotificacionController {
         try {
             $items    = $this->model->obtenerParaUsuario($idUsuario, 15);
             $noLeidas = $this->model->contarNoLeidas($idUsuario);
-            $this->json(['ok' => true, 'items' => $items, 'no_leidas' => $noLeidas]);
+            
+            $devPendientes = 0;
+            if (isset($_SESSION['id_tipo_usuario']) && (int)$_SESSION['id_tipo_usuario'] === 1) {
+                require_once __DIR__ . '/../models/DevolucionModel.php';
+                $devPendientes = (new DevolucionModel($this->conn))->contarPendientesAdmin();
+            }
+
+            $this->json([
+                'ok' => true, 
+                'items' => $items, 
+                'no_leidas' => $noLeidas,
+                'dev_pendientes' => $devPendientes
+            ]);
         } catch (Throwable $e) {
             error_log('NotificacionController::listarJson – ' . $e->getMessage());
-            $this->json(['ok' => false, 'items' => [], 'no_leidas' => 0]);
+            $this->json(['ok' => false, 'items' => [], 'no_leidas' => 0, 'dev_pendientes' => 0]);
         }
     }
 

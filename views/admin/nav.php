@@ -591,9 +591,9 @@ try {
                 <a href="index.php?action=admin_devoluciones" class="nav-link">
                     <i class="fas fa-rotate-left"></i>
                     <span><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></span>
-                    <?php if ($adminDevPendientes > 0): ?>
-                    <span class="nav-badge" title="Pendientes" style="background: #fbbf24; color: #1a1000;"><?= min($adminDevPendientes, 99) ?></span>
-                    <?php endif; ?>
+                    <span id="sidebar-dev-badge" class="nav-badge" title="Pendientes" style="background: #fbbf24; color: #1a1000; <?= $adminDevPendientes > 0 ? '' : 'display:none;' ?>">
+                        <?= min($adminDevPendientes, 99) ?>
+                    </span>
                 </a>
             </div>
 
@@ -726,11 +726,18 @@ applyAdminTheme(localStorage.getItem('theme') || 'dark');
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
                         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function setBadge(n) {
+    function setBadge(n, dev) {
         n = parseInt(n, 10) || 0;
-        if (!badge) return;
-        badge.textContent = n > 99 ? '99+' : String(n);
-        badge.style.display = n > 0 ? 'flex' : 'none';
+        if (badge) {
+            badge.textContent = n > 99 ? '99+' : String(n);
+            badge.style.display = n > 0 ? 'flex' : 'none';
+        }
+        var sBadge = document.getElementById('sidebar-dev-badge');
+        if (sBadge) {
+            dev = parseInt(dev, 10) || 0;
+            sBadge.textContent = dev > 99 ? '99+' : String(dev);
+            sBadge.style.display = dev > 0 ? 'inline-block' : 'none';
+        }
     }
     function renderItems(items) {
         if (!items || items.length === 0) {
@@ -758,7 +765,10 @@ applyAdminTheme(localStorage.getItem('theme') || 'dark');
         fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (d) {
-                if (d.ok) { renderItems(d.items); setBadge(d.no_leidas); }
+                if (d.ok) { 
+                    renderItems(d.items); 
+                    setBadge(d.no_leidas, d.dev_pendientes); 
+                }
                 else { list.innerHTML = '<div class="admin-notif-empty">Sin notificaciones.</div>'; }
                 loaded = true;
             })
@@ -800,7 +810,7 @@ applyAdminTheme(localStorage.getItem('theme') || 'dark');
     setInterval(function () {
         fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
-            .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
+            .then(function (d) { if (d.ok) setBadge(d.no_leidas, d.dev_pendientes); });
     }, 30000);
 })();
 

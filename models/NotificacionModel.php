@@ -35,8 +35,10 @@ class NotificacionModel {
                        (ID_NOTIFICACION, ID_USUARIO, TITULO, MENSAJE, TIPO, LEIDA, URL, FECHA_CREACION)
                 VALUES (SEQ_NOTIFICACION.NEXTVAL, :id_usuario, :titulo, :mensaje, :tipo, 0, :url, SYSDATE)";
 
-        $stmt = @oci_parse($this->conn, $sql);
+        $stmt = oci_parse($this->conn, $sql);
         if (!$stmt) {
+            $err = oci_error($this->conn);
+            error_log('NotificacionModel::crear (parse) – ' . ($err['message'] ?? 'Unknown error'));
             return;
         }
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
@@ -44,18 +46,22 @@ class NotificacionModel {
         oci_bind_by_name($stmt, ':mensaje',    $mensaje);
         oci_bind_by_name($stmt, ':tipo',       $tipo);
         oci_bind_by_name($stmt, ':url',        $url);
-        @oci_execute($stmt, OCI_NO_AUTO_COMMIT);
+        
+        if (!oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $err = oci_error($stmt);
+            error_log('NotificacionModel::crear (execute) – ' . ($err['message'] ?? 'Unknown error'));
+        }
         oci_free_statement($stmt);
     }
 
     public function marcarTodas(int $idUsuario): void {
         $sql  = "UPDATE NOTIFICACION SET LEIDA = 1 WHERE ID_USUARIO = :id_usuario AND LEIDA = 0";
-        $stmt = @oci_parse($this->conn, $sql);
+        $stmt = oci_parse($this->conn, $sql);
         if (!$stmt) {
             return;
         }
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
-        @oci_execute($stmt, OCI_NO_AUTO_COMMIT);
+        oci_execute($stmt, OCI_NO_AUTO_COMMIT);
         oci_free_statement($stmt);
     }
 

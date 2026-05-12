@@ -104,9 +104,11 @@ class DevolucionController {
                         'warning',
                         'index.php?action=admin_devoluciones'
                     );
-                    oci_commit($this->conn);
+                    oci_commit($this->conn); // Commit para la notificación
                 }
-            } catch (Throwable $eNotif) { /* silencioso */ }
+            } catch (Throwable $eNotif) { 
+                error_log('DevolucionController::enviarSolicitud (Notif Admin) – ' . $eNotif->getMessage());
+            }
             $_SESSION['success'] = 'Solicitud de devolución enviada. El equipo revisará tu caso.';
             $this->redirect('index.php?action=misDevoluciones');
         } catch (Throwable $e) {
@@ -245,9 +247,11 @@ class DevolucionController {
                         'success',
                         'index.php?action=devolucionDetalle&id=' . $idDevolucion
                     );
-                    oci_commit($this->conn);
+                    oci_commit($this->conn); // Commit para la notificación
                 }
-            } catch (Throwable $eNotif) { /* silencioso */ }
+            } catch (Throwable $eNotif) { 
+                error_log('DevolucionController::adminAprobar (Notif Cliente) – ' . $eNotif->getMessage());
+            }
             $_SESSION['success'] = 'Devolución aprobada. El cliente debe enviar los productos.';
         } catch (Throwable $e) {
             @oci_rollback($this->conn);
@@ -284,9 +288,11 @@ class DevolucionController {
                         'error',
                         'index.php?action=devolucionDetalle&id=' . $idDevolucion
                     );
-                    oci_commit($this->conn);
+                    oci_commit($this->conn); // Commit para la notificación
                 }
-            } catch (Throwable $eNotif) { /* silencioso */ }
+            } catch (Throwable $eNotif) { 
+                error_log('DevolucionController::adminRechazar (Notif Cliente) – ' . $eNotif->getMessage());
+            }
             $_SESSION['success'] = 'Devolución rechazada.';
         } catch (Throwable $e) {
             @oci_rollback($this->conn);
