@@ -382,13 +382,13 @@ class CheckoutController {
         return [
             'publicKey' => $publicKey,
             'currency' => $currency,
-            'amount_in_cents' => $amountInCents,
-            'real_amount_in_cents' => $realAmountInCents,
-            'test_mode' => $wompiTestMode,
+            'amountInCents' => $amountInCents,
+            'realAmountInCents' => $realAmountInCents,
+            'testMode' => $wompiTestMode,
             'reference' => $referencia,
-            'integrity_signature' => $integritySignature,
-            'redirect_url' => $returnUrl,
-            'return_url' => $returnUrl
+            'integritySignature' => $integritySignature,
+            'redirectUrl' => $returnUrl,
+            'returnUrl' => $returnUrl
         ];
     }
 
@@ -568,9 +568,9 @@ class CheckoutController {
                 'id_pedido'          => $idPedido,
                 'id_venta'           => $idVenta,
                 'referencia'         => $checkoutPayload['reference'],
-                'amount_in_cents'    => $checkoutPayload['amount_in_cents'],
-                'real_amount_in_cents' => $checkoutPayload['real_amount_in_cents'],
-                'test_mode'          => $checkoutPayload['test_mode'],
+                'amountInCents'      => $checkoutPayload['amountInCents'],
+                'realAmountInCents'  => $checkoutPayload['realAmountInCents'],
+                'testMode'           => $checkoutPayload['testMode'],
                 'fecha'              => date('Y-m-d H:i:s'),
                 'total'              => $resumen['total'],
                 'currency'           => $checkoutPayload['currency']
@@ -713,9 +713,9 @@ class CheckoutController {
                 'id_pedido' => $idPedido,
                 'id_venta' => $idVenta,
                 'referencia' => $checkoutPayload['reference'],
-                'amount_in_cents' => $checkoutPayload['amount_in_cents'],
-                'real_amount_in_cents' => $checkoutPayload['real_amount_in_cents'],
-                'test_mode' => $checkoutPayload['test_mode'],
+                'amountInCents' => $checkoutPayload['amountInCents'],
+                'realAmountInCents' => $checkoutPayload['realAmountInCents'],
+                'testMode' => $checkoutPayload['testMode'],
                 'fecha' => date('Y-m-d H:i:s'),
                 'total' => $total,
                 'currency' => $checkoutPayload['currency'],

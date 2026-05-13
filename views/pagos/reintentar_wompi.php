@@ -174,12 +174,13 @@ async function openWompiRetry() {
         return;
     }
 
-    const publicKey     = (typeof wompiRetryCheckout?.publicKey        === 'string') ? wompiRetryCheckout.publicKey.trim()        : '';
-    const reference     = (typeof wompiRetryCheckout?.reference         === 'string') ? wompiRetryCheckout.reference.trim()         : '';
-    const integrity     = (typeof wompiRetryCheckout?.integrity_signature === 'string') ? wompiRetryCheckout.integrity_signature.trim() : '';
-    const currency      = (typeof wompiRetryCheckout?.currency          === 'string' && wompiRetryCheckout.currency) ? wompiRetryCheckout.currency : 'COP';
-    const amountInCents = Math.round(Number(wompiRetryCheckout?.amount_in_cents));
-    const redirectUrl   = (typeof wompiRetryCheckout?.redirect_url      === 'string') ? wompiRetryCheckout.redirect_url : '';
+    const wompi = wompiRetryCheckout || {};
+    const publicKey = typeof wompi.publicKey === 'string' ? wompi.publicKey.trim() : '';
+    const reference = typeof wompi.reference === 'string' ? wompi.reference.trim() : '';
+    const integrity = typeof wompi.integritySignature === 'string' ? wompi.integritySignature.trim() : '';
+    const currency = typeof wompi.currency === 'string' && wompi.currency ? wompi.currency : 'COP';
+    const amountInCents = Math.round(Number(wompi.amountInCents));
+    const redirectUrl = typeof wompi.redirectUrl === 'string' ? wompi.redirectUrl : '';
 
     if (!publicKey || !reference || !integrity || !(amountInCents > 0)) {
         console.error('Payload Wompi retry incompleto:', { publicKey, reference, integrity, amountInCents, raw: wompiRetryCheckout });
@@ -194,16 +195,16 @@ async function openWompiRetry() {
         amountInCents: amountInCents,
         reference: reference,
         publicKey: publicKey,
+        redirectUrl: redirectUrl,
         signature: {
             integrity: integrity
-        },
-        redirectUrl: redirectUrl
+        }
     });
 
     widget.open(async (result) => {
         console.log('Wompi retry result:', result);
         await syncWompiTransaction(result);
-        window.location.href = wompiRetryCheckout.return_url || wompiRetryCheckout.redirect_url || 'index.php?action=misPedidos&id=<?= $idPedidoRetry ?>';
+        window.location.href = wompi.returnUrl || wompi.redirectUrl || 'index.php?action=misPedidos&id=<?= $idPedidoRetry ?>';
     });
 }
 

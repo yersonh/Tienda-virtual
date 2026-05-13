@@ -707,12 +707,13 @@ async function openWompiCheckout(checkout) {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
 
-    const publicKey      = (typeof checkout?.publicKey        === 'string') ? checkout.publicKey.trim()        : '';
-    const reference      = (typeof checkout?.reference         === 'string') ? checkout.reference.trim()         : '';
-    const integrity      = (typeof checkout?.integrity_signature === 'string') ? checkout.integrity_signature.trim() : '';
-    const currency       = (typeof checkout?.currency          === 'string' && checkout.currency) ? checkout.currency : 'COP';
-    const amountInCents  = Math.round(Number(checkout?.amount_in_cents));
-    const redirectUrl    = (typeof checkout?.redirect_url      === 'string') ? checkout.redirect_url : '';
+    const wompi = checkout || {};
+    const publicKey = typeof wompi.publicKey === 'string' ? wompi.publicKey.trim() : '';
+    const reference = typeof wompi.reference === 'string' ? wompi.reference.trim() : '';
+    const integrity = typeof wompi.integritySignature === 'string' ? wompi.integritySignature.trim() : '';
+    const currency = typeof wompi.currency === 'string' && wompi.currency ? wompi.currency : 'COP';
+    const amountInCents = Math.round(Number(wompi.amountInCents));
+    const redirectUrl = typeof wompi.redirectUrl === 'string' ? wompi.redirectUrl : '';
 
     if (!publicKey || !reference || !integrity || !(amountInCents > 0)) {
         console.error('Payload Wompi incompleto:', { publicKey, reference, integrity, amountInCents, raw: checkout });
@@ -724,17 +725,17 @@ async function openWompiCheckout(checkout) {
         amountInCents: amountInCents,
         reference: reference,
         publicKey: publicKey,
+        redirectUrl: redirectUrl,
         signature: {
             integrity: integrity
-        },
-        redirectUrl: redirectUrl
+        }
     });
 
     widget.open(async (result) => {
         console.log('Wompi result:', result);
         sessionStorage.setItem(paymentCompletedKey, '1');
         await syncWompiTransaction(result);
-        window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
+        window.location.href = wompi.returnUrl || wompi.redirectUrl || 'index.php?action=misPedidos';
     });
 }
 
