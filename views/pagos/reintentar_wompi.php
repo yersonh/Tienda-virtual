@@ -194,12 +194,14 @@ async function openWompiRetry() {
     console.log('Wompi checkout payload', wompiRetryCheckout);
 
     const widget = new WidgetCheckout({
-        currency: currency,
+        currency: String(currency),
         amountInCents: Number(amountInCents),
         reference: String(reference),
         publicKey: String(publicKey),
         redirectUrl: String(redirectUrl),
-        integrity: String(integrity)
+        signature: {
+            integrity: String(integrity)
+        }
     });
 
     widget.open(async (result) => {
