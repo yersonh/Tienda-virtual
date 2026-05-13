@@ -54,6 +54,18 @@ class WompiModel {
             return;
         }
 
+        $pedido = $this->buscarPedidoPorVenta($idVenta);
+        if (!$pedido) {
+            throw new Exception('No se encontro un pedido asociado a la venta Wompi: ' . $idVenta);
+        }
+
+        $idEstadoPedido = (int) ($pedido['id_estado'] ?? 0);
+        if ($idEstadoPedido !== 1) {
+            error_log("[Wompi Notification] Skipping SP_PROCESAR_PAGO for Venta $idVenta because order state is $idEstadoPedido");
+            oci_commit($this->conn);
+            return;
+        }
+
         error_log("[Wompi Notification] Calling SP_PROCESAR_PAGO for Venta $idVenta, Status $estadoPago");
         $this->procesarPagoWompi(
             $idVenta,
@@ -171,6 +183,21 @@ class WompiModel {
     private function buscarVentaPorId(int $idVenta): ?array {
         $query = "SELECT ID_VENTA
                   FROM VENTA
+                  WHERE ID_VENTA = :id_venta
+                  FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = $this->parse($query);
+        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+        $this->execute($stmt);
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? array_change_key_case($row, CASE_LOWER) : null;
+    }
+
+    private function buscarPedidoPorVenta(int $idVenta): ?array {
+        $query = "SELECT ID_PEDIDO, ID_ESTADO
+                  FROM PEDIDO
                   WHERE ID_VENTA = :id_venta
                   FETCH FIRST 1 ROWS ONLY";
 
@@ -330,7 +357,15 @@ class WompiModel {
         $txActual = trim((string) ($pagoActual['id_transaccion_wompi'] ?? ''));
         $refActual = trim((string) ($pagoActual['referencia_wompi'] ?? ''));
 
-        if (in_array($estadoActual, ['APPROVED', 'PAGADO', 'COMPLETADO'], true)) {
+        // APPROVED siempre es terminal — nunca sobreescribir.
+        if ($estadoActual === 'APPROVED') {
+            return true;
+        }
+
+        // PAGADO/COMPLETADO solo son terminales cuando ya tienen un TX Wompi real.
+        // Sin TX_ID son placeholders de SP_CREAR_PEDIDO_COMPLETO que deben ser
+        // procesados por el webhook para guardar el ID de transacción correcto.
+        if (in_array($estadoActual, ['PAGADO', 'COMPLETADO'], true) && $txActual !== '') {
             return true;
         }
 

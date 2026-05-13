@@ -422,17 +422,12 @@ class PedidoController {
 
     private function estadoPedidoSql(): string {
         return "CASE 
-                    WHEN p.ID_ESTADO = 1 AND EXISTS (
-                        SELECT 1 FROM PAGO pg 
-                        WHERE pg.ID_VENTA = p.ID_VENTA 
-                        AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
-                    ) THEN 'Procesado'
-                    WHEN p.ID_ESTADO = 1 THEN 'Pendiente'
+                    WHEN p.ID_ESTADO = 1 THEN 'Pendiente de pago'
                     WHEN p.ID_ESTADO = 2 THEN 'Procesado'
                     WHEN p.ID_ESTADO = 3 THEN 'Enviado'
                     WHEN p.ID_ESTADO = 4 THEN 'Entregado'
                     WHEN p.ID_ESTADO = 5 THEN 'Cancelado'
-                    ELSE 'Pendiente'
+                    ELSE 'Pendiente de pago'
                 END";
     }
 
@@ -458,19 +453,12 @@ class PedidoController {
         $estadoSql = $this->estadoPedidoSql();
 
         $query = "SELECT p.ID_PEDIDO,
-                         CASE 
-                            WHEN p.ID_ESTADO = 1 AND EXISTS (
-                                SELECT 1 FROM PAGO pg 
-                                WHERE pg.ID_VENTA = p.ID_VENTA 
-                                AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
-                            ) THEN 2
-                            ELSE p.ID_ESTADO
-                         END AS ID_ESTADO,
+                         p.ID_ESTADO,
                          $estadoSql AS ESTADO,
                          {$venta['fecha']} AS FECHA,
                          {$venta['total']} AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (15 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (5 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
                          CASE WHEN EXISTS (
                              SELECT 1
                              FROM PAGO pg
@@ -580,20 +568,13 @@ class PedidoController {
     private function obtenerPedidoUsuario(int $idUsuario, int $idPedido): ?array {
         $query = "SELECT fp.ID_PEDIDO,
                          fp.ID_VENTA,
-                         CASE 
-                            WHEN p.ID_ESTADO = 1 AND EXISTS (
-                                SELECT 1 FROM PAGO pg 
-                                WHERE pg.ID_VENTA = p.ID_VENTA 
-                                AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
-                            ) THEN 2
-                            ELSE p.ID_ESTADO
-                         END AS ID_ESTADO,
-                         CASE 
-                            WHEN p.ID_ESTADO = 1 AND EXISTS (
-                                SELECT 1 FROM PAGO pg 
-                                WHERE pg.ID_VENTA = p.ID_VENTA 
-                                AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
-                            ) THEN 'Procesado'
+                         p.ID_ESTADO,
+                         CASE
+                            WHEN p.ID_ESTADO = 1 THEN 'Pendiente de pago'
+                            WHEN p.ID_ESTADO = 2 THEN 'Procesado'
+                            WHEN p.ID_ESTADO = 3 THEN 'Enviado'
+                            WHEN p.ID_ESTADO = 4 THEN 'Entregado'
+                            WHEN p.ID_ESTADO = 5 THEN 'Cancelado'
                             ELSE fp.ESTADO_PEDIDO
                          END AS ESTADO,
                          TO_CHAR(fp.FECHA, 'YYYY-MM-DD HH24:MI:SS') AS FECHA,
@@ -602,7 +583,7 @@ class PedidoController {
                          NVL(fp.ENVIO, 0) AS ENVIO,
                          NVL(fp.TOTAL, 0) AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (15 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (5 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES,
                          CASE WHEN EXISTS (
                              SELECT 1
                              FROM PAGO pg
@@ -1083,8 +1064,7 @@ class PedidoController {
         }
 
         $idEstadoPedido = (int) ($pedido['id_estado'] ?? 0);
-        $pagoAprobadoPedido = (int) ($pedido['pago_aprobado'] ?? 0) === 1;
-        if (!in_array($idEstadoPedido, [2, 3, 4], true) && !($idEstadoPedido === 5 && $pagoAprobadoPedido)) {
+        if (!in_array($idEstadoPedido, [2, 3, 4], true)) {
             $_SESSION['error'] = 'La factura estara disponible cuando el pago sea aprobado.';
             header("Location: index.php?action=misPedidos&id=" . $idPedido);
             exit();

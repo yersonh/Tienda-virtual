@@ -63,7 +63,7 @@ function canCancelOrder(array $pedido): bool {
 function canDownloadInvoice(array $pedido): bool {
     $idEstado = (int) ($pedido['id_estado'] ?? 0);
     if ($idEstado > 0) {
-        return in_array($idEstado, [2, 3, 4], true) || ($idEstado === 5 && (int) ($pedido['pago_aprobado'] ?? 0) === 1);
+        return in_array($idEstado, [2, 3, 4], true);
     }
 
     $estado = strtolower(trim((string) ($pedido['estado'] ?? '')));
@@ -83,6 +83,26 @@ function retryTimeText(array $pedido): string {
     $minutes = intdiv($seconds, 60);
     $remainingSeconds = $seconds % 60;
     return sprintf('%02d:%02d', $minutes, $remainingSeconds);
+}
+
+function paymentCountdownHtml(array $pedido, string $className = ''): string {
+    if ((int) ($pedido['id_estado'] ?? 0) !== 1) {
+        return '';
+    }
+
+    $seconds = max(0, (int) ($pedido['segundos_restantes'] ?? 0));
+    $createdAtRaw = trim((string) ($pedido['created_at'] ?? ''));
+    $createdAt = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $createdAtRaw)
+        ? str_replace(' ', 'T', $createdAtRaw)
+        : '';
+    $idPedido = (int) ($pedido['id_pedido'] ?? 0);
+    $label = $seconds > 0 ? 'Tu pedido expirará en ' . retryTimeText($pedido) : 'Expirando...';
+    $classes = trim('payment-countdown ' . $className . ($seconds > 0 && $seconds < 60 ? ' is-danger' : '') . ($seconds <= 0 ? ' is-expired' : ''));
+
+    return '<div class="' . htmlspecialchars($classes, ENT_QUOTES, 'UTF-8') . '" data-payment-countdown data-seconds="' . $seconds . '" data-created-at="' . htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8') . '" data-order-id="' . $idPedido . '">' .
+        '<span class="payment-countdown-icon" aria-hidden="true">⏳</span>' .
+        '<span data-countdown-label>' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</span>' .
+        '</div>';
 }
 
 function orderProductImage(?string $imagen): ?string {
@@ -313,6 +333,36 @@ function orderProductImage(?string $imagen): ?string {
     border-color: rgba(248,113,113,0.35);
     background: rgba(248,113,113,0.14);
     color: #fca5a5;
+}
+.payment-countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    width: fit-content;
+    margin-top: 9px;
+    padding: 7px 11px;
+    border: 1px solid rgba(251,191,36,0.34);
+    border-radius: 999px;
+    background: rgba(251,191,36,0.11);
+    color: #fbbf24;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.2;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.payment-countdown.inline {
+    margin-top: 0;
+}
+.payment-countdown.is-danger,
+.payment-countdown.is-expired {
+    border-color: rgba(248,113,113,0.48);
+    background: rgba(248,113,113,0.14);
+    color: #fca5a5;
+}
+.payment-countdown-icon {
+    font-size: 14px;
+    line-height: 1;
 }
 .orders-alert {
     margin-bottom: 18px;
@@ -791,7 +841,7 @@ function orderProductImage(?string $imagen): ?string {
             $stepIndex = orderStepIndex($pedidoDetalle);
             $progress = (($stepIndex - 1) / 3) * 100;
             $cartProgress = 8 + ($progress * 0.84);
-            $estadoDetalle = (string) ($pedidoDetalle['estado'] ?? 'Pendiente');
+            $estadoDetalle = (string) ($pedidoDetalle['estado'] ?? 'Pendiente de pago');
             $puedeCancelarDetalle = canCancelOrder($pedidoDetalle);
             $puedeReintentarDetalle = canRetryPayment($pedidoDetalle);
             $puedeEditarDireccionDetalle = (int) ($pedidoDetalle['id_estado'] ?? 0) === 1;
@@ -801,7 +851,7 @@ function orderProductImage(?string $imagen): ?string {
                 ? round($subtotalPedidoDetalle * 0.19)
                 : round(max(0, (float) ($pedidoDetalle['total'] ?? 0)) * 0.19 / 1.19);
             $steps = [
-                ['Pendiente', 'Creamos tu orden y estamos validando el pedido.'],
+                ['Pendiente de pago', 'Creamos tu orden y estamos validando el pedido.'],
                 ['Procesado', 'El pedido fue procesado y queda listo para envio.'],
                 ['Enviado', 'El pedido salio hacia la direccion registrada.'],
                 ['Entregado', 'La compra ya fue entregada al receptor.']
@@ -838,8 +888,8 @@ function orderProductImage(?string $imagen): ?string {
                         <div class="detail-row"><span><?= htmlspecialchars('Entrega estimada', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars(orderDateText($pedidoDetalle['fecha_estimada_entrega'] ?? ''), ENT_QUOTES, 'UTF-8') ?></strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('IVA 19%', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format($ivaPedidoDetalle) ?> COP</strong></div>
                         <div class="detail-row"><span><?= htmlspecialchars('Total', ENT_QUOTES, 'UTF-8') ?></span><strong>$<?= number_format((float) ($pedidoDetalle['total'] ?? 0)) ?> COP</strong></div>
+                        <?= paymentCountdownHtml($pedidoDetalle) ?>
                         <?php if ($puedeReintentarDetalle): ?>
-                            <div class="detail-row"><span><?= htmlspecialchars('Tiempo para pagar', ENT_QUOTES, 'UTF-8') ?></span><strong><?= htmlspecialchars(retryTimeText($pedidoDetalle), ENT_QUOTES, 'UTF-8') ?></strong></div>
                             <a class="orders-btn primary" href="index.php?action=reintentarPago&id=<?= (int) $pedidoDetalle['id_pedido'] ?>">
                                 <i class="fas fa-credit-card"></i>
                                 <?= htmlspecialchars('Pagar ahora', ENT_QUOTES, 'UTF-8') ?>
@@ -1038,7 +1088,7 @@ function orderProductImage(?string $imagen): ?string {
                         $fecha = orderDateText($pedido['fecha'] ?? '');
                         $fechaFiltro = ($pedido['fecha'] ?? '') !== '' && strtotime((string) $pedido['fecha']) ? date('Y-m-d', strtotime((string) $pedido['fecha'])) : '';
                         $total = (float) ($pedido['total'] ?? 0);
-                        $estado = (string) ($pedido['estado'] ?? 'Pendiente');
+                        $estado = (string) ($pedido['estado'] ?? 'Pendiente de pago');
                         $puedeCancelar = canCancelOrder($pedido);
                         $puedeDescargarFactura = canDownloadInvoice($pedido);
                         $puedeReintentarPago = canRetryPayment($pedido);
@@ -1070,6 +1120,7 @@ function orderProductImage(?string $imagen): ?string {
                             </div>
                             <div>
                                 <span class="status-pill <?= statusClass($estado, (int) ($pedido['id_estado'] ?? 0)) ?>"><?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?></span>
+                                <?= paymentCountdownHtml($pedido, 'inline') ?>
                             </div>
                             <div class="orders-toolbar order-card-actions">
                                 <a class="orders-btn primary" href="index.php?action=misPedidos&id=<?= $idPedido ?>">
@@ -1207,6 +1258,52 @@ clearOrderDateFilter?.addEventListener('click', () => {
     if (orderEstadoFilter) orderEstadoFilter.value = '';
     applyOrderFilters();
 });
+
+const countdownItems = Array.from(document.querySelectorAll('[data-payment-countdown]'));
+let countdownReloadScheduled = false;
+
+function formatCountdownSeconds(totalSeconds) {
+    const safeSeconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = safeSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function scheduleCountdownReload() {
+    if (countdownReloadScheduled) return;
+    countdownReloadScheduled = true;
+    window.setTimeout(() => {
+        window.location.reload();
+    }, 1200);
+}
+
+function syncPaymentCountdowns() {
+    countdownItems.forEach((item) => {
+        const label = item.querySelector('[data-countdown-label]');
+        const currentSeconds = Math.max(0, Math.floor(Number(item.dataset.seconds) || 0));
+
+        item.classList.toggle('is-danger', currentSeconds > 0 && currentSeconds < 60);
+        item.classList.toggle('is-expired', currentSeconds <= 0);
+
+        if (label) {
+            label.textContent = currentSeconds > 0
+                ? `Tu pedido expirará en ${formatCountdownSeconds(currentSeconds)}`
+                : 'Expirando...';
+        }
+
+        if (currentSeconds <= 0) {
+            scheduleCountdownReload();
+            return;
+        }
+
+        item.dataset.seconds = String(currentSeconds - 1);
+    });
+}
+
+if (countdownItems.length > 0) {
+    syncPaymentCountdowns();
+    window.setInterval(syncPaymentCountdowns, 1000);
+}
 
 document.querySelectorAll('[data-order-strip]').forEach((strip) => {
     const thumbs = Array.from(strip.querySelectorAll('.order-strip-thumb'));

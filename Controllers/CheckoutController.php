@@ -243,7 +243,7 @@ class CheckoutController {
                          p.ID_ESTADO,
                          NVL(v.TOTAL, 0) AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (15 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (5 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
                   FROM PEDIDO p
                   INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
                   WHERE p.ID_PEDIDO = :id_pedido
@@ -370,11 +370,15 @@ class CheckoutController {
     }
 
     private function eliminarPagoPendienteSinReferencia(int $idVenta): void {
+        // Elimina cualquier registro PAGO creado por el SP de pedido que NO tenga
+        // referencia ni TX Wompi real. PAGADO/COMPLETADO sin TX_ID son placeholders
+        // del SP — también deben eliminarse para que el webhook inserte el registro
+        // correcto con ID_TRANSACCION_WOMPI. Solo APPROVED con TX_ID se preserva.
         $query = "DELETE FROM PAGO
                   WHERE ID_VENTA = :id_venta
                     AND (REFERENCIA_WOMPI IS NULL OR TRIM(TO_CHAR(REFERENCIA_WOMPI)) = '')
                     AND (ID_TRANSACCION_WOMPI IS NULL OR TRIM(TO_CHAR(ID_TRANSACCION_WOMPI)) = '')
-                    AND UPPER(TRIM(NVL(TO_CHAR(ESTADO), ''))) NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO')";
+                    AND UPPER(TRIM(NVL(TO_CHAR(ESTADO), ''))) NOT IN ('APPROVED')";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -454,8 +458,9 @@ class CheckoutController {
             // el registro real de PAGO solo debe crearse desde el webhook.
             $this->eliminarPagoPendienteSinReferencia($idVenta);
 
-            // Asegurar que el pedido quede en estado 1 (pendiente) tras el SP.
-            $this->pedidoModel->mantenerPendienteTx($idPedido);
+            if ((int) ($pedido['id_estado'] ?? 0) !== 1) {
+                throw new RuntimeException('El pedido ya no esta pendiente de pago.');
+            }
 
             $checkoutPayload = $this->checkoutPayloadWompi($idPedido, $idVenta, (float) $resumen['total']);
 

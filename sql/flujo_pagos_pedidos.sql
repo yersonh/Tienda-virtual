@@ -206,7 +206,17 @@ BEGIN
             METODO_REAL = p_metodo_real,
             JSON_RESPUESTA = p_json_respuesta
         WHERE ID_PAGO = v_id_pago
-          AND UPPER(TRIM(ESTADO)) NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO');
+          AND (
+              -- Nunca sobreescribir APPROVED real.
+              -- PAGADO/COMPLETADO sin TX_ID son placeholders del SP de pedido:
+              -- si el webhook llega con un TX_ID real se deben actualizar.
+              UPPER(TRIM(ESTADO)) NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+              OR (
+                  UPPER(TRIM(ESTADO)) IN ('PAGADO', 'COMPLETADO')
+                  AND (ID_TRANSACCION_WOMPI IS NULL
+                       OR TRIM(TO_CHAR(ID_TRANSACCION_WOMPI)) = '')
+              )
+          );
     END IF;
 
     IF v_estado = 'APPROVED' AND NVL(UPPER(TRIM(v_estado_pago_actual)), 'PENDING') NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO') THEN

@@ -139,33 +139,6 @@ class PedidoModel {
         }
     }
 
-    public function mantenerPendienteTx(int $idPedido): void {
-        $idPedido = (int) $idPedido;
-        if ($idPedido <= 0) {
-            throw new InvalidArgumentException('Pedido invalido');
-        }
-
-        $query = "UPDATE PEDIDO
-                  SET ID_ESTADO = 1
-                  WHERE ID_PEDIDO = :id_pedido
-                    AND ID_ESTADO IN (1, 2)";
-
-        $stmt = oci_parse($this->conn, $query);
-        if (!$stmt) {
-            throw new Exception($this->oracleErrorMessage());
-        }
-
-        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
-
-        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
-            $message = $this->oracleErrorMessage($stmt);
-            oci_free_statement($stmt);
-            throw new Exception($message);
-        }
-
-        oci_free_statement($stmt);
-    }
-
     private function argumentosProcedimiento(string $procedimiento): array {
         $query = "SELECT ARGUMENT_NAME,
                          POSITION,

@@ -335,7 +335,7 @@ map.addControl(new maptilersdk.NavigationControl(), 'top-right');
 map.addControl(new maptilersdk.AttributionControl({ compact: true }), 'bottom-right');
 
 const estadoConfig = {
-    1: { color: '#fac275', bg: 'rgba(250,194,117,0.2)', nombre: 'Pendiente'  },
+    1: { color: '#fac275', bg: 'rgba(250,194,117,0.2)', nombre: 'Pendiente de pago'  },
     2: { color: '#3b82f6', bg: 'rgba(59,130,246,0.2)',  nombre: 'Procesado'  },
     3: { color: '#06b6d4', bg: 'rgba(6,182,212,0.2)',   nombre: 'En camino'  },
     4: { color: '#4ade80', bg: 'rgba(74,222,128,0.2)',  nombre: 'Entregado'  },
