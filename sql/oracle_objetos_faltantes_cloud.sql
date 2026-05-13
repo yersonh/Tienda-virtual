@@ -212,15 +212,12 @@ SELECT
     v.ID_VENTA,
     v.ID_USUARIO,
     u.USERNAME,
-    pe.ID_ESTADO,
-    pe.ID_DIRECCION_PEDIDO,
 
     per.NOMBRES,
     per.APELLIDOS,
     per.CORREO,
 
     v.FECHA,
-    pe.FECHA_ESTIMADA_ENTREGA,
 
     SUM(dv.SUBTOTAL) AS SUBTOTAL,
 
@@ -235,35 +232,37 @@ SELECT
     dp.DIRECCION_ENVIO,
     dp.CIUDAD,
     dp.BARRIO,
-    dp.TELEFONO_RECEPTOR,
-    dp.TELEFONO_ALTERNO,
-    dp.INFORMACION_ADICIONAL
+    dp.TELEFONO_RECEPTOR
+
 FROM PEDIDO pe
 
-JOIN VENTA v ON v.ID_VENTA = pe.ID_VENTA
+JOIN VENTA v
+    ON v.ID_VENTA = pe.ID_VENTA
 
-JOIN DETALLE_VENTA dv ON dv.ID_VENTA = v.ID_VENTA
+JOIN DETALLE_VENTA dv
+    ON dv.ID_VENTA = v.ID_VENTA
 
-JOIN USUARIO u ON u.ID_USUARIO = v.ID_USUARIO
+JOIN USUARIO u
+    ON u.ID_USUARIO = v.ID_USUARIO
 
-JOIN PERSONA per ON per.ID_PERSONA = u.ID_PERSONA
+JOIN PERSONA per
+    ON per.ID_PERSONA = u.ID_PERSONA
 
-JOIN ESTADO_PEDIDO ep ON ep.ID_ESTADO = pe.ID_ESTADO
+JOIN ESTADO_PEDIDO ep
+    ON ep.ID_ESTADO = pe.ID_ESTADO
 
-LEFT JOIN DIRECCION_PEDIDO dp ON dp.ID_DIRECCION_PEDIDO = pe.ID_DIRECCION_PEDIDO
+LEFT JOIN DIRECCION_PEDIDO dp
+    ON dp.ID_DIRECCION_PEDIDO = pe.ID_DIRECCION_PEDIDO
 
 GROUP BY
     pe.ID_PEDIDO,
     v.ID_VENTA,
     v.ID_USUARIO,
     u.USERNAME,
-    pe.ID_ESTADO,
-    pe.ID_DIRECCION_PEDIDO,
     per.NOMBRES,
     per.APELLIDOS,
     per.CORREO,
     v.FECHA,
-    pe.FECHA_ESTIMADA_ENTREGA,
     v.IVA,
     v.ENVIO,
     v.TOTAL,
@@ -273,9 +272,7 @@ GROUP BY
     dp.DIRECCION_ENVIO,
     dp.CIUDAD,
     dp.BARRIO,
-    dp.TELEFONO_RECEPTOR,
-    dp.TELEFONO_ALTERNO,
-    dp.INFORMACION_ADICIONAL;
+    dp.TELEFONO_RECEPTOR;
 /
 
 CREATE OR REPLACE VIEW V_ADMIN_PEDIDOS AS
@@ -285,22 +282,13 @@ SELECT
     pe.ID_ESTADO,
     ep.NOMBRE AS ESTADO,
     v.ID_USUARIO,
-    per.NOMBRES AS CLIENTE_NOMBRE,
-    per.APELLIDOS AS CLIENTE_APELLIDO,
     per.NOMBRES || ' ' || per.APELLIDOS AS CLIENTE,
     per.CORREO,
     v.FECHA,
-    v.IVA,
-    v.ENVIO,
     v.TOTAL,
-    pe.FECHA_ESTIMADA_ENTREGA,
-    dp.NOMBRE_RECEPTOR,
-    dp.APELLIDO_RECEPTOR,
     dp.CIUDAD,
     dp.BARRIO,
-    dp.DIRECCION_ENVIO,
-    dp.TELEFONO_RECEPTOR,
-    dp.INFORMACION_ADICIONAL
+    dp.DIRECCION_ENVIO
 FROM PEDIDO pe
 JOIN VENTA v ON v.ID_VENTA = pe.ID_VENTA
 JOIN USUARIO u ON u.ID_USUARIO = v.ID_USUARIO
@@ -733,10 +721,11 @@ BEGIN
         TELEFONO_ALTERNO = REGEXP_REPLACE(p_telefono_alterno, '[^0-9]', ''),
         INFORMACION_ADICIONAL = p_informacion_adicional,
         UPDATED_AT = SYSDATE
-    WHERE dp.ID_DIRECCION_PEDIDO = (
-          SELECT p.ID_DIRECCION_PEDIDO
+    WHERE dp.ID_PEDIDO = p_id_pedido
+      AND EXISTS (
+          SELECT 1
           FROM PEDIDO p
-          WHERE p.ID_PEDIDO = p_id_pedido
+          WHERE p.ID_PEDIDO = dp.ID_PEDIDO
             AND p.ID_ESTADO = 1
       );
 
@@ -755,47 +744,21 @@ CREATE OR REPLACE PROCEDURE SP_CANCELAR_PEDIDO (
     p_id_usuario IN NUMBER
 )
 AS
-    v_id_estado PEDIDO.ID_ESTADO%TYPE;
-BEGIN
-    SELECT p.ID_ESTADO
-    INTO v_id_estado
-    FROM PEDIDO p
-    JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
-    WHERE p.ID_PEDIDO = p_id_pedido
-      AND v.ID_USUARIO = p_id_usuario
-    FOR UPDATE;
-
-    IF v_id_estado IN (3, 4) THEN
-        RAISE_APPLICATION_ERROR(-20541, 'El pedido ya esta en camino o fue entregado');
-    ELSIF v_id_estado = 5 THEN
-        RAISE_APPLICATION_ERROR(-20542, 'Pedido cancelado');
-    ELSIF v_id_estado NOT IN (1, 2) THEN
-        RAISE_APPLICATION_ERROR(-20540, 'No se puede cancelar el pedido');
-    END IF;
-
-    UPDATE PEDIDO
-    SET ID_ESTADO = 5
-    WHERE ID_PEDIDO = p_id_pedido;
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RAISE_APPLICATION_ERROR(-20540, 'No se puede cancelar el pedido');
-END;
-/
-
-CREATE OR REPLACE PROCEDURE SP_EXPIRAR_PEDIDOS
-AS
 BEGIN
     UPDATE PEDIDO p
     SET p.ID_ESTADO = 5
-    WHERE p.ID_ESTADO = 1
-      AND p.CREATED_AT IS NOT NULL
-      AND CAST(p.CREATED_AT AS TIMESTAMP) < SYSTIMESTAMP - INTERVAL '30' MINUTE
-      AND NOT EXISTS (
+    WHERE p.ID_PEDIDO = p_id_pedido
+      AND p.ID_ESTADO IN (1, 2)
+      AND EXISTS (
           SELECT 1
-          FROM PAGO pg
-          WHERE pg.ID_VENTA = p.ID_VENTA
-            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+          FROM VENTA v
+          WHERE v.ID_VENTA = p.ID_VENTA
+            AND v.ID_USUARIO = p_id_usuario
       );
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20540, 'No se puede cancelar el pedido');
+    END IF;
 END;
 /
 
@@ -811,13 +774,12 @@ BEGIN
     IF NVL(p_es_predeterminado, 0) = 1 THEN
         UPDATE METODO_PAGO_USUARIO
         SET ES_PREDETERMINADO = 0
-        WHERE ID_USUARIO = p_id_usuario
-          AND ID_METODO_PAGO_USUARIO <> p_id_metodo_pago_usuario;
+        WHERE ID_USUARIO = p_id_usuario;
     END IF;
 
     UPDATE METODO_PAGO_USUARIO
-    SET TITULAR = SUBSTR(TRIM(p_titular), 1, 120),
-        FECHA_EXPIRACION = TO_DATE(p_fecha_expiracion, 'MM/YYYY'),
+    SET TITULAR = TRIM(p_titular),
+        FECHA_EXPIRACION = TO_DATE(p_fecha_expiracion, 'YYYY-MM-DD'),
         ES_PREDETERMINADO = CASE WHEN NVL(p_es_predeterminado, 0) = 1 THEN 1 ELSE ES_PREDETERMINADO END
     WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
       AND ID_USUARIO = p_id_usuario
@@ -835,9 +797,7 @@ CREATE OR REPLACE PROCEDURE SP_ELIMINAR_METODO_PAGO (
 )
 AS
 BEGIN
-    UPDATE METODO_PAGO_USUARIO
-    SET ACTIVO = 0,
-        ES_PREDETERMINADO = 0
+    DELETE FROM METODO_PAGO_USUARIO
     WHERE ID_METODO_PAGO_USUARIO = p_id_metodo_pago_usuario
       AND ID_USUARIO = p_id_usuario;
 

@@ -42,13 +42,30 @@ class CheckoutController {
     }
 
     private function nombreMetodoPago(int $metodo): string {
-        return match ($metodo) {
-            1 => 'Efectivo',
-            2 => 'Tarjeta debito',
-            3 => 'Tarjeta credito',
-            4 => 'Transferencia bancaria',
-            default => 'Registrado'
-        };
+
+        $sql = "SELECT FORMA_PAGO
+                FROM METODO_PAGO
+                WHERE ID_METODO = :id_metodo
+                FETCH FIRST 1 ROWS ONLY";
+
+        $stmt = oci_parse($this->conn, $sql);
+
+        if (!$stmt) {
+            return 'Metodo desconocido';
+        }
+
+        oci_bind_by_name($stmt, ':id_metodo', $metodo, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt)) {
+            oci_free_statement($stmt);
+            return 'Metodo desconocido';
+        }
+
+        $row = oci_fetch_assoc($stmt);
+
+        oci_free_statement($stmt);
+
+        return trim((string) ($row['FORMA_PAGO'] ?? 'Metodo desconocido'));
     }
 
     private function limpiarSesionCheckout(): void {
