@@ -341,7 +341,7 @@
         } catch {}
     }
 
-    setInterval(pollAdmin, 5000);
+    setInterval(pollAdmin, 10000);
 })();
 </script>
 

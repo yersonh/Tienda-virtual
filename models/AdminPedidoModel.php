@@ -47,7 +47,7 @@ class AdminPedidoModel {
         if (!empty($where)) {
             $query .= " WHERE " . implode(" AND ", $where);
         }
-        $query .= " ORDER BY vp.ID_PEDIDO DESC";
+        $query .= " ORDER BY vp.ID_PEDIDO DESC FETCH FIRST 200 ROWS ONLY";
 
         $stmt = oci_parse($this->conn, $query);
 

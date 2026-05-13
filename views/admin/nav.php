@@ -4,19 +4,35 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $adminNotifNoLeidas = 0;
-try {
-    require_once __DIR__ . '/../../config/database.php';
-    require_once __DIR__ . '/../../models/NotificacionModel.php';
-    $adminNotifNoLeidas = (new NotificacionModel(Database::getConnection()))
-        ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
-} catch (Throwable $_ae) { /* silencioso */ }
-
-// Contador de devoluciones pendientes para el badge del menu
 $adminDevPendientes = 0;
-try {
-    require_once __DIR__ . '/../../models/DevolucionModel.php';
-    $adminDevPendientes = (new DevolucionModel(Database::getConnection()))->contarPendientesAdmin();
-} catch (Throwable $_de) { }
+$_navCacheKey = 'admin_nav_cache';
+$_navCacheTtl = 30;
+$_navCache    = $_SESSION[$_navCacheKey] ?? null;
+
+if (
+    !is_array($_navCache) ||
+    !isset($_navCache['ts']) ||
+    (time() - (int) $_navCache['ts']) >= $_navCacheTtl
+) {
+    try {
+        require_once __DIR__ . '/../../config/database.php';
+        require_once __DIR__ . '/../../models/NotificacionModel.php';
+        require_once __DIR__ . '/../../models/DevolucionModel.php';
+        $_navConn = Database::getConnection();
+        $adminNotifNoLeidas = (new NotificacionModel($_navConn))
+            ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
+        $adminDevPendientes = (new DevolucionModel($_navConn))->contarPendientesAdmin();
+        $_SESSION[$_navCacheKey] = [
+            'ts'      => time(),
+            'notif'   => $adminNotifNoLeidas,
+            'dev'     => $adminDevPendientes,
+        ];
+    } catch (Throwable $_ae) { /* silencioso */ }
+} else {
+    $adminNotifNoLeidas = (int) $_navCache['notif'];
+    $adminDevPendientes = (int) $_navCache['dev'];
+}
+unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 ?>
 
 <!DOCTYPE html>
