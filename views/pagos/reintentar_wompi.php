@@ -174,7 +174,7 @@ async function openWompiRetry() {
         return;
     }
 
-    const publicKey     = (typeof wompiRetryCheckout?.public_key        === 'string') ? wompiRetryCheckout.public_key.trim()        : '';
+    const publicKey     = (typeof wompiRetryCheckout?.publicKey        === 'string') ? wompiRetryCheckout.publicKey.trim()        : '';
     const reference     = (typeof wompiRetryCheckout?.reference         === 'string') ? wompiRetryCheckout.reference.trim()         : '';
     const integrity     = (typeof wompiRetryCheckout?.integrity_signature === 'string') ? wompiRetryCheckout.integrity_signature.trim() : '';
     const currency      = (typeof wompiRetryCheckout?.currency          === 'string' && wompiRetryCheckout.currency) ? wompiRetryCheckout.currency : 'COP';

@@ -707,7 +707,7 @@ async function openWompiCheckout(checkout) {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
 
-    const publicKey      = (typeof checkout?.public_key        === 'string') ? checkout.public_key.trim()        : '';
+    const publicKey      = (typeof checkout?.publicKey        === 'string') ? checkout.publicKey.trim()        : '';
     const reference      = (typeof checkout?.reference         === 'string') ? checkout.reference.trim()         : '';
     const integrity      = (typeof checkout?.integrity_signature === 'string') ? checkout.integrity_signature.trim() : '';
     const currency       = (typeof checkout?.currency          === 'string' && checkout.currency) ? checkout.currency : 'COP';
