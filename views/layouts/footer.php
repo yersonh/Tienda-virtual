@@ -12,9 +12,10 @@ body {
     min-height: 44px;
     padding: 8px 18px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-top: 1px solid rgba(148,163,184,0.16);
@@ -33,22 +34,49 @@ body {
 .app-footer i {
     color: var(--accent, #38bdf8);
 }
+.footer-brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
 @media (max-width: 560px) {
     .app-footer {
         font-size: 12px;
         text-align: center;
     }
 }
+.footer-links{
+    margin-top: 10px;
+}
+
+.footer-links a{
+    color: #9ecbff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-links a:hover{
+    text-decoration: underline;
+}
 </style>
 
-<div class="app-footer">
-    <i class="fas fa-store"></i>
-    <span><?= htmlspecialchars('Tienda Virtual del Sistema de Inventario TechSolutions', ENT_QUOTES, 'UTF-8') ?></span>
-</div>
+    <div class="app-footer">
 
-<a href="index.php?action=politicas">
-    Políticas de pago y privacidad
-</a>
+        <div class="footer-brand">
+            <i class="fas fa-store"></i>
 
-</body>
+            <span>
+                <?= htmlspecialchars('Tienda Virtual del Sistema de Inventario TechSolutions', ENT_QUOTES, 'UTF-8') ?>
+            </span>
+        </div>
+
+        <div class="footer-links">
+            <a href="index.php?action=politicas">
+                Políticas de pago y privacidad
+            </a>
+        </div>
+
+    </div>
+
+    </body>
 </html>

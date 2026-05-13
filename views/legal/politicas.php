@@ -1,112 +1,196 @@
-<div class="container py-5">
+<!DOCTYPE html>
+<html lang="es">
 
-    <div class="card shadow-lg border-0 rounded-4 p-4">
+<head>
+    <meta charset="UTF-8">
 
-        <h1 class="mb-4 text-center">
-            Políticas de Pago y Tratamiento de Datos
-        </h1>
+    <title>Políticas de Pago y Privacidad</title>
 
-        <hr>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <h3 class="mt-4">Política de Pagos</h3>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tienda.css">
 
-        <p>
-            Al realizar una compra en la tienda virtual, el usuario acepta que los pagos electrónicos serán procesados mediante plataformas seguras de terceros como Wompi.
-        </p>
+    <style>
 
-        <p>
-            Los pagos realizados con tarjeta débito, tarjeta crédito y transferencias electrónicas están sujetos a validación y aprobación por parte de la entidad financiera correspondiente.
-        </p>
+        body{
+            background:
+                linear-gradient(rgba(2,6,23,.92), rgba(2,6,23,.92)),
+                url('imagenes/Fondo.png') center/cover fixed;
+            color:#fff;
+            font-family: Arial, sans-serif;
+            margin:0;
+            padding:40px 20px 120px;
+        }
 
-        <p>
-            La confirmación del pedido, generación de factura y actualización del inventario únicamente se realizarán cuando el pago sea aprobado oficialmente por la pasarela de pago.
-        </p>
+        .politicas-container{
+            max-width:1100px;
+            margin:auto;
+        }
 
-        <p>
-            Los pedidos pendientes de pago podrán ser cancelados automáticamente después del tiempo límite definido por el sistema.
-        </p>
+        .politicas-card{
+            background:rgba(15,23,42,.78);
+            backdrop-filter:blur(16px);
+            -webkit-backdrop-filter:blur(16px);
+            border:1px solid rgba(148,163,184,.14);
+            border-radius:24px;
+            padding:40px;
+            box-shadow:0 20px 45px rgba(0,0,0,.35);
+        }
 
-        <p>
-            La tienda no almacena números completos de tarjetas, códigos CVV ni credenciales bancarias sensibles.
-        </p>
+        .politicas-title{
+            text-align:center;
+            font-size:38px;
+            margin-bottom:35px;
+            color:#fff;
+        }
 
-        <hr>
+        .politicas-card h2{
+            margin-top:40px;
+            color:#7dd3fc;
+            font-size:28px;
+        }
 
-        <h3 class="mt-4">Política de Tratamiento de Datos</h3>
+        .politicas-card p,
+        .politicas-card li{
+            color:#e2e8f0;
+            line-height:1.8;
+            font-size:16px;
+        }
 
-        <p>
-            La información personal suministrada por el usuario será utilizada únicamente para:
-        </p>
+        .politicas-card ul{
+            padding-left:22px;
+        }
 
-        <ul>
-            <li>Procesamiento de pedidos.</li>
-            <li>Gestión de pagos.</li>
-            <li>Facturación.</li>
-            <li>Envíos.</li>
-            <li>Soporte y seguimiento de compras.</li>
-        </ul>
+        .politicas-card hr{
+            border:none;
+            height:1px;
+            background:rgba(148,163,184,.18);
+            margin:35px 0;
+        }
 
-        <p>
-            Los datos son tratados bajo medidas razonables de seguridad para proteger la privacidad y confidencialidad de la información.
-        </p>
+        .volver-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:25px;
+            padding:12px 18px;
+            border-radius:14px;
+            background:rgba(56,189,248,.15);
+            color:#7dd3fc;
+            text-decoration:none;
+            border:1px solid rgba(56,189,248,.25);
+            transition:.25s;
+        }
 
-        <p>
-            En el caso de tarjetas guardadas, únicamente se almacenan referencias tokenizadas, últimos cuatro dígitos y datos mínimos permitidos por la pasarela de pago.
-        </p>
+        .volver-btn:hover{
+            background:rgba(56,189,248,.25);
+        }
 
-        <p>
-            La tienda virtual no comparte información financiera sensible con terceros distintos a los proveedores autorizados para el procesamiento de pagos.
-        </p>
+        @media(max-width:768px){
 
-        <hr>
+            .politicas-card{
+                padding:24px;
+            }
 
-        <h3 class="mt-4">Política de Pedidos y Estados</h3>
+            .politicas-title{
+                font-size:28px;
+            }
 
-        <p>
-            Los pedidos pueden pasar por los siguientes estados:
-        </p>
+            .politicas-card h2{
+                font-size:22px;
+            }
+        }
 
-        <ul>
-            <li>Pendiente de pago.</li>
-            <li>Aprobado.</li>
-            <li>Cancelado.</li>
-            <li>Expirado.</li>
-        </ul>
+    </style>
+</head>
 
-        <p>
-            Un pedido únicamente será considerado aprobado cuando la pasarela de pago confirme exitosamente la transacción.
-        </p>
+<body>
 
-        <p>
-            Si una transacción es rechazada, expirada o cancelada, el pedido podrá ser invalidado automáticamente por el sistema.
-        </p>
+    <div class="politicas-container">
 
-        <hr>
+        <a href="index.php?action=tienda" class="volver-btn">
+            ← Volver a la tienda
+        </a>
 
-        <h3 class="mt-4">Política de Reembolsos y Cancelaciones</h3>
+        <div class="politicas-card">
 
-        <p>
-            Las solicitudes de cancelación o reembolso estarán sujetas al estado del pedido y validación administrativa.
-        </p>
+            <h1 class="politicas-title">
+                Políticas de Pago y Tratamiento de Datos
+            </h1>
 
-        <p>
-            Los reembolsos aprobados podrán tomar tiempos adicionales dependiendo de la entidad financiera o pasarela de pago utilizada.
-        </p>
+            <h2>Política de Pagos</h2>
 
-        <p>
-            No se garantiza reembolso sobre pedidos ya despachados o procesados completamente.
-        </p>
+            <p>
+                Al realizar una compra en la tienda virtual, el usuario acepta que los pagos electrónicos serán procesados mediante plataformas seguras de terceros como Wompi.
+            </p>
 
-        <hr>
+            <p>
+                Los pagos realizados con tarjeta débito, tarjeta crédito y transferencias electrónicas están sujetos a validación y aprobación por parte de la entidad financiera correspondiente.
+            </p>
 
-        <h3 class="mt-4">Aceptación de Políticas</h3>
+            <p>
+                La confirmación del pedido, generación de factura y actualización del inventario únicamente se realizarán cuando el pago sea aprobado oficialmente por la pasarela de pago.
+            </p>
 
-        <p>
-            Al continuar con el proceso de compra, el usuario declara haber leído y aceptado las políticas de pago, privacidad y tratamiento de datos de la tienda virtual.
-        </p>
+            <hr>
+
+            <h2>Tratamiento de Datos</h2>
+
+            <p>
+                La información personal suministrada por el usuario será utilizada únicamente para procesamiento de pedidos, pagos, facturación, envíos y soporte de compras.
+            </p>
+
+            <ul>
+                <li>Procesamiento de pedidos.</li>
+                <li>Gestión de pagos.</li>
+                <li>Facturación.</li>
+                <li>Envíos.</li>
+                <li>Seguimiento de compras.</li>
+            </ul>
+
+            <p>
+                La tienda no almacena números completos de tarjetas ni códigos CVV.
+            </p>
+
+            <hr>
+
+            <h2>Pedidos y Estados</h2>
+
+            <ul>
+                <li>Pendiente de pago.</li>
+                <li>Aprobado.</li>
+                <li>Cancelado.</li>
+                <li>Expirado.</li>
+            </ul>
+
+            <p>
+                Un pedido solo será aprobado cuando la pasarela confirme exitosamente la transacción.
+            </p>
+
+            <hr>
+
+            <h2>Reembolsos</h2>
+
+            <p>
+                Las solicitudes de reembolso estarán sujetas al estado del pedido y validación administrativa.
+            </p>
+
+            <p>
+                No se garantiza reembolso sobre pedidos ya despachados o completamente procesados.
+            </p>
+
+            <hr>
+
+            <h2>Aceptación</h2>
+
+            <p>
+                Al continuar con el proceso de compra, el usuario declara haber leído y aceptado estas políticas.
+            </p>
+
+        </div>
 
     </div>
 
-</div>
-
-<?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+</body>
+</html>
