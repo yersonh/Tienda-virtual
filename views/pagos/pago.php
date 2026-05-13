@@ -1190,8 +1190,8 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
         <section class="payment-card">
             <div class="payment-head">
                 <div class="payment-kicker"><?= htmlspecialchars('Proceso de Pago', ENT_QUOTES, 'UTF-8') ?></div>
-                <h1 class="payment-title"><?= htmlspecialchars('Pago seguro con Wompi', ENT_QUOTES, 'UTF-8') ?></h1>
-                <p class="payment-sub"><?= htmlspecialchars('Tu pedido se crea pendiente y la factura se activa solo cuando Wompi confirme el pago aprobado.', ENT_QUOTES, 'UTF-8') ?></p>
+                <h1 class="payment-title"><?= htmlspecialchars('Pago seguro', ENT_QUOTES, 'UTF-8') ?></h1>
+                <p class="payment-sub"><?= htmlspecialchars('Tu pedido se crea pendiente y la factura se activa cuando el pago sea aprobado.', ENT_QUOTES, 'UTF-8') ?></p>
                 <div class="payment-progress" aria-label="<?= htmlspecialchars('Progreso de compra', ENT_QUOTES, 'UTF-8') ?>">
                     <span class="payment-progress-step"><i class="fas fa-cart-shopping"></i> <?= htmlspecialchars('Carrito', ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="payment-progress-step"><i class="fas fa-location-dot"></i> <?= htmlspecialchars('Direccion', ENT_QUOTES, 'UTF-8') ?></span>
@@ -1238,15 +1238,15 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             <div class="payment-fast-step">
                                 <i class="fas fa-shield-halved"></i>
                                 <div>
-                                    <strong><?= htmlspecialchars('Checkout Wompi', ENT_QUOTES, 'UTF-8') ?></strong>
-                                    <span><?= htmlspecialchars('El pago se realiza en el widget oficial.', ENT_QUOTES, 'UTF-8') ?></span>
+                                    <strong><?= htmlspecialchars('Pago protegido', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <span><?= htmlspecialchars('El pago se procesa en una pasarela segura.', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>
                             <div class="payment-fast-step">
                                 <i class="fas fa-receipt"></i>
                                 <div>
                                     <strong><?= htmlspecialchars('Pedido pendiente', ENT_QUOTES, 'UTF-8') ?></strong>
-                                    <span><?= htmlspecialchars('No se registra pago hasta recibir el webhook.', ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span><?= htmlspecialchars('No se registra pago hasta recibir confirmacion.', ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
                             </div>
                             <div class="payment-fast-step">
@@ -1259,27 +1259,17 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                         </div>
 
                         <div class="payment-section-title">
-                            <label id="payment-method-label"><?= htmlspecialchars('Confirmacion Wompi', ENT_QUOTES, 'UTF-8') ?></label>
+                            <label id="payment-method-label"><?= htmlspecialchars('Metodo de pago', ENT_QUOTES, 'UTF-8') ?></label>
                         </div>
 
                         <div class="payment-invoice-note" role="status">
                             <i class="fas fa-lock"></i>
-                            <span><?= htmlspecialchars('Al continuar se abrira Wompi. El pedido quedara pendiente hasta que Wompi notifique APPROVED al webhook.', ENT_QUOTES, 'UTF-8') ?></span>
+                            <span><?= htmlspecialchars('Al continuar se abrira la pasarela segura. El pedido quedara pendiente hasta confirmar el pago aprobado.', ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
 
                         <input type="hidden" name="metodo_pago" id="metodo_pago" value="<?= $metodoSeleccionado ?>">
                         <input type="hidden" name="id_metodo_pago_usuario" id="id_metodo_pago_usuario" value="<?= $metodoPagoGuardadoSeleccionado ?>">
-                        <div class="payment-method-grid wompi-legacy-payment-ui" role="radiogroup" aria-labelledby="payment-method-label">
-                            <button class="payment-method <?= $metodoSeleccionado === 1 ? 'is-active' : '' ?>" type="button" data-method="1" role="radio" aria-checked="<?= $metodoSeleccionado === 1 ? '1' : '0' ?>">
-                                <span class="payment-method-top">
-                                    <span class="payment-method-icon">
-                                        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 12h10"></path><path d="M7 15h4"></path></svg>
-                                    </span>
-                                    <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
-                                </span>
-                                <strong><?= htmlspecialchars('Efectivo', ENT_QUOTES, 'UTF-8') ?></strong>
-                                <small><?= htmlspecialchars('Gestionado por Wompi.', ENT_QUOTES, 'UTF-8') ?></small>
-                            </button>
+                        <div class="payment-method-grid" role="radiogroup" aria-labelledby="payment-method-label">
                             <button class="payment-method <?= $metodoSeleccionado === 2 ? 'is-active' : '' ?>" type="button" data-method="2" role="radio" aria-checked="<?= $metodoSeleccionado === 2 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
                                     <span class="payment-method-icon">
@@ -1288,7 +1278,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                     <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Tarjeta debito', ENT_QUOTES, 'UTF-8') ?></strong>
-                                <small><?= htmlspecialchars('Gestionado por Wompi.', ENT_QUOTES, 'UTF-8') ?></small>
+                                <small><?= htmlspecialchars('Pago con tarjeta debito.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
                             <button class="payment-method <?= $metodoSeleccionado === 3 ? 'is-active' : '' ?>" type="button" data-method="3" role="radio" aria-checked="<?= $metodoSeleccionado === 3 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
@@ -1298,7 +1288,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                     <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Tarjeta credito', ENT_QUOTES, 'UTF-8') ?></strong>
-                                <small><?= htmlspecialchars('Confirmacion por webhook.', ENT_QUOTES, 'UTF-8') ?></small>
+                                <small><?= htmlspecialchars('Pago con tarjeta credito.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
                             <button class="payment-method <?= $metodoSeleccionado === 4 ? 'is-active' : '' ?>" type="button" data-method="4" role="radio" aria-checked="<?= $metodoSeleccionado === 4 ? '1' : '0' ?>">
                                 <span class="payment-method-top">
@@ -1308,7 +1298,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                                     <span class="payment-check"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg></span>
                                 </span>
                                 <strong><?= htmlspecialchars('Transferencia bancaria', ENT_QUOTES, 'UTF-8') ?></strong>
-                                <small><?= htmlspecialchars('Gestionado por Wompi.', ENT_QUOTES, 'UTF-8') ?></small>
+                                <small><?= htmlspecialchars('Pago por transferencia bancaria.', ENT_QUOTES, 'UTF-8') ?></small>
                             </button>
                         </div>
 
@@ -1422,11 +1412,11 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             </div>
                             <div class="payment-invoice-note" id="saved-card-cvv">
                                 <i class="fas fa-shield-halved"></i>
-                                <span><?= htmlspecialchars('Las tarjetas guardadas se cobran con la fuente de pago tokenizada en Wompi. No pedimos ni guardamos CVV.', ENT_QUOTES, 'UTF-8') ?></span>
+                                <span><?= htmlspecialchars('Las tarjetas guardadas se cobran con una fuente de pago tokenizada. No pedimos ni guardamos CVV.', ENT_QUOTES, 'UTF-8') ?></span>
                             </div>
                         </div>
 
-                        <button class="payment-link wompi-legacy-payment-ui" type="button" id="one-time-card-toggle" style="display: none;">
+                        <button class="payment-link" type="button" id="one-time-card-toggle" style="display: none;">
                             <i class="fas fa-credit-card"></i>
                             <?= htmlspecialchars('Pagar con tarjeta sin guardar', ENT_QUOTES, 'UTF-8') ?>
                         </button>
@@ -1476,7 +1466,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             </div>
                         </div>
 
-                        <div id="transferencia" class="payment-dynamic wompi-legacy-payment-ui">
+                        <div id="transferencia" class="payment-dynamic">
                             <div class="payment-transfer-fields">
                                 <div class="payment-field">
                                     <label for="banco_origen"><?= htmlspecialchars('Banco de origen', ENT_QUOTES, 'UTF-8') ?></label>
@@ -1527,7 +1517,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                         <label class="payment-checkline">
                             <input type="checkbox" id="standalone-wompi-acceptance" required>
                             <span>
-                                <?= htmlspecialchars('Acepto la politica de privacidad y autorizacion de datos personales de Wompi.', ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Acepto la politica de privacidad y autorizacion de datos personales.', ENT_QUOTES, 'UTF-8') ?>
                                 <a href="#" target="_blank" rel="noopener" data-wompi-acceptance-link><?= htmlspecialchars('Ver documentos', ENT_QUOTES, 'UTF-8') ?></a>
                             </span>
                         </label>
@@ -1554,7 +1544,7 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                         <div class="payment-actions">
                             <button class="payment-btn" type="submit" form="payment-confirm-form">
                                 <svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg>
-                                <?= htmlspecialchars('Pagar con Wompi', ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars('Continuar al pago seguro', ENT_QUOTES, 'UTF-8') ?>
                             </button>
                             <a class="payment-link" href="index.php?action=ConfirmarPedido">
                                 <svg viewBox="0 0 24 24"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
@@ -1567,8 +1557,8 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                         <span class="payment-aside-icon">
                             <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
                         </span>
-                        <h2><?= htmlspecialchars('Pago seguro Wompi', ENT_QUOTES, 'UTF-8') ?></h2>
-                        <p><?= htmlspecialchars('El sistema crea el pedido pendiente y Wompi confirma el pago real por webhook.', ENT_QUOTES, 'UTF-8') ?></p>
+                        <h2><?= htmlspecialchars('Pago seguro', ENT_QUOTES, 'UTF-8') ?></h2>
+                        <p><?= htmlspecialchars('El sistema crea el pedido pendiente y confirma el pago real automaticamente.', ENT_QUOTES, 'UTF-8') ?></p>
                         <div class="payment-invoice-note">
                             <svg viewBox="0 0 24 24"><path d="M7 3h10l3 3v15l-3-2-3 2-3-2-3 2-3-2V3z"></path><path d="M9 9h6"></path><path d="M9 13h6"></path></svg>
                             <span><?= htmlspecialchars('Despues del pago veras la confirmacion y podras descargar o imprimir la factura.', ENT_QUOTES, 'UTF-8') ?></span>
@@ -1584,14 +1574,14 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                             <div class="payment-step">
                                 <span>2</span>
                                 <div>
-                                    <strong><?= htmlspecialchars('Paga en Wompi', ENT_QUOTES, 'UTF-8') ?></strong>
-                                    <small><?= htmlspecialchars('El widget procesa el pago real.', ENT_QUOTES, 'UTF-8') ?></small>
+                                    <strong><?= htmlspecialchars('Completa el pago', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <small><?= htmlspecialchars('La pasarela procesa el pago real.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </div>
                             </div>
                             <div class="payment-step">
                                 <span>3</span>
                                 <div>
-                                    <strong><?= htmlspecialchars('Webhook aprobado', ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <strong><?= htmlspecialchars('Pago aprobado', ENT_QUOTES, 'UTF-8') ?></strong>
                                     <small><?= htmlspecialchars('Oracle registra el pago y actualiza el estado.', ENT_QUOTES, 'UTF-8') ?></small>
                                 </div>
                             </div>
@@ -1785,7 +1775,7 @@ function initPaymentPage() {
         if (savedPaymentSubtitle) {
             savedPaymentSubtitle.textContent = isCardMethod
                 ? 'Selecciona una tarjeta activa o registra una nueva.'
-                : 'Transferencia y efectivo no guardan datos de tarjeta.';
+                : 'La transferencia bancaria no guarda datos de tarjeta.';
         }
 
         return { isCardMethod, visibleCount, selectedRadio };
@@ -1794,9 +1784,9 @@ function initPaymentPage() {
     function syncPaymentFields() {
         const method = selectedPaymentMethod();
         const val = String(method);
-        efectivo.classList.toggle('is-visible', method === 1);
-        tarjeta.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
-        transferencia.classList.toggle('is-visible', method === 4);
+        efectivo?.classList.toggle('is-visible', false);
+        tarjeta?.classList.toggle('is-visible', isCardPaymentMethod(method) && oneTimeCardMode);
+        transferencia?.classList.toggle('is-visible', method === 4);
         if (oneTimeCardToggle) {
             oneTimeCardToggle.style.display = isCardPaymentMethod(method) ? 'inline-flex' : 'none';
         }
@@ -1804,7 +1794,7 @@ function initPaymentPage() {
         if (savedPanel) {
             savedPanel.classList.toggle('is-visible', savedState.isCardMethod);
         }
-        setRequired(efectivo, method === 1);
+        setRequired(efectivo, false);
         setRequired(transferencia, method === 4);
         setNewCardFieldsEnabled(isCardPaymentMethod(method) && oneTimeCardMode);
 
@@ -1978,15 +1968,15 @@ function initPaymentPage() {
         if (!button) return;
         button.disabled = loading;
         if (loading) {
-            button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${label || 'Preparando Wompi'}`;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${label || 'Preparando pago'}`;
         } else {
-            button.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg> Pagar con Wompi';
+            button.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"></path></svg> Continuar al pago seguro';
         }
     }
 
     function openWompiCheckout(checkout) {
         if (typeof WidgetCheckout === 'undefined') {
-            throw new Error('No se pudo cargar el widget de Wompi');
+            throw new Error('No se pudo cargar la pasarela de pago');
         }
 
         const widget = new WidgetCheckout({
@@ -2006,11 +1996,11 @@ function initPaymentPage() {
             sessionStorage.setItem(paymentCompletedKey, '1');
 
             if (status === 'APPROVED') {
-                showPaymentNotice('Wompi aprobo el pago. Estamos esperando la confirmacion del webhook para activar factura e historial.');
+                showPaymentNotice('Pago aprobado. Estamos esperando la confirmacion final para activar factura e historial.');
             } else if (status) {
-                showPaymentNotice('Wompi registro la transaccion con estado ' + status + '. Puedes revisar el pedido desde tu historial.', status !== 'PENDING');
+                showPaymentNotice('La transaccion quedo con estado ' + status + '. Puedes revisar el pedido desde tu historial.', status !== 'PENDING');
             } else {
-                showPaymentNotice('Wompi cerro el checkout. Puedes revisar el estado desde tus pedidos.');
+                showPaymentNotice('La pasarela cerro el checkout. Puedes revisar el estado desde tus pedidos.');
             }
 
             window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
@@ -2025,11 +2015,11 @@ function initPaymentPage() {
 
         sessionStorage.setItem(paymentSubmittedKey, '1');
         paymentForm.dataset.processing = '1';
-        setWompiButtonLoading(true, 'Preparando Wompi');
+        setWompiButtonLoading(true, 'Preparando pago');
 
         try {
             if (typeof WidgetCheckout === 'undefined') {
-                throw new Error('No se pudo cargar el widget de Wompi');
+                throw new Error('No se pudo cargar la pasarela de pago');
             }
 
             const response = await fetch(paymentForm.action, {
@@ -2049,7 +2039,7 @@ function initPaymentPage() {
             }
 
             if (data?.redirect && data?.saved_card_transaction !== undefined) {
-                showPaymentNotice(data.message || 'Transaccion enviada a Wompi.');
+                showPaymentNotice(data.message || 'Transaccion enviada.');
                 window.location.href = data.redirect;
                 return;
             }
@@ -2059,16 +2049,16 @@ function initPaymentPage() {
                     window.location.href = data.redirect;
                     return;
                 }
-                throw new Error(data?.message || 'No se pudo preparar el pago con Wompi');
+                throw new Error(data?.message || 'No se pudo preparar el pago');
             }
 
-            setWompiButtonLoading(true, 'Abriendo Wompi');
+            setWompiButtonLoading(true, 'Abriendo pago');
             openWompiCheckout(data.checkout);
         } catch (error) {
             paymentForm.dataset.processing = '0';
             sessionStorage.removeItem(paymentSubmittedKey);
             setWompiButtonLoading(false);
-            showPaymentNotice(error.message || 'No se pudo abrir Wompi', true);
+            showPaymentNotice(error.message || 'No se pudo abrir el pago', true);
         }
     });
 
@@ -2158,7 +2148,7 @@ function initPaymentPage() {
         });
         const data = await response.json();
         if (!response.ok || !data.success || !data.public_key) {
-            throw new Error(data.message || 'No se pudo cargar Wompi para tarjetas');
+            throw new Error(data.message || 'No se pudo cargar el servicio de tarjetas');
         }
         wompiCardConfig = data;
         document.querySelectorAll('[data-wompi-acceptance-link]').forEach((link) => {
@@ -2190,7 +2180,7 @@ function initPaymentPage() {
             throw new Error('Completa alias y CVV para tokenizar la tarjeta');
         }
         if (!acceptance?.checked) {
-            throw new Error('Debes aceptar las politicas de Wompi para guardar la tarjeta');
+            throw new Error('Debes aceptar las politicas para guardar la tarjeta');
         }
 
         const config = await loadWompiCardConfig();
@@ -2214,7 +2204,7 @@ function initPaymentPage() {
         });
         const data = await response.json();
         if (!response.ok || !data?.data?.id) {
-            throw new Error(data?.error?.reason || data?.message || 'Wompi no pudo tokenizar la tarjeta');
+            throw new Error(data?.error?.reason || data?.message || 'No se pudo tokenizar la tarjeta');
         }
 
         const tokenData = data.data;

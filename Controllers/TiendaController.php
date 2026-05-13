@@ -7,7 +7,7 @@ class TiendaController {
 
     private $model;
     private $carritoModel;
-    private const CACHE_TTL = 8;
+    private const CACHE_TTL = 120;
 
     public function __construct() {
     }
@@ -113,17 +113,6 @@ class TiendaController {
         });
 
         return $productos;
-    }
-
-    private function obtenerCategoriasCacheadas(): array {
-        $categorias = $this->getCache('categorias');
-        if ($categorias !== null) {
-            return $categorias;
-        }
-
-        $categorias = $this->productoModel()->obtenerCategorias();
-        $this->setCache('categorias', $categorias);
-        return $categorias;
     }
 
     private function obtenerMasVendidosCacheados(): array {
@@ -326,17 +315,18 @@ class TiendaController {
 
         foreach ($productos as $producto) {
             foreach (($producto['compatibilidades']['vehiculos'] ?? []) as $vehiculo) {
-                if ($this->vehiculoCumple($vehiculo, [], $modelosSeleccionados, $anosSeleccionados)) {
-                    $this->agregarOpcion($marcas, $vehiculo['marca_vehiculo'] ?? '');
+                if (!$this->vehiculoCumple($vehiculo, $marcasSeleccionadas, $modelosSeleccionados, $anosSeleccionados)) {
+                    continue;
                 }
-                if ($this->vehiculoCumple($vehiculo, $marcasSeleccionadas, [], $anosSeleccionados)) {
-                    $this->agregarOpcion($modelos, $vehiculo['modelo_vehiculo'] ?? '');
-                }
-                if ($this->vehiculoCumple($vehiculo, $marcasSeleccionadas, $modelosSeleccionados, [])) {
-                    $inicio = (int) ($vehiculo['ano_inicio'] ?? 0);
-                    $fin = (int) ($vehiculo['ano_fin'] ?? 0);
-                    if ($inicio > 0 && $fin >= $inicio && ($fin - $inicio) <= 120) {
-                        foreach (range($inicio, $fin) as $ano) {
+
+                $this->agregarOpcion($marcas, $vehiculo['marca_vehiculo'] ?? '');
+                $this->agregarOpcion($modelos, $vehiculo['modelo_vehiculo'] ?? '');
+
+                $inicio = (int) ($vehiculo['ano_inicio'] ?? 0);
+                $fin = (int) ($vehiculo['ano_fin'] ?? 0);
+                if ($inicio > 0 && $fin >= $inicio && ($fin - $inicio) <= 120) {
+                    foreach (range($inicio, $fin) as $ano) {
+                        if (empty($anosSeleccionados) || in_array($ano, $anosSeleccionados, true)) {
                             $anos[(string) $ano] = (string) $ano;
                         }
                     }
@@ -362,13 +352,9 @@ class TiendaController {
 
         foreach ($productos as $producto) {
             foreach (($producto['compatibilidades']['maquinarias'] ?? []) as $maquinaria) {
-                if ($this->maquinariaCumple($maquinaria, [], $marcasSeleccionadas, $modelosSeleccionados)) {
+                if ($this->maquinariaCumple($maquinaria, $tiposSeleccionados, $marcasSeleccionadas, $modelosSeleccionados)) {
                     $this->agregarOpcion($tipos, $maquinaria['tipo_maquinaria'] ?? '');
-                }
-                if ($this->maquinariaCumple($maquinaria, $tiposSeleccionados, [], $modelosSeleccionados)) {
                     $this->agregarOpcion($marcas, $maquinaria['marca_maquinaria'] ?? '');
-                }
-                if ($this->maquinariaCumple($maquinaria, $tiposSeleccionados, $marcasSeleccionadas, [])) {
                     $this->agregarOpcion($modelos, $maquinaria['modelo_maquinaria'] ?? '');
                 }
             }
@@ -382,39 +368,6 @@ class TiendaController {
             'tipos' => array_values($tipos),
             'marcas' => array_values($marcas),
             'modelos' => array_values($modelos)
-        ];
-    }
-
-    private function mezclarOpcionesSeleccionadas(array $opciones, array $seleccionadas, bool $numeric = false): array {
-        foreach ($seleccionadas as $value) {
-            $value = trim((string) $value);
-            if ($value !== '') {
-                $opciones[$value] = $value;
-            }
-        }
-
-        if ($numeric) {
-            ksort($opciones, SORT_NUMERIC);
-        } else {
-            natcasesort($opciones);
-        }
-
-        return array_values($opciones);
-    }
-
-    private function conservarSeleccionesEnOpcionesVehiculo(array $opciones, array $marcas, array $modelos, array $anos): array {
-        return [
-            'marcas' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['marcas'] ?? [], $opciones['marcas'] ?? []) ?: [], $marcas),
-            'modelos' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['modelos'] ?? [], $opciones['modelos'] ?? []) ?: [], $modelos),
-            'anos' => $this->mezclarOpcionesSeleccionadas(array_combine(array_map('strval', $opciones['anos'] ?? []), array_map('strval', $opciones['anos'] ?? [])) ?: [], array_map('strval', $anos), true)
-        ];
-    }
-
-    private function conservarSeleccionesEnOpcionesMaquinaria(array $opciones, array $tipos, array $marcas, array $modelos): array {
-        return [
-            'tipos' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['tipos'] ?? [], $opciones['tipos'] ?? []) ?: [], $tipos),
-            'marcas' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['marcas'] ?? [], $opciones['marcas'] ?? []) ?: [], $marcas),
-            'modelos' => $this->mezclarOpcionesSeleccionadas(array_combine($opciones['modelos'] ?? [], $opciones['modelos'] ?? []) ?: [], $modelos)
         ];
     }
 
@@ -535,50 +488,7 @@ class TiendaController {
         extract($this->obtenerDatosTienda());
         require_once __DIR__ . '/../views/Tienda.php';
 
-        $productos = array_filter($productos, function($p) use ($filtro, $precio_min, $precio_max, $categoria_filtro) {
-
-            $match_texto = true;
-            if (!empty($filtro)) {
-                $f = strtolower($filtro);
-
-                $match_texto =
-                    str_contains(strtolower((string)$p['nombre']), $f) ||
-                    str_contains(strtolower((string)$p['codigo']), $f) ||
-                    str_contains(strtolower((string)($p['descripcion'] ?? '')), $f);
-            }
-
-            $match_precio = true;
-
-            if ($precio_min !== '') {
-                $match_precio = (int)$p['precio'] >= (int)$precio_min;
-            }
-
-            if ($precio_max !== '') {
-                $match_precio = $match_precio && (int)$p['precio'] <= (int)$precio_max;
-            }
-
-            $match_categoria = true;
-            if (!empty($categoria_filtro)) {
-                $match_categoria =
-                    strtolower(trim((string)$p['categoria_nombre'])) ===
-                    strtolower(trim((string)$categoria_filtro));
-            }
-
-            return $match_texto && $match_precio && $match_categoria;
-        });
-
         // Ã°Å¸â€Â¥ AGRUPAR
-        $categorias = [];
-        $todasCategorias = array_map(function($cat) {
-            return $cat['nombre'];
-        }, $this->obtenerCategoriasCacheadas() ?? []);
-
-        foreach ($productos as $p) {
-            $cat = $p['categoria_nombre'] ?? 'Sin categoria';
-            $categorias[$cat][] = $p;
-        }
-
-        require_once __DIR__ . '/../views/Tienda.php';
     }
 
     // Ã°Å¸â€Â DETALLE
@@ -587,7 +497,8 @@ class TiendaController {
 
         try {
             $modoCompatibilidad = $_GET['compatibilidad_tipo'] ?? '';
-            extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo', true));
+            $forzarCatalogo = isset($_GET['_refresh_catalog']);
+            extract($this->obtenerDatosTienda($modoCompatibilidad === 'vehiculo', $forzarCatalogo));
             $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 
             ob_start();
@@ -599,6 +510,7 @@ class TiendaController {
                 'productos_html' => $productosHtml,
                 'categoria_activa' => $categoria_filtro,
                 'categorias_disponibles' => $todasCategorias,
+                'rango_precios' => $rangoPrecios,
                 'compatibilidad_tipo' => $compatibilidad_tipo,
                 'compatibilidad_activa' => $compatibilidad_activa,
                 'opciones' => [

@@ -1190,7 +1190,10 @@ class PedidoController {
             $marca = strtoupper(trim((string) ($publicData['brand'] ?? $publicData['card_brand'] ?? $marca)));
             $ultimos4 = preg_replace('/\D+/', '', (string) ($publicData['last_four'] ?? $publicData['card_last_four'] ?? $ultimos4));
 
-            $idMetodo = 5;
+            $idMetodo = (int) ($_POST['id_metodo'] ?? 3);
+            if (!in_array($idMetodo, [2, 3], true)) {
+                $idMetodo = 3;
+            }
             $idMetodoPagoUsuario = $this->metodoPagoUsuarioModel->guardar([
                 'id_usuario' => $idUsuario,
                 'id_metodo' => $idMetodo,

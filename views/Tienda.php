@@ -1563,6 +1563,23 @@ function renderCategoryFilters(options, selected) {
     syncCategoryTabs(selectedValue);
 }
 
+function renderPriceRange(range) {
+    if (!range || typeof range !== 'object') return;
+
+    const min = Number(range.min || 0);
+    const max = Number(range.max || 0);
+    if (precioMin) {
+        precioMin.min = min > 0 ? String(Math.floor(min)) : '';
+        precioMin.max = max > 0 ? String(Math.ceil(max)) : '';
+        precioMin.placeholder = min > 0 ? `Precio min (${Math.floor(min).toLocaleString('es-CO')})` : 'Precio min';
+    }
+    if (precioMax) {
+        precioMax.min = min > 0 ? String(Math.floor(min)) : '';
+        precioMax.max = max > 0 ? String(Math.ceil(max)) : '';
+        precioMax.placeholder = max > 0 ? `Precio max (${Math.ceil(max).toLocaleString('es-CO')})` : 'Precio max';
+    }
+}
+
 function refreshOptionSearches() {
     document.querySelectorAll('[data-option-search]').forEach((input) => filterOptionList(input));
 }
@@ -1621,7 +1638,7 @@ async function fetchFilteredStore(force = false) {
     const requestParams = new URLSearchParams(viewParams);
     requestParams.set('action', 'tiendaFiltros');
     if (force) {
-        requestParams.set('_live', String(Date.now()));
+        requestParams.set('_refresh_catalog', '1');
     }
     const requestKey = requestParams.toString();
     const currentRequestId = ++filterRequestId;
@@ -1697,6 +1714,7 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
     }
 
         renderCategoryFilters(data.categorias_disponibles || [], activeCat);
+        renderPriceRange(data.rango_precios || null);
         applyLocalStoreFilters();
         if (compatibilityType && typeof data.compatibilidad_tipo !== 'undefined') {
             compatibilityType.value = data.compatibilidad_tipo || '';
@@ -1720,7 +1738,7 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
     window.history.replaceState({}, '', `index.php?${urlParams.toString()}${activeCat ? '#category-detail' : ''}`);
 }
 
-function scheduleFilterProducts(delay = 90){
+function scheduleFilterProducts(delay = 220){
     clearTimeout(filterTimer);
     filterTimer = setTimeout(filterProducts, delay);
 }
@@ -1738,7 +1756,7 @@ function handleGeneralFilterInput(event) {
     if (input === precioMin) lastMinValue = current;
     if (input === precioMax) lastMaxValue = current;
 
-    scheduleFilterProducts(isDeleting ? 0 : 90);
+    scheduleFilterProducts(isDeleting ? 80 : 220);
 }
 
 // UN SOLO EVENTO PARA TODO
@@ -1881,10 +1899,6 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     openFilterSidebar();
 }
 
-setInterval(() => {
-    if (document.visibilityState !== 'visible') return;
-    fetchFilteredStore(true);
-}, 3000);
 </script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
