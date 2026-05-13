@@ -720,12 +720,14 @@ async function openWompiCheckout(checkout) {
     }
 
     const widget = new WidgetCheckout({
-        currency,
-        amountInCents,
-        reference,
-        publicKey,
-        signature: { integrity },
-        redirectUrl,
+        currency: currency,
+        amountInCents: amountInCents,
+        reference: reference,
+        publicKey: publicKey,
+        signature: {
+            integrity: integrity
+        },
+        redirectUrl: redirectUrl
     });
 
     widget.open(async (result) => {
