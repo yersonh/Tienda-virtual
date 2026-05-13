@@ -127,6 +127,10 @@ class CheckoutController {
         if ($testMode && str_starts_with($publicKey, 'pub_prod_')) {
             throw new RuntimeException('WOMPI_TEST_MODE=true requiere una llave publica sandbox pub_test_');
         }
+
+        if (!$testMode && str_starts_with($publicKey, 'pub_test_')) {
+            throw new RuntimeException('WOMPI_TEST_MODE=false requiere una llave publica de produccion pub_prod_');
+        }
     }
 
     private function montoWompiCentavos(float $total): int {

@@ -187,6 +187,8 @@ async function openWompiRetry() {
         return;
     }
 
+    console.log('Wompi checkout payload', wompiRetryCheckout);
+
     const widget = new WidgetCheckout({
         currency,
         amountInCents,

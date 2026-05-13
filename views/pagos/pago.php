@@ -787,6 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             setWompiButtonLoading(true, 'Abriendo pasarela Wompi');
+            console.log('Wompi checkout payload', data.checkout);
             await openWompiCheckout(data.checkout);
         } catch (error) {
             paymentForm.dataset.processing = '0';
