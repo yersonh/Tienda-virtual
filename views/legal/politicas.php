@@ -479,7 +479,58 @@
 
         </div>
 
+        <div class="politica-card">
+
+            <div class="politica-icon">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+
+            <h2>Seguridad de la Plataforma</h2>
+
+            <p>
+                La plataforma implementa validaciones de autenticación, control de sesiones y protección de operaciones críticas del sistema.
+            </p>
+
+            <ul>
+                <li>Validación de usuarios.</li>
+                <li>Protección de sesiones.</li>
+                <li>Control de accesos.</li>
+                <li>Verificación de pagos.</li>
+            </ul>
+
+            <div class="politica-highlight">
+                El sistema restringe operaciones sensibles y protege la integridad de la información procesada.
+            </div>
+
+        </div>
+
+        <div class="politica-card">
+
+            <div class="politica-icon">
+                <i class="fas fa-truck-fast"></i>
+            </div>
+
+            <h2>Gestión Logística</h2>
+
+            <p>
+                El sistema administra automáticamente procesos relacionados con inventario, entregas y seguimiento de pedidos.
+            </p>
+
+            <ul>
+                <li>Control de inventario.</li>
+                <li>Actualización de stock.</li>
+                <li>Seguimiento de pedidos.</li>
+                <li>Estimación de entregas.</li>
+            </ul>
+
+            <div class="politica-highlight">
+                Los movimientos de inventario se actualizan únicamente después de validar el pago aprobado.
+            </div>
+
+        </div>
+
     </div>
+    
 
     <div class="politica-footer">
 
