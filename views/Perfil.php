@@ -105,12 +105,7 @@ $iniciales = $inicialNombre . $inicialApellido;
 
     </form>
 
-    <!-- ZONA DE PELIGRO -->
     <div class="perfil-danger-zone">
-        <div class="perfil-danger-head">
-            <i class="fas fa-triangle-exclamation"></i>
-            <span><?= htmlspecialchars('Zona de peligro', ENT_QUOTES, 'UTF-8') ?></span>
-        </div>
         <p class="perfil-danger-desc">
             <?= htmlspecialchars('Al inactivar tu cuenta no podras iniciar sesion. Tus pedidos y datos se conservan.', ENT_QUOTES, 'UTF-8') ?>
         </p>
@@ -414,20 +409,6 @@ button:hover {
 [data-theme="light"] .perfil-danger-zone {
     background: rgba(248,113,113,0.06);
     border-color: rgba(220,38,38,0.22);
-}
-.perfil-danger-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fca5a5;
-    font-weight: 900;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
-}
-[data-theme="light"] .perfil-danger-head {
-    color: #b91c1c;
 }
 .perfil-danger-desc {
     color: #94a3b8;

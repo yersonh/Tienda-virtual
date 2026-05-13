@@ -504,7 +504,7 @@ class UsuarioModel
     public function inactivarUsuario(int $idUsuario): bool {
         if ($idUsuario <= 0) return false;
 
-        $sql = "UPDATE USUARIO SET ESTADO = 'INACTIVO', UPDATED_AT = SYSDATE WHERE ID_USUARIO = :id_usuario";
+        $sql = "UPDATE USUARIO SET ESTADO = 'Inactivo', UPDATED_AT = SYSDATE WHERE ID_USUARIO = :id_usuario";
         $stmt = oci_parse($this->conn, $sql);
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
 
