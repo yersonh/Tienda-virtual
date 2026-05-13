@@ -127,6 +127,7 @@ AS
     v_monto NUMBER(10,2);
     v_id_pago PAGO.ID_PAGO%TYPE;
     v_estado_pago_actual PAGO.ESTADO%TYPE;
+    v_tx_pago_actual PAGO.ID_TRANSACCION_WOMPI%TYPE;
     v_estado VARCHAR2(30);
     v_stock_proc NUMBER;
 BEGIN
@@ -154,8 +155,8 @@ BEGIN
     END IF;
 
     BEGIN
-        SELECT ID_PAGO
-        INTO v_id_pago
+        SELECT ID_PAGO, ESTADO, ID_TRANSACCION_WOMPI
+        INTO v_id_pago, v_estado_pago_actual, v_tx_pago_actual
         FROM PAGO
         WHERE ID_VENTA = p_id_venta
           AND ROWNUM = 1
@@ -164,6 +165,7 @@ BEGIN
         WHEN NO_DATA_FOUND THEN
             v_id_pago := NULL;
             v_estado_pago_actual := NULL;
+            v_tx_pago_actual := NULL;
     END;
 
     IF v_id_pago IS NULL THEN
@@ -192,11 +194,6 @@ BEGIN
             p_json_respuesta
         );
     ELSE
-        SELECT ESTADO
-        INTO v_estado_pago_actual
-        FROM PAGO
-        WHERE ID_PAGO = v_id_pago;
-
         UPDATE PAGO
         SET ID_METODO = p_metodo,
             MONTO = v_monto,
@@ -219,7 +216,15 @@ BEGIN
           );
     END IF;
 
-    IF v_estado = 'APPROVED' AND NVL(UPPER(TRIM(v_estado_pago_actual)), 'PENDING') NOT IN ('APPROVED', 'PAGADO', 'COMPLETADO') THEN
+    IF v_estado = 'APPROVED'
+       AND NOT (
+           UPPER(TRIM(NVL(v_estado_pago_actual, 'PENDING'))) = 'APPROVED'
+           OR (
+               UPPER(TRIM(NVL(v_estado_pago_actual, 'PENDING'))) IN ('PAGADO', 'COMPLETADO')
+               AND v_tx_pago_actual IS NOT NULL
+               AND TRIM(TO_CHAR(v_tx_pago_actual)) <> ''
+           )
+       ) THEN
         SELECT COUNT(*)
         INTO v_stock_proc
         FROM USER_PROCEDURES
@@ -238,6 +243,24 @@ BEGIN
     -- DECLINED / ERROR / VOIDED no cancelan el pedido inmediatamente.
     -- El pedido queda en ID_ESTADO = 1 (Pendiente) para permitir reintentos.
     -- SP_EXPIRAR_PEDIDOS lo cancela automaticamente despues de 5 minutos.
+END;
+/
+
+CREATE OR REPLACE TRIGGER TRG_PAGO_AI_ESTADO_PEDIDO
+AFTER INSERT OR UPDATE OF ESTADO, ID_TRANSACCION_WOMPI ON PAGO
+FOR EACH ROW
+BEGIN
+    IF UPPER(TRIM(:NEW.ESTADO)) = 'APPROVED'
+       OR (
+           UPPER(TRIM(:NEW.ESTADO)) IN ('PAGADO', 'COMPLETADO')
+           AND :NEW.ID_TRANSACCION_WOMPI IS NOT NULL
+           AND TRIM(TO_CHAR(:NEW.ID_TRANSACCION_WOMPI)) <> ''
+       ) THEN
+        UPDATE PEDIDO
+        SET ID_ESTADO = 2
+        WHERE ID_VENTA = :NEW.ID_VENTA
+          AND ID_ESTADO IN (1, 5);
+    END IF;
 END;
 /
 

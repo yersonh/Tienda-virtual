@@ -222,7 +222,7 @@ class CheckoutController {
         $query = "SELECT COUNT(*) AS TOTAL
                   FROM PAGO
                   WHERE ID_VENTA = :id_venta
-                    AND UPPER(TRIM(ESTADO)) IN ('APPROVED')";
+                    AND UPPER(TRIM(ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {

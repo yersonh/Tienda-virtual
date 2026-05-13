@@ -456,8 +456,8 @@ class DevolucionModel {
                   FROM PAGO   pa
                  INNER JOIN PEDIDO  pe ON pe.ID_VENTA = pa.ID_VENTA
                  INNER JOIN VENTA   v  ON v.ID_VENTA  = pa.ID_VENTA
-                 WHERE pe.ID_PEDIDO            = :id_pedido
-                   AND pa.ESTADO               = 'APPROVED'
+                  WHERE pe.ID_PEDIDO            = :id_pedido
+                   AND UPPER(TRIM(pa.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
                    AND pa.ID_TRANSACCION_WOMPI IS NOT NULL
                  FETCH FIRST 1 ROWS ONLY";
 

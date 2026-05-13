@@ -838,9 +838,6 @@ function orderProductImage(?string $imagen): ?string {
 
         <?php if ($pedidoDetalle): ?>
             <?php
-            $stepIndex = orderStepIndex($pedidoDetalle);
-            $progress = (($stepIndex - 1) / 3) * 100;
-            $cartProgress = 8 + ($progress * 0.84);
             $estadoDetalle = (string) ($pedidoDetalle['estado'] ?? 'Pendiente de pago');
             $puedeCancelarDetalle = canCancelOrder($pedidoDetalle);
             $puedeReintentarDetalle = canRetryPayment($pedidoDetalle);
@@ -856,6 +853,12 @@ function orderProductImage(?string $imagen): ?string {
                 ['Enviado', 'El pedido salio hacia la direccion registrada.'],
                 ['Entregado', 'La compra ya fue entregada al receptor.']
             ];
+            $stepCount = count($steps);
+            $stepIndex = $stepCount > 0 ? max(1, min($stepCount, orderStepIndex($pedidoDetalle))) : 1;
+            $progress = $stepCount > 1 ? (($stepIndex - 1) / ($stepCount - 1)) * 100 : 0;
+            $cartProgress = 8 + ($progress * 0.84);
+            $deliveryStep = $steps[$stepIndex - 1] ?? null;
+            $deliveryNote = is_array($deliveryStep) ? (string) ($deliveryStep[1] ?? '') : '';
             ?>
             <section class="order-detail-panel">
                 <div class="detail-layout">
@@ -877,7 +880,7 @@ function orderProductImage(?string $imagen): ?string {
                             </div>
                         </div>
                         <div class="delivery-note" id="delivery-note">
-                            <?= htmlspecialchars($steps[$stepIndex - 1][1], ENT_QUOTES, 'UTF-8') ?>
+                            <?= htmlspecialchars($deliveryNote ?? '', ENT_QUOTES, 'UTF-8') ?>
                         </div>
                     </div>
 

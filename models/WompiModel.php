@@ -25,14 +25,19 @@ class WompiModel {
 
         $this->validarColumnasWompi();
 
+        $idsReferencia = $this->idsDesdeReferencia($referencia);
         $target = $this->buscarPagoExistente($idTransaccion, $referencia);
         if ($target === null) {
-            $target = $this->buscarVentaPorReferencia($referencia);
+            $target = $this->buscarVentaPorReferencia($referencia, $idsReferencia);
             if ($target) {
                 error_log("[Wompi Notification] Found target by reference: " . ($target['id_venta'] ?? 'N/A'));
             }
         } else {
             error_log("[Wompi Notification] Found existing payment for TX/Ref: " . ($target['id_pago'] ?? 'N/A'));
+            if (!$this->targetCoincideConReferencia($target, $idsReferencia, $referencia)) {
+                error_log("[Wompi Notification] Existing payment does not match reference $referencia. Resolving target from reference.");
+                $target = $this->buscarVentaPorReferencia($referencia, $idsReferencia);
+            }
         }
 
         if ($target === null || (int) ($target['id_venta'] ?? 0) <= 0) {
@@ -119,12 +124,15 @@ class WompiModel {
         return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
-    private function buscarVentaPorReferencia(string $referencia): ?array {
-        $ids = $this->idsDesdeReferencia($referencia);
+    private function buscarVentaPorReferencia(string $referencia, ?array $ids = null): ?array {
+        $ids ??= $this->idsDesdeReferencia($referencia);
 
         foreach ($ids['pedidos'] as $idPedido) {
             $porPedido = $this->buscarVentaPorPedido($idPedido);
             if ($porPedido !== null) {
+                if (!empty($ids['ventas']) && !in_array((int) ($porPedido['id_venta'] ?? 0), $ids['ventas'], true)) {
+                    throw new Exception('La referencia Wompi no coincide con la venta real del pedido: ' . $referencia);
+                }
                 return $porPedido;
             }
         }
@@ -149,6 +157,30 @@ class WompiModel {
         }
 
         return null;
+    }
+
+    private function targetCoincideConReferencia(array $target, array $ids, string $referencia): bool {
+        $idVentaTarget = (int) ($target['id_venta'] ?? 0);
+        if ($idVentaTarget <= 0) {
+            return false;
+        }
+
+        if (!empty($ids['ventas']) && !in_array($idVentaTarget, $ids['ventas'], true)) {
+            return false;
+        }
+
+        foreach ($ids['pedidos'] as $idPedido) {
+            $ventaPedido = $this->buscarVentaPorPedido($idPedido);
+            if ($ventaPedido === null) {
+                continue;
+            }
+
+            if ((int) ($ventaPedido['id_venta'] ?? 0) !== $idVentaTarget) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function buscarVentaPorPedido(int $idPedido): ?array {

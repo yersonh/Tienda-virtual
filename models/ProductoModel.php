@@ -488,7 +488,7 @@ class ProductoModel {
                     FROM detalle_venta dv
                     INNER JOIN venta v ON v.id_venta = dv.id_venta
                     INNER JOIN pago pg ON pg.id_venta = v.id_venta
-                    WHERE UPPER(TRIM(pg.estado)) = 'COMPLETADO'
+                    WHERE UPPER(TRIM(pg.estado)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
                     GROUP BY dv.id_producto
                 ) ventas ON ventas.id_producto = p.id_producto
                 ORDER BY ventas.total_vendido DESC, p.id_producto DESC
