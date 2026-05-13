@@ -349,4 +349,39 @@ class PedidoModel {
 
         return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
+
+    public function mantenerPendienteTx(int $idPedido): void {
+
+        $idPedido = (int) $idPedido;
+
+        if ($idPedido <= 0) {
+            throw new InvalidArgumentException('Pedido invalido');
+        }
+
+        $query = "UPDATE PEDIDO
+                  SET ID_ESTADO = 1
+                  WHERE ID_PEDIDO = :id_pedido";
+
+        $stmt = oci_parse($this->conn, $query);
+
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        $filas = oci_num_rows($stmt);
+
+        oci_free_statement($stmt);
+
+        if ($filas < 1) {
+            throw new Exception('No se pudo mantener el pedido pendiente');
+        }
+    }
 }

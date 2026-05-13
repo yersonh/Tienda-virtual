@@ -580,16 +580,15 @@ class CheckoutController {
                 'checkout'  => $checkoutPayload
             ]);
         } catch (Throwable $e) {
-            oci_rollback($this->conn);
-            error_log('confirmarPedido: ' . $e->getMessage());
 
-            $message = $e instanceof InvalidArgumentException || $e instanceof RuntimeException
-                ? $e->getMessage()
-                : 'No se pudo preparar el pago con Wompi. Intenta de nuevo.';
+            oci_rollback($this->conn);
+
+            error_log('confirmarPedido ERROR REAL: ' . $e->getMessage());
 
             $this->jsonResponse(400, [
                 'success' => false,
-                'message' => $message
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
