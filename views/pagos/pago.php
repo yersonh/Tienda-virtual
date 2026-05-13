@@ -721,7 +721,6 @@ function loadWompiSdk(publicKey) {
 
         const script = document.createElement('script');
         script.src = 'https://checkout.wompi.co/widget.js';
-        script.dataset.publicKey = publicKey;
         script.onload = () => resolve();
         script.onerror = () => reject(new Error('No se pudo cargar la pasarela de pago.'));
         document.body.appendChild(script);
