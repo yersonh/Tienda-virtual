@@ -282,6 +282,27 @@ class TiendaController {
         }
     }
 
+    private function construirCategoriasDisponibles(array $productos): array {
+        $categorias = [];
+        foreach ($productos as $producto) {
+            $this->agregarOpcion($categorias, $producto['categoria_nombre'] ?? 'Sin categoria');
+        }
+
+        natcasesort($categorias);
+        return array_values($categorias);
+    }
+
+    private function categoriaEnOpciones(string $categoria, array $opciones): bool {
+        $categoria = $this->normalizarTexto($categoria);
+        foreach ($opciones as $opcion) {
+            if ($categoria === $this->normalizarTexto((string) $opcion)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function construirOpcionesCompatibilidadVehiculo(array $productos, array $marcasSeleccionadas, array $modelosSeleccionados, array $anosSeleccionados): array {
         $marcas = [];
         $modelos = [];
@@ -412,7 +433,29 @@ class TiendaController {
         }
 
         $productosBase = $this->obtenerCatalogoCacheado(!empty($filtro), $forzarActualizacionCatalogo);
-        $productosFiltradosBase = $this->filtrarProductosGenerales($productosBase, trim((string) $filtro), $precio_min, $precio_max, trim((string) $categoria_filtro));
+        $productosSinCategoria = $this->filtrarProductosGenerales($productosBase, trim((string) $filtro), $precio_min, $precio_max, '');
+        $productosParaCategorias = $productosSinCategoria;
+
+        if (($compatibilidad_tipo === 'vehiculo' && $hayFiltroVehiculo) || ($compatibilidad_tipo === 'maquinaria' && $hayFiltroMaquinaria)) {
+            $productosParaCategorias = $this->filtrarPorCompatibilidad(
+                $productosSinCategoria,
+                $compatibilidad_tipo,
+                $vehiculo_marcas,
+                $vehiculo_modelos,
+                $vehiculo_anos,
+                $maquinaria_tipos,
+                $maquinaria_marcas,
+                $maquinaria_modelos
+            );
+        }
+
+        $todasCategorias = $this->construirCategoriasDisponibles($productosParaCategorias);
+        $categoria_filtro = trim((string) $categoria_filtro);
+        if ($categoria_filtro !== '' && !$this->categoriaEnOpciones($categoria_filtro, $todasCategorias)) {
+            $categoria_filtro = '';
+        }
+
+        $productosFiltradosBase = $this->filtrarProductosGenerales($productosBase, trim((string) $filtro), $precio_min, $precio_max, $categoria_filtro);
 
         $opcionesVehiculo = $this->construirOpcionesCompatibilidadVehiculo($productosFiltradosBase, $vehiculo_marcas, $vehiculo_modelos, $vehiculo_anos);
         $opcionesMaquinaria = $this->construirOpcionesCompatibilidadMaquinaria($productosFiltradosBase, $maquinaria_tipos, $maquinaria_marcas, $maquinaria_modelos);
@@ -436,9 +479,6 @@ class TiendaController {
         }
 
         $categorias = [];
-        $todasCategorias = array_map(function($cat) {
-            return $cat['nombre'];
-        }, $this->obtenerCategoriasCacheadas() ?? []);
 
         foreach ($productos as $p) {
             $cat = $p['categoria_nombre'] ?? 'Sin categoria';
@@ -608,6 +648,8 @@ class TiendaController {
             echo json_encode([
                 'success' => true,
                 'productos_html' => $productosHtml,
+                'categoria_activa' => $categoria_filtro,
+                'categorias_disponibles' => $todasCategorias,
                 'compatibilidad_tipo' => $compatibilidad_tipo,
                 'compatibilidad_activa' => $compatibilidad_activa,
                 'opciones' => [

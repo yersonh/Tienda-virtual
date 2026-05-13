@@ -1079,7 +1079,7 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
 };
 ?>
 
-<div class="cat-tabs">
+<div class="cat-tabs" id="cat-tabs">
     <button class="cat-tab <?= empty($categoria_filtro ?? '') ? 'active' : '' ?>" data-cat="" onclick="setTab(this,'')"><?= htmlspecialchars('Todo', ENT_QUOTES, 'UTF-8') ?></button>
     <?php if(isset($todasCategorias) && is_array($todasCategorias)): ?>
         <?php foreach($todasCategorias as $cat): ?>
@@ -1376,7 +1376,7 @@ function openProductDetailFromKey(event, card){
 }
 
 function syncCategoryTabs(cat){
-    tabsCategoria.forEach(tab=>{
+    document.querySelectorAll('.cat-tab').forEach(tab=>{
         const valorTab = tab.dataset.cat || '';
         tab.classList.toggle('active', valorTab === (cat || ''));
     });
@@ -1528,6 +1528,41 @@ function renderOptionList(name, options, selected) {
     }).join('');
 }
 
+function renderCategoryFilters(options, selected) {
+    if (!Array.isArray(options)) return;
+
+    const selectedValue = String(selected || '');
+    categoriaActiva = selectedValue;
+
+    if (categoria) {
+        categoria.innerHTML = [
+            `<option value="">${escapeHtml(i18n.allCategories)}</option>`,
+            ...options.map((option) => {
+                const value = String(option);
+                const safeValue = escapeHtml(value);
+                const checked = value === selectedValue ? 'selected' : '';
+                return `<option value="${safeValue}" ${checked}>${safeValue}</option>`;
+            })
+        ].join('');
+        categoria.value = selectedValue;
+    }
+
+    const tabs = document.getElementById('cat-tabs');
+    if (tabs) {
+        tabs.innerHTML = [
+            `<button class="cat-tab ${selectedValue === '' ? 'active' : ''}" data-cat="" onclick="setTab(this,'')">${escapeHtml('Todo')}</button>`,
+            ...options.map((option) => {
+                const value = String(option);
+                const safeValue = escapeHtml(value);
+                const active = value === selectedValue ? 'active' : '';
+                return `<button class="cat-tab ${active}" data-cat="${safeValue}" onclick="setTab(this, ${escapeHtml(JSON.stringify(value))})">${safeValue}</button>`;
+            })
+        ].join('');
+    }
+
+    syncCategoryTabs(selectedValue);
+}
+
 function refreshOptionSearches() {
     document.querySelectorAll('[data-option-search]').forEach((input) => filterOptionList(input));
 }
@@ -1647,6 +1682,13 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
         lastAppliedRequestKey = requestKey;
     }
 
+    const activeCat = typeof data.categoria_activa !== 'undefined' ? (data.categoria_activa || '') : (cat || '');
+    if (activeCat) {
+        viewParams.set('categoria', activeCat);
+    } else {
+        viewParams.delete('categoria');
+    }
+
     const results = document.getElementById('store-results');
     if (results && results.innerHTML !== (data.productos_html || '')) {
         results.innerHTML = data.productos_html || '';
@@ -1654,6 +1696,8 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
         applyLocalStoreFilters();
     }
 
+        renderCategoryFilters(data.categorias_disponibles || [], activeCat);
+        applyLocalStoreFilters();
         if (compatibilityType && typeof data.compatibilidad_tipo !== 'undefined') {
             compatibilityType.value = data.compatibilidad_tipo || '';
         }
@@ -1666,14 +1710,14 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '') {
         syncCompatibilityFields();
         bindDynamicFilterCheckboxes();
         refreshOptionSearches();
-        syncCategoryTabs(cat);
+        syncCategoryTabs(activeCat);
         if (openFiltersBtn) {
             openFiltersBtn.classList.toggle('active', Boolean(data.compatibilidad_activa));
         }
 
     const urlParams = new URLSearchParams(viewParams);
     urlParams.set('action', 'tienda');
-    window.history.replaceState({}, '', `index.php?${urlParams.toString()}${cat ? '#category-detail' : ''}`);
+    window.history.replaceState({}, '', `index.php?${urlParams.toString()}${activeCat ? '#category-detail' : ''}`);
 }
 
 function scheduleFilterProducts(delay = 90){
