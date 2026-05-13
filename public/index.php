@@ -159,7 +159,9 @@ switch ($action) {
     case 'nosotros':
         (new TiendaController())->nosotros();
         break;
-
+    case 'politicas':
+        require_once __DIR__ . '/views/legal/politicas.php';
+        break;
     case 'tienda':
         (new TiendaController())->index();
         break;

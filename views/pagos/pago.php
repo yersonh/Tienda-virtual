@@ -1516,9 +1516,15 @@ foreach ($metodosPagoUsuario as $metodoPagoAviso) {
                         </label>
                         <label class="payment-checkline">
                             <input type="checkbox" id="standalone-wompi-acceptance" required>
+
                             <span>
-                                <?= htmlspecialchars('Acepto la politica de privacidad y autorizacion de datos personales.', ENT_QUOTES, 'UTF-8') ?>
-                                <a href="#" target="_blank" rel="noopener" data-wompi-acceptance-link><?= htmlspecialchars('Ver documentos', ENT_QUOTES, 'UTF-8') ?></a>
+                                <?= htmlspecialchars('Acepto la ', ENT_QUOTES, 'UTF-8') ?>
+
+                                <a href="index.php?action=politicas" target="_blank">
+                                    <?= htmlspecialchars('Politica de privacidad', ENT_QUOTES, 'UTF-8') ?>
+                                </a>
+
+                                <?= htmlspecialchars(' y autorizo el tratamiento de mis datos personales para el procesamiento del pago.', ENT_QUOTES, 'UTF-8') ?>
                             </span>
                         </label>
                         <div class="standalone-card-actions">
