@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -52,26 +52,26 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
 <style>
     :root {
-        --admin-bg: radial-gradient(circle at top left, rgba(139,92,246,0.13), transparent 34%), linear-gradient(135deg, #070b14 0%, #111827 100%);
-        --sidebar-bg: linear-gradient(180deg, rgba(15,23,42,0.98) 0%, rgba(7,11,20,0.98) 100%);
-        --sidebar-text: #edf4ff;
-        --panel-muted: #a8b5ca;
-        --panel-line: rgba(125,211,252,0.18);
-        --panel-soft: rgba(139,92,246,0.1);
-        --content-bg: rgba(15,23,42,0.48);
-        --welcome-bg: rgba(15,23,42,0.74);
-        --panel-shadow: 0 24px 60px rgba(2,6,23,0.34);
+        --admin-bg: radial-gradient(circle at top left, rgba(59,130,246,0.13), transparent 34%), linear-gradient(135deg, #07101f 0%, #0d1b34 100%);
+        --sidebar-bg: linear-gradient(180deg, rgba(7,16,31,0.98) 0%, rgba(9,21,37,0.98) 100%);
+        --sidebar-text: #e9f2ff;
+        --panel-muted: #94a3b8;
+        --panel-line: rgba(59,130,246,0.18);
+        --panel-soft: rgba(59,130,246,0.08);
+        --content-bg: rgba(15,27,46,0.48);
+        --welcome-bg: rgba(15,27,46,0.74);
+        --panel-shadow: 0 24px 60px rgba(2,8,23,0.34);
     }
     [data-theme="light"] {
-        --admin-bg: radial-gradient(circle at top left, rgba(124,58,237,0.14), transparent 34%), linear-gradient(135deg, #eef6ff 0%, #f8fafc 100%);
-        --sidebar-bg: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(241,245,249,0.96) 100%);
-        --sidebar-text: #1e1251;
-        --panel-muted: #64748b;
-        --panel-line: rgba(100,116,139,0.18);
-        --panel-soft: rgba(124,58,237,0.08);
+        --admin-bg: radial-gradient(circle at top left, rgba(37,99,235,0.10), transparent 34%), linear-gradient(135deg, #f0f6ff 0%, #e8f0fe 100%);
+        --sidebar-bg: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(240,246,255,0.96) 100%);
+        --sidebar-text: #0f2340;
+        --panel-muted: #475569;
+        --panel-line: rgba(37,99,235,0.18);
+        --panel-soft: rgba(37,99,235,0.06);
         --content-bg: rgba(255,255,255,0.54);
         --welcome-bg: rgba(255,255,255,0.82);
-        --panel-shadow: 0 24px 60px rgba(100,116,139,0.18);
+        --panel-shadow: 0 24px 60px rgba(15,35,80,0.12);
     }
     * {
         margin: 0;
@@ -115,7 +115,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     }
 
     .sidebar-header h2 {
-        color: #a78bfa;
+        color: #3b82f6;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 26px;
         font-weight: 700;
@@ -165,13 +165,13 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .nav-link:hover {
         background: var(--panel-soft);
-        color: #a78bfa;
+        color: #3b82f6;
         transform: translateX(4px);
         box-shadow: inset 0 0 0 1px var(--panel-line);
     }
 
     .nav-link:hover i {
-        color: #a78bfa;
+        color: #3b82f6;
     }
 
     .sidebar-footer {
@@ -194,7 +194,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     .user-avatar {
         width: 44px;
         height: 44px;
-        background: linear-gradient(135deg, #a78bfa, #3b82f6);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         border-radius: 12px;
         display: flex;
         align-items: center;
@@ -254,11 +254,11 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     }
 
     .admin-sidebar::-webkit-scrollbar-track {
-        background: #1e293b;
+        background: #0d1b34;
     }
 
     .admin-sidebar::-webkit-scrollbar-thumb {
-        background: #a78bfa;
+        background: #3b82f6;
         border-radius: 4px;
     }
 
@@ -268,7 +268,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(5, 2, 18, 0.56);
+        background: rgba(2, 8, 23, 0.56);
         z-index: 999;
         opacity: 0;
         pointer-events: none;
@@ -299,7 +299,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
             align-items: center;
             gap: 14px;
             padding: 12px 16px;
-            background: rgba(13, 10, 26, 0.94);
+            background: rgba(7, 16, 31, 0.94);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--panel-line);
@@ -337,15 +337,15 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         }
         .admin-hamburger:hover,
         .admin-hamburger:active {
-            border-color: #a78bfa;
-            color: #a78bfa;
-            background: rgba(139, 92, 246, 0.12);
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.12);
         }
         .admin-mobile-logo {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 18px;
             font-weight: 700;
-            color: #a78bfa;
+            color: #3b82f6;
             flex: 1;
             letter-spacing: -0.03em;
         }
@@ -389,7 +389,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .welcome-message i {
         font-size: 64px;
-        color: #a78bfa;
+        color: #3b82f6;
         margin-bottom: 20px;
     }
 
@@ -420,7 +420,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .theme-toggle-admin:hover {
         transform: translateY(-2px);
-        border-color: #a78bfa;
+        border-color: #3b82f6;
         background: var(--panel-soft);
     }
 
@@ -448,7 +448,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     .main-content .form-select {
         border-radius: 12px;
         border: 1px solid var(--panel-line);
-        background: rgba(15,23,42,0.46);
+        background: rgba(9,21,37,0.46);
         color: var(--sidebar-text);
         font-weight: 700;
     }
@@ -460,8 +460,8 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .main-content .form-control:focus,
     .main-content .form-select:focus {
-        border-color: #a78bfa;
-        box-shadow: 0 0 0 4px rgba(139,92,246,0.16);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.16);
     }
 
     .main-content .btn {
@@ -501,7 +501,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         font-size: 16px; flex-shrink: 0;
         transition: background 0.2s, border-color 0.2s, color 0.2s;
     }
-    .admin-notif-btn:hover { border-color: #a78bfa; color: #a78bfa; }
+    .admin-notif-btn:hover { border-color: #3b82f6; color: #3b82f6; }
     .admin-notif-badge {
         position: absolute;
         top: -6px; right: -6px;
@@ -519,7 +519,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         top: calc(100% + 10px);
         right: 0;
         width: min(340px, calc(100vw - 28px));
-        background: rgba(13, 10, 26, 0.97);
+        background: rgba(7, 16, 31, 0.97);
         border: 1px solid var(--panel-line);
         border-radius: 16px;
         box-shadow: 0 20px 50px rgba(2,6,23,0.48);
@@ -545,12 +545,12 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     }
     .admin-notif-mark {
         background: none; border: none;
-        color: #a78bfa; font-size: 12px; font-weight: 800;
+        color: #3b82f6; font-size: 12px; font-weight: 800;
         cursor: pointer; padding: 3px 7px; border-radius: 7px;
         font-family: inherit;
         transition: background 0.15s;
     }
-    .admin-notif-mark:hover { background: rgba(139,92,246,0.12); }
+    .admin-notif-mark:hover { background: rgba(59,130,246,0.12); }
     .admin-notif-list { overflow-y: auto; flex: 1; }
     .admin-notif-empty {
         padding: 28px 14px; text-align: center;
@@ -565,9 +565,9 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         font-size: 13px;
     }
     .admin-notif-item:hover { background: var(--panel-soft); }
-    .admin-notif-item.unread { background: rgba(139,92,246,0.05); }
+    .admin-notif-item.unread { background: rgba(59,130,246,0.05); }
     .admin-nd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-    .admin-nd.info    { background: #a78bfa; }
+    .admin-nd.info    { background: #3b82f6; }
     .admin-nd.success { background: #4ade80; }
     .admin-nd.warning { background: #fbbf24; }
     .admin-nd.error   { background: #f87171; }

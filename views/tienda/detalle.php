@@ -294,7 +294,7 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
     width: fit-content;
     padding: 5px 10px;
     border-radius: 999px;
-    background: rgba(167,139,250,0.1);
+    background: rgba(147,197,253,0.1);
     color: var(--accent);
     font-size: 11px;
     font-weight: 900;
@@ -542,7 +542,7 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
     align-items: center;
     padding: 14px 16px;
     border-radius: 16px;
-    background: rgba(13, 10, 26, 0.94);
+    background: rgba(7, 16, 31, 0.94);
     border: 1px solid rgba(0, 229, 192, 0.32);
     color: #f8fafc;
     box-shadow: 0 22px 48px rgba(0,0,0,0.35);
@@ -611,7 +611,7 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
 [data-theme="light"] .cart-toast {
     background: rgba(255,255,255,0.96);
     color: #0f172a;
-    box-shadow: 0 18px 42px rgba(15,23,42,0.16);
+    box-shadow: 0 18px 42px rgba(9,21,37,0.16);
 }
 [data-theme="light"] .cart-toast-text {
     color: #475569;

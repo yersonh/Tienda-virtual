@@ -311,9 +311,9 @@ function orderProductImage(?string $imagen): ?string {
     color: #fbbf24;
 }
 .status-pill.is-processed {
-    border-color: rgba(139,92,246,0.3);
-    background: rgba(139,92,246,0.12);
-    color: #c4b5fd;
+    border-color: rgba(59,130,246,0.3);
+    background: rgba(59,130,246,0.12);
+    color: #93c5fd;
 }
 .status-pill.is-shipped {
     border-color: rgba(20,216,189,0.32);
@@ -415,7 +415,7 @@ function orderProductImage(?string $imagen): ?string {
 }
 .order-strip-nav:hover:not(:disabled) {
     color: var(--accent);
-    border-color: rgba(167,139,250,0.38);
+    border-color: rgba(147,197,253,0.38);
 }
 .order-strip-nav:disabled {
     opacity: 0.35;
@@ -433,7 +433,7 @@ function orderProductImage(?string $imagen): ?string {
     border: 1px solid var(--border);
     background: rgba(148,163,184,0.18);
     object-fit: cover;
-    box-shadow: 0 8px 16px rgba(15,23,42,0.18);
+    box-shadow: 0 8px 16px rgba(9,21,37,0.18);
     display: none;
 }
 .order-strip-thumb.is-active {
@@ -583,10 +583,10 @@ function orderProductImage(?string $imagen): ?string {
     margin-top: 18px;
     min-height: 48px;
     padding: 13px 14px;
-    border: 1px solid rgba(139,92,246,0.2);
+    border: 1px solid rgba(59,130,246,0.2);
     border-radius: 14px;
     color: var(--secondary);
-    background: rgba(139,92,246,0.07);
+    background: rgba(59,130,246,0.07);
 }
 .order-items-mini {
     display: grid;
@@ -605,7 +605,7 @@ function orderProductImage(?string $imagen): ?string {
     transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 .order-mini-item[href]:hover {
-    background: rgba(167,139,250,0.07);
+    background: rgba(147,197,253,0.07);
     transform: translateX(2px);
 }
 .order-mini-photo {
@@ -655,7 +655,7 @@ function orderProductImage(?string $imagen): ?string {
     min-height: 28px;
     padding: 0 10px;
     border-radius: 999px;
-    background: rgba(167,139,250,0.12);
+    background: rgba(147,197,253,0.12);
     color: var(--accent);
     font-size: 12px;
     font-weight: 900;
@@ -677,7 +677,7 @@ function orderProductImage(?string $imagen): ?string {
     margin-top: 4px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: rgba(167,139,250,0.08);
+    background: rgba(147,197,253,0.08);
     color: var(--accent);
     font: inherit;
     font-size: 13px;
@@ -689,8 +689,8 @@ function orderProductImage(?string $imagen): ?string {
     gap: 8px;
 }
 .order-items-toggle:hover {
-    border-color: rgba(167,139,250,0.4);
-    background: rgba(167,139,250,0.13);
+    border-color: rgba(147,197,253,0.4);
+    background: rgba(147,197,253,0.13);
 }
 .order-address-form {
     display: none;
@@ -1060,7 +1060,7 @@ function orderProductImage(?string $imagen): ?string {
                     </div>
                     <div class="orders-date-filter">
                         <label for="order-estado-filter"><?= htmlspecialchars('Filtrar por estado', ENT_QUOTES, 'UTF-8') ?></label>
-                        <select id="order-estado-filter" style="min-height:42px;min-width:180px;border:1px solid var(--border);border-radius:12px;background:rgba(15,23,42,.7);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px;font-weight:700;">
+                        <select id="order-estado-filter" style="min-height:42px;min-width:180px;border:1px solid var(--border);border-radius:12px;background:rgba(9,21,37,.7);color:var(--text);padding:0 12px;font-family:inherit;font-size:14px;font-weight:700;">
                             <option value=""><?= htmlspecialchars('Todos los estados', ENT_QUOTES, 'UTF-8') ?></option>
                             <?php
                             $estadosUnicos = array_unique(array_map(fn($p) => (string) ($p['estado'] ?? ''), $pedidos));

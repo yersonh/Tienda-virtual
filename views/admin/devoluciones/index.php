@@ -9,7 +9,7 @@ $estadoFiltro  = isset($_GET['estado']) && $_GET['estado'] !== '' ? (int) $_GET[
 function adDevEstadoStyle(string $nombre): array {
     $n = strtolower($nombre);
     if (str_contains($n, 'rechaz')) return ['#f87171', 'rgba(248,113,113,.15)'];
-    if (str_contains($n, 'aprob'))  return ['#c4b5fd', 'rgba(139,92,246,.15)'];
+    if (str_contains($n, 'aprob'))  return ['#93c5fd', 'rgba(59,130,246,.15)'];
     if (str_contains($n, 'reembol') || str_contains($n, 'complet')) return ['#4ade80', 'rgba(74,222,128,.15)'];
     return ['#fac275', 'rgba(250,194,117,.15)'];
 }
@@ -67,7 +67,7 @@ function adDevEstadoStyle(string $nombre): array {
     .filter-select:focus {
         border-color: var(--accent);
         outline: none;
-        box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.1);
+        box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.1);
     }
     .btn-filter {
         background: var(--accent);
@@ -144,8 +144,8 @@ function adDevEstadoStyle(string $nombre): array {
         letter-spacing: 0.03em;
     }
     .btn-view {
-        background: rgba(167, 139, 250, 0.1);
-        border: 1px solid rgba(167, 139, 250, 0.2);
+        background: rgba(147, 197, 253, 0.1);
+        border: 1px solid rgba(147, 197, 253, 0.2);
         color: var(--accent);
         padding: 8px 16px;
         border-radius: 10px;

@@ -85,7 +85,7 @@
     .reac-card:hover {
         transform: translateY(-6px);
         border-color: var(--accent);
-        box-shadow: 0 12px 30px rgba(167, 139, 250, 0.15);
+        box-shadow: 0 12px 30px rgba(147, 197, 253, 0.15);
     }
     .reac-img-wrapper {
         height: 180px;

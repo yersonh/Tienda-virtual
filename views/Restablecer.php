@@ -31,34 +31,34 @@ if (!empty($token)) {
 
     <style>
         :root {
-            --bg-overlay-1: rgba(13, 10, 26, 0.64);
-            --bg-overlay-2: rgba(8, 13, 24, 0.78);
-            --card-bg: rgba(20, 14, 40, 0.78);
-            --card-border: rgba(167, 139, 250, 0.2);
-            --input-bg: rgba(20, 14, 40, 0.72);
-            --input-text: #f8fafc;
-            --muted: #a8b5ca;
-            --body-text: #eaf2ff;
-            --accent: #a78bfa;
-            --accent-2: #7c3aed;
+            --bg-overlay-1: rgba(7, 16, 31, 0.75);
+            --bg-overlay-2: rgba(13, 27, 52, 0.82);
+            --card-bg: rgba(15, 27, 46, 0.85);
+            --card-border: rgba(59, 130, 246, 0.20);
+            --input-bg: rgba(59, 130, 246, 0.08);
+            --input-text: #e9f2ff;
+            --muted: #94a3b8;
+            --body-text: #e9f2ff;
+            --accent: #3b82f6;
+            --accent-strong: #2563eb;
             --success: #16a34a;
-            --shadow: 0 24px 70px rgba(5, 2, 18, 0.46);
+            --shadow: 0 22px 54px rgba(2, 8, 23, 0.46);
             --page-bg-image: url('../imagenes/Fondo.png');
         }
 
         [data-theme="light"] {
-            --bg-overlay-1: rgba(255, 255, 255, 0.78);
-            --bg-overlay-2: rgba(241, 245, 249, 0.9);
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --card-border: rgba(124, 58, 237, 0.18);
-            --input-bg: rgba(248, 250, 252, 0.94);
-            --input-text: #1e1251;
-            --muted: #64748b;
-            --body-text: #1e293b;
-            --accent: #5b5bf6;
-            --accent-2: #7c3aed;
+            --bg-overlay-1: rgba(240, 246, 255, 0.82);
+            --bg-overlay-2: rgba(232, 240, 254, 0.90);
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --card-border: rgba(37, 99, 235, 0.18);
+            --input-bg: rgba(37, 99, 235, 0.06);
+            --input-text: #0f2340;
+            --muted: #475569;
+            --body-text: #0f2340;
+            --accent: #3b82f6;
+            --accent-strong: #2563eb;
             --success: #15803d;
-            --shadow: 0 24px 60px rgba(100, 116, 139, 0.2);
+            --shadow: 0 22px 48px rgba(15, 35, 80, 0.12);
             --page-bg-image: url('../imagenes/Fondoclaro.png');
         }
 
@@ -85,7 +85,7 @@ if (!empty($token)) {
 
         .recovery-container {
             background:
-                linear-gradient(135deg, rgba(139, 92, 246, 0.08), transparent 38%),
+                linear-gradient(135deg, rgba(59, 130, 246, 0.08), transparent 38%),
                 var(--card-bg);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
@@ -161,7 +161,7 @@ if (!empty($token)) {
 
         .input-with-icon input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.16);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
         }
 
         .theme-toggle {
@@ -189,21 +189,21 @@ if (!empty($token)) {
         .recovery-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
             border: none;
             border-radius: 14px;
             font-weight: 800;
             cursor: pointer;
             color: white;
             transition: all 0.2s ease;
-            box-shadow: 0 16px 34px rgba(124, 58, 237, 0.28);
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.28);
             margin-bottom: 15px;
         }
 
         .recovery-btn:hover {
             transform: translateY(-2px);
             filter: brightness(1.04);
-            box-shadow: 0 20px 42px rgba(124, 58, 237, 0.36);
+            box-shadow: 0 20px 42px rgba(37, 99, 235, 0.36);
         }
 
         .back-link {

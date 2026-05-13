@@ -1,4 +1,4 @@
-﻿<!-- views/admin/pedidos/mapa.php -->
+<!-- views/admin/pedidos/mapa.php -->
 <?php
 /** @var array $estados */
 ?>
@@ -99,20 +99,20 @@
         width: 272px;
         min-width: 272px;
         background: rgba(10,16,30,0.97);
-        border-right: 1px solid rgba(139,92,246,0.12);
+        border-right: 1px solid rgba(59,130,246,0.12);
         overflow-y: auto;
         display: flex;
         flex-direction: column;
     }
     .sidebar-nav {
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(139,92,246,0.1);
+        border-bottom: 1px solid rgba(59,130,246,0.1);
         display: flex;
         align-items: center;
         gap: 10px;
     }
     .btn-back {
-        color: #a78bfa;
+        color: #3b82f6;
         text-decoration: none;
         font-size: 12px;
         font-weight: 600;
@@ -121,7 +121,7 @@
         align-items: center;
         gap: 5px;
     }
-    .btn-back:hover { color: #c4b5fd; }
+    .btn-back:hover { color: #93c5fd; }
     .sidebar-titulo {
         color: #e2e8f0;
         font-size: 14px;
@@ -130,7 +130,7 @@
     }
     .sidebar-seccion {
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(139,92,246,0.07);
+        border-bottom: 1px solid rgba(59,130,246,0.07);
         display: flex;
         flex-direction: column;
         gap: 7px;
@@ -153,7 +153,7 @@
         width: 100%;
         padding: 7px 10px;
         background: rgba(30,41,59,0.9);
-        border: 1px solid rgba(139,92,246,0.18);
+        border: 1px solid rgba(59,130,246,0.18);
         border-radius: 8px;
         color: #e2e8f0;
         font-size: 12px;
@@ -161,11 +161,11 @@
     }
     .campo-input:focus {
         outline: none;
-        border-color: rgba(139,92,246,0.45);
+        border-color: rgba(59,130,246,0.45);
     }
     .btn-cargar {
         margin-top: 2px;
-        background: linear-gradient(135deg, #a78bfa, #3b82f6);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         border: none;
         color: white;
         padding: 9px;
@@ -183,19 +183,19 @@
     .btn-cargar:disabled { opacity: 0.45; cursor: not-allowed; }
     .texto-progreso {
         font-size: 12px;
-        color: #a78bfa;
+        color: #3b82f6;
         font-weight: 600;
         margin: 0;
     }
     .barra-contenedor {
-        background: rgba(139,92,246,0.1);
+        background: rgba(59,130,246,0.1);
         border-radius: 999px;
         height: 5px;
         overflow: hidden;
     }
     .barra-relleno {
         height: 100%;
-        background: linear-gradient(90deg, #a78bfa, #3b82f6);
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
         border-radius: 999px;
         transition: width 0.25s ease;
     }

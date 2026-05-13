@@ -19,31 +19,31 @@ $old = $_SESSION['old'] ?? [];
 <style>
 /* Tokens aligned with global navbar.php naming */
 :root {
-    --bg-overlay-1: rgba(7,11,20,0.64);
-    --bg-overlay-2: rgba(8,13,24,0.78);
-    --card-bg: rgba(15,23,42,0.78);
-    --border: rgba(125,211,252,0.2);
-    --soft-surface: rgba(15,23,42,0.72);
-    --text: #f8fafc;
-    --secondary: #a8b5ca;
-    --accent: #a78bfa;
-    --accent-strong: #7c3aed;
-    --shadow: 0 24px 70px rgba(2,6,23,0.46);
+    --bg-overlay-1: rgba(7,16,31,0.75);
+    --bg-overlay-2: rgba(13,27,52,0.82);
+    --card-bg: rgba(15,27,46,0.85);
+    --border: rgba(59,130,246,0.20);
+    --soft-surface: rgba(59,130,246,0.08);
+    --text: #e9f2ff;
+    --secondary: #94a3b8;
+    --accent: #3b82f6;
+    --accent-strong: #2563eb;
+    --shadow: 0 22px 54px rgba(2,8,23,0.46);
     --radius: 14px;
     --transition: 180ms ease;
     --page-bg-image: url('imagenes/Fondo.png');
 }
 [data-theme="light"] {
-    --bg-overlay-1: rgba(255,255,255,0.78);
-    --bg-overlay-2: rgba(241,245,249,0.9);
-    --card-bg: rgba(255,255,255,0.9);
-    --border: rgba(124,58,237,0.18);
-    --soft-surface: rgba(248,250,252,0.94);
-    --text: #1e1251;
-    --secondary: #64748b;
-    --accent: #5b5bf6;
-    --accent-strong: #7c3aed;
-    --shadow: 0 24px 60px rgba(100,116,139,0.2);
+    --bg-overlay-1: rgba(240,246,255,0.82);
+    --bg-overlay-2: rgba(232,240,254,0.90);
+    --card-bg: rgba(255,255,255,0.96);
+    --border: rgba(37,99,235,0.18);
+    --soft-surface: rgba(37,99,235,0.06);
+    --text: #0f2340;
+    --secondary: #475569;
+    --accent: #3b82f6;
+    --accent-strong: #2563eb;
+    --shadow: 0 22px 48px rgba(15,35,80,0.12);
     --page-bg-image: url('imagenes/Fondoclaro.png');
 }
 
@@ -70,7 +70,7 @@ body {
 /* 🔥 CONTENEDOR GLASS */
 .container {
     background:
-        linear-gradient(135deg, rgba(139,92,246,0.08), transparent 38%),
+        linear-gradient(135deg, rgba(59,130,246,0.08), transparent 38%),
         var(--card-bg);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -90,7 +90,7 @@ h2 {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 30px;
     letter-spacing: -0.03em;
-    text-shadow:0 0 22px rgba(139,92,246,0.28);
+    text-shadow:0 0 22px rgba(59,130,246,0.28);
 }
 
 /* INPUTS CON ICONOS */
@@ -148,7 +148,7 @@ h2 {
 }
 
 .password-toggle:hover {
-    color: #a78bfa;
+    color: #3b82f6;
     transform: translateY(-50%);
 }
 
@@ -218,7 +218,7 @@ h2 {
 button {
     width:100%;
     padding:12px;
-    background:linear-gradient(135deg,#a78bfa,#7c3aed);
+    background:linear-gradient(135deg,#3b82f6,#2563eb);
     border:none;
     border-radius:10px;
     color:white;
@@ -270,7 +270,7 @@ button:hover {
 
 .input-group input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(139,92,246,0.16);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.16);
 }
 
 .password-toggle {
@@ -280,7 +280,7 @@ button:hover {
 
 .password-toggle:hover {
     color: var(--accent);
-    background: rgba(139,92,246,0.1);
+    background: rgba(59,130,246,0.1);
 }
 
 .validation-msg {
@@ -499,14 +499,14 @@ a:hover {
 
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php?action=login" style="color:#a78bfa;">
+        <a href="index.php?action=login" style="color:#3b82f6;">
             <i class="fas fa-arrow-left"></i> <?= htmlspecialchars('Ir al login', ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php?action=tienda" style="color:#a78bfa;">
+        <a href="index.php?action=tienda" style="color:#3b82f6;">
             <i class="fas fa-arrow-left"></i> <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>

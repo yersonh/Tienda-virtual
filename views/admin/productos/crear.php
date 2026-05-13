@@ -1,4 +1,4 @@
-﻿<!-- views/admin/productos/crear.php -->
+<!-- views/admin/productos/crear.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h1 style="color: white; margin: 0;">Nuevo Producto</h1>
@@ -132,7 +132,7 @@
 <style>
     .seccion-card {
         background: rgba(30,41,59,0.8);
-        border: 1px solid rgba(139,92,246,0.15);
+        border: 1px solid rgba(59,130,246,0.15);
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 20px;
@@ -144,7 +144,7 @@
         margin-bottom: 16px;
     }
     .seccion-titulo {
-        color: #a78bfa;
+        color: #3b82f6;
         font-size: 16px;
         font-weight: 700;
         margin: 0 0 16px;
@@ -165,15 +165,15 @@
         gap: 6px;
     }
     .form-group label {
-        color: #a78bfa;
+        color: #3b82f6;
         font-weight: 600;
         font-size: 13px;
     }
     .form-group input,
     .form-group select,
     .form-group textarea {
-        background: rgba(15,23,42,0.8);
-        border: 1px solid rgba(139,92,246,0.2);
+        background: rgba(9,21,37,0.8);
+        border: 1px solid rgba(59,130,246,0.2);
         border-radius: 8px;
         padding: 10px 12px;
         color: white;
@@ -185,18 +185,18 @@
     .form-group select:focus,
     .form-group textarea:focus {
         outline: none;
-        border-color: #a78bfa;
-        box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
     }
     .btn-volver {
-        background: rgba(139,92,246,0.1);
-        color: #a78bfa;
+        background: rgba(59,130,246,0.1);
+        color: #3b82f6;
         padding: 8px 16px;
         border-radius: 8px;
         text-decoration: none;
         transition: 0.2s;
     }
-    .btn-volver:hover { background: rgba(139,92,246,0.2); }
+    .btn-volver:hover { background: rgba(59,130,246,0.2); }
     .btn-add {
         background: rgba(74,222,128,0.1);
         border: 1px solid rgba(74,222,128,0.3);
@@ -213,8 +213,8 @@
     }
     .btn-add:hover { background: rgba(74,222,128,0.2); }
     .compat-row {
-        background: rgba(15,23,42,0.5);
-        border: 1px solid rgba(139,92,246,0.1);
+        background: rgba(9,21,37,0.5);
+        border: 1px solid rgba(59,130,246,0.1);
         border-radius: 10px;
         padding: 14px;
         margin-bottom: 10px;
@@ -224,8 +224,8 @@
     .compat-row-vehiculo { grid-template-columns: 1fr 1fr 80px 80px 1fr 1fr 1fr 80px 28px; }
     .compat-row-maquinaria { grid-template-columns: 1fr 1fr 1fr 1fr 80px 80px 1fr 80px 28px; }
     .compat-row input {
-        background: rgba(15,23,42,0.8);
-        border: 1px solid rgba(139,92,246,0.15);
+        background: rgba(9,21,37,0.8);
+        border: 1px solid rgba(59,130,246,0.15);
         border-radius: 6px;
         padding: 8px 10px;
         color: white;
@@ -236,7 +236,7 @@
     }
     .compat-row input:focus {
         outline: none;
-        border-color: #a78bfa;
+        border-color: #3b82f6;
     }
     .compat-row input::placeholder { color: #475569; }
     .compat-label {
@@ -273,19 +273,19 @@
         margin: 0;
     }
     .upload-area {
-        border: 2px dashed rgba(139,92,246,0.3);
+        border: 2px dashed rgba(59,130,246,0.3);
         border-radius: 12px;
         padding: 28px;
         text-align: center;
         cursor: pointer;
         transition: 0.3s;
-        background: rgba(15,23,42,0.5);
+        background: rgba(9,21,37,0.5);
     }
-    .upload-area:hover { border-color: #a78bfa; background: rgba(139,92,246,0.05); }
-    .upload-area i { font-size: 40px; color: #a78bfa; margin-bottom: 8px; }
+    .upload-area:hover { border-color: #3b82f6; background: rgba(59,130,246,0.05); }
+    .upload-area i { font-size: 40px; color: #3b82f6; margin-bottom: 8px; }
     .upload-area p { color: #94a3b8; margin-bottom: 12px; }
     .btn-upload {
-        background: linear-gradient(135deg, #a78bfa, #3b82f6);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: white;
         border: none;
         padding: 8px 20px;
@@ -293,14 +293,14 @@
         cursor: pointer;
         font-weight: 600;
     }
-    .upload-area.drag-over { border-color: #a78bfa; background: rgba(139,92,246,0.1); }
+    .upload-area.drag-over { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
     .preview-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(100px, 100px));
         gap: 12px;
         margin-top: 16px;
     }
-    .preview-item { position: relative; border-radius: 8px; overflow: hidden; background: rgba(15,23,42,0.8); border: 1px solid rgba(139,92,246,0.2); }
+    .preview-item { position: relative; border-radius: 8px; overflow: hidden; background: rgba(9,21,37,0.8); border: 1px solid rgba(59,130,246,0.2); }
     .preview-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
     .preview-item .remove-img {
         position: absolute; top: 4px; right: 4px;
@@ -311,10 +311,10 @@
     .form-help { color: #64748b; font-size: 12px; margin-top: 8px; display: block; }
     .form-actions {
         display: flex; gap: 12px; margin-top: 8px; padding-top: 16px;
-        border-top: 1px solid rgba(139,92,246,0.1);
+        border-top: 1px solid rgba(59,130,246,0.1);
     }
     .btn-guardar {
-        background: linear-gradient(135deg, #a78bfa, #3b82f6);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: white; border: none; padding: 12px 24px;
         border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
     }

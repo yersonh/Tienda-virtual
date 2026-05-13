@@ -55,7 +55,7 @@ $motivosLabel = [
     color: var(--secondary); font-size: 12px; font-weight: 900;
 }
 .status-pill.is-pending   { border-color: rgba(251,191,36,.36);   background: rgba(251,191,36,.13);   color: #fbbf24; }
-.status-pill.is-processed { border-color: rgba(139,92,246,.3);    background: rgba(139,92,246,.12);   color: #c4b5fd; }
+.status-pill.is-processed { border-color: rgba(59,130,246,.3);    background: rgba(59,130,246,.12);   color: #93c5fd; }
 .status-pill.is-done      { border-color: rgba(34,197,94,.35);    background: rgba(34,197,94,.14);    color: #4ade80; }
 .status-pill.is-canceled  { border-color: rgba(248,113,113,.35);  background: rgba(248,113,113,.14);  color: #fca5a5; }
 .dev-product-card {
@@ -83,7 +83,7 @@ $motivosLabel = [
 .dev-img-thumb:hover { transform: scale(1.06); }
 .dev-admin-box {
     padding: 14px 18px; border-radius: 14px; margin-top: 10px;
-    border: 1px solid rgba(139,92,246,.22); background: rgba(139,92,246,.07);
+    border: 1px solid rgba(59,130,246,.22); background: rgba(59,130,246,.07);
     color: var(--secondary); font-size: 13px;
 }
 .dev-admin-box strong { color: var(--text); }

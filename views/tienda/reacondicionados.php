@@ -54,7 +54,7 @@ $items = $items ?? [];
     overflow: hidden; transition: transform .22s, box-shadow .22s;
     display: flex; flex-direction: column;
 }
-.reac-card:hover { transform: translateY(-4px); box-shadow: 0 24px 48px rgba(15,23,42,.28); }
+.reac-card:hover { transform: translateY(-4px); box-shadow: 0 24px 48px rgba(9,21,37,.28); }
 .reac-card-img {
     position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden;
     background: rgba(148,163,184,.12);

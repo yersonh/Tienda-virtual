@@ -100,7 +100,7 @@
 
 <style>
     .btn-nuevo {
-        background: linear-gradient(135deg, #a78bfa, #7c3aed);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: #ffffff;
         padding: 10px 20px;
         border-radius: 12px;
@@ -109,13 +109,13 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 10px 20px rgba(139,92,246,0.25);
+        box-shadow: 0 10px 20px rgba(59,130,246,0.25);
         transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         white-space: nowrap;
     }
     .btn-nuevo:hover {
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 14px 28px rgba(139,92,246,0.38);
+        box-shadow: 0 14px 28px rgba(59,130,246,0.38);
         color: #ffffff;
     }
     .table-container {
@@ -151,7 +151,7 @@
         font-size: 14px;
         vertical-align: middle;
     }
-    .productos-table tr:hover td { background: rgba(167,139,250,0.03); }
+    .productos-table tr:hover td { background: rgba(147,197,253,0.03); }
     .producto-img-mini {
         width: 48px; height: 48px;
         object-fit: contain; background: white;
@@ -168,7 +168,7 @@
     }
     .txt-mono  { font-family: monospace; font-size: 13px; color: #94a3b8; }
     .txt-nombre { font-weight: 600; }
-    .txt-ref   { color: #a78bfa; font-size: 13px; font-weight: 600; }
+    .txt-ref   { color: #3b82f6; font-size: 13px; font-weight: 600; }
     .txt-precio { font-weight: 700; color: #4ade80; }
     .badge {
         padding: 4px 12px;
@@ -197,7 +197,7 @@
         display: flex; align-items: center; justify-content: center;
     }
     .btn-ver    { color: #64748b; } .btn-ver:hover    { color: var(--accent); transform: scale(1.15); }
-    .btn-editar { color: #64748b; } .btn-editar:hover { color: #a78bfa;      transform: scale(1.15); }
+    .btn-editar { color: #64748b; } .btn-editar:hover { color: #3b82f6;      transform: scale(1.15); }
     .btn-eliminar { color: #64748b; } .btn-eliminar:hover { color: #f87171; transform: scale(1.15); }
     .alert-success {
         background: rgba(34,197,94,0.12);

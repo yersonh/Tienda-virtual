@@ -27,8 +27,8 @@
             <input type="hidden" name="action" value="admin_pedidos">
 
             <div class="filter-group">
-                <label for="estado-filter" style="display: block; color: #a78bfa; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Estado</label>
-                <select id="estado-filter" name="estado" style="width: 100%; padding: 10px; background: rgba(15,23,42,0.8); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; color: white; font-size: 14px;">
+                <label for="estado-filter" style="display: block; color: #3b82f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Estado</label>
+                <select id="estado-filter" name="estado" style="width: 100%; padding: 10px; background: rgba(9,21,37,0.8); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; color: white; font-size: 14px;">
                     <option value="">Todos</option>
                     <?php foreach($estados as $est): ?>
                         <option value="<?= (int)$est['id_estado'] ?>" <?= isset($_GET['estado']) && (int)$_GET['estado'] === (int)$est['id_estado'] ? 'selected' : '' ?>>
@@ -39,13 +39,13 @@
             </div>
 
             <div class="filter-group">
-                <label for="fecha-desde" style="display: block; color: #a78bfa; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Desde</label>
-                <input type="date" id="fecha-desde" name="fecha_desde" value="<?= htmlspecialchars($fecha_desde ?? '', ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; padding: 10px; background: rgba(15,23,42,0.8); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; color: white; font-size: 14px;">
+                <label for="fecha-desde" style="display: block; color: #3b82f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Desde</label>
+                <input type="date" id="fecha-desde" name="fecha_desde" value="<?= htmlspecialchars($fecha_desde ?? '', ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; padding: 10px; background: rgba(9,21,37,0.8); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; color: white; font-size: 14px;">
             </div>
 
             <div class="filter-group">
-                <label for="fecha-hasta" style="display: block; color: #a78bfa; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Hasta</label>
-                <input type="date" id="fecha-hasta" name="fecha_hasta" value="<?= htmlspecialchars($fecha_hasta ?? '', ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; padding: 10px; background: rgba(15,23,42,0.8); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; color: white; font-size: 14px;">
+                <label for="fecha-hasta" style="display: block; color: #3b82f6; font-weight: 600; margin-bottom: 8px; font-size: 14px;">Hasta</label>
+                <input type="date" id="fecha-hasta" name="fecha_hasta" value="<?= htmlspecialchars($fecha_hasta ?? '', ENT_QUOTES, 'UTF-8') ?>" style="width: 100%; padding: 10px; background: rgba(9,21,37,0.8); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; color: white; font-size: 14px;">
             </div>
 
             <button type="submit" class="btn-filtrar">
@@ -76,7 +76,7 @@
                 <?php if (!empty($pedidos) && is_array($pedidos)): ?>
                     <?php foreach($pedidos as $pedido): ?>
                     <tr data-pedido-id="<?= (int) $pedido['id_pedido'] ?>" data-pedido-estado-id="<?= (int) ($pedido['id_estado'] ?? 0) ?>">
-                        <td style="font-weight: 600; color: #a78bfa;">#<?= (int)$pedido['id_pedido'] ?></td>
+                        <td style="font-weight: 600; color: #3b82f6;">#<?= (int)$pedido['id_pedido'] ?></td>
                         <td>
                             <?= htmlspecialchars(($pedido['cliente_nombre'] ?? '') . ' ' . ($pedido['cliente_apellido'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
                         </td>
@@ -139,7 +139,7 @@
         align-items: center;
         margin-bottom: 24px;
         background: rgba(30,41,59,0.6);
-        border: 1px solid rgba(139,92,246,0.1);
+        border: 1px solid rgba(59,130,246,0.1);
         border-radius: 16px;
         padding: 18px 24px;
     }
@@ -155,7 +155,7 @@
         color: #64748b;
     }
     .btn-mapa {
-        background: linear-gradient(135deg, #a78bfa, #7c3aed);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: #ffffff;
         padding: 10px 20px;
         border-radius: 12px;
@@ -165,12 +165,12 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         white-space: nowrap;
     }
     .btn-mapa:hover {
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 14px 28px rgba(139, 92, 246, 0.45);
+        box-shadow: 0 14px 28px rgba(59, 130, 246, 0.45);
         color: #ffffff;
     }
     .filter-card {
@@ -205,11 +205,11 @@
     }
     .filter-group select:focus, .filter-group input:focus {
         border-color: var(--accent);
-        box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.12);
+        box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.12);
         outline: none;
     }
     .btn-filtrar {
-        background: rgba(167, 139, 250, 0.12);
+        background: rgba(147, 197, 253, 0.12);
         border: 1px solid var(--border);
         color: var(--accent);
         padding: 10px 24px;
@@ -283,7 +283,7 @@
         font-size: 14px;
     }
     .pedidos-table tr:hover td {
-        background: rgba(167, 139, 250, 0.03);
+        background: rgba(147, 197, 253, 0.03);
     }
     .btn-qr {
         background: var(--soft-surface);

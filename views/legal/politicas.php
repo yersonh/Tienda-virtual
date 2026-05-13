@@ -24,8 +24,8 @@
             min-height:100vh;
 
             background:
-                radial-gradient(circle at top left, rgba(139,92,246,.18), transparent 25%),
-                radial-gradient(circle at bottom right, rgba(124,58,237,.12), transparent 25%),
+                radial-gradient(circle at top left, rgba(59,130,246,.18), transparent 25%),
+                radial-gradient(circle at bottom right, rgba(37,99,235,.12), transparent 25%),
                 linear-gradient(rgba(2,6,23,.95), rgba(2,6,23,.95)),
                 url('imagenes/Fondo.png') center/cover fixed;
 
@@ -49,8 +49,8 @@
 
             background:
                 linear-gradient(135deg,
-                rgba(124,58,237,.22),
-                rgba(15,23,42,.92));
+                rgba(37,99,235,.22),
+                rgba(9,21,37,.92));
 
             border:1px solid rgba(125,211,252,.18);
 
@@ -77,7 +77,7 @@
             width:450px;
             height:450px;
 
-            background:rgba(139,92,246,.12);
+            background:rgba(59,130,246,.12);
 
             border-radius:50%;
 
@@ -109,7 +109,7 @@
 
             letter-spacing:-2px;
 
-            background:linear-gradient(to right,#fff,#c4b5fd);
+            background:linear-gradient(to right,#fff,#93c5fd);
             -webkit-background-clip:text;
             -webkit-text-fill-color:transparent;
         }
@@ -143,7 +143,7 @@
 
             border-radius:18px;
 
-            background:rgba(15,23,42,.72);
+            background:rgba(9,21,37,.72);
 
             border:1px solid rgba(125,211,252,.16);
 
@@ -154,7 +154,7 @@
         }
 
         .hero-badge i{
-            color:#a78bfa;
+            color:#3b82f6;
         }
 
         .volver-btn{
@@ -167,11 +167,11 @@
 
             border-radius:18px;
 
-            background:rgba(139,92,246,.15);
+            background:rgba(59,130,246,.15);
 
-            border:1px solid rgba(139,92,246,.28);
+            border:1px solid rgba(59,130,246,.28);
 
-            color:#c4b5fd;
+            color:#93c5fd;
 
             text-decoration:none;
 
@@ -184,9 +184,9 @@
 
             transform:translateY(-2px);
 
-            background:rgba(139,92,246,.24);
+            background:rgba(59,130,246,.24);
 
-            box-shadow:0 10px 28px rgba(139,92,246,.18);
+            box-shadow:0 10px 28px rgba(59,130,246,.18);
         }
 
         .politicas-grid{
@@ -200,7 +200,7 @@
 
         .politica-card{
 
-            background:rgba(15,23,42,.82);
+            background:rgba(9,21,37,.82);
 
             border:1px solid rgba(148,163,184,.12);
 
@@ -221,7 +221,7 @@
 
             transform:translateY(-5px);
 
-            border-color:rgba(139,92,246,.28);
+            border-color:rgba(59,130,246,.28);
 
             box-shadow:
                 0 25px 60px rgba(0,0,0,.38);
@@ -238,7 +238,7 @@
             align-items:center;
             justify-content:center;
 
-            background:linear-gradient(135deg,#7c3aed,#a78bfa);
+            background:linear-gradient(135deg,#2563eb,#3b82f6);
 
             color:#fff;
 
@@ -246,7 +246,7 @@
 
             margin-bottom:22px;
 
-            box-shadow:0 12px 28px rgba(124,58,237,.35);
+            box-shadow:0 12px 28px rgba(37,99,235,.35);
         }
 
         .politica-card h2{
@@ -280,9 +280,9 @@
 
             border-radius:18px;
 
-            background:rgba(139,92,246,.10);
+            background:rgba(59,130,246,.10);
 
-            border:1px solid rgba(139,92,246,.16);
+            border:1px solid rgba(59,130,246,.16);
 
             color:#dbeafe;
 

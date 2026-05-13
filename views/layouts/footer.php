@@ -49,7 +49,7 @@ body{
 }
 
 .footer-brand i{
-    color:#a78bfa;
+    color:#3b82f6;
 }
 
 .footer-links{
@@ -59,7 +59,7 @@ body{
 
 .footer-links a{
 
-    color:#c4b5fd;
+    color:#93c5fd;
 
     text-decoration:none;
 
@@ -70,7 +70,7 @@ body{
 }
 
 .footer-links a:hover{
-    color:#ddd6fe;
+    color:#bfdbfe;
     text-decoration:underline;
 }
 

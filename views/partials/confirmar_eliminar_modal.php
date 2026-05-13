@@ -57,7 +57,7 @@
         font-weight: 700;
     }
     #eliminar-nombre {
-        color: #a78bfa;
+        color: #3b82f6;
         font-size: 14px;
         font-weight: 600;
         margin: 0 0 6px;

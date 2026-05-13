@@ -24,7 +24,7 @@ $items = $items ?? [];
             <p style="color:#94a3b8;font-size:13px;margin:0;">Productos sin salida: 3.ª devolución o descartados manualmente.</p>
         </div>
         <a href="index.php?action=admin_reacondicionados"
-           style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);color:#a78bfa;padding:9px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;">
+           style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:#3b82f6;padding:9px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;">
             <i class="fas fa-arrow-left"></i> Volver a Reacondicionados
         </a>
     </div>
@@ -48,7 +48,7 @@ $items = $items ?? [];
                 $imagen    = (string) ($item['imagen'] ?? '');
                 $imgUrl    = $imagen !== '' ? htmlspecialchars(UploadHelper::getImageUrl($imagen), ENT_QUOTES, 'UTF-8') : null;
                 ?>
-                <div style="border:1px solid rgba(248,113,113,.22);border-radius:14px;background:rgba(15,23,42,.6);overflow:hidden;opacity:.88;">
+                <div style="border:1px solid rgba(248,113,113,.22);border-radius:14px;background:rgba(9,21,37,.6);overflow:hidden;opacity:.88;">
                     <!-- Imagen -->
                     <div style="height:130px;background:rgba(148,163,184,.08);overflow:hidden;position:relative;">
                         <?php if ($imgUrl): ?>
@@ -85,8 +85,8 @@ $items = $items ?? [];
             <?php endforeach; ?>
         </div>
 
-        <div style="margin-top:20px;padding:14px 18px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:12px;color:#94a3b8;font-size:13px;">
-            <i class="fas fa-circle-info" style="color:#a78bfa;margin-right:6px;"></i>
+        <div style="margin-top:20px;padding:14px 18px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:12px;color:#94a3b8;font-size:13px;">
+            <i class="fas fa-circle-info" style="color:#3b82f6;margin-right:6px;"></i>
             Total: <strong style="color:white;"><?= count($items) ?> items</strong> en stock muerto.
         </div>
     <?php endif; ?>

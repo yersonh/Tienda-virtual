@@ -91,7 +91,7 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     border: 1px solid var(--border);
     border-radius: 8px;
     background:
-        linear-gradient(135deg, rgba(167,139,250,0.09), transparent 60%),
+        linear-gradient(135deg, rgba(147,197,253,0.09), transparent 60%),
         rgba(255,255,255,0.045);
 }
 
@@ -212,7 +212,7 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     flex: 0 0 auto;
     border-radius: 8px;
     color: var(--accent);
-    background: rgba(167,139,250,0.12);
+    background: rgba(147,197,253,0.12);
 }
 
 .payment-actions {
@@ -291,7 +291,7 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     border-radius: 8px;
     padding: 28px 24px;
     background:
-        linear-gradient(145deg, rgba(167,139,250,0.08), transparent 55%),
+        linear-gradient(145deg, rgba(147,197,253,0.08), transparent 55%),
         rgba(255,255,255,0.035);
     position: sticky;
     top: 92px;
@@ -305,7 +305,7 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     align-items: center;
     justify-content: center;
     margin-bottom: 14px;
-    background: rgba(167,139,250,0.12);
+    background: rgba(147,197,253,0.12);
     color: var(--accent);
 }
 
@@ -364,7 +364,7 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(167,139,250,0.12);
+    background: rgba(147,197,253,0.12);
     color: var(--accent);
     font-size: 12px;
     font-weight: 900;
@@ -387,9 +387,9 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     gap: 12px;
     margin: 18px 0 22px;
     padding: 14px;
-    border: 1px solid rgba(167,139,250,0.22);
+    border: 1px solid rgba(147,197,253,0.22);
     border-radius: 8px;
-    background: rgba(167,139,250,0.08);
+    background: rgba(147,197,253,0.08);
     color: var(--secondary);
     line-height: 1.5;
 }
@@ -460,17 +460,17 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     padding: 0 15px;
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: rgba(20, 14, 40, 0.58);
+    background: rgba(15, 27, 46, 0.58);
     color: var(--secondary);
     font-size: 13px;
     font-weight: 900;
 }
 
 .payment-progress-step.active {
-    border-color: rgba(139, 92, 246, 0.72);
-    background: rgba(167, 139, 250, 0.14);
+    border-color: rgba(59, 130, 246, 0.72);
+    background: rgba(147, 197, 253, 0.14);
     color: var(--text);
-    box-shadow: 0 0 26px rgba(167, 139, 250, 0.14);
+    box-shadow: 0 0 26px rgba(147, 197, 253, 0.14);
 }
 
 [data-theme="light"] .payment-head {

@@ -157,7 +157,7 @@ $iniciales = $inicialNombre . $inicialApellido;
 [data-theme="light"] .container-perfil {
     background: rgba(255,255,255,0.88);
     color: #334155;
-    border: 1px solid rgba(139,92,246,0.16);
+    border: 1px solid rgba(59,130,246,0.16);
     box-shadow: 0 18px 40px rgba(148,163,184,0.18);
 }
 
@@ -174,21 +174,21 @@ $iniciales = $inicialNombre . $inicialApellido;
     width:60px;
     height:60px;
     border-radius:50%;
-    background:linear-gradient(135deg,#a78bfa,#7c3aed);
+    background:linear-gradient(135deg,#3b82f6,#2563eb);
     display:flex;
     align-items:center;
     justify-content:center;
     font-weight:bold;
     color:white;
     font-size:20px;
-    box-shadow:0 0 15px rgba(139,92,246,0.5);
+    box-shadow:0 0 15px rgba(59,130,246,0.5);
 }
 
 /* TITULO */
 .perfil-header h2 {
     margin:0;
     font-size:28px;
-    color:#a78bfa;
+    color:#3b82f6;
 }
 
 .perfil-header p {
@@ -248,11 +248,11 @@ $iniciales = $inicialNombre . $inicialApellido;
 .input-icon input:focus {
     outline:none;
     background:#3b4a61;
-    box-shadow:0 0 10px rgba(139,92,246,0.4);
+    box-shadow:0 0 10px rgba(59,130,246,0.4);
 }
 [data-theme="light"] .input-icon input:focus {
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(139,92,246,0.14);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.14);
 }
 
 .input-icon input::placeholder {
@@ -267,7 +267,7 @@ $iniciales = $inicialNombre . $inicialApellido;
 button {
     width:100%;
     padding:14px;
-    background:linear-gradient(135deg,#a78bfa,#7c3aed);
+    background:linear-gradient(135deg,#3b82f6,#2563eb);
     border:none;
     border-radius:12px;
     color:white;
@@ -282,7 +282,7 @@ button i {
 
 button:hover {
     transform:scale(1.03);
-    box-shadow:0 0 20px rgba(139,92,246,0.6);
+    box-shadow:0 0 20px rgba(59,130,246,0.6);
 }
 
 .perfil-payments {
@@ -310,7 +310,7 @@ button:hover {
 }
 
 .perfil-payments-head a {
-    color:#a78bfa;
+    color:#3b82f6;
     font-size:12px;
     font-weight:800;
     text-decoration:none;
@@ -325,9 +325,9 @@ button:hover {
     display:grid;
     gap:4px;
     padding:12px;
-    border:1px solid rgba(139,92,246,0.18);
+    border:1px solid rgba(59,130,246,0.18);
     border-radius:12px;
-    background:rgba(15,23,42,0.35);
+    background:rgba(9,21,37,0.35);
 }
 
 [data-theme="light"] .perfil-payment-card {
@@ -354,8 +354,8 @@ button:hover {
     width:fit-content;
     padding:3px 8px;
     border-radius:999px;
-    background:rgba(139,92,246,0.13);
-    color:#a78bfa;
+    background:rgba(59,130,246,0.13);
+    color:#3b82f6;
     font-size:11px;
     font-style:normal;
     font-weight:900;
@@ -463,7 +463,7 @@ button:hover {
     display: flex;
 }
 .inactivar-modal {
-    background: rgba(15,23,42,0.97);
+    background: rgba(9,21,37,0.97);
     border: 1px solid rgba(248,113,113,0.3);
     border-radius: 20px;
     padding: 32px 28px;

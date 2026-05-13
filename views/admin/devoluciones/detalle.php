@@ -1,4 +1,4 @@
-﻿<!-- views/admin/devoluciones/detalle.php -->
+<!-- views/admin/devoluciones/detalle.php -->
 <?php
 /** @var array $devolucion */
 require_once __DIR__ . '/../../../config/UploadHelper.php';
@@ -31,9 +31,9 @@ $motivosLabel = [
     aspect-ratio: 1;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid rgba(139,92,246,.22);
+    border: 1px solid rgba(59,130,246,.22);
     cursor: pointer;
-    background: rgba(15,23,42,.6);
+    background: rgba(9,21,37,.6);
 }
 .dev-gallery-item img {
     width: 100%; height: 100%;
@@ -72,14 +72,14 @@ $motivosLabel = [
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
             <a href="index.php?action=admin_devoluciones"
-               style="color:#a78bfa;text-decoration:none;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;">
+               style="color:#3b82f6;text-decoration:none;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;">
                 <i class="fas fa-arrow-left"></i> Volver a devoluciones
             </a>
             <h1 style="color:white;margin:0;font-size:24px;">
                 Devolución #<?= (int) $devolucion['id_devolucion'] ?>
                 <span style="margin-left:10px;font-size:14px;padding:4px 12px;border-radius:20px;
-                    background:<?= $esPendiente ? 'rgba(250,194,117,.15)' : ($esAprobada ? 'rgba(139,92,246,.15)' : 'rgba(74,222,128,.15)') ?>;
-                    color:<?= $esPendiente ? '#fac275' : ($esAprobada ? '#c4b5fd' : '#4ade80') ?>;">
+                    background:<?= $esPendiente ? 'rgba(250,194,117,.15)' : ($esAprobada ? 'rgba(59,130,246,.15)' : 'rgba(74,222,128,.15)') ?>;
+                    color:<?= $esPendiente ? '#fac275' : ($esAprobada ? '#93c5fd' : '#4ade80') ?>;">
                     <?= htmlspecialchars($estadoNom, ENT_QUOTES, 'UTF-8') ?>
                 </span>
             </h1>
@@ -89,12 +89,12 @@ $motivosLabel = [
 
     <!-- Resumen -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;">
-        <div style="padding:16px;border:1px solid rgba(139,92,246,.2);border-radius:14px;background:rgba(15,23,42,.6);">
+        <div style="padding:16px;border:1px solid rgba(59,130,246,.2);border-radius:14px;background:rgba(9,21,37,.6);">
             <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Solicitada</div>
             <strong style="color:white;"><?= htmlspecialchars($devolucion['fecha_solicitud'] ?? '-', ENT_QUOTES, 'UTF-8') ?></strong>
         </div>
         <?php if (!empty($devolucion['fecha_aprobacion'])): ?>
-        <div style="padding:16px;border:1px solid rgba(139,92,246,.2);border-radius:14px;background:rgba(15,23,42,.6);">
+        <div style="padding:16px;border:1px solid rgba(59,130,246,.2);border-radius:14px;background:rgba(9,21,37,.6);">
             <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Aprobada</div>
             <strong style="color:white;"><?= htmlspecialchars($devolucion['fecha_aprobacion'], ENT_QUOTES, 'UTF-8') ?></strong>
         </div>
@@ -106,20 +106,20 @@ $motivosLabel = [
         $montoEstimado   = (float)  ($devolucion['monto_reembolso_estimado'] ?? 0);
         ?>
         <?php if ($montoEstimado > 0): ?>
-        <div style="padding:16px;border:1px solid rgba(139,92,246,.2);border-radius:14px;background:rgba(15,23,42,.6);">
+        <div style="padding:16px;border:1px solid rgba(59,130,246,.2);border-radius:14px;background:rgba(9,21,37,.6);">
             <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Reembolso estimado</div>
             <strong style="color:#4ade80;font-size:18px;">$<?= number_format($montoEstimado) ?> COP</strong>
         </div>
         <?php endif; ?>
         <?php if ($reembolsoEstado !== ''): ?>
-        <div style="padding:16px;border:1px solid rgba(139,92,246,.2);border-radius:14px;background:rgba(15,23,42,.6);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="padding:16px;border:1px solid rgba(59,130,246,.2);border-radius:14px;background:rgba(9,21,37,.6);display:flex;flex-direction:column;justify-content:space-between;">
             <div>
                 <div style="color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:6px;">Estado reembolso</div>
                 <strong style="color:<?= $reembolsoEstado === 'REALIZADO' ? '#4ade80' : ($reembolsoEstado === 'PENDIENTE-MANUAL' ? '#f87171' : '#fbbf24') ?>;">
                     <?= htmlspecialchars($reembolsoEstado, ENT_QUOTES, 'UTF-8') ?>
                 </strong>
                 <?php if ($reembolsoWompi !== ''): ?>
-                    <div style="color:#c4b5fd;font-size:11px;margin-top:4px;word-break:break-all;">ID: <?= htmlspecialchars($reembolsoWompi, ENT_QUOTES, 'UTF-8') ?></div>
+                    <div style="color:#93c5fd;font-size:11px;margin-top:4px;word-break:break-all;">ID: <?= htmlspecialchars($reembolsoWompi, ENT_QUOTES, 'UTF-8') ?></div>
                 <?php endif; ?>
                 <?php if ($reembolsoError !== ''): ?>
                     <div style="color:#f87171;font-size:11px;margin-top:4px;"><?= htmlspecialchars($reembolsoError, ENT_QUOTES, 'UTF-8') ?></div>
@@ -130,7 +130,7 @@ $motivosLabel = [
                 <form method="POST" action="index.php?action=admin_reintentar_reembolso" style="margin-top:12px;">
                     <input type="hidden" name="id_devolucion" value="<?= (int) $devolucion['id_devolucion'] ?>">
                     <button type="submit" 
-                            style="width:100%;padding:8px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:8px;color:#c4b5fd;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;">
+                            style="width:100%;padding:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:8px;color:#93c5fd;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;">
                         <i class="fas fa-sync-alt"></i> Reintentar Reembolso
                     </button>
                 </form>
@@ -156,9 +156,9 @@ $motivosLabel = [
         $imagenes   = $det['imagenes'] ?? [];
         $motivoLbl  = $motivosLabel[$motivo] ?? $motivo;
         ?>
-        <div style="border:1px solid rgba(139,92,246,.18);border-radius:16px;background:rgba(15,23,42,.6);margin-bottom:16px;overflow:hidden;">
+        <div style="border:1px solid rgba(59,130,246,.18);border-radius:16px;background:rgba(9,21,37,.6);margin-bottom:16px;overflow:hidden;">
             <!-- Cabecera producto -->
-            <div style="padding:14px 18px;background:rgba(139,92,246,.05);border-bottom:1px solid rgba(139,92,246,.12);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="padding:14px 18px;background:rgba(59,130,246,.05);border-bottom:1px solid rgba(59,130,246,.12);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <div>
                     <strong style="color:white;font-size:15px;"><?= htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') ?></strong>
                     <?php if ($ref !== ''): ?>
@@ -167,8 +167,8 @@ $motivosLabel = [
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
                     <span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;
-                        background:<?= $detEstado === 'APROBADO' ? 'rgba(139,92,246,.15)' : ($detEstado === 'RECIBIDO' ? 'rgba(74,222,128,.15)' : ($detEstado === 'RECHAZADO' ? 'rgba(248,113,113,.15)' : 'rgba(250,194,117,.15)')) ?>;
-                        color:<?= $detEstado === 'APROBADO' ? '#c4b5fd' : ($detEstado === 'RECIBIDO' ? '#4ade80' : ($detEstado === 'RECHAZADO' ? '#f87171' : '#fac275')) ?>;">
+                        background:<?= $detEstado === 'APROBADO' ? 'rgba(59,130,246,.15)' : ($detEstado === 'RECIBIDO' ? 'rgba(74,222,128,.15)' : ($detEstado === 'RECHAZADO' ? 'rgba(248,113,113,.15)' : 'rgba(250,194,117,.15)')) ?>;
+                        color:<?= $detEstado === 'APROBADO' ? '#93c5fd' : ($detEstado === 'RECIBIDO' ? '#4ade80' : ($detEstado === 'RECHAZADO' ? '#f87171' : '#fac275')) ?>;">
                         <?= htmlspecialchars($detEstado, ENT_QUOTES, 'UTF-8') ?>
                     </span>
                     <?php if ($recibido): ?>
@@ -207,7 +207,7 @@ $motivosLabel = [
 
             <!-- Acción: PRODUCTO RECIBIDO (solo si aprobado y no recibido aún) -->
             <?php if ($esAprobada && $detEstado === 'APROBADO' && !$recibido): ?>
-                <div style="padding:12px 18px 16px;border-top:1px solid rgba(139,92,246,.1);">
+                <div style="padding:12px 18px 16px;border-top:1px solid rgba(59,130,246,.1);">
                     <form method="POST" action="index.php?action=admin_producto_recibido"
                           onsubmit="return confirm('¿Confirmar que el producto fue recibido físicamente? Esto ejecutará el reembolso Wompi.');">
                         <input type="hidden" name="id_devolucion"        value="<?= (int) $devolucion['id_devolucion'] ?>">
@@ -229,8 +229,8 @@ $motivosLabel = [
     <?php if ($esPendiente): ?>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;">
             <!-- APROBAR -->
-            <div style="border:1px solid rgba(139,92,246,.2);border-radius:16px;padding:20px;background:rgba(15,23,42,.6);">
-                <h3 style="color:#c4b5fd;margin:0 0 16px;font-size:16px;"><i class="fas fa-check-circle"></i> Aprobar devolución</h3>
+            <div style="border:1px solid rgba(59,130,246,.2);border-radius:16px;padding:20px;background:rgba(9,21,37,.6);">
+                <h3 style="color:#93c5fd;margin:0 0 16px;font-size:16px;"><i class="fas fa-check-circle"></i> Aprobar devolución</h3>
                 <form method="POST" action="index.php?action=admin_aprobar_devolucion">
                     <input type="hidden" name="id_devolucion" value="<?= (int) $devolucion['id_devolucion'] ?>">
                     <?php foreach ($detalles as $det): ?>
@@ -244,24 +244,24 @@ $motivosLabel = [
                                    name="cantidad_aprobada_<?= $idDet ?>"
                                    min="0" max="<?= (int) ($det['cantidad'] ?? 1) ?>"
                                    value="<?= (int) ($det['cantidad'] ?? 0) ?>"
-                                   style="width:100%;padding:9px 12px;background:rgba(15,23,42,.8);border:1px solid rgba(139,92,246,.2);border-radius:8px;color:white;font-size:14px;">
+                                   style="width:100%;padding:9px 12px;background:rgba(9,21,37,.8);border:1px solid rgba(59,130,246,.2);border-radius:8px;color:white;font-size:14px;">
                         </div>
                     <?php endforeach; ?>
                     <div style="margin-bottom:12px;">
                         <label style="display:block;color:#94a3b8;font-size:12px;font-weight:700;margin-bottom:4px;">Observación para el cliente</label>
                         <textarea name="observacion_admin" rows="3"
                                   placeholder="Ej: Aprobamos la devolución. Envía el producto por mensajería..."
-                                  style="width:100%;padding:9px 12px;background:rgba(15,23,42,.8);border:1px solid rgba(139,92,246,.2);border-radius:8px;color:white;font-size:14px;resize:vertical;"></textarea>
+                                  style="width:100%;padding:9px 12px;background:rgba(9,21,37,.8);border:1px solid rgba(59,130,246,.2);border-radius:8px;color:white;font-size:14px;resize:vertical;"></textarea>
                     </div>
                     <button type="submit"
-                            style="width:100%;padding:11px;background:linear-gradient(135deg,#a78bfa,#3b82f6);border:none;border-radius:10px;color:white;font-weight:800;cursor:pointer;font-size:14px;">
+                            style="width:100%;padding:11px;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;border-radius:10px;color:white;font-weight:800;cursor:pointer;font-size:14px;">
                         <i class="fas fa-check"></i> Aprobar y notificar al cliente
                     </button>
                 </form>
             </div>
 
             <!-- RECHAZAR -->
-            <div style="border:1px solid rgba(248,113,113,.2);border-radius:16px;padding:20px;background:rgba(15,23,42,.6);">
+            <div style="border:1px solid rgba(248,113,113,.2);border-radius:16px;padding:20px;background:rgba(9,21,37,.6);">
                 <h3 style="color:#f87171;margin:0 0 16px;font-size:16px;"><i class="fas fa-xmark-circle"></i> Rechazar devolución</h3>
                 <form method="POST" action="index.php?action=admin_rechazar_devolucion">
                     <input type="hidden" name="id_devolucion" value="<?= (int) $devolucion['id_devolucion'] ?>">
@@ -269,7 +269,7 @@ $motivosLabel = [
                         <label style="display:block;color:#94a3b8;font-size:12px;font-weight:700;margin-bottom:4px;">Motivo del rechazo (obligatorio)</label>
                         <textarea name="motivo_rechazo" rows="5" required
                                   placeholder="Ej: El producto no presenta defectos visibles según nuestra política..."
-                                  style="width:100%;padding:9px 12px;background:rgba(15,23,42,.8);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:white;font-size:14px;resize:vertical;"></textarea>
+                                  style="width:100%;padding:9px 12px;background:rgba(9,21,37,.8);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:white;font-size:14px;resize:vertical;"></textarea>
                     </div>
                     <button type="submit"
                             onclick="return confirm('¿Rechazar esta devolución? El cliente será notificado del motivo.')"

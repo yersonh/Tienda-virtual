@@ -1,4 +1,4 @@
-﻿<!-- views/admin/productos/ver.php -->
+<!-- views/admin/productos/ver.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <h1 style="color: white; margin: 0;"><?= htmlspecialchars('Ver Producto', ENT_QUOTES, 'UTF-8') ?></h1>
@@ -105,18 +105,18 @@
 
 <style>
     .btn-volver {
-        background: rgba(139,92,246,0.1);
-        color: #a78bfa;
+        background: rgba(59,130,246,0.1);
+        color: #3b82f6;
         padding: 8px 16px;
         border-radius: 8px;
         text-decoration: none;
         transition: 0.3s;
     }
     .btn-volver:hover {
-        background: rgba(139,92,246,0.2);
+        background: rgba(59,130,246,0.2);
     }
     .btn-editar {
-        background: linear-gradient(135deg, #a78bfa, #3b82f6);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: white;
         padding: 8px 16px;
         border-radius: 8px;
@@ -137,7 +137,7 @@
         padding: 20px;
     }
     .producto-imagenes h3 {
-        color: #a78bfa;
+        color: #3b82f6;
         margin-bottom: 20px;
     }
     .galeria {
@@ -146,16 +146,16 @@
         gap: 15px;
     }
     .galeria-item {
-        background: rgba(15,23,42,0.8);
+        background: rgba(9,21,37,0.8);
         border-radius: 8px;
         overflow: hidden;
-        border: 1px solid rgba(139,92,246,0.2);
+        border: 1px solid rgba(59,130,246,0.2);
         cursor: pointer;
         transition: 0.3s;
     }
     .galeria-item:hover {
         transform: scale(1.02);
-        border-color: #a78bfa;
+        border-color: #3b82f6;
     }
     .galeria-item img {
         width: 100%;
@@ -177,7 +177,7 @@
         padding: 20px;
     }
     .producto-info h3 {
-        color: #a78bfa;
+        color: #3b82f6;
         margin-bottom: 20px;
     }
     .info-table {
@@ -266,7 +266,7 @@
     }
 
     .lightbox-close:hover {
-        color: #a78bfa;
+        color: #3b82f6;
     }
 
     .lightbox-prev,
@@ -302,7 +302,7 @@
 
     .lightbox-prev:hover,
     .lightbox-next:hover {
-        background: #a78bfa;
+        background: #3b82f6;
         color: white;
         transform: scale(1.1);
     }
