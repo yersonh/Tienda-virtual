@@ -2226,7 +2226,10 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
             }
         }
 
-    function syncProductControls(ref, stock) {
+        syncRealtimeCardState(ref, stock);
+    }
+
+    function syncRealtimeCardState(ref, stock) {
         var card = document.querySelector('.product-card[data-reference="' + ref + '"]');
         if (!card) return;
 
@@ -2261,7 +2264,7 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
 
     function startPolling() {
         if (rtInterval) return;
-        rtInterval = setInterval(fetchRealtime, 8000);
+        rtInterval = setInterval(fetchRealtime, 20000);
     }
 
     function stopPolling() {
@@ -2282,8 +2285,8 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     // Re-observar tras actualización de filtros
     var _origApply = window.applyFilteredStoreResponse;
     if (typeof _origApply === 'function') {
-        window.applyFilteredStoreResponse = function (data, viewParams, cat, requestKey) {
-            _origApply.call(this, data, viewParams, cat, requestKey);
+        window.applyFilteredStoreResponse = function (data, viewParams, cat, requestKey, append) {
+            _origApply.call(this, data, viewParams, cat, requestKey, append);
             setTimeout(function () { observeCards(); }, 80);
         };
     }

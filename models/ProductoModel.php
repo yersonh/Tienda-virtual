@@ -383,6 +383,62 @@ class ProductoModel {
         return $results;
     }
 
+    public function obtenerRealtimePorReferencias(array $idsReferencia): array {
+        $idsReferencia = array_values(array_unique(array_filter(
+            array_map('intval', $idsReferencia),
+            fn($id) => $id > 0
+        )));
+
+        if (empty($idsReferencia)) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($idsReferencia as $index => $idReferencia) {
+            $param = ':ref' . $index;
+            $placeholders[] = $param;
+            $params[$param] = $idReferencia;
+        }
+
+        $query = "SELECT r.ID_REFERENCIA,
+                         p.ID_PRODUCTO,
+                         p.PRECIO,
+                         p.ESTADO,
+                         NVL(stk.STOCK_P, 0) AS STOCK_P
+                  FROM REFERENCIA_PRODUCTO r
+                  INNER JOIN PRODUCTO p ON p.ID_PRODUCTO = r.ID_PRODUCTO
+                  LEFT JOIN (
+                      SELECT ID_REFERENCIA, SUM(STOCK_P) AS STOCK_P
+                      FROM (
+                          SELECT ID_REFERENCIA, NVL(STOCK_P, 0) AS STOCK_P
+                          FROM COMPATIBILIDAD_VEHICULO
+                          UNION ALL
+                          SELECT ID_REFERENCIA, NVL(STOCK_P, 0) AS STOCK_P
+                          FROM COMPATIBILIDAD_MAQUINARIA
+                      )
+                      GROUP BY ID_REFERENCIA
+                  ) stk ON stk.ID_REFERENCIA = r.ID_REFERENCIA
+                  WHERE r.ID_REFERENCIA IN (" . implode(',', $placeholders) . ")";
+
+        $stmt = oci_parse($this->conn, $query);
+        $bindValues = [];
+        foreach ($params as $param => $value) {
+            $bindValues[$param] = $value;
+            oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
+        }
+
+        oci_execute($stmt);
+
+        $results = [];
+        while ($row = oci_fetch_assoc($stmt)) {
+            $results[] = $this->normalizeRow($row);
+        }
+        oci_free_statement($stmt);
+
+        return $results;
+    }
+
     public function obtenerMasVendidos($limite = 5) {
         $limite = max(1, min(10, (int) $limite));
 

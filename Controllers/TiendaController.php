@@ -8,6 +8,7 @@ class TiendaController {
     private $model;
     private $carritoModel;
     private const CACHE_TTL = 120;
+    private const FILTER_CACHE_TTL = 35;
 
     public function __construct() {
     }
@@ -82,11 +83,34 @@ class TiendaController {
         return null;
     }
 
-    private function setCache(string $key, $data): void {
+    private function setCache(string $key, $data, ?int $ttl = null): void {
+        if (!isset($_SESSION['tienda_cache']) || !is_array($_SESSION['tienda_cache'])) {
+            $_SESSION['tienda_cache'] = [];
+        }
+
+        $now = time();
+        foreach ($_SESSION['tienda_cache'] as $cacheKey => $cacheItem) {
+            if (!is_array($cacheItem) || (int) ($cacheItem['expires'] ?? 0) < $now) {
+                unset($_SESSION['tienda_cache'][$cacheKey]);
+            }
+        }
+
+        if (count($_SESSION['tienda_cache']) > 30) {
+            $_SESSION['tienda_cache'] = array_slice($_SESSION['tienda_cache'], -30, null, true);
+        }
+
         $_SESSION['tienda_cache'][$key] = [
-            'expires' => time() + self::CACHE_TTL,
+            'expires' => $now + ($ttl ?? self::CACHE_TTL),
             'data' => $data
         ];
+    }
+
+    private function cacheKeyFiltros(array $filters, int $page, int $limit): string {
+        return 'filtros_' . sha1(json_encode([
+            'filters' => $filters,
+            'page' => $page,
+            'limit' => $limit
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
     private function obtenerCatalogoCacheado(bool $incluirDescripcion = true, bool $forzarActualizacion = false): array {
@@ -402,11 +426,22 @@ class TiendaController {
             }
         }
 
-        // 1. Obtener TOTAL para paginaciÃ³n
-        $totalProductos = $this->productoModel()->contarProductosAvanzado($filters);
-        
-        // 2. Ejecutar bÃºsqueda paginada
-        $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado($filters, $limit, $offset);
+        $cacheKeyFiltros = $this->cacheKeyFiltros($filters, $page, $limit);
+        $resultadoCacheado = $forzarActualizacionCatalogo ? null : $this->getCache($cacheKeyFiltros);
+
+        if (is_array($resultadoCacheado)) {
+            $totalProductos = (int) ($resultadoCacheado['total'] ?? 0);
+            $productosResultadoFinal = is_array($resultadoCacheado['productos'] ?? null)
+                ? $resultadoCacheado['productos']
+                : [];
+        } else {
+            $totalProductos = $this->productoModel()->contarProductosAvanzado($filters);
+            $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado($filters, $limit, $offset);
+            $this->setCache($cacheKeyFiltros, [
+                'total' => $totalProductos,
+                'productos' => $productosResultadoFinal
+            ], self::FILTER_CACHE_TTL);
+        }
 
         // Variables para la vista
         $filtro = $filters['query'];
@@ -470,7 +505,6 @@ class TiendaController {
     }
 
     public function inicio() {
-        unset($_SESSION['tienda_cache']['mas_vendidos'], $_SESSION['tienda_cache']['productos_nuevos']);
         $carritoVista = $this->obtenerCarritoVista();
         $carritoCount = array_sum($carritoVista);
         $masVendidos = $this->obtenerMasVendidosCacheados();
@@ -596,7 +630,7 @@ class TiendaController {
                 exit();
             }
 
-            $productos = $this->productoModel()->obtenerPorIds($ids);
+            $productos = $this->productoModel()->obtenerRealtimePorReferencias($ids);
             $data = [];
             foreach ($productos as $p) {
                 $ref = (int) ($p['id_referencia'] ?? 0);
