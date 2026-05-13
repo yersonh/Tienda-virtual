@@ -380,7 +380,7 @@ class CheckoutController {
         $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&id=' . $idPedido;
 
         return [
-            'public_key' => $publicKey,
+            'publicKey' => $publicKey,
             'currency' => $currency,
             'amount_in_cents' => $amountInCents,
             'real_amount_in_cents' => $realAmountInCents,
