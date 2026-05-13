@@ -856,7 +856,7 @@ function orderProductImage(?string $imagen): ?string {
             $deliveryStep = $steps[$stepIndex - 1] ?? null;
             $deliveryNote = is_array($deliveryStep) ? (string) ($deliveryStep[1] ?? '') : '';
             ?>
-            <section class="order-detail-panel">
+            <section class="order-detail-panel" data-poll-order-id="<?= (int) $pedidoDetalle['id_pedido'] ?>" data-poll-order-estado-id="<?= (int) ($pedidoDetalle['id_estado'] ?? 0) ?>">
                 <div class="detail-layout">
                     <div class="detail-box">
                         <h2><?= htmlspecialchars('Proceso de entrega', ENT_QUOTES, 'UTF-8') ?></h2>
@@ -1108,7 +1108,7 @@ function orderProductImage(?string $imagen): ?string {
                         $hayCarrusel = count($itemsCarrusel) > 1;
                         $cantidadProductos = (int) ($pedido['cantidad_productos'] ?? array_sum(array_map(fn($item) => (int) ($item['cantidad'] ?? 0), $itemsPreview)));
                         ?>
-                        <article class="orders-card" data-order-date="<?= htmlspecialchars($fechaFiltro, ENT_QUOTES, 'UTF-8') ?>" data-order-estado="<?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?>">
+                        <article class="orders-card" data-order-date="<?= htmlspecialchars($fechaFiltro, ENT_QUOTES, 'UTF-8') ?>" data-order-estado="<?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?>" data-order-id="<?= $idPedido ?>" data-order-estado-id="<?= (int) ($pedido['id_estado'] ?? 0) ?>">
                             <div>
                                 <div class="order-id">#<?= $idPedido ?></div>
                                 <div class="order-muted"><?= htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') ?></div>
@@ -1384,6 +1384,75 @@ if (editAddressBtn && orderAddressForm) {
         }
     });
 }
+
+(function () {
+    const detailPanel = document.querySelector('[data-poll-order-id]');
+    const cards = Array.from(document.querySelectorAll('[data-order-id]'));
+    if (!detailPanel && !cards.length) return;
+
+    let reloading = false;
+
+    function showUpdateToast() {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--accent);color:#06201d;padding:10px 22px;border-radius:999px;font-weight:900;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:none';
+        t.textContent = 'Actualizando pedido...';
+        document.body.appendChild(t);
+    }
+
+    function scheduleReload() {
+        if (reloading) return;
+        reloading = true;
+        showUpdateToast();
+        setTimeout(() => window.location.reload(), 1200);
+    }
+
+    if (detailPanel) {
+        const orderId    = parseInt(detailPanel.dataset.pollOrderId);
+        const knownState = parseInt(detailPanel.dataset.pollOrderEstadoId || '0');
+
+        async function pollDetail() {
+            if (reloading) return;
+            try {
+                const resp = await fetch('index.php?action=pollPedidoEstado&id=' + orderId, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.ok) return;
+                if (data.id_estado !== knownState) scheduleReload();
+            } catch {}
+        }
+
+        setInterval(pollDetail, 5000);
+    } else {
+        const stateMap = {};
+        cards.forEach(c => {
+            const id    = parseInt(c.dataset.orderId || '0');
+            const state = parseInt(c.dataset.orderEstadoId || '0');
+            if (id > 0) stateMap[id] = state;
+        });
+
+        async function pollList() {
+            if (reloading) return;
+            try {
+                const resp = await fetch('index.php?action=pollPedidosUsuario', {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.ok) return;
+                for (const p of data.pedidos) {
+                    if (stateMap[p.id_pedido] !== undefined && p.id_estado !== stateMap[p.id_pedido]) {
+                        scheduleReload();
+                        return;
+                    }
+                }
+            } catch {}
+        }
+
+        setInterval(pollList, 5000);
+    }
+})();
 
 </script>
 

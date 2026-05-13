@@ -229,6 +229,38 @@ async function openWompiRetry() {
 
 document.getElementById('open-wompi-retry')?.addEventListener('click', openWompiRetry);
 window.addEventListener('load', () => setTimeout(openWompiRetry, 250));
+
+(function () {
+    const orderId = <?= $idPedidoRetry ?>;
+    if (!orderId) return;
+
+    let active = true;
+
+    async function pollRetryStatus() {
+        if (!active) return;
+        try {
+            const resp = await fetch('index.php?action=pollPedidoEstado&id=' + orderId, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (!data.ok) return;
+
+            if (data.id_estado === 2 || data.id_estado === 3 || data.id_estado === 4) {
+                active = false;
+                window.location.href = 'index.php?action=misPedidos&id=' + orderId;
+            } else if (data.id_estado === 5 || data.segundos_restantes <= 0) {
+                active = false;
+                window.location.href = 'index.php?action=misPedidos&id=' + orderId;
+            }
+        } catch {}
+    }
+
+    const retryPollInterval = setInterval(() => {
+        if (!active) { clearInterval(retryPollInterval); return; }
+        pollRetryStatus();
+    }, 4000);
+})();
 </script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

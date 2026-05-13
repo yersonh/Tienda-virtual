@@ -75,7 +75,7 @@
             <tbody>
                 <?php if (!empty($pedidos) && is_array($pedidos)): ?>
                     <?php foreach($pedidos as $pedido): ?>
-                    <tr>
+                    <tr data-pedido-id="<?= (int) $pedido['id_pedido'] ?>" data-pedido-estado-id="<?= (int) ($pedido['id_estado'] ?? 0) ?>">
                         <td style="font-weight: 600; color: #38bdf8;">#<?= (int)$pedido['id_pedido'] ?></td>
                         <td>
                             <?= htmlspecialchars(($pedido['cliente_nombre'] ?? '') . ' ' . ($pedido['cliente_apellido'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
@@ -306,5 +306,43 @@
         transform: scale(1.05);
     }
 </style>
+
+<script>
+(function () {
+    const rows = Array.from(document.querySelectorAll('tr[data-pedido-id]'));
+    if (!rows.length) return;
+
+    const stateMap = {};
+    rows.forEach(r => {
+        const id    = parseInt(r.dataset.pedidoId || '0');
+        const state = parseInt(r.dataset.pedidoEstadoId || '0');
+        if (id > 0) stateMap[id] = state;
+    });
+
+    const ids = Object.keys(stateMap).join(',');
+    let reloading = false;
+
+    async function pollAdmin() {
+        if (reloading) return;
+        try {
+            const resp = await fetch('index.php?action=pollAdminPedidos&ids=' + ids, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (!data.ok) return;
+            for (const p of data.pedidos) {
+                if (stateMap[p.id_pedido] !== undefined && p.id_estado !== stateMap[p.id_pedido]) {
+                    reloading = true;
+                    window.location.reload();
+                    return;
+                }
+            }
+        } catch {}
+    }
+
+    setInterval(pollAdmin, 5000);
+})();
+</script>
 
 <?php require_once __DIR__ . '/../../partials/qr_modal.php'; ?>

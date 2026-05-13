@@ -454,6 +454,19 @@ switch ($action) {
         (new NotificacionController())->marcarLeidas();
         break;
 
+    // ── Polling tiempo real ────────────────────────────────────────────────────
+    case 'pollPedidoEstado':
+        (new PollController())->pedidoEstado();
+        break;
+
+    case 'pollPedidosUsuario':
+        (new PollController())->pedidosUsuario();
+        break;
+
+    case 'pollAdminPedidos':
+        (new PollController())->adminPedidos();
+        break;
+
     default:
         header("Location: index.php?action=login");
         exit();
