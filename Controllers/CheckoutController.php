@@ -218,7 +218,7 @@ class CheckoutController {
         $query = "SELECT COUNT(*) AS TOTAL
                   FROM PAGO
                   WHERE ID_VENTA = :id_venta
-                    AND UPPER(TRIM(ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')";
+                    AND UPPER(TRIM(ESTADO)) IN ('APPROVED')";
 
         $stmt = oci_parse($this->conn, $query);
         if (!$stmt) {
@@ -273,12 +273,9 @@ class CheckoutController {
     private function idsReferenciaWompi(string $referencia): array {
         $ids = ['id_pedido' => 0, 'id_venta' => 0];
 
-        if (preg_match('/(?:^|[-_])PED[-_]?(\d+)(?:[-_]|$)/i', $referencia, $matches)) {
+        if (preg_match('/^NVX-PED-(\d+)-VENTA-(\d+)-TRY-\d+$/i', $referencia, $matches)) {
             $ids['id_pedido'] = (int) $matches[1];
-        }
-
-        if (preg_match('/(?:^|[-_])VENTA[-_]?(\d+)(?:[-_]|$)/i', $referencia, $matches)) {
-            $ids['id_venta'] = (int) $matches[1];
+            $ids['id_venta'] = (int) $matches[2];
         }
 
         return $ids;
@@ -553,9 +550,8 @@ class CheckoutController {
             // el registro real de PAGO solo debe crearse desde el webhook.
             $this->eliminarPagoPendienteSinReferencia($idVenta);
 
-            if ((int) ($pedido['id_estado'] ?? 0) !== 1) {
-                throw new RuntimeException('El pedido ya no esta pendiente de pago.');
-            }
+            // Asegurar que el pedido quede en estado 1 (pendiente) tras el SP.
+            $this->pedidoModel->mantenerPendienteTx($idPedido);
 
             $checkoutPayload = $this->checkoutPayloadWompi($idPedido, $idVenta, (float) $resumen['total']);
 
@@ -656,7 +652,7 @@ class CheckoutController {
             ]);
         } catch (Throwable $e) {
             @oci_rollback($this->conn);
-            error_log('sincronizarPagoWompi: ' . $e->getMessage());
+            error_log('sincronizarPagoWompi error: ' . $e->getMessage());
             $this->jsonResponse(500, [
                 'success' => false,
                 'message' => 'No se pudo sincronizar el pago con Wompi'
