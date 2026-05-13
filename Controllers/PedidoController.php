@@ -117,6 +117,37 @@ class PedidoController {
         }
     }
 
+    private function transactionIdRetornoWompi(): string {
+        foreach (['transaction_id', 'id_transaction', 'transactionId', 'transaction_id_wompi'] as $key) {
+            $value = trim((string) ($_GET[$key] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        $id = trim((string) ($_GET['id'] ?? ''));
+        return $id !== '' && !ctype_digit($id) ? $id : '';
+    }
+
+    private function sincronizarRetornoWompi(int $idUsuario): void {
+        $transactionId = $this->transactionIdRetornoWompi();
+        if ($transactionId === '') {
+            return;
+        }
+
+        if (($_SESSION['wompi_sync_retorno_tx'] ?? '') === $transactionId) {
+            return;
+        }
+
+        try {
+            $resultado = (new CheckoutController())->sincronizarTransaccionWompiPorId($transactionId, $idUsuario);
+            $_SESSION['wompi_sync_retorno_tx'] = $transactionId;
+            error_log('misPedidos retorno Wompi sync: TX ' . $transactionId . ' result=' . json_encode($resultado));
+        } catch (Throwable $e) {
+            error_log('misPedidos retorno Wompi sync error: TX ' . $transactionId . ' ' . $e->getMessage());
+        }
+    }
+
     private function calcularTotalCarrito(array $carrito): float {
         $productos = $this->obtenerProductosResumen(array_keys($carrito));
 
@@ -1005,7 +1036,6 @@ class PedidoController {
 
     public function misPedidos() {
         $this->ensureSession();
-        $this->expirarPedidosPendientes();
         $idUsuario = $this->getUsuarioId();
 
         if ($idUsuario <= 0) {
@@ -1014,11 +1044,18 @@ class PedidoController {
             exit();
         }
 
+        $this->sincronizarRetornoWompi($idUsuario);
+        $this->expirarPedidosPendientes();
+
         $pedidos = [];
         $pedidoDetalle = null;
 
         try {
-            $idPedido = (int) ($_GET['id'] ?? 0);
+            $idPedidoParam = $_GET['pedido_id'] ?? $_GET['order_id'] ?? null;
+            if ($idPedidoParam === null && isset($_GET['id']) && ctype_digit((string) $_GET['id'])) {
+                $idPedidoParam = $_GET['id'];
+            }
+            $idPedido = (int) ($idPedidoParam ?? 0);
             if ($idPedido > 0) {
                 $pedidoDetalle = $this->obtenerPedidoUsuario($idUsuario, $idPedido);
                 if (!$pedidoDetalle) {

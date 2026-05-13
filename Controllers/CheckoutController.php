@@ -377,7 +377,7 @@ class CheckoutController {
         $tryNumber = $this->contarIntentosWompi($idVenta);
         $referencia = sprintf('NVX-PED-%d-VENTA-%d-TRY-%d', $idPedido, $idVenta, $tryNumber);
         $integritySignature = $this->firmaIntegridadWompi($referencia, $amountInCents, $currency, $integritySecret);
-        $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&id=' . $idPedido;
+        $returnUrl = $this->baseUrl() . '/index.php?action=misPedidos&pedido_id=' . $idPedido;
 
         return [
             'publicKey' => $publicKey,
@@ -617,44 +617,7 @@ class CheckoutController {
         }
 
         try {
-            $transaction = $this->consultarTransaccionWompi($transactionId);
-            $status = strtoupper(trim((string) ($transaction['status'] ?? '')));
-            $statusesProcesables = ['APPROVED', 'DECLINED', 'ERROR', 'VOIDED'];
-
-            if (!in_array($status, $statusesProcesables, true)) {
-                error_log('sincronizarPagoWompi: TX ' . $transactionId . ' no procesable, status=' . $status);
-                $this->jsonResponse(200, [
-                    'success' => true,
-                    'processed' => false,
-                    'status' => $status !== '' ? $status : null
-                ]);
-            }
-
-            $referencia = trim((string) ($transaction['reference'] ?? ''));
-            $ids = $this->idsReferenciaWompi($referencia);
-            if (!$this->referenciaPerteneceUsuario($idUsuario, $ids['id_pedido'], $ids['id_venta'])) {
-                throw new RuntimeException('La transaccion no corresponde a tu pedido');
-            }
-
-            $jsonRespuesta = json_encode([
-                'source' => 'checkout_callback',
-                'verified_transaction' => $transaction
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            if (!is_string($jsonRespuesta) || $jsonRespuesta === '') {
-                $jsonRespuesta = json_encode($transaction, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
-            }
-
-            $wompiModel = new WompiModel($this->conn);
-            $wompiModel->registrarTransaccion($transaction, $jsonRespuesta);
-            oci_commit($this->conn);
-
-            error_log('sincronizarPagoWompi success: TX ' . $transactionId . ' status=' . $status);
-
-            $this->jsonResponse(200, [
-                'success' => true,
-                'processed' => true,
-                'status' => $status
-            ]);
+            $this->jsonResponse(200, $this->sincronizarTransaccionWompiPorId($transactionId, $idUsuario));
         } catch (Throwable $e) {
             @oci_rollback($this->conn);
             error_log('sincronizarPagoWompi error: ' . $e->getMessage());
@@ -663,6 +626,56 @@ class CheckoutController {
                 'message' => 'No se pudo sincronizar el pago con Wompi'
             ]);
         }
+    }
+
+    public function sincronizarTransaccionWompiPorId(string $transactionId, int $idUsuario): array {
+        $transactionId = trim($transactionId);
+        if ($transactionId === '') {
+            throw new InvalidArgumentException('ID de transaccion requerido');
+        }
+
+        if ($idUsuario <= 0) {
+            throw new InvalidArgumentException('Usuario invalido');
+        }
+
+        $transaction = $this->consultarTransaccionWompi($transactionId);
+        $status = strtoupper(trim((string) ($transaction['status'] ?? '')));
+        $statusesProcesables = ['APPROVED', 'DECLINED', 'ERROR', 'VOIDED'];
+
+        if (!in_array($status, $statusesProcesables, true)) {
+            error_log('sincronizarPagoWompi: TX ' . $transactionId . ' no procesable, status=' . $status);
+            return [
+                'success' => true,
+                'processed' => false,
+                'status' => $status !== '' ? $status : null
+            ];
+        }
+
+        $referencia = trim((string) ($transaction['reference'] ?? ''));
+        $ids = $this->idsReferenciaWompi($referencia);
+        if (!$this->referenciaPerteneceUsuario($idUsuario, $ids['id_pedido'], $ids['id_venta'])) {
+            throw new RuntimeException('La transaccion no corresponde a tu pedido');
+        }
+
+        $jsonRespuesta = json_encode([
+            'source' => 'checkout_callback',
+            'verified_transaction' => $transaction
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($jsonRespuesta) || $jsonRespuesta === '') {
+            $jsonRespuesta = json_encode($transaction, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
+        }
+
+        $wompiModel = new WompiModel($this->conn);
+        $wompiModel->registrarTransaccion($transaction, $jsonRespuesta);
+        oci_commit($this->conn);
+
+        error_log('sincronizarPagoWompi success: TX ' . $transactionId . ' status=' . $status);
+
+        return [
+            'success' => true,
+            'processed' => true,
+            'status' => $status
+        ];
     }
 
     public function reintentarPago(): void {
