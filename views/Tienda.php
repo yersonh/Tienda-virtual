@@ -1343,7 +1343,6 @@ $renderOptionPicker = function(string $id, string $label, string $name, array $o
     </div>
 </aside>
 
-<script src="https://cdn.jsdelivr.net/npm/color-thief-browser/dist/color-thief.umd.js"></script>
 <script>
 let cart = {};
 cart = <?= json_encode($carritoVista) ?>;
@@ -1665,13 +1664,7 @@ let lastMinValue = precioMin ? precioMin.value : '';
 let lastMaxValue = precioMax ? precioMax.value : '';
 
 function applyDynamicBg(img) {
-    try {
-        if (!window.ColorThief || !img || !img.naturalWidth) return;
-        const wrapper = img.closest('.card-img-wrap');
-        if (!wrapper) return;
-        const [r, g, b] = new ColorThief().getColor(img);
-        wrapper.style.background = `radial-gradient(circle at center, rgba(${r},${g},${b},0.45), rgba(5,10,25,0.95))`;
-    } catch (e) {}
+    return;
 }
 
 const productImageObserver = 'IntersectionObserver' in window
@@ -2052,7 +2045,7 @@ if (compatibilityType) {
             hasVehicleCompatibilityFilters() ||
             hasMachineCompatibilityFilters();
 
-        if (mustRefreshProducts) {
+        if (mustRefreshProducts || compatibilityType.value !== '') {
             fetchFilteredStore();
         } else if (openFiltersBtn) {
             openFiltersBtn.classList.remove('active');

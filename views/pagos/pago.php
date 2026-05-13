@@ -671,6 +671,37 @@ function setWompiButtonLoading(loading, label) {
     }
 }
 
+function getWompiTransactionId(result) {
+    return String(
+        result?.transaction?.id ||
+        result?.data?.transaction?.id ||
+        result?.id ||
+        ''
+    ).trim();
+}
+
+async function syncWompiTransaction(result) {
+    const transactionId = getWompiTransactionId(result);
+    if (!transactionId) return;
+
+    const body = new URLSearchParams();
+    body.set('transaction_id', transactionId);
+
+    try {
+        await fetch('index.php?action=sincronizarPagoWompi', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body
+        });
+    } catch (error) {
+        console.warn('No se pudo sincronizar la transaccion Wompi antes de redirigir:', error);
+    }
+}
+
 function openWompiCheckout(checkout) {
     if (typeof WidgetCheckout === 'undefined') {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
@@ -697,9 +728,10 @@ function openWompiCheckout(checkout) {
         redirectUrl,
     });
 
-    widget.open((result) => {
+    widget.open(async (result) => {
         console.log('Wompi result:', result);
         sessionStorage.setItem(paymentCompletedKey, '1');
+        await syncWompiTransaction(result);
         window.location.href = checkout.return_url || checkout.redirect_url || 'index.php?action=misPedidos';
     });
 }

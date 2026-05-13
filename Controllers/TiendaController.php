@@ -436,7 +436,12 @@ class TiendaController {
                 : [];
         } else {
             $totalProductos = $this->productoModel()->contarProductosAvanzado($filters);
-            $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado($filters, $limit, $offset);
+            $productosResultadoFinal = $this->productoModel()->buscarProductosAvanzado(
+                $filters,
+                $limit,
+                $offset,
+                !empty($filters['compatibilidad_tipo'])
+            );
             $this->setCache($cacheKeyFiltros, [
                 'total' => $totalProductos,
                 'productos' => $productosResultadoFinal

@@ -7,6 +7,7 @@ require_once __DIR__ . '/../models/PedidoModel.php';
 require_once __DIR__ . '/../models/DireccionPedidoModel.php';
 require_once __DIR__ . '/../models/PedidoLifecycleModel.php';
 require_once __DIR__ . '/../models/WompiApiModel.php';
+require_once __DIR__ . '/../models/WompiModel.php';
 
 class CheckoutController {
 
@@ -269,6 +270,100 @@ class CheckoutController {
         return $row ? array_change_key_case($row, CASE_LOWER) : null;
     }
 
+    private function idsReferenciaWompi(string $referencia): array {
+        $ids = ['id_pedido' => 0, 'id_venta' => 0];
+
+        if (preg_match('/(?:^|[-_])PED[-_]?(\d+)(?:[-_]|$)/i', $referencia, $matches)) {
+            $ids['id_pedido'] = (int) $matches[1];
+        }
+
+        if (preg_match('/(?:^|[-_])VENTA[-_]?(\d+)(?:[-_]|$)/i', $referencia, $matches)) {
+            $ids['id_venta'] = (int) $matches[1];
+        }
+
+        return $ids;
+    }
+
+    private function referenciaPerteneceUsuario(int $idUsuario, int $idPedido, int $idVenta): bool {
+        if ($idUsuario <= 0 || $idPedido <= 0 || $idVenta <= 0) {
+            return false;
+        }
+
+        $query = "SELECT COUNT(*) AS TOTAL
+                  FROM PEDIDO p
+                  INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
+                  WHERE p.ID_PEDIDO = :id_pedido
+                    AND p.ID_VENTA = :id_venta
+                    AND v.ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception('No se pudo validar el pedido del usuario');
+        }
+
+        oci_bind_by_name($stmt, ':id_pedido', $idPedido, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($error['message'] ?? 'No se pudo validar el pedido del usuario');
+        }
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return ((int) ($row['TOTAL'] ?? 0)) > 0;
+    }
+
+    private function consultarTransaccionWompi(string $transactionId): array {
+        $privateKey = trim((string) getenv('WOMPI_PRIVATE_KEY'));
+        if ($privateKey === '') {
+            throw new RuntimeException('Falta configurar WOMPI_PRIVATE_KEY');
+        }
+
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('La extension cURL es requerida para Wompi');
+        }
+
+        $baseUrl = str_starts_with($privateKey, 'prv_test_')
+            ? 'https://sandbox.wompi.co/v1'
+            : 'https://production.wompi.co/v1';
+
+        $ch = curl_init($baseUrl . '/transactions/' . rawurlencode($transactionId));
+        if (!$ch) {
+            throw new RuntimeException('No se pudo inicializar cURL para Wompi');
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $privateKey,
+                'Accept: application/json'
+            ]
+        ]);
+
+        $body = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $response = is_string($body) ? json_decode($body, true) : null;
+        if ($body === false || $httpCode < 200 || $httpCode >= 300 || !is_array($response)) {
+            throw new RuntimeException('No se pudo consultar la transaccion en Wompi: HTTP ' . $httpCode . ' ' . $curlError);
+        }
+
+        $transaction = is_array($response['data'] ?? null) ? $response['data'] : [];
+        if (empty($transaction)) {
+            throw new RuntimeException('Respuesta invalida al consultar la transaccion en Wompi');
+        }
+
+        return $transaction;
+    }
+
     private function checkoutPayloadWompi(int $idPedido, int $idVenta, float $total): array {
         $publicKey = $this->wompiPublicKey();
         $integritySecret = $this->wompiIntegritySecret();
@@ -499,6 +594,72 @@ class CheckoutController {
             $this->jsonResponse(400, [
                 'success' => false,
                 'message' => $message
+            ]);
+        }
+    }
+
+    public function sincronizarPagoWompi(): void {
+        $this->ensureSession();
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            $this->jsonResponse(405, ['success' => false, 'message' => 'Metodo no permitido']);
+        }
+
+        $idUsuario = $this->getUsuarioId();
+        if ($idUsuario <= 0) {
+            $this->jsonResponse(401, ['success' => false, 'message' => 'Debes iniciar sesion']);
+        }
+
+        $transactionId = trim((string) ($_POST['transaction_id'] ?? ''));
+        if ($transactionId === '') {
+            $this->jsonResponse(400, ['success' => false, 'message' => 'ID de transaccion requerido']);
+        }
+
+        try {
+            $transaction = $this->consultarTransaccionWompi($transactionId);
+            $status = strtoupper(trim((string) ($transaction['status'] ?? '')));
+            $statusesProcesables = ['APPROVED', 'DECLINED', 'ERROR', 'VOIDED'];
+
+            if (!in_array($status, $statusesProcesables, true)) {
+                error_log('sincronizarPagoWompi: TX ' . $transactionId . ' no procesable, status=' . $status);
+                $this->jsonResponse(200, [
+                    'success' => true,
+                    'processed' => false,
+                    'status' => $status !== '' ? $status : null
+                ]);
+            }
+
+            $referencia = trim((string) ($transaction['reference'] ?? ''));
+            $ids = $this->idsReferenciaWompi($referencia);
+            if (!$this->referenciaPerteneceUsuario($idUsuario, $ids['id_pedido'], $ids['id_venta'])) {
+                throw new RuntimeException('La transaccion no corresponde a tu pedido');
+            }
+
+            $jsonRespuesta = json_encode([
+                'source' => 'checkout_callback',
+                'verified_transaction' => $transaction
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if (!is_string($jsonRespuesta) || $jsonRespuesta === '') {
+                $jsonRespuesta = json_encode($transaction, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
+            }
+
+            $wompiModel = new WompiModel($this->conn);
+            $wompiModel->registrarTransaccion($transaction, $jsonRespuesta);
+            oci_commit($this->conn);
+
+            error_log('sincronizarPagoWompi success: TX ' . $transactionId . ' status=' . $status);
+
+            $this->jsonResponse(200, [
+                'success' => true,
+                'processed' => true,
+                'status' => $status
+            ]);
+        } catch (Throwable $e) {
+            @oci_rollback($this->conn);
+            error_log('sincronizarPagoWompi: ' . $e->getMessage());
+            $this->jsonResponse(500, [
+                'success' => false,
+                'message' => 'No se pudo sincronizar el pago con Wompi'
             ]);
         }
     }

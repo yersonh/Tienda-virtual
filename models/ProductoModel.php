@@ -204,6 +204,35 @@ class ProductoModel {
                 ) {$alias} ON {$alias}.id_producto = p.id_producto";
     }
 
+    private function productoColumnsRapidas(bool $includeDescripcion = true): string {
+        $stockExpression = "(NVL((SELECT SUM(NVL(cv.STOCK_P, 0)) FROM COMPATIBILIDAD_VEHICULO cv WHERE cv.ID_REFERENCIA = r.ID_REFERENCIA), 0)
+                            + NVL((SELECT SUM(NVL(cm.STOCK_P, 0)) FROM COMPATIBILIDAD_MAQUINARIA cm WHERE cm.ID_REFERENCIA = r.ID_REFERENCIA), 0))";
+
+        $columns = [
+            "p.ID_PRODUCTO",
+            "r.ID_REFERENCIA",
+            "r.NUMERO_REFERENCIA",
+            "r.MARCA",
+            "r.FABRICANTE",
+            "p.NOMBRE",
+            "p.CODIGO",
+            "p.PRECIO",
+            "{$stockExpression} AS STOCK_P",
+            "p.ESTADO",
+            "p.ID_CATEGORIA",
+            "c.NOMBRE AS CATEGORIA_NOMBRE",
+            "(SELECT MIN(pi.URL) KEEP (DENSE_RANK FIRST ORDER BY NVL(pi.ORDEN, 999999), pi.ID_IMAGEN)
+              FROM PRODUCTO_IMAGEN pi
+              WHERE pi.ID_PRODUCTO = p.ID_PRODUCTO) AS IMAGEN"
+        ];
+
+        if ($includeDescripcion) {
+            array_splice($columns, 3, 0, "p.DESCRIPCION");
+        }
+
+        return implode(",\n                         ", $columns);
+    }
+
     // 🔥 CATÁLOGO (IMPORTANTE PARA TIENDA)
     public function obtenerCatalogo(bool $includeDescripcion = true) {
         $columns = $this->productoColumns('p', false, 'c', 'img', $includeDescripcion);
@@ -1212,12 +1241,16 @@ class ProductoModel {
         return (int) ($row[0] ?? 0);
     }
 
-    public function buscarProductosAvanzado(array $filters, int $limit = 0, int $offset = 0): array {
+    public function buscarProductosAvanzado(array $filters, int $limit = 0, int $offset = 0, bool $incluirCompatibilidades = true): array {
         $binds = [];
-        $columns = $this->productoColumns('p');
-        $imageJoin = $this->primeraImagenJoin();
         $referenciaJoin = $this->referenciaJoin();
-        $stockJoin = $this->stockReferenciaJoin();
+        $columns = $limit > 0 ? $this->productoColumnsRapidas(true) : $this->productoColumns('p');
+        $imageJoin = $limit > 0 ? '' : $this->primeraImagenJoin();
+        $stockJoin = $limit > 0 ? '' : $this->stockReferenciaJoin();
+        $stockSortExpression = $limit > 0
+            ? "(NVL((SELECT SUM(NVL(cv_sort.STOCK_P, 0)) FROM COMPATIBILIDAD_VEHICULO cv_sort WHERE cv_sort.ID_REFERENCIA = r.ID_REFERENCIA), 0)
+                + NVL((SELECT SUM(NVL(cm_sort.STOCK_P, 0)) FROM COMPATIBILIDAD_MAQUINARIA cm_sort WHERE cm_sort.ID_REFERENCIA = r.ID_REFERENCIA), 0))"
+            : "NVL(stk.stock_p, 0)";
 
         $where = " WHERE " . $this->activeProductoCondition('p');
 
@@ -1277,7 +1310,7 @@ class ProductoModel {
                   $stockJoin
                   $imageJoin
                   $where
-                  ORDER BY c.NOMBRE, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.NOMBRE";
+                  ORDER BY c.NOMBRE, CASE WHEN $stockSortExpression <= 0 THEN 1 ELSE 0 END, p.NOMBRE";
 
         if ($limit > 0) {
             $query .= " OFFSET :offset_val ROWS FETCH NEXT :limit_val ROWS ONLY";
@@ -1301,7 +1334,11 @@ class ProductoModel {
         oci_free_statement($stmt);
 
         // Si es catálogo completo (muchos productos), limitamos compatibilidades a 3 por producto para ahorrar memoria/red
-        $limiteCompat = ($limit > 0) ? 3 : 10;
+        if (!$incluirCompatibilidades) {
+            return $results;
+        }
+
+        $limiteCompat = ($limit > 0) ? 2 : 10;
         return $this->anexarCompatibilidades($results, $limiteCompat);
     }
 }

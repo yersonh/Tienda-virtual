@@ -1,3 +1,4 @@
+<?php $productoRenderIndex = 0; ?>
 <?php if(isset($categorias) && is_array($categorias) && !empty($categorias)): ?>
 <?php foreach($categorias as $categoria => $productos): ?>
 <div id="<?= !empty($categoria_filtro ?? '') ? 'category-detail' : 'section-' . strtolower(str_replace(' ', '-', $categoria)) ?>" class="category-section">
@@ -27,6 +28,7 @@
         <div class="product-grid <?= !empty($categoria_filtro) ? 'detail-grid' : '' ?>" id="grid-<?= strtolower(str_replace(' ', '-', $categoria)) ?>">
             <?php foreach($productos as $p): ?>
             <?php
+                $productoRenderIndex++;
                 $idReferencia = (int) ($p['id_referencia'] ?? 0);
                 $cantidadEnCarrito = isset($carritoVista[$idReferencia]) ? (int) $carritoVista[$idReferencia] : 0;
                 $stockProducto = (int) $p['stock_p'];
@@ -36,6 +38,10 @@
                 $vehiculosCompatibles = isset($compatibilidades['vehiculos']) && is_array($compatibilidades['vehiculos']) ? $compatibilidades['vehiculos'] : [];
                 $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($compatibilidades['maquinarias']) ? $compatibilidades['maquinarias'] : [];
                 $limiteCompatibilidad = 2;
+                $imagenProductoUrl = !empty($p['imagen'])
+                    ? 'image.php?folder=productos&path=' . urlencode(basename($p['imagen']))
+                    : '';
+                $cargaPrioritaria = $productoRenderIndex <= 8;
             ?>
             <div class="product-card producto-card producto"
                  data-nombre="<?= htmlspecialchars(strtolower((string) $p['nombre']), ENT_QUOTES, 'UTF-8') ?>"
@@ -54,7 +60,11 @@
                  aria-label="<?= htmlspecialchars('Ver detalle de', ENT_QUOTES, 'UTF-8') ?> <?= htmlspecialchars((string) $p['nombre'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="card-img-wrap">
                     <?php if(!empty($p['imagen'])): ?>
-                    <img data-src="image.php?folder=productos&path=<?= urlencode(basename($p['imagen'])) ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='220' viewBox='0 0 320 220'%3E%3Crect width='320' height='220' fill='%2312162a'/%3E%3C/svg%3E" alt="<?= htmlspecialchars((string) $p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                        <?php if($cargaPrioritaria): ?>
+                            <img src="<?= htmlspecialchars($imagenProductoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars((string) $p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="eager" fetchpriority="high" decoding="async" onerror="this.style.display='none'">
+                        <?php else: ?>
+                            <img data-src="<?= htmlspecialchars($imagenProductoUrl, ENT_QUOTES, 'UTF-8') ?>" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='220' viewBox='0 0 320 220'%3E%3Crect width='320' height='220' fill='%2312162a'/%3E%3C/svg%3E" alt="<?= htmlspecialchars((string) $p['nombre'], ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" onerror="this.style.display='none'">
+                        <?php endif; ?>
                     <?php else: ?>
                     <div class="card-placeholder">
                         <span class="placeholder-icon" aria-hidden="true">

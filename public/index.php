@@ -272,6 +272,10 @@ switch ($action) {
         }
         exit();
 
+    case 'sincronizarPagoWompi':
+        (new CheckoutController())->sincronizarPagoWompi();
+        break;
+
     case 'confirmarPedido':
         (new CheckoutController())->confirmarPedido();
         break;

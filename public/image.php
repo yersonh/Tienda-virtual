@@ -51,6 +51,8 @@ header('ETag: ' . $etag);
 header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $modifiedTime) . ' GMT');
 header('Cache-Control: public, max-age=604800, immutable');
 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 604800) . ' GMT');
+header('Content-Length: ' . filesize($rutaArchivo));
+header('Accept-Ranges: bytes');
 
 if (
     (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
@@ -83,7 +85,13 @@ switch ($extension) {
         break;
 }
 
-// Leer y enviar el archivo
-readfile($rutaArchivo);
+$fp = fopen($rutaArchivo, 'rb');
+if ($fp === false) {
+    header('HTTP/1.0 500 Internal Server Error');
+    exit;
+}
+
+fpassthru($fp);
+fclose($fp);
 exit;
 ?>
