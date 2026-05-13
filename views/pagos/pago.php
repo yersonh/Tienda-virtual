@@ -645,7 +645,10 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     </div>
 </main>
 
-<script src="https://checkout.wompi.co/widget.js"></script>
+<script
+    src="https://checkout.wompi.co/widget.js"
+    data-render="button">
+</script>
 <script>
 const paymentCompletedKey = 'naylexPaymentCompleted';
 const paymentSubmittedKey = 'naylexPaymentSubmitted';
@@ -719,6 +722,9 @@ async function openWompiCheckout(checkout) {
         console.error('Payload Wompi incompleto:', { publicKey, reference, integrity, amountInCents, raw: checkout });
         throw new Error('No se pudo preparar la informacion del pago.');
     }
+
+    console.log('WidgetCheckout type', typeof WidgetCheckout);
+    console.log('window.WidgetCheckout', window.WidgetCheckout);
 
     const widget = new WidgetCheckout({
         currency: currency,

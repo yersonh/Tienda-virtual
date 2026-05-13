@@ -133,7 +133,10 @@ $remainingRetry = max(0, $secondsRetry) % 60;
     </div>
 </main>
 
-<script src="https://checkout.wompi.co/widget.js"></script>
+<script
+    src="https://checkout.wompi.co/widget.js"
+    data-render="button">
+</script>
 <script>
 const wompiRetryCheckout = <?= json_encode($checkoutPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 
@@ -189,6 +192,9 @@ async function openWompiRetry() {
     }
 
     console.log('Wompi checkout payload', wompiRetryCheckout);
+
+    console.log('WidgetCheckout type', typeof WidgetCheckout);
+    console.log('window.WidgetCheckout', window.WidgetCheckout);
 
     const widget = new WidgetCheckout({
         currency: currency,
