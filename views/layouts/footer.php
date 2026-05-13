@@ -46,5 +46,9 @@ body {
     <span><?= htmlspecialchars('Tienda Virtual del Sistema de Inventario TechSolutions', ENT_QUOTES, 'UTF-8') ?></span>
 </div>
 
+<a href="index.php?action=politicas">
+    Políticas de pago y privacidad
+</a>
+
 </body>
 </html>

@@ -52,6 +52,7 @@ $publicas = [
     'iniciarSesion',
     'inicio',
     'nosotros',
+    'politicas',
     'tienda',
     'tiendaFiltros',
     'productoDetalle',
