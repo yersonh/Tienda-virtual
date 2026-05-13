@@ -2005,7 +2005,7 @@ function applyFilteredStoreResponse(data, viewParams, cat, requestKey = '', appe
             results.innerHTML = data.productos_html || '';
         }
         observeLazyImages(results);
-        applyLocalStoreFilters();
+        if (append) applyLocalStoreFilters();
     }
 
     // Actualizar paginacion
@@ -2121,9 +2121,17 @@ optionSearchInputs.forEach((input) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeFilterSidebar();
 });
-window.addEventListener('resize', updateFilterSidebarBounds);
+let filterSidebarResizeFrame = null;
+function scheduleFilterSidebarBounds() {
+    if (filterSidebarResizeFrame !== null) return;
+    filterSidebarResizeFrame = window.requestAnimationFrame(() => {
+        filterSidebarResizeFrame = null;
+        updateFilterSidebarBounds();
+    });
+}
+window.addEventListener('resize', scheduleFilterSidebarBounds, { passive: true });
 if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateFilterSidebarBounds);
+    window.visualViewport.addEventListener('resize', scheduleFilterSidebarBounds, { passive: true });
 }
 
 function updateFilterSidebarBounds() {

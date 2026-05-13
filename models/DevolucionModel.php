@@ -545,7 +545,22 @@ class DevolucionModel {
 
     public function obtenerOfertasReacondicionadas(): array {
         $stmt = $this->parse(
-            "SELECT * FROM V_OFERTAS_REACONDICIONADOS ORDER BY NUMERO_DEVOLUCIONES ASC, PRECIO_FINAL ASC"
+            "SELECT ID_ITEM_REACONDICIONADO,
+                    ID_DEVOLUCION_DETALLE,
+                    ID_PRODUCTO,
+                    ID_REFERENCIA,
+                    NUMERO_DEVOLUCIONES,
+                    PRECIO_ORIGINAL,
+                    DESCUENTO,
+                    PRECIO_FINAL,
+                    ESTADO,
+                    DISPONIBLE,
+                    FECHA_INGRESO,
+                    PRODUCTO,
+                    NOMBRE_REFERENCIA,
+                    IMAGEN
+               FROM V_OFERTAS_REACONDICIONADOS
+              ORDER BY NUMERO_DEVOLUCIONES ASC, PRECIO_FINAL ASC"
         );
         $this->exec($stmt);
         $result = $this->rows($stmt);
@@ -555,7 +570,22 @@ class DevolucionModel {
 
     public function obtenerStockMuerto(): array {
         $stmt = $this->parse(
-            "SELECT * FROM V_STOCK_MUERTO ORDER BY FECHA_INGRESO DESC"
+            "SELECT ID_ITEM_REACONDICIONADO,
+                    ID_DEVOLUCION_DETALLE,
+                    ID_PRODUCTO,
+                    ID_REFERENCIA,
+                    NUMERO_DEVOLUCIONES,
+                    PRECIO_ORIGINAL,
+                    DESCUENTO,
+                    PRECIO_FINAL,
+                    ESTADO,
+                    DISPONIBLE,
+                    FECHA_INGRESO,
+                    PRODUCTO,
+                    NOMBRE_REFERENCIA,
+                    IMAGEN
+               FROM V_STOCK_MUERTO
+              ORDER BY FECHA_INGRESO DESC"
         );
         $this->exec($stmt);
         $result = $this->rows($stmt);

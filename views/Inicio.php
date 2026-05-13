@@ -1981,24 +1981,10 @@ body[data-theme="light"] {
     }
 
     function applyDynamicBg(img) {
-        try {
-            if (!window.ColorThief || !img || !img.naturalWidth) return;
-            const wrapper = img.closest('.card-img-wrap');
-            if (!wrapper) return;
-            const [r, g, b] = new ColorThief().getColor(img);
-            wrapper.style.background = `radial-gradient(circle at center, rgba(${r},${g},${b},0.45), rgba(5,10,25,0.95))`;
-        } catch (e) {}
+        return;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.card-img-wrap img').forEach(img => {
-            if (img.complete && img.naturalWidth > 0) {
-                applyDynamicBg(img);
-            } else {
-                img.addEventListener('load', () => applyDynamicBg(img), { once: true });
-            }
-        });
-
         const modelTabs = Array.from(document.querySelectorAll('[data-model-tab]'));
         const modelPanels = Array.from(document.querySelectorAll('[data-model-panel]'));
         let modelFrameObserver = null;
