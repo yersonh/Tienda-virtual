@@ -31,9 +31,9 @@ class ReembolsoService {
         }
 
         $isSandbox = str_starts_with($privateKey, 'prv_test_');
-        $baseUrl   = $isSandbox
-            ? 'https://sandbox.wompi.co/v1'
-            : 'https://production.wompi.co/v1';
+        $baseUrl = $isSandbox
+        ? 'https://sandbox.wompi.co/v1'
+        : 'https://api.wompi.co/v1';
 
         $url     = $baseUrl . '/transactions/' . rawurlencode($transactionId) . '/refund';
         $payload = ['amount_in_cents' => $amountInCents];
@@ -46,7 +46,7 @@ class ReembolsoService {
         error_log('[ReembolsoService] transaction_id  : ' . $transactionId);
         error_log('[ReembolsoService] amount_in_cents : ' . $amountInCents . '  →  ' . ($amountInCents / 100) . ' COP');
         error_log('[ReembolsoService] payload_json    : ' . $body);
-        error_log('[ReembolsoService] entorno         : ' . ($isSandbox ? 'SANDBOX (sandbox.wompi.co)' : 'PRODUCCION (production.wompi.co)'));
+        error_log('[ReembolsoService] entorno         : ' . ($isSandbox ? 'SANDBOX (sandbox.wompi.co)' : 'PRODUCCION (api.wompi.co)'));
         error_log('[ReembolsoService] key_prefix      : ' . substr($privateKey, 0, 16) . '...');
 
         // Advertencia monto mínimo antes de enviar
@@ -237,7 +237,23 @@ class ReembolsoService {
                 . '" NO coincide con formato UUID ni numérico de Wompi.'
                 . ' Confirmar que sea el campo "id" del evento Wompi (no REFERENCIA_WOMPI ni otro).');
         }
+        
+        if (!$soportaRefundApi) {
 
+            $msg = 'Metodo ' . $metodoPago .
+                ' requiere reembolso manual desde Wompi';
+
+            error_log('[ReembolsoService] ' . $msg);
+
+            $this->model->registrarReembolso(
+                $idDevolucion,
+                'PENDIENTE-MANUAL',
+                '',
+                $msg
+            );
+
+            return 'PENDIENTE-MANUAL';
+        }
         // ── Llamada a Wompi ─────────────────────────────────────────────────
         $result = $this->callWompi($wompiTxId, $amountInCents);
 
