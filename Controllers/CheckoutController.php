@@ -218,25 +218,38 @@ class CheckoutController {
         }
     }
 
-    private function pagoAprobadoExiste(int $idVenta): bool {
+   private function pagoAprobadoExiste(int $idVenta): bool {
         $query = "SELECT COUNT(*) AS TOTAL
-                  FROM PAGO
-                  WHERE ID_VENTA = :id_venta
-                    AND UPPER(TRIM(ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')";
+                FROM PAGO
+                WHERE ID_VENTA = :id_venta
+                    AND (
+                        UPPER(TRIM(ESTADO)) = 'APPROVED'
+                        OR (
+                            UPPER(TRIM(ESTADO)) IN ('PAGADO', 'COMPLETADO')
+                            AND ID_TRANSACCION_WOMPI IS NOT NULL
+                            AND TRIM(TO_CHAR(ID_TRANSACCION_WOMPI)) <> ''
+                        )
+                    )";
 
         $stmt = oci_parse($this->conn, $query);
+
         if (!$stmt) {
             throw new Exception('No se pudo validar el pago del pedido');
         }
 
         oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
+
         if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);
             oci_free_statement($stmt);
-            throw new Exception($error['message'] ?? 'No se pudo validar el pago del pedido');
+
+            throw new Exception(
+                $error['message'] ?? 'No se pudo validar el pago del pedido'
+            );
         }
 
         $row = oci_fetch_assoc($stmt);
+
         oci_free_statement($stmt);
 
         return ((int) ($row['TOTAL'] ?? 0)) > 0;
@@ -248,7 +261,7 @@ class CheckoutController {
                          p.ID_ESTADO,
                          NVL(v.TOTAL, 0) AS TOTAL,
                          TO_CHAR(p.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
-                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (5 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
+                         GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (20 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
                   FROM PEDIDO p
                   INNER JOIN VENTA v ON v.ID_VENTA = p.ID_VENTA
                   WHERE p.ID_PEDIDO = :id_pedido
