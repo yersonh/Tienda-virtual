@@ -1,5 +1,3 @@
-<?php require_once __DIR__ . '/../layouts/header.php'; ?>
-
 <div class="container py-5">
 
     <div class="card shadow-lg border-0 rounded-4 p-4">
