@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $old = $_SESSION['old'] ?? [];
 ?>
 
@@ -26,8 +26,8 @@ $old = $_SESSION['old'] ?? [];
     --soft-surface: rgba(15,23,42,0.72);
     --text: #f8fafc;
     --secondary: #a8b5ca;
-    --accent: #38bdf8;
-    --accent-strong: #2563eb;
+    --accent: #a78bfa;
+    --accent-strong: #7c3aed;
     --shadow: 0 24px 70px rgba(2,6,23,0.46);
     --radius: 14px;
     --transition: 180ms ease;
@@ -37,12 +37,12 @@ $old = $_SESSION['old'] ?? [];
     --bg-overlay-1: rgba(255,255,255,0.78);
     --bg-overlay-2: rgba(241,245,249,0.9);
     --card-bg: rgba(255,255,255,0.9);
-    --border: rgba(14,165,233,0.18);
+    --border: rgba(124,58,237,0.18);
     --soft-surface: rgba(248,250,252,0.94);
-    --text: #122033;
+    --text: #1e1251;
     --secondary: #64748b;
-    --accent: #0284c7;
-    --accent-strong: #2563eb;
+    --accent: #5b5bf6;
+    --accent-strong: #7c3aed;
     --shadow: 0 24px 60px rgba(100,116,139,0.2);
     --page-bg-image: url('imagenes/Fondoclaro.png');
 }
@@ -70,7 +70,7 @@ body {
 /* 🔥 CONTENEDOR GLASS */
 .container {
     background:
-        linear-gradient(135deg, rgba(56,189,248,0.08), transparent 38%),
+        linear-gradient(135deg, rgba(139,92,246,0.08), transparent 38%),
         var(--card-bg);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -90,7 +90,7 @@ h2 {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 30px;
     letter-spacing: -0.03em;
-    text-shadow:0 0 22px rgba(56,189,248,0.28);
+    text-shadow:0 0 22px rgba(139,92,246,0.28);
 }
 
 /* INPUTS CON ICONOS */
@@ -148,7 +148,7 @@ h2 {
 }
 
 .password-toggle:hover {
-    color: #38bdf8;
+    color: #a78bfa;
     transform: translateY(-50%);
 }
 
@@ -218,7 +218,7 @@ h2 {
 button {
     width:100%;
     padding:12px;
-    background:linear-gradient(135deg,#38bdf8,#2563eb);
+    background:linear-gradient(135deg,#a78bfa,#7c3aed);
     border:none;
     border-radius:10px;
     color:white;
@@ -270,7 +270,7 @@ button:hover {
 
 .input-group input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(56,189,248,0.16);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.16);
 }
 
 .password-toggle {
@@ -280,7 +280,7 @@ button:hover {
 
 .password-toggle:hover {
     color: var(--accent);
-    background: rgba(56,189,248,0.1);
+    background: rgba(139,92,246,0.1);
 }
 
 .validation-msg {
@@ -363,10 +363,42 @@ a:hover {
         border-radius: 22px;
     }
 }
+
+/* TOAST */
+.nxl-toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.nxl-toast {
+    pointer-events: all; display: flex; align-items: flex-start; gap: 10px;
+    padding: 13px 16px 13px 14px; border-radius: 12px; font-size: 14px;
+    font-weight: 500; min-width: 260px; max-width: 360px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 28px rgba(2,8,23,0.38); border: 1px solid;
+    animation: nxlToastIn 220ms cubic-bezier(.22,.8,.4,1) both;
+    font-family: 'Manrope', system-ui, sans-serif;
+}
+.nxl-toast.nxl-toast-out { animation: nxlToastOut 200ms ease forwards; }
+.nxl-toast-success { background: rgba(20,83,45,0.88); border-color: rgba(34,197,94,0.42); color: #dcfce7; }
+.nxl-toast-error   { background: rgba(127,29,29,0.88); border-color: rgba(248,113,113,0.42); color: #fecaca; }
+.nxl-toast-warning { background: rgba(113,63,18,0.88); border-color: rgba(250,204,21,0.42); color: #fef9c3; }
+[data-theme="light"] .nxl-toast-success { background: rgba(220,252,231,0.96); border-color: rgba(34,197,94,0.46); color: #14532d; box-shadow: 0 8px 28px rgba(15,55,90,0.18); }
+[data-theme="light"] .nxl-toast-error   { background: rgba(254,226,226,0.96); border-color: rgba(239,68,68,0.46); color: #991b1b; box-shadow: 0 8px 28px rgba(15,55,90,0.18); }
+.nxl-toast-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+.nxl-toast-text { flex: 1; line-height: 1.45; }
+.nxl-toast-close {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    color: inherit; opacity: 0.55; padding: 0; font-size: 13px; line-height: 1; margin-top: 1px;
+}
+.nxl-toast-close:hover { opacity: 1; }
+@keyframes nxlToastIn  { from { opacity:0; transform: translateX(28px) scale(0.96); } to { opacity:1; transform: translateX(0) scale(1); } }
+@keyframes nxlToastOut { from { opacity:1; transform: translateX(0) scale(1); } to { opacity:0; transform: translateX(28px) scale(0.94); } }
 </style>
 </head>
 
 <body data-theme="dark">
+
+<div class="nxl-toast-container" id="nxl-toast-container" aria-live="polite" aria-atomic="false"></div>
 
 <button type="button" class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?>">
     <i class="fas fa-moon"></i>
@@ -467,14 +499,14 @@ a:hover {
 
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php?action=login" style="color:#38bdf8;">
+        <a href="index.php?action=login" style="color:#a78bfa;">
             <i class="fas fa-arrow-left"></i> <?= htmlspecialchars('Ir al login', ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
 
     <!-- VOLVER -->
     <div style="text-align:center; margin-top:10px;">
-        <a href="index.php?action=tienda" style="color:#38bdf8;">
+        <a href="index.php?action=tienda" style="color:#a78bfa;">
             <i class="fas fa-arrow-left"></i> <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
         </a>
     </div>
@@ -797,6 +829,27 @@ a:hover {
         });
 
         checkFormValidity();
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var container = document.getElementById('nxl-toast-container');
+            if (!container || !message) return;
+            var icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation' };
+            var icon = icons[type] || 'fa-circle-check';
+            var toast = document.createElement('div');
+            toast.className = 'nxl-toast nxl-toast-' + type;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            toast.innerHTML = '<i class="fas ' + icon + ' nxl-toast-icon"></i><span class="nxl-toast-text"></span><button class="nxl-toast-close" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>';
+            toast.querySelector('.nxl-toast-text').textContent = message;
+            container.appendChild(toast);
+            var dismiss = function() {
+                if (!toast.isConnected) return;
+                toast.classList.add('nxl-toast-out');
+                toast.addEventListener('animationend', function() { toast.remove(); }, { once: true });
+            };
+            toast.querySelector('.nxl-toast-close').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        }
 
         setTimeout(() => {
             const error = document.getElementById("mensajeError");

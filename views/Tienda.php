@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/layouts/navbar.php'; ?>
+﻿<?php require_once __DIR__ . '/layouts/navbar.php'; ?>
 <?php $carritoVista = isset($carritoVista) && is_array($carritoVista) ? $carritoVista : ($_SESSION['carrito'] ?? []); ?>
 <?php $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']); ?>
 
@@ -29,15 +29,15 @@
     position: absolute;
     top: -60px; left: -100px;
     width: 500px; height: 400px;
-    background: radial-gradient(ellipse, rgba(34,211,238,0.08) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(167,139,250,0.08) 0%, transparent 70%);
     pointer-events: none;
 }
 .hero-label {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(34,211,238,0.08);
-    border: 1px solid rgba(34,211,238,0.2);
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
     color: var(--accent);
     font-size: 11px;
     font-weight: 500;
@@ -111,8 +111,8 @@
     color: #0f172a;
 }
 .btn-clear {
-    background: rgba(34,211,238,0.1);
-    border: 1px solid rgba(34,211,238,0.25);
+    background: rgba(167,139,250,0.1);
+    border: 1px solid rgba(167,139,250,0.25);
     color: var(--accent);
     padding: 10px 20px;
     border-radius: 10px;
@@ -123,7 +123,7 @@
     transition: all 0.2s;
     white-space: nowrap;
 }
-.btn-clear:hover { background: rgba(34,211,238,0.2); }
+.btn-clear:hover { background: rgba(167,139,250,0.2); }
 [data-theme="light"] .btn-clear {
     background: #dff7f5;
     border-color: #9fe8e1;
@@ -151,8 +151,8 @@
 }
 .btn-filter:hover,
 .btn-filter.active {
-    background: rgba(34,211,238,0.12);
-    border-color: rgba(34,211,238,0.35);
+    background: rgba(167,139,250,0.12);
+    border-color: rgba(167,139,250,0.35);
     color: var(--accent);
 }
 .btn-filter svg,
@@ -183,7 +183,7 @@
     bottom: 0;
     left: 0;
     z-index: 9990;
-    background: rgba(2, 6, 23, 0.56);
+    background: rgba(5, 2, 18, 0.56);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.24s ease;
@@ -248,7 +248,7 @@
 }
 .sidebar-close:hover {
     color: var(--accent);
-    border-color: rgba(34,211,238,0.35);
+    border-color: rgba(167,139,250,0.35);
 }
 .sidebar-body {
     padding: 22px 24px;
@@ -307,7 +307,7 @@
     cursor: pointer;
 }
 .option-row:hover {
-    background: rgba(34,211,238,0.08);
+    background: rgba(167,139,250,0.08);
 }
 .option-row input {
     width: 16px;
@@ -341,7 +341,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(2, 6, 23, 0.28);
+    background: rgba(5, 2, 18, 0.28);
     pointer-events: none;
 }
 .filter-sidebar.loading .sidebar-body {
@@ -372,8 +372,8 @@
 }
 .cat-tab:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
 .cat-tab.active {
-    background: rgba(34,211,238,0.12);
-    border-color: rgba(34,211,238,0.35);
+    background: rgba(167,139,250,0.12);
+    border-color: rgba(167,139,250,0.35);
     color: var(--accent);
 }
 [data-theme="light"] .cat-tab {
@@ -498,8 +498,8 @@
     width: 36px;
     height: 36px;
     border-radius: 999px;
-    border: 1px solid rgba(34,211,238,0.24);
-    background: rgba(34,211,238,0.08);
+    border: 1px solid rgba(167,139,250,0.24);
+    background: rgba(167,139,250,0.08);
     color: var(--accent);
     display: inline-flex;
     align-items: center;
@@ -509,8 +509,8 @@
 }
 .carousel-btn:hover {
     transform: translateY(-1px);
-    background: rgba(34,211,238,0.16);
-    border-color: rgba(34,211,238,0.4);
+    background: rgba(167,139,250,0.16);
+    border-color: rgba(167,139,250,0.4);
 }
 [data-theme="light"] .carousel-btn {
     background: #f0fdfa;
@@ -535,13 +535,13 @@
     scroll-snap-type: x proximity;
     padding: 0 0 10px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(34,211,238,0.3) transparent;
+    scrollbar-color: rgba(167,139,250,0.3) transparent;
 }
 .product-grid::-webkit-scrollbar {
     height: 8px;
 }
 .product-grid::-webkit-scrollbar-thumb {
-    background: rgba(34,211,238,0.24);
+    background: rgba(167,139,250,0.24);
     border-radius: 999px;
 }
 .product-grid::-webkit-scrollbar-track {
@@ -599,8 +599,8 @@
     position: absolute;
     top: 10px; left: 10px;
     z-index: 2;
-    background: rgba(34,211,238,0.15);
-    border: 1px solid rgba(34,211,238,0.3);
+    background: rgba(167,139,250,0.15);
+    border: 1px solid rgba(167,139,250,0.3);
     color: var(--accent);
     font-size: 10px;
     font-weight: 600;
@@ -688,9 +688,9 @@
     color: #64748b;
 }
 .meta-stock {
-    background: rgba(34,211,238,0.08);
+    background: rgba(167,139,250,0.08);
     color: var(--accent);
-    border: 1px solid rgba(34,211,238,0.15);
+    border: 1px solid rgba(167,139,250,0.15);
 }
 [data-theme="light"] .meta-stock {
     background: #e7fffb;
@@ -731,7 +731,7 @@
     min-height: 22px;
     padding: 3px 8px;
     border-radius: 999px;
-    background: rgba(34,211,238,0.1);
+    background: rgba(167,139,250,0.1);
     color: var(--accent);
     font-size: 10px;
     font-weight: 900;
@@ -804,8 +804,8 @@
 }
 .add-btn {
     flex: 1;
-    background: rgba(34,211,238,0.12);
-    border: 1px solid rgba(34,211,238,0.25);
+    background: rgba(167,139,250,0.12);
+    border: 1px solid rgba(167,139,250,0.25);
     color: var(--accent);
     height: 32px;
     border-radius: 8px;
@@ -817,8 +817,8 @@
     transition: all 0.2s;
     letter-spacing: 0.3px;
 }
-.add-btn:hover { background: rgba(34,211,238,0.22); border-color: rgba(34,211,238,0.5); }
-.add-btn.added { background: rgba(34,211,238,0.25); border-color: var(--accent); }
+.add-btn:hover { background: rgba(167,139,250,0.22); border-color: rgba(167,139,250,0.5); }
+.add-btn.added { background: rgba(167,139,250,0.25); border-color: var(--accent); }
 .add-btn:disabled,
 .qty-btn:disabled {
     cursor: not-allowed;
@@ -854,8 +854,8 @@
     align-items: center;
     padding: 14px 16px;
     border-radius: 16px;
-    background: rgba(9, 18, 34, 0.94);
-    border: 1px solid rgba(34, 211, 238, 0.32);
+    background: rgba(13, 10, 26, 0.94);
+    border: 1px solid rgba(167, 139, 250, 0.32);
     color: #f8fafc;
     box-shadow: 0 22px 48px rgba(0,0,0,0.35);
     backdrop-filter: blur(16px);
@@ -880,7 +880,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(34, 211, 238, 0.14);
+    background: rgba(167, 139, 250, 0.14);
     color: var(--accent);
 }
 .cart-toast.error .cart-toast-icon {
@@ -1124,9 +1124,9 @@
 }
 
     @keyframes rtFlash {
-        0% { background: rgba(34, 211, 238, 0.15); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
-        50% { background: rgba(34, 211, 238, 0.35); box-shadow: 0 0 20px 5px rgba(34, 211, 238, 0.2); }
-        100% { background: transparent; box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+        0% { background: rgba(167, 139, 250, 0.15); box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4); }
+        50% { background: rgba(167, 139, 250, 0.35); box-shadow: 0 0 20px 5px rgba(167, 139, 250, 0.2); }
+        100% { background: transparent; box-shadow: 0 0 0 0 rgba(167, 139, 250, 0); }
     }
     .rt-flash {
         animation: rtFlash 1.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1158,8 +1158,8 @@
         color: var(--secondary);
     }
     .btn-load-more {
-        background: rgba(34,211,238,0.1);
-        border: 1px solid rgba(34,211,238,0.3);
+        background: rgba(167,139,250,0.1);
+        border: 1px solid rgba(167,139,250,0.3);
         color: var(--accent);
         padding: 12px 36px;
         border-radius: 12px;
@@ -1173,10 +1173,10 @@
         gap: 10px;
     }
     .btn-load-more:hover:not(:disabled) {
-        background: rgba(34,211,238,0.2);
+        background: rgba(167,139,250,0.2);
         border-color: var(--accent);
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(34,211,238,0.25);
+        box-shadow: 0 10px 25px -5px rgba(167,139,250,0.25);
     }
     .btn-load-more:active:not(:disabled) {
         transform: translateY(0);

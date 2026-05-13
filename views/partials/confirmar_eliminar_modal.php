@@ -1,4 +1,4 @@
-<!-- views/partials/confirmar_eliminar_modal.php -->
+﻿<!-- views/partials/confirmar_eliminar_modal.php -->
 <div id="eliminar-overlay" onclick="cerrarEliminarSiFondo(event)">
     <div id="eliminar-dialog">
         <div id="eliminar-icono"><i class="fas fa-trash-alt"></i></div>
@@ -57,7 +57,7 @@
         font-weight: 700;
     }
     #eliminar-nombre {
-        color: #38bdf8;
+        color: #a78bfa;
         font-size: 14px;
         font-weight: 600;
         margin: 0 0 6px;

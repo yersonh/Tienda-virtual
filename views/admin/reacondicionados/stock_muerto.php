@@ -1,4 +1,4 @@
-<!-- views/admin/reacondicionados/stock_muerto.php -->
+﻿<!-- views/admin/reacondicionados/stock_muerto.php -->
 <?php
 /** @var array $items */
 require_once __DIR__ . '/../../../config/UploadHelper.php';
@@ -24,7 +24,7 @@ $items = $items ?? [];
             <p style="color:#94a3b8;font-size:13px;margin:0;">Productos sin salida: 3.ª devolución o descartados manualmente.</p>
         </div>
         <a href="index.php?action=admin_reacondicionados"
-           style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:#38bdf8;padding:9px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;">
+           style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);color:#a78bfa;padding:9px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;">
             <i class="fas fa-arrow-left"></i> Volver a Reacondicionados
         </a>
     </div>
@@ -85,8 +85,8 @@ $items = $items ?? [];
             <?php endforeach; ?>
         </div>
 
-        <div style="margin-top:20px;padding:14px 18px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:12px;color:#94a3b8;font-size:13px;">
-            <i class="fas fa-circle-info" style="color:#38bdf8;margin-right:6px;"></i>
+        <div style="margin-top:20px;padding:14px 18px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:12px;color:#94a3b8;font-size:13px;">
+            <i class="fas fa-circle-info" style="color:#a78bfa;margin-right:6px;"></i>
             Total: <strong style="color:white;"><?= count($items) ?> items</strong> en stock muerto.
         </div>
     <?php endif; ?>

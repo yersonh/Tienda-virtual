@@ -1,4 +1,4 @@
-<!-- views/admin/reacondicionados/index.php -->
+﻿<!-- views/admin/reacondicionados/index.php -->
 <?php
 /** @var array $itemsPendientes  Items recibidos pendientes de decisión (estado=PENDIENTE) */
 /** @var array $itemsOferta10    Items actualmente en OFERTA_10 */
@@ -85,7 +85,7 @@
     .reac-card:hover {
         transform: translateY(-6px);
         border-color: var(--accent);
-        box-shadow: 0 12px 30px rgba(34, 211, 238, 0.15);
+        box-shadow: 0 12px 30px rgba(167, 139, 250, 0.15);
     }
     .reac-img-wrapper {
         height: 180px;
@@ -105,7 +105,7 @@
         top: 12px;
         right: 12px;
         background: var(--accent-strong);
-        color: #041522;
+        color: #ffffff;
         padding: 4px 10px;
         border-radius: 8px;
         font-size: 11px;
@@ -248,7 +248,7 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
     $html .= '<div class="reac-actions">';
     $html .= '<form method="POST" action="index.php?action=' . $accion . '">';
     $html .= '<input type="hidden" name="id_item" value="' . $id . '">';
-    $html .= '<button type="submit" class="btn-reac-action" style="background:' . $color . '; color: #041522;" onclick="return confirm(\'¿Confirmar esta acción?\')">';
+    $html .= '<button type="submit" class="btn-reac-action" style="background:' . $color . '; color: #ffffff;" onclick="return confirm(\'¿Confirmar esta acción?\')">';
     $html .= '<i class="fas fa-tag"></i> ' . $label;
     $html .= '</button></form>';
 

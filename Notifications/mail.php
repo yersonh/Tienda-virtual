@@ -78,6 +78,17 @@ class Mailer
     }
 
     /**
+     * Enviar correo de reactivación de cuenta
+     */
+    public function enviarReactivacion($nombre, $email, $token)
+    {
+        $activationLink = "https://tienda-virtual-production-c3df.up.railway.app/index.php?action=confirmarReactivacion&token=" . $token;
+        $subject = "Reactiva tu cuenta - NAYLEX STORE";
+        $htmlContent = $this->getTemplateReactivacion($nombre, $activationLink);
+        return $this->sendEmail($email, $subject, $htmlContent);
+    }
+
+    /**
      * Template HTML para correo de recuperación de contraseña
      */
     private function getTemplateRecuperacion($nombre, $resetLink)
@@ -160,6 +171,102 @@ class Mailer
         </div>
         
         <!-- Pie de página -->
+        <div style="background-color: #0a1628; padding: 20px; text-align: center;">
+            <p style="color: #d4a853; font-size: 14px; font-weight: 700; margin: 0 0 4px 0;">
+                NAVI FLEX
+            </p>
+            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                © {$year} NAYLEX STORE — Todos los derechos reservados<br>
+                <span style="font-size: 11px;">Desarrollado por TechSolutions</span>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * Template HTML para correo de reactivación de cuenta
+     */
+    private function getTemplateReactivacion($nombre, $activationLink)
+    {
+        $year = date('Y');
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f7fa; margin: 0; padding: 0;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+
+        <div style="background: linear-gradient(135deg, #0a1628 0%, #1a2744 100%); padding: 32px 24px; text-align: center;">
+            <h1 style="color: #d4a853; font-size: 24px; margin: 0; font-weight: 700; letter-spacing: 0.5px;">
+                NAYLEX STORE
+            </h1>
+            <p style="color: #ffffff; margin-top: 8px; font-size: 14px; opacity: 0.9;">
+                Reactivación de Cuenta
+            </p>
+        </div>
+
+        <div style="padding: 32px 24px; color: #2d3748;">
+            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                Hola <strong style="color: #0a1628;">{$nombre}</strong>,
+            </p>
+
+            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px; color: #4a5568;">
+                Recibimos una solicitud para reactivar tu cuenta en
+                <strong style="color: #0a1628;">NAYLEX STORE</strong>.
+                Tus pedidos y datos se han conservado.
+            </p>
+
+            <div style="background-color: #f8f9fc; border-left: 4px solid #d4a853; padding: 24px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+                <p style="font-size: 16px; margin: 0 0 12px 0; font-weight: 600; color: #0a1628;">
+                    Reactivar mi cuenta
+                </p>
+                <p style="font-size: 14px; color: #718096; margin: 0 0 20px 0;">
+                    Hacé clic en el botón de abajo para reactivar tu cuenta:
+                </p>
+                <div style="text-align: center; margin: 24px 0;">
+                    <a href="{$activationLink}"
+                       style="background: linear-gradient(135deg, #0a1628 0%, #1a2744 100%);
+                              color: #ffffff; padding: 14px 40px;
+                              text-decoration: none; border-radius: 8px; font-weight: 600;
+                              display: inline-block; font-size: 16px;
+                              border: 1px solid #d4a853;">
+                        Reactivar cuenta
+                    </a>
+                </div>
+                <p style="font-size: 13px; color: #a0aec0; margin: 16px 0 0 0;">
+                    Si el botón no funciona, copiá y pegá este enlace en tu navegador:
+                </p>
+                <p style="font-size: 13px; color: #2d3748; word-break: break-all; background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    {$activationLink}
+                </p>
+            </div>
+
+            <div style="background-color: #fffbeb; border: 1px solid #fbd38d; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <p style="font-size: 13px; margin: 0; color: #744210;">
+                    ⚠️ Este enlace es válido por <strong>24 horas</strong>. Si no solicitaste esta reactivación, podés ignorar este correo.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 24px 0;">
+                <a href="https://tienda-virtual-production-c3df.up.railway.app/index.php?action=login"
+                   style="color: #d4a853; text-decoration: none; font-size: 14px; font-weight: 600;">
+                    ← Volver al Login
+                </a>
+            </div>
+
+            <p style="font-size: 13px; color: #a0aec0; line-height: 1.6; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                ¿Necesitás ayuda? Contactanos:<br>
+                📧 soporte@naviflexstore.com<br>
+                📞 (+57) 313 333 62 27
+            </p>
+        </div>
+
         <div style="background-color: #0a1628; padding: 20px; text-align: center;">
             <p style="color: #d4a853; font-size: 14px; font-weight: 700; margin: 0 0 4px 0;">
                 NAVI FLEX

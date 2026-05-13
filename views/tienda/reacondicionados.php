@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+﻿<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 <?php
 /** @var array $items */
 require_once __DIR__ . '/../../config/UploadHelper.php';
@@ -90,7 +90,7 @@ $items = $items ?? [];
     width: 100%; min-height: 44px; border-radius: 12px; font-family: inherit;
     font-size: 14px; font-weight: 800; cursor: pointer;
     border: none; background: linear-gradient(135deg,var(--accent),var(--accent-strong));
-    color: #06201d; transition: opacity .2s;
+    color: #ffffff; transition: opacity .2s;
     text-decoration: none;
 }
 .reac-add-btn:hover { opacity: .88; }

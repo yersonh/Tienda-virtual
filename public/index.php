@@ -66,6 +66,9 @@ $publicas = [
     'solicitarRecuperacion',
     'restablecer',
     'cambiarPassword',
+    'reactivar',
+    'solicitarReactivacion',
+    'confirmarReactivacion',
     'wompiWebhook',
     'expirarPedidosCron',
     'tomarPedido',
@@ -116,6 +119,19 @@ switch ($action) {
     case 'cambiarPassword':
         (new RecuperarController())->cambiarPassword();
         break;
+
+    case 'reactivar':
+        require_once __DIR__ . '/../views/Reactivar.php';
+        break;
+
+    case 'solicitarReactivacion':
+        (new ReactivarController())->solicitarReactivacion();
+        break;
+
+    case 'confirmarReactivacion':
+        (new ReactivarController())->confirmarReactivacion();
+        break;
+
     case 'iniciarSesion':
         (new LoginController())->iniciarSesion();
         break;

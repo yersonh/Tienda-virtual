@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Recuperar Contraseña - NAYLEX Store</title>
+    <title>Reactivar Cuenta - NAYLEX Store</title>
     <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
     <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
 
@@ -30,7 +30,6 @@ if (session_status() === PHP_SESSION_NONE) {
             --body-text: #eaf2ff;
             --accent: #a78bfa;
             --accent-2: #7c3aed;
-            --success: #16a34a;
             --shadow: 0 24px 70px rgba(5, 2, 18, 0.46);
             --page-bg-image: url('imagenes/Fondo.png');
         }
@@ -45,8 +44,7 @@ if (session_status() === PHP_SESSION_NONE) {
             --muted: #64748b;
             --body-text: #1e293b;
             --accent: #5b5bf6;
-            --accent-2: #7c3aed;
-            --success: #15803d;
+            --accent-2: #4338ca;
             --shadow: 0 24px 60px rgba(100, 116, 139, 0.2);
             --page-bg-image: url('imagenes/Fondoclaro.png');
         }
@@ -64,7 +62,6 @@ if (session_status() === PHP_SESSION_NONE) {
                 linear-gradient(var(--bg-overlay-1), var(--bg-overlay-2)),
                 var(--page-bg-image) no-repeat center center fixed;
             background-size: cover;
-
             display: flex;
             justify-content: center;
             align-items: center;
@@ -72,7 +69,7 @@ if (session_status() === PHP_SESSION_NONE) {
             padding: 28px 16px;
         }
 
-        .recovery-container {
+        .reactivar-container {
             background:
                 linear-gradient(135deg, rgba(139, 92, 246, 0.08), transparent 38%),
                 var(--card-bg);
@@ -101,16 +98,40 @@ if (session_status() === PHP_SESSION_NONE) {
             margin-bottom: 12px;
             color: var(--accent);
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 26px;
+            font-size: 24px;
             letter-spacing: -0.02em;
         }
 
         .description {
             text-align: center;
             color: var(--muted);
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.6;
             margin-bottom: 24px;
+        }
+
+        .hint-chips {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .hint-chip {
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.22);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+        }
+
+        [data-theme="light"] .hint-chip {
+            background: rgba(91, 91, 246, 0.08);
+            border-color: rgba(91, 91, 246, 0.2);
         }
 
         .form-group {
@@ -141,11 +162,12 @@ if (session_status() === PHP_SESSION_NONE) {
             font-weight: 700;
             outline: none;
             transition: all 0.2s ease;
+            font-size: 14px;
         }
 
         .input-with-icon input::placeholder {
             color: var(--muted);
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .input-with-icon input:focus {
@@ -175,7 +197,7 @@ if (session_status() === PHP_SESSION_NONE) {
             border-color: var(--accent);
         }
 
-        .recovery-btn {
+        .reactivar-btn {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -187,13 +209,36 @@ if (session_status() === PHP_SESSION_NONE) {
             transition: all 0.2s ease;
             box-shadow: 0 16px 34px rgba(124, 58, 237, 0.28);
             margin-bottom: 15px;
+            font-size: 15px;
         }
 
-        .recovery-btn:hover {
+        .reactivar-btn:hover {
             transform: translateY(-2px);
             filter: brightness(1.04);
             box-shadow: 0 20px 42px rgba(124, 58, 237, 0.36);
         }
+
+        .reactivar-btn.btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+
+        .reactivar-btn.btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .back-link {
             display: flex;
@@ -240,15 +285,17 @@ if (session_status() === PHP_SESSION_NONE) {
         [data-theme="light"] .error-message {
             color: #7f1d1d;
             background: #fee2e2;
+            border-color: rgba(239, 68, 68, 0.3);
         }
 
         [data-theme="light"] .success-message {
             color: #14532d;
             background: #dcfce7;
+            border-color: rgba(34, 197, 94, 0.3);
         }
 
         @media (max-width: 480px) {
-            .recovery-container {
+            .reactivar-container {
                 padding: 30px 22px;
                 border-radius: 22px;
             }
@@ -262,7 +309,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <i class="fas fa-moon"></i>
     </button>
 
-    <div class="recovery-container">
+    <div class="reactivar-container">
 
         <div class="logo-section">
             <a href="index.php?action=tienda">
@@ -270,38 +317,47 @@ if (session_status() === PHP_SESSION_NONE) {
             </a>
         </div>
 
-        <h2>Recuperar Contraseña</h2>
+        <h2><i class="fas fa-user-check" style="margin-right:8px;"></i>Reactivar Cuenta</h2>
         <p class="description">
-            Ingresa tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.
+            Ingresá tu usuario, correo o teléfono registrado y te enviaremos un enlace para reactivar tu cuenta.
         </p>
 
-        <!-- MENSAJES -->
+        <div class="hint-chips">
+            <span class="hint-chip"><i class="fas fa-user" style="margin-right:4px;"></i>Usuario</span>
+            <span class="hint-chip"><i class="fas fa-envelope" style="margin-right:4px;"></i>Correo</span>
+            <span class="hint-chip"><i class="fas fa-phone" style="margin-right:4px;"></i>Teléfono</span>
+        </div>
+
         <?php if (isset($_SESSION['error'])): ?>
             <div class="error-message">
-                <?= $_SESSION['error'];
+                <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
                 unset($_SESSION['error']); ?>
             </div>
         <?php endif; ?>
 
         <?php if (isset($_SESSION['success'])): ?>
             <div class="success-message" id="success-message">
-                <?= $_SESSION['success'];
+                <?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8');
                 unset($_SESSION['success']); ?>
             </div>
         <?php endif; ?>
 
-        <!-- FORM -->
-        <form method="POST" action="index.php?action=solicitarRecuperacion">
+        <form method="POST" action="index.php?action=solicitarReactivacion" id="reactivar-form">
 
             <div class="form-group">
                 <div class="input-with-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" placeholder="<?= htmlspecialchars('Correo electrónico', ENT_QUOTES, 'UTF-8') ?>" required>
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        name="identificador"
+                        placeholder="<?= htmlspecialchars('Usuario, correo o teléfono', ENT_QUOTES, 'UTF-8') ?>"
+                        autocomplete="off"
+                        required>
                 </div>
             </div>
 
-            <button type="submit" class="recovery-btn">
-                <i class="fas fa-paper-plane"></i> Enviar Instrucciones
+            <button type="submit" class="reactivar-btn" id="reactivar-btn">
+                <i class="fas fa-paper-plane"></i> Enviar Enlace de Reactivación
             </button>
 
             <a href="index.php?action=login" class="back-link">
@@ -329,25 +385,27 @@ if (session_status() === PHP_SESSION_NONE) {
                 '<i class="fas fa-sun"></i>';
         }
 
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        themeToggle.addEventListener('click', function() {
+            var nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             applyTheme(nextTheme);
             localStorage.setItem('theme', nextTheme);
         });
 
         applyTheme(localStorage.getItem('theme') || 'dark');
 
-        const successMessage = document.getElementById('success-message');
+        var successMessage = document.getElementById('success-message');
         if (successMessage) {
-            setTimeout(() => {
+            setTimeout(function() {
                 successMessage.style.opacity = '0';
                 successMessage.style.transition = 'opacity 0.4s ease';
-
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 400);
-            }, 5000);
+                setTimeout(function() { successMessage.style.display = 'none'; }, 400);
+            }, 6000);
         }
+
+        document.getElementById('reactivar-form').addEventListener('submit', function() {
+            var btn = document.getElementById('reactivar-btn');
+            btn.classList.add('btn-loading');
+        });
     </script>
 
 </body>

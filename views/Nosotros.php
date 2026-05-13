@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/layouts/navbar.php';
 
 $direccionTienda = 'Carrera 34 # 40-20, Villavicencio, Meta';
@@ -30,7 +30,7 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 .about-service,
 .about-stat {
     border: 1px solid var(--border);
-    background: linear-gradient(145deg, rgba(15, 27, 46, 0.9), rgba(7, 16, 31, 0.72));
+    background: linear-gradient(145deg, rgba(20, 14, 40, 0.9), rgba(7, 16, 31, 0.72));
     box-shadow: var(--shadow);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -55,8 +55,8 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(90deg, rgba(34, 211, 238, 0.12) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px);
+        linear-gradient(90deg, rgba(167, 139, 250, 0.12) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(167, 139, 250, 0.1) 1px, transparent 1px);
     background-size: 38px 38px;
     mask-image: linear-gradient(130deg, rgba(0,0,0,0.76), transparent 72%);
     pointer-events: none;
@@ -73,10 +73,10 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     gap: 9px;
     min-height: 32px;
     padding: 0 12px;
-    border: 1px solid rgba(34, 211, 238, 0.34);
+    border: 1px solid rgba(167, 139, 250, 0.34);
     border-radius: 999px;
     color: var(--accent);
-    background: rgba(34, 211, 238, 0.09);
+    background: rgba(167, 139, 250, 0.09);
     font-size: 12px;
     font-weight: 900;
     text-transform: uppercase;
@@ -111,9 +111,9 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 .about-purpose {
     margin-top: 20px;
     padding: 18px 20px;
-    border: 1px solid rgba(34, 211, 238, 0.22);
+    border: 1px solid rgba(167, 139, 250, 0.22);
     border-radius: 8px;
-    background: rgba(34, 211, 238, 0.08);
+    background: rgba(167, 139, 250, 0.08);
 }
 
 .about-purpose h2 {
@@ -153,9 +153,9 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 
 .about-btn.primary {
     border-color: transparent;
-    color: #041522;
-    background: linear-gradient(135deg, #22d3ee, #38bdf8);
-    box-shadow: 0 16px 34px rgba(34, 211, 238, 0.28);
+    color: #ffffff;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    box-shadow: 0 16px 34px rgba(167, 139, 250, 0.28);
 }
 
 .about-btn:hover {
@@ -165,7 +165,7 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 }
 
 .about-btn.primary:hover {
-    color: #041522;
+    color: #ffffff;
 }
 
 .about-stats {
@@ -234,10 +234,10 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     display: grid;
     place-items: center;
     border-radius: 50% 50% 50% 10px;
-    background: linear-gradient(135deg, #22d3ee, #38bdf8);
-    color: #041522;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: #ffffff;
     border: 4px solid #ffffff;
-    box-shadow: 0 18px 36px rgba(2, 8, 23, 0.36);
+    box-shadow: 0 18px 36px rgba(5, 2, 18, 0.36);
     transform: rotate(-45deg);
     cursor: pointer;
 }
@@ -257,8 +257,8 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     padding: 14px;
     border-radius: 8px;
     background: #ffffff;
-    box-shadow: 0 18px 36px rgba(2, 8, 23, 0.24);
-    color: #102033;
+    box-shadow: 0 18px 36px rgba(5, 2, 18, 0.24);
+    color: #1e1251;
     transform: translateX(-50%);
     opacity: 0;
     pointer-events: none;
@@ -332,9 +332,9 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    background: rgba(34, 211, 238, 0.12);
+    background: rgba(167, 139, 250, 0.12);
     color: var(--accent);
-    border: 1px solid rgba(34, 211, 238, 0.22);
+    border: 1px solid rgba(167, 139, 250, 0.22);
 }
 
 .about-service h3 {

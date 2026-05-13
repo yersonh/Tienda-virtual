@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../helpers/entrega.php';
 require_once __DIR__ . '/../layouts/navbar.php';
 $fechaEstimadaResumen = $fechaEstimadaResumen ?? ($_SESSION['pedido_confirmado']['fecha_estimada_entrega'] ?? null);
@@ -14,8 +14,8 @@ renderEntregaStyles();
 <style>
 :root {
     --checkout-bg: linear-gradient(145deg, #090d18 0%, #111827 48%, #080b12 100%);
-    --checkout-card: rgba(15, 23, 42, 0.72);
-    --checkout-card-strong: rgba(15, 23, 42, 0.92);
+    --checkout-card: rgba(20, 14, 40, 0.72);
+    --checkout-card-strong: rgba(20, 14, 40, 0.92);
     --checkout-border: rgba(148, 163, 184, 0.14);
     --checkout-text: #e2e8f0;
     --checkout-muted: #94a3b8;
@@ -26,7 +26,7 @@ body[data-theme="light"],
     --checkout-bg: linear-gradient(145deg, #eef6ff 0%, #f8fafc 48%, #eaf2ff 100%);
     --checkout-card: rgba(255, 255, 255, 0.86);
     --checkout-card-strong: rgba(255, 255, 255, 0.96);
-    --checkout-border: rgba(15, 23, 42, 0.10);
+    --checkout-border: rgba(20, 14, 40, 0.10);
     --checkout-text: #1e293b;
     --checkout-muted: #64748b;
     --checkout-strong: #0f172a;
@@ -35,7 +35,7 @@ body[data-theme="light"],
     min-height: calc(100vh - 80px);
     padding: 42px 20px 92px;
     background:
-        radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.14), transparent 32rem),
+        radial-gradient(circle at 8% 0%, rgba(124, 58, 237, 0.14), transparent 32rem),
         radial-gradient(circle at 92% 12%, rgba(34, 197, 94, 0.10), transparent 26rem),
         var(--checkout-bg);
     color: var(--checkout-text);
@@ -146,7 +146,7 @@ body[data-theme="light"],
     margin-top: 16px;
     border: 0;
     border-radius: 16px;
-    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    background: linear-gradient(135deg, #7c3aed, #7c3aed);
     color: #fff;
     display: inline-flex;
     align-items: center;
@@ -154,13 +154,13 @@ body[data-theme="light"],
     gap: 10px;
     font-weight: 900;
     text-decoration: none;
-    box-shadow: 0 18px 38px rgba(37, 99, 235, 0.28);
+    box-shadow: 0 18px 38px rgba(124, 58, 237, 0.28);
     transition: transform .2s ease, box-shadow .2s ease;
 }
 .btn-resume:hover {
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 24px 52px rgba(37, 99, 235, 0.34);
+    box-shadow: 0 24px 52px rgba(124, 58, 237, 0.34);
 }
 .btn-back {
     border: 1px solid var(--checkout-border);

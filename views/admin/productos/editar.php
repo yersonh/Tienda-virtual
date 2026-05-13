@@ -1,4 +1,4 @@
-<!-- views/admin/productos/editar.php -->
+﻿<!-- views/admin/productos/editar.php -->
 <?php
 /** @var array $producto */
 /** @var array $categorias */
@@ -210,7 +210,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
 <style>
     .seccion-card {
         background: rgba(30,41,59,0.8);
-        border: 1px solid rgba(56,189,248,0.15);
+        border: 1px solid rgba(139,92,246,0.15);
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 20px;
@@ -222,7 +222,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
         margin-bottom: 16px;
     }
     .seccion-titulo {
-        color: #38bdf8;
+        color: #a78bfa;
         font-size: 16px;
         font-weight: 700;
         margin: 0 0 16px;
@@ -238,12 +238,12 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
     }
     .full-width { grid-column: span 2; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { color: #38bdf8; font-weight: 600; font-size: 13px; }
+    .form-group label { color: #a78bfa; font-weight: 600; font-size: 13px; }
     .form-group input,
     .form-group select,
     .form-group textarea {
         background: rgba(15,23,42,0.8);
-        border: 1px solid rgba(56,189,248,0.2);
+        border: 1px solid rgba(139,92,246,0.2);
         border-radius: 8px;
         padding: 10px 12px;
         color: white;
@@ -255,18 +255,18 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
     .form-group select:focus,
     .form-group textarea:focus {
         outline: none;
-        border-color: #38bdf8;
-        box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
     }
     .btn-volver {
-        background: rgba(56,189,248,0.1);
-        color: #38bdf8;
+        background: rgba(139,92,246,0.1);
+        color: #a78bfa;
         padding: 8px 16px;
         border-radius: 8px;
         text-decoration: none;
         transition: 0.2s;
     }
-    .btn-volver:hover { background: rgba(56,189,248,0.2); }
+    .btn-volver:hover { background: rgba(139,92,246,0.2); }
     .btn-add {
         background: rgba(74,222,128,0.1);
         border: 1px solid rgba(74,222,128,0.3);
@@ -284,7 +284,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
     .btn-add:hover { background: rgba(74,222,128,0.2); }
     .compat-row {
         background: rgba(15,23,42,0.5);
-        border: 1px solid rgba(56,189,248,0.1);
+        border: 1px solid rgba(139,92,246,0.1);
         border-radius: 10px;
         padding: 14px;
         margin-bottom: 10px;
@@ -295,7 +295,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
     .compat-row-maquinaria { grid-template-columns: 1fr 1fr 1fr 1fr 80px 80px 1fr 80px 28px; }
     .compat-row input {
         background: rgba(15,23,42,0.8);
-        border: 1px solid rgba(56,189,248,0.15);
+        border: 1px solid rgba(139,92,246,0.15);
         border-radius: 6px;
         padding: 8px 10px;
         color: white;
@@ -304,7 +304,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
         box-sizing: border-box;
         font-family: inherit;
     }
-    .compat-row input:focus { outline: none; border-color: #38bdf8; }
+    .compat-row input:focus { outline: none; border-color: #a78bfa; }
     .compat-row input::placeholder { color: #475569; }
     .compat-label {
         color: #64748b;
@@ -343,7 +343,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
         border-radius: 8px;
         overflow: hidden;
         background: rgba(15,23,42,0.8);
-        border: 1px solid rgba(56,189,248,0.2);
+        border: 1px solid rgba(139,92,246,0.2);
     }
     .imagen-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
     .btn-eliminar-img {
@@ -355,7 +355,7 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
     }
     .btn-eliminar-img:hover { background: #ef4444; transform: scale(1.1); }
     .upload-area {
-        border: 2px dashed rgba(56,189,248,0.3);
+        border: 2px dashed rgba(139,92,246,0.3);
         border-radius: 12px;
         padding: 28px;
         text-align: center;
@@ -363,21 +363,21 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
         transition: 0.3s;
         background: rgba(15,23,42,0.5);
     }
-    .upload-area:hover { border-color: #38bdf8; background: rgba(56,189,248,0.05); }
-    .upload-area i { font-size: 40px; color: #38bdf8; margin-bottom: 8px; }
+    .upload-area:hover { border-color: #a78bfa; background: rgba(139,92,246,0.05); }
+    .upload-area i { font-size: 40px; color: #a78bfa; margin-bottom: 8px; }
     .upload-area p { color: #94a3b8; margin-bottom: 12px; }
     .btn-upload {
-        background: linear-gradient(135deg, #38bdf8, #3b82f6);
+        background: linear-gradient(135deg, #a78bfa, #3b82f6);
         color: white; border: none; padding: 8px 20px;
         border-radius: 8px; cursor: pointer; font-weight: 600;
     }
-    .upload-area.drag-over { border-color: #38bdf8; background: rgba(56,189,248,0.1); }
+    .upload-area.drag-over { border-color: #a78bfa; background: rgba(139,92,246,0.1); }
     .preview-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(100px, 100px));
         gap: 12px; margin-top: 16px;
     }
-    .preview-item { position: relative; border-radius: 8px; overflow: hidden; background: rgba(15,23,42,0.8); border: 1px solid rgba(56,189,248,0.2); }
+    .preview-item { position: relative; border-radius: 8px; overflow: hidden; background: rgba(15,23,42,0.8); border: 1px solid rgba(139,92,246,0.2); }
     .preview-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
     .preview-item .remove-img {
         position: absolute; top: 4px; right: 4px;
@@ -388,10 +388,10 @@ $esActivo  = in_array($estadoVal, ['activo', 'true', '1']);
     .form-help { color: #64748b; font-size: 12px; margin-top: 8px; display: block; }
     .form-actions {
         display: flex; gap: 12px; margin-top: 8px;
-        padding-top: 16px; border-top: 1px solid rgba(56,189,248,0.1);
+        padding-top: 16px; border-top: 1px solid rgba(139,92,246,0.1);
     }
     .btn-guardar {
-        background: linear-gradient(135deg, #38bdf8, #3b82f6);
+        background: linear-gradient(135deg, #a78bfa, #3b82f6);
         color: white; border: none; padding: 12px 24px;
         border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
     }

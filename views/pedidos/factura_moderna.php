@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $facturaPedido = isset($facturaPedido) && is_array($facturaPedido) ? $facturaPedido : [];
 $facturaItems = isset($facturaPedido['items']) && is_array($facturaPedido['items']) ? $facturaPedido['items'] : [];
 $facturaReceptor = isset($facturaPedido['receptor']) && is_array($facturaPedido['receptor']) ? $facturaPedido['receptor'] : [];
@@ -58,7 +58,7 @@ if (is_file($facturaLogoPath)) {
 <style>
 .modern-invoice-page {
     padding: 34px 18px 92px;
-    color: #122033;
+    color: #1e1251;
 }
 .modern-invoice-shell {
     width: min(1020px, 100%);
@@ -69,7 +69,7 @@ if (is_file($facturaLogoPath)) {
     border: 1px solid #c9d9e8;
     border-radius: 4px;
     background: #ffffff;
-    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+    box-shadow: 0 24px 64px rgba(20, 14, 40, 0.18);
 }
 .modern-invoice-header {
     display: grid;

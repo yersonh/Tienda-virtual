@@ -1,4 +1,4 @@
-<!-- views/admin/productos/index.php -->
+﻿<!-- views/admin/productos/index.php -->
 <div style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
@@ -100,8 +100,8 @@
 
 <style>
     .btn-nuevo {
-        background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-        color: #041522;
+        background: linear-gradient(135deg, #a78bfa, #7c3aed);
+        color: #ffffff;
         padding: 10px 20px;
         border-radius: 12px;
         text-decoration: none;
@@ -109,14 +109,14 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 10px 20px rgba(56,189,248,0.25);
+        box-shadow: 0 10px 20px rgba(139,92,246,0.25);
         transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         white-space: nowrap;
     }
     .btn-nuevo:hover {
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 14px 28px rgba(56,189,248,0.38);
-        color: #041522;
+        box-shadow: 0 14px 28px rgba(139,92,246,0.38);
+        color: #ffffff;
     }
     .table-container {
         background: var(--card-bg);
@@ -151,7 +151,7 @@
         font-size: 14px;
         vertical-align: middle;
     }
-    .productos-table tr:hover td { background: rgba(34,211,238,0.03); }
+    .productos-table tr:hover td { background: rgba(167,139,250,0.03); }
     .producto-img-mini {
         width: 48px; height: 48px;
         object-fit: contain; background: white;
@@ -168,7 +168,7 @@
     }
     .txt-mono  { font-family: monospace; font-size: 13px; color: #94a3b8; }
     .txt-nombre { font-weight: 600; }
-    .txt-ref   { color: #38bdf8; font-size: 13px; font-weight: 600; }
+    .txt-ref   { color: #a78bfa; font-size: 13px; font-weight: 600; }
     .txt-precio { font-weight: 700; color: #4ade80; }
     .badge {
         padding: 4px 12px;

@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+﻿<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 <?php
 $usuarioLogueado = !empty($_SESSION['logueado']) && isset($_SESSION['id_usuario']);
 $categoriaActual = $_GET['categoria'] ?? ($producto['categoria_nombre'] ?? '');
@@ -294,7 +294,7 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
     width: fit-content;
     padding: 5px 10px;
     border-radius: 999px;
-    background: rgba(34,211,238,0.1);
+    background: rgba(167,139,250,0.1);
     color: var(--accent);
     font-size: 11px;
     font-weight: 900;
@@ -542,7 +542,7 @@ $maquinariasCompatibles = isset($compatibilidades['maquinarias']) && is_array($c
     align-items: center;
     padding: 14px 16px;
     border-radius: 16px;
-    background: rgba(9, 18, 34, 0.94);
+    background: rgba(13, 10, 26, 0.94);
     border: 1px solid rgba(0, 229, 192, 0.32);
     color: #f8fafc;
     box-shadow: 0 22px 48px rgba(0,0,0,0.35);

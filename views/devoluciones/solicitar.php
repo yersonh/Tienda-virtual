@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+﻿<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 <?php
 /** @var array $pedido */
 /** @var array $items */
@@ -129,7 +129,7 @@ $motivosDisponibles = [
 .dev-btn.primary {
     border-color: rgba(20,216,189,.28);
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    color: #06201d;
+    color: #ffffff;
 }
 .dev-btn.primary:hover { opacity: .9; }
 .dev-empty { padding: 42px; border: 1px dashed var(--border); border-radius: 18px; color: var(--secondary); text-align: center; }

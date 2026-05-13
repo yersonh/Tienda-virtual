@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -52,23 +52,23 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
 <style>
     :root {
-        --admin-bg: radial-gradient(circle at top left, rgba(56,189,248,0.13), transparent 34%), linear-gradient(135deg, #070b14 0%, #111827 100%);
+        --admin-bg: radial-gradient(circle at top left, rgba(139,92,246,0.13), transparent 34%), linear-gradient(135deg, #070b14 0%, #111827 100%);
         --sidebar-bg: linear-gradient(180deg, rgba(15,23,42,0.98) 0%, rgba(7,11,20,0.98) 100%);
         --sidebar-text: #edf4ff;
         --panel-muted: #a8b5ca;
         --panel-line: rgba(125,211,252,0.18);
-        --panel-soft: rgba(56,189,248,0.1);
+        --panel-soft: rgba(139,92,246,0.1);
         --content-bg: rgba(15,23,42,0.48);
         --welcome-bg: rgba(15,23,42,0.74);
         --panel-shadow: 0 24px 60px rgba(2,6,23,0.34);
     }
     [data-theme="light"] {
-        --admin-bg: radial-gradient(circle at top left, rgba(14,165,233,0.14), transparent 34%), linear-gradient(135deg, #eef6ff 0%, #f8fafc 100%);
+        --admin-bg: radial-gradient(circle at top left, rgba(124,58,237,0.14), transparent 34%), linear-gradient(135deg, #eef6ff 0%, #f8fafc 100%);
         --sidebar-bg: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(241,245,249,0.96) 100%);
-        --sidebar-text: #122033;
+        --sidebar-text: #1e1251;
         --panel-muted: #64748b;
         --panel-line: rgba(100,116,139,0.18);
-        --panel-soft: rgba(14,165,233,0.08);
+        --panel-soft: rgba(124,58,237,0.08);
         --content-bg: rgba(255,255,255,0.54);
         --welcome-bg: rgba(255,255,255,0.82);
         --panel-shadow: 0 24px 60px rgba(100,116,139,0.18);
@@ -115,7 +115,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     }
 
     .sidebar-header h2 {
-        color: #38bdf8;
+        color: #a78bfa;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 26px;
         font-weight: 700;
@@ -165,13 +165,13 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .nav-link:hover {
         background: var(--panel-soft);
-        color: #38bdf8;
+        color: #a78bfa;
         transform: translateX(4px);
         box-shadow: inset 0 0 0 1px var(--panel-line);
     }
 
     .nav-link:hover i {
-        color: #38bdf8;
+        color: #a78bfa;
     }
 
     .sidebar-footer {
@@ -194,7 +194,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     .user-avatar {
         width: 44px;
         height: 44px;
-        background: linear-gradient(135deg, #38bdf8, #3b82f6);
+        background: linear-gradient(135deg, #a78bfa, #3b82f6);
         border-radius: 12px;
         display: flex;
         align-items: center;
@@ -258,7 +258,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     }
 
     .admin-sidebar::-webkit-scrollbar-thumb {
-        background: #38bdf8;
+        background: #a78bfa;
         border-radius: 4px;
     }
 
@@ -268,7 +268,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(2, 6, 23, 0.56);
+        background: rgba(5, 2, 18, 0.56);
         z-index: 999;
         opacity: 0;
         pointer-events: none;
@@ -299,7 +299,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
             align-items: center;
             gap: 14px;
             padding: 12px 16px;
-            background: rgba(7, 11, 20, 0.94);
+            background: rgba(13, 10, 26, 0.94);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--panel-line);
@@ -337,15 +337,15 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         }
         .admin-hamburger:hover,
         .admin-hamburger:active {
-            border-color: #38bdf8;
-            color: #38bdf8;
-            background: rgba(56, 189, 248, 0.12);
+            border-color: #a78bfa;
+            color: #a78bfa;
+            background: rgba(139, 92, 246, 0.12);
         }
         .admin-mobile-logo {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 18px;
             font-weight: 700;
-            color: #38bdf8;
+            color: #a78bfa;
             flex: 1;
             letter-spacing: -0.03em;
         }
@@ -389,7 +389,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .welcome-message i {
         font-size: 64px;
-        color: #38bdf8;
+        color: #a78bfa;
         margin-bottom: 20px;
     }
 
@@ -420,7 +420,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .theme-toggle-admin:hover {
         transform: translateY(-2px);
-        border-color: #38bdf8;
+        border-color: #a78bfa;
         background: var(--panel-soft);
     }
 
@@ -460,8 +460,8 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 
     .main-content .form-control:focus,
     .main-content .form-select:focus {
-        border-color: #38bdf8;
-        box-shadow: 0 0 0 4px rgba(56,189,248,0.16);
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 4px rgba(139,92,246,0.16);
     }
 
     .main-content .btn {
@@ -501,7 +501,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         font-size: 16px; flex-shrink: 0;
         transition: background 0.2s, border-color 0.2s, color 0.2s;
     }
-    .admin-notif-btn:hover { border-color: #38bdf8; color: #38bdf8; }
+    .admin-notif-btn:hover { border-color: #a78bfa; color: #a78bfa; }
     .admin-notif-badge {
         position: absolute;
         top: -6px; right: -6px;
@@ -519,7 +519,7 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         top: calc(100% + 10px);
         right: 0;
         width: min(340px, calc(100vw - 28px));
-        background: rgba(7, 11, 20, 0.97);
+        background: rgba(13, 10, 26, 0.97);
         border: 1px solid var(--panel-line);
         border-radius: 16px;
         box-shadow: 0 20px 50px rgba(2,6,23,0.48);
@@ -545,12 +545,12 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
     }
     .admin-notif-mark {
         background: none; border: none;
-        color: #38bdf8; font-size: 12px; font-weight: 800;
+        color: #a78bfa; font-size: 12px; font-weight: 800;
         cursor: pointer; padding: 3px 7px; border-radius: 7px;
         font-family: inherit;
         transition: background 0.15s;
     }
-    .admin-notif-mark:hover { background: rgba(56,189,248,0.12); }
+    .admin-notif-mark:hover { background: rgba(139,92,246,0.12); }
     .admin-notif-list { overflow-y: auto; flex: 1; }
     .admin-notif-empty {
         padding: 28px 14px; text-align: center;
@@ -565,9 +565,9 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
         font-size: 13px;
     }
     .admin-notif-item:hover { background: var(--panel-soft); }
-    .admin-notif-item.unread { background: rgba(56,189,248,0.05); }
+    .admin-notif-item.unread { background: rgba(139,92,246,0.05); }
     .admin-nd { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-    .admin-nd.info    { background: #38bdf8; }
+    .admin-nd.info    { background: #a78bfa; }
     .admin-nd.success { background: #4ade80; }
     .admin-nd.warning { background: #fbbf24; }
     .admin-nd.error   { background: #f87171; }

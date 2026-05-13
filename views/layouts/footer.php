@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 
 body{
     padding-bottom:58px;
@@ -49,7 +49,7 @@ body{
 }
 
 .footer-brand i{
-    color:#38bdf8;
+    color:#a78bfa;
 }
 
 .footer-links{
@@ -59,7 +59,7 @@ body{
 
 .footer-links a{
 
-    color:#7dd3fc;
+    color:#c4b5fd;
 
     text-decoration:none;
 
@@ -70,7 +70,7 @@ body{
 }
 
 .footer-links a:hover{
-    color:#bae6fd;
+    color:#ddd6fe;
     text-decoration:underline;
 }
 

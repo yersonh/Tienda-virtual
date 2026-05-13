@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $direcciones = isset($direcciones) && is_array($direcciones) ? $direcciones : ($_SESSION['direcciones'] ?? []);
 require_once __DIR__ . '/layouts/navbar.php';
 
@@ -32,9 +32,9 @@ foreach ($direcciones as $index => $direccion) {
     --checkout-text: #e2e8f0;
     --checkout-muted: #94a3b8;
     --checkout-strong: #f8fafc;
-    --checkout-panel: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.44));
+    --checkout-panel: linear-gradient(145deg, rgba(20, 14, 40, 0.78), rgba(20, 14, 40, 0.44));
     --checkout-border: rgba(148, 163, 184, 0.14);
-    --checkout-soft: rgba(15, 23, 42, 0.62);
+    --checkout-soft: rgba(20, 14, 40, 0.62);
 }
 body[data-theme="light"],
 .light-mode {
@@ -43,7 +43,7 @@ body[data-theme="light"],
     --checkout-muted: #64748b;
     --checkout-strong: #0f172a;
     --checkout-panel: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.74));
-    --checkout-border: rgba(15, 23, 42, 0.10);
+    --checkout-border: rgba(20, 14, 40, 0.10);
     --checkout-soft: rgba(255, 255, 255, 0.76);
 }
 .checkout-page {
@@ -51,7 +51,7 @@ body[data-theme="light"],
     padding: 42px 22px 96px;
     color: var(--checkout-text);
     background:
-        radial-gradient(circle at 8% 0%, rgba(14, 165, 233, 0.16), transparent 34rem),
+        radial-gradient(circle at 8% 0%, rgba(124, 58, 237, 0.16), transparent 34rem),
         radial-gradient(circle at 92% 14%, rgba(34, 197, 94, 0.10), transparent 28rem),
         var(--checkout-bg);
 }
@@ -93,22 +93,22 @@ body[data-theme="light"],
     gap: 8px;
     min-height: 38px;
     padding: 0 14px;
-    border: 1px solid rgba(56, 189, 248, 0.18);
+    border: 1px solid rgba(139, 92, 246, 0.18);
     border-radius: 999px;
-    background: rgba(15, 27, 46, 0.58);
+    background: rgba(20, 14, 40, 0.58);
     color: var(--checkout-muted);
     font-size: 0.86rem;
     font-weight: 700;
 }
 .checkout-step.active {
-    border-color: rgba(56, 189, 248, 0.7);
-    background: rgba(34, 211, 238, 0.14);
+    border-color: rgba(139, 92, 246, 0.7);
+    background: rgba(167, 139, 250, 0.14);
     color: var(--checkout-strong);
-    box-shadow: 0 0 26px rgba(34, 211, 238, 0.14);
+    box-shadow: 0 0 26px rgba(167, 139, 250, 0.14);
 }
 body[data-theme="light"] .checkout-step,
 .light-mode .checkout-step {
-    border-color: rgba(15, 23, 42, 0.14);
+    border-color: rgba(20, 14, 40, 0.14);
     background: rgba(226, 232, 240, 0.92);
     color: #334155;
 }
@@ -118,10 +118,10 @@ body[data-theme="light"] .checkout-step i,
 }
 body[data-theme="light"] .checkout-step.active,
 .light-mode .checkout-step.active {
-    border-color: rgba(14, 165, 233, 0.78);
+    border-color: rgba(124, 58, 237, 0.78);
     background: rgba(224, 247, 255, 0.94);
     color: #0f172a;
-    box-shadow: 0 0 26px rgba(14, 165, 233, 0.16);
+    box-shadow: 0 0 26px rgba(124, 58, 237, 0.16);
 }
 body[data-theme="light"] .checkout-step.active i,
 .light-mode .checkout-step.active i {
@@ -183,7 +183,7 @@ body[data-theme="light"] .checkout-step.active i,
     padding: 14px 16px;
     border: 1px solid rgba(59, 130, 246, 0.28);
     border-radius: 16px;
-    background: rgba(37, 99, 235, 0.12);
+    background: rgba(124, 58, 237, 0.12);
     color: #bfdbfe;
     font-weight: 800;
 }
@@ -211,7 +211,7 @@ body[data-theme="light"] .checkout-step.active i,
     padding: 20px;
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.62);
+    background: rgba(20, 14, 40, 0.62);
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
     cursor: pointer;
     transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
@@ -229,7 +229,7 @@ body[data-theme="light"] .checkout-step.active i,
 .address-option:hover {
     transform: translateY(-5px);
     border-color: rgba(59, 130, 246, 0.48);
-    box-shadow: 0 22px 54px rgba(15, 23, 42, 0.42);
+    box-shadow: 0 22px 54px rgba(20, 14, 40, 0.42);
 }
 .address-option:hover::before,
 .address-option.active::before {
@@ -237,7 +237,7 @@ body[data-theme="light"] .checkout-step.active i,
 }
 .address-option.active {
     border-color: rgba(96, 165, 250, 0.9);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.26), 0 22px 58px rgba(37, 99, 235, 0.22);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.26), 0 22px 58px rgba(124, 58, 237, 0.22);
 }
 .address-option input[type="radio"] {
     position: relative;
@@ -273,7 +273,7 @@ body[data-theme="light"] .checkout-step.active i,
 }
 .address-text i {
     width: 18px;
-    color: #60a5fa;
+    color: #c4b5fd;
 }
 .address-badge {
     display: inline-flex;
@@ -335,8 +335,8 @@ body[data-theme="light"] .checkout-step.active i,
 }
 .checkout-btn.primary {
     border-color: rgba(59, 130, 246, 0.75);
-    background: linear-gradient(135deg, #2563eb, #0ea5e9);
-    box-shadow: 0 18px 36px rgba(37, 99, 235, 0.22);
+    background: linear-gradient(135deg, #7c3aed, #7c3aed);
+    box-shadow: 0 18px 36px rgba(124, 58, 237, 0.22);
 }
 .checkout-btn:disabled {
     cursor: not-allowed;
@@ -378,7 +378,7 @@ body[data-theme="light"] .checkout-step.active i,
     padding: 22px;
     border: 1px solid rgba(148, 163, 184, 0.14);
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.58);
+    background: rgba(20, 14, 40, 0.58);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .address-form.is-visible {
@@ -393,7 +393,7 @@ body[data-theme="light"] .checkout-step.active i,
     min-height: 46px;
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 14px;
-    background: rgba(2, 6, 23, 0.34);
+    background: rgba(5, 2, 18, 0.34);
     color: var(--checkout-strong);
 }
 .form-control::placeholder {
@@ -401,7 +401,7 @@ body[data-theme="light"] .checkout-step.active i,
 }
 .form-control:focus {
     border-color: rgba(96, 165, 250, 0.72);
-    background: rgba(2, 6, 23, 0.46);
+    background: rgba(5, 2, 18, 0.46);
     color: #fff;
     box-shadow: 0 0 0 0.22rem rgba(59, 130, 246, 0.16);
 }
@@ -432,7 +432,7 @@ body[data-theme="light"] .checkout-btn.secondary,
 }
 body[data-theme="light"] .checkout-btn.secondary:hover,
 .light-mode .checkout-btn.secondary:hover {
-    border-color: rgba(37, 99, 235, 0.36);
+    border-color: rgba(124, 58, 237, 0.36);
     background: #eff6ff;
     color: #1d4ed8;
 }
@@ -449,7 +449,7 @@ body[data-theme="light"] .checkout-btn.danger:hover,
 }
 body[data-theme="light"] .checkout-btn.outline-add,
 .light-mode .checkout-btn.outline-add {
-    border-color: rgba(37, 99, 235, 0.34);
+    border-color: rgba(124, 58, 237, 0.34);
     background: rgba(239, 246, 255, 0.88);
     color: #1d4ed8;
 }
@@ -469,7 +469,7 @@ body[data-theme="light"] .form-control:focus,
     color: #0f172a;
 }
 .form-check-input {
-    background-color: rgba(2, 6, 23, 0.5);
+    background-color: rgba(5, 2, 18, 0.5);
     border-color: rgba(148, 163, 184, 0.35);
 }
 .form-check-input:checked {

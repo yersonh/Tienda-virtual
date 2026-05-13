@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -23,17 +23,17 @@ if (session_status() === PHP_SESSION_NONE) {
     <style>
         /* Tokens aligned with global navbar.php naming */
         :root {
-            --bg-overlay-1: rgba(7, 11, 20, 0.64);
+            --bg-overlay-1: rgba(13, 10, 26, 0.64);
             --bg-overlay-2: rgba(8, 13, 24, 0.78);
-            --card-bg: rgba(15, 23, 42, 0.78);
-            --border: rgba(125, 211, 252, 0.2);
-            --soft-surface: rgba(15, 23, 42, 0.72);
+            --card-bg: rgba(20, 14, 40, 0.78);
+            --border: rgba(167, 139, 250, 0.2);
+            --soft-surface: rgba(20, 14, 40, 0.72);
             --text: #f8fafc;
             --secondary: #a8b5ca;
-            --accent: #38bdf8;
-            --accent-strong: #2563eb;
+            --accent: #a78bfa;
+            --accent-strong: #7c3aed;
             --success: #16a34a;
-            --shadow: 0 24px 70px rgba(2, 6, 23, 0.46);
+            --shadow: 0 24px 70px rgba(5, 2, 18, 0.46);
             --radius: 14px;
             --transition: 180ms ease;
             --page-bg-image: url('imagenes/Fondo.png');
@@ -43,12 +43,12 @@ if (session_status() === PHP_SESSION_NONE) {
             --bg-overlay-1: rgba(255, 255, 255, 0.78);
             --bg-overlay-2: rgba(241, 245, 249, 0.9);
             --card-bg: rgba(255, 255, 255, 0.9);
-            --border: rgba(14, 165, 233, 0.18);
+            --border: rgba(124, 58, 237, 0.18);
             --soft-surface: rgba(248, 250, 252, 0.94);
-            --text: #122033;
+            --text: #1e1251;
             --secondary: #64748b;
-            --accent: #0284c7;
-            --accent-strong: #2563eb;
+            --accent: #5b5bf6;
+            --accent-strong: #7c3aed;
             --success: #15803d;
             --shadow: 0 24px 60px rgba(100, 116, 139, 0.2);
             --page-bg-image: url('imagenes/Fondoclaro.png');
@@ -78,7 +78,7 @@ if (session_status() === PHP_SESSION_NONE) {
         /* 🔥 CONTENEDOR */
         .login-container {
             background:
-                linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 38%),
+                linear-gradient(135deg, rgba(139, 92, 246, 0.08), transparent 38%),
                 var(--card-bg);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
@@ -98,7 +98,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
         .logo-img {
             width: min(245px, 82%);
-            filter: drop-shadow(0 16px 26px rgba(2, 6, 23, 0.22));
+            filter: drop-shadow(0 16px 26px rgba(5, 2, 18, 0.22));
         }
 
         .logo-section p {
@@ -146,7 +146,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
         .input-with-icon input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.16);
         }
 
         /* 👁️ */
@@ -166,7 +166,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
         .toggle-password:hover {
             color: var(--accent);
-            background: rgba(56, 189, 248, 0.1);
+            background: rgba(139, 92, 246, 0.1);
         }
 
         .theme-toggle {
@@ -182,7 +182,7 @@ if (session_status() === PHP_SESSION_NONE) {
             cursor: pointer;
             font-size: 18px;
             backdrop-filter: blur(14px);
-            box-shadow: 0 12px 28px rgba(2, 6, 23, 0.2);
+            box-shadow: 0 12px 28px rgba(5, 2, 18, 0.2);
             transition: transform 0.2s ease, border-color 0.2s ease;
         }
 
@@ -202,13 +202,13 @@ if (session_status() === PHP_SESSION_NONE) {
             cursor: pointer;
             color: white;
             transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.28);
+            box-shadow: 0 16px 34px rgba(124, 58, 237, 0.28);
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
             filter: brightness(1.04);
-            box-shadow: 0 20px 42px rgba(37, 99, 235, 0.36);
+            box-shadow: 0 20px 42px rgba(124, 58, 237, 0.36);
         }
 
         .register-btn {
@@ -301,10 +301,42 @@ if (session_status() === PHP_SESSION_NONE) {
                 border-radius: 22px;
             }
         }
+
+        /* TOAST */
+        .nxl-toast-container {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .nxl-toast {
+            pointer-events: all; display: flex; align-items: flex-start; gap: 10px;
+            padding: 13px 16px 13px 14px; border-radius: 12px; font-size: 14px;
+            font-weight: 500; min-width: 260px; max-width: 360px;
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 8px 28px rgba(2,8,23,0.38); border: 1px solid;
+            animation: nxlToastIn 220ms cubic-bezier(.22,.8,.4,1) both;
+            font-family: 'Manrope', system-ui, sans-serif;
+        }
+        .nxl-toast.nxl-toast-out { animation: nxlToastOut 200ms ease forwards; }
+        .nxl-toast-success { background: rgba(20,83,45,0.88); border-color: rgba(34,197,94,0.42); color: #dcfce7; }
+        .nxl-toast-error   { background: rgba(127,29,29,0.88); border-color: rgba(248,113,113,0.42); color: #fecaca; }
+        .nxl-toast-warning { background: rgba(113,63,18,0.88); border-color: rgba(250,204,21,0.42); color: #fef9c3; }
+        [data-theme="light"] .nxl-toast-success { background: rgba(220,252,231,0.96); border-color: rgba(34,197,94,0.46); color: #14532d; box-shadow: 0 8px 28px rgba(15,55,90,0.18); }
+        [data-theme="light"] .nxl-toast-error   { background: rgba(254,226,226,0.96); border-color: rgba(239,68,68,0.46); color: #991b1b; box-shadow: 0 8px 28px rgba(15,55,90,0.18); }
+        .nxl-toast-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+        .nxl-toast-text { flex: 1; line-height: 1.45; }
+        .nxl-toast-close {
+            flex-shrink: 0; background: none; border: none; cursor: pointer;
+            color: inherit; opacity: 0.55; padding: 0; font-size: 13px; line-height: 1; margin-top: 1px;
+        }
+        .nxl-toast-close:hover { opacity: 1; }
+        @keyframes nxlToastIn  { from { opacity:0; transform: translateX(28px) scale(0.96); } to { opacity:1; transform: translateX(0) scale(1); } }
+        @keyframes nxlToastOut { from { opacity:1; transform: translateX(0) scale(1); } to { opacity:0; transform: translateX(28px) scale(0.94); } }
     </style>
 </head>
 
 <body data-theme="dark">
+
+<div class="nxl-toast-container" id="nxl-toast-container" aria-live="polite" aria-atomic="false"></div>
 
     <button type="button" class="theme-toggle" id="theme-toggle" title="<?= htmlspecialchars('Cambiar tema', ENT_QUOTES, 'UTF-8') ?>">
         <i class="fas fa-moon"></i>
@@ -359,20 +391,20 @@ if (session_status() === PHP_SESSION_NONE) {
 
         <!-- LINKS -->
         <div style="text-align:center; margin-top:15px;">
-            <a href="index.php?action=recuperar" style="color:#38bdf8; font-size:13px;">
+            <a href="index.php?action=recuperar" style="color:#a78bfa; font-size:13px;">
                 <?= htmlspecialchars('¿Olvido su contrasena?', ENT_QUOTES, 'UTF-8') ?>
             </a>
         </div>
 
         <div style="text-align:center; margin-top:5px;">
-            <a href="#" style="color:#facc15; font-size:13px;">
+            <a href="index.php?action=reactivar" style="color:#facc15; font-size:13px;">
                 <?= htmlspecialchars('¿Quieres reactivar tu cuenta?', ENT_QUOTES, 'UTF-8') ?>
             </a>
         </div>
 
         <!-- VOLVER -->
         <div style="text-align:center; margin-top:10px;">
-            <a href="index.php?action=tienda" style="color:#38bdf8;">
+            <a href="index.php?action=tienda" style="color:#a78bfa;">
                 <i class="fas fa-arrow-left"></i> <?= htmlspecialchars('Volver a la tienda', ENT_QUOTES, 'UTF-8') ?>
             </a>
         </div>
@@ -414,6 +446,27 @@ if (session_status() === PHP_SESSION_NONE) {
         });
 
         applyTheme(localStorage.getItem('theme') || 'dark');
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var container = document.getElementById('nxl-toast-container');
+            if (!container || !message) return;
+            var icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation' };
+            var icon = icons[type] || 'fa-circle-check';
+            var toast = document.createElement('div');
+            toast.className = 'nxl-toast nxl-toast-' + type;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            toast.innerHTML = '<i class="fas ' + icon + ' nxl-toast-icon"></i><span class="nxl-toast-text"></span><button class="nxl-toast-close" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>';
+            toast.querySelector('.nxl-toast-text').textContent = message;
+            container.appendChild(toast);
+            var dismiss = function() {
+                if (!toast.isConnected) return;
+                toast.classList.add('nxl-toast-out');
+                toast.addEventListener('animationend', function() { toast.remove(); }, { once: true });
+            };
+            toast.querySelector('.nxl-toast-close').addEventListener('click', dismiss);
+            setTimeout(dismiss, 4000);
+        }
 
         const successMessage = document.getElementById('success-message');
         if (successMessage) {

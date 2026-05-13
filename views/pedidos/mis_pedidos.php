@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+﻿<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 <?php
 $pedidoDetalle = $pedidoDetalle ?? null;
 $pedidos = isset($pedidos) && is_array($pedidos) ? $pedidos : [];
@@ -169,7 +169,7 @@ function orderProductImage(?string $imagen): ?string {
 .orders-btn.primary {
     border-color: rgba(20,216,189,0.28);
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    color: #06201d;
+    color: #ffffff;
 }
 .orders-btn.danger {
     border-color: rgba(248,113,113,0.34);
@@ -311,9 +311,9 @@ function orderProductImage(?string $imagen): ?string {
     color: #fbbf24;
 }
 .status-pill.is-processed {
-    border-color: rgba(56,189,248,0.3);
-    background: rgba(56,189,248,0.12);
-    color: #7dd3fc;
+    border-color: rgba(139,92,246,0.3);
+    background: rgba(139,92,246,0.12);
+    color: #c4b5fd;
 }
 .status-pill.is-shipped {
     border-color: rgba(20,216,189,0.32);
@@ -415,7 +415,7 @@ function orderProductImage(?string $imagen): ?string {
 }
 .order-strip-nav:hover:not(:disabled) {
     color: var(--accent);
-    border-color: rgba(34,211,238,0.38);
+    border-color: rgba(167,139,250,0.38);
 }
 .order-strip-nav:disabled {
     opacity: 0.35;
@@ -536,7 +536,7 @@ function orderProductImage(?string $imagen): ?string {
     justify-content: center;
     transform: translateX(-50%);
     background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    color: #06201d;
+    color: #ffffff;
     box-shadow: 0 16px 32px rgba(20,216,189,0.28);
     transition: left 240ms ease;
     z-index: 2;
@@ -583,10 +583,10 @@ function orderProductImage(?string $imagen): ?string {
     margin-top: 18px;
     min-height: 48px;
     padding: 13px 14px;
-    border: 1px solid rgba(56,189,248,0.2);
+    border: 1px solid rgba(139,92,246,0.2);
     border-radius: 14px;
     color: var(--secondary);
-    background: rgba(56,189,248,0.07);
+    background: rgba(139,92,246,0.07);
 }
 .order-items-mini {
     display: grid;
@@ -605,7 +605,7 @@ function orderProductImage(?string $imagen): ?string {
     transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 .order-mini-item[href]:hover {
-    background: rgba(34,211,238,0.07);
+    background: rgba(167,139,250,0.07);
     transform: translateX(2px);
 }
 .order-mini-photo {
@@ -655,7 +655,7 @@ function orderProductImage(?string $imagen): ?string {
     min-height: 28px;
     padding: 0 10px;
     border-radius: 999px;
-    background: rgba(34,211,238,0.12);
+    background: rgba(167,139,250,0.12);
     color: var(--accent);
     font-size: 12px;
     font-weight: 900;
@@ -677,7 +677,7 @@ function orderProductImage(?string $imagen): ?string {
     margin-top: 4px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: rgba(34,211,238,0.08);
+    background: rgba(167,139,250,0.08);
     color: var(--accent);
     font: inherit;
     font-size: 13px;
@@ -689,8 +689,8 @@ function orderProductImage(?string $imagen): ?string {
     gap: 8px;
 }
 .order-items-toggle:hover {
-    border-color: rgba(34,211,238,0.4);
-    background: rgba(34,211,238,0.13);
+    border-color: rgba(167,139,250,0.4);
+    background: rgba(167,139,250,0.13);
 }
 .order-address-form {
     display: none;

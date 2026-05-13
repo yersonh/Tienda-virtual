@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
+﻿<?php require_once __DIR__ . '/../layouts/navbar.php'; ?>
 <?php
 /** @var array $devoluciones */
 $devoluciones = $devoluciones ?? [];
@@ -40,7 +40,7 @@ function devEstadoClass(string $nombre): string {
     color: var(--secondary); font-size: 12px; font-weight: 900;
 }
 .status-pill.is-pending   { border-color: rgba(251,191,36,.36);   background: rgba(251,191,36,.13);   color: #fbbf24; }
-.status-pill.is-processed { border-color: rgba(56,189,248,.3);    background: rgba(56,189,248,.12);   color: #7dd3fc; }
+.status-pill.is-processed { border-color: rgba(139,92,246,.3);    background: rgba(139,92,246,.12);   color: #c4b5fd; }
 .status-pill.is-done      { border-color: rgba(34,197,94,.35);    background: rgba(34,197,94,.14);    color: #4ade80; }
 .status-pill.is-canceled  { border-color: rgba(248,113,113,.35);  background: rgba(248,113,113,.14);  color: #fca5a5; }
 .dev-btn {
@@ -50,7 +50,7 @@ function devEstadoClass(string $nombre): string {
     border: 1px solid var(--border); background: var(--soft-surface); color: var(--text);
     text-decoration: none; transition: background .2s;
 }
-.dev-btn.primary { border-color: rgba(20,216,189,.28); background: linear-gradient(135deg,var(--accent),var(--accent-strong)); color: #06201d; }
+.dev-btn.primary { border-color: rgba(20,216,189,.28); background: linear-gradient(135deg,var(--accent),var(--accent-strong)); color: #ffffff; }
 .dev-empty { padding: 42px; border: 1px dashed var(--border); border-radius: 18px; color: var(--secondary); text-align: center; }
 @media (max-width: 800px) {
     .dev-card { grid-template-columns: 1fr; gap: 10px; }

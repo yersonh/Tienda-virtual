@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../helpers/entrega.php';
 require_once __DIR__ . '/../layouts/navbar.php';
 
@@ -19,7 +19,7 @@ $facturaHideActions = true;
     padding: 44px 18px 34px;
     background:
         linear-gradient(180deg, rgba(7, 16, 31, 0.16), rgba(7, 16, 31, 0.02)),
-        radial-gradient(circle at var(--pulse-x, 50%) var(--pulse-y, 35%), rgba(34, 211, 238, 0.2), transparent 28%);
+        radial-gradient(circle at var(--pulse-x, 50%) var(--pulse-y, 35%), rgba(167, 139, 250, 0.2), transparent 28%);
 }
 .payment-confirmed-shell {
     width: min(1080px, 100%);
@@ -32,24 +32,24 @@ $facturaHideActions = true;
     grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
     gap: 26px;
     padding: clamp(28px, 5vw, 54px);
-    border: 1px solid rgba(56, 189, 248, 0.22);
+    border: 1px solid rgba(139, 92, 246, 0.22);
     border-radius: 18px;
     background: rgba(10, 20, 36, 0.82);
-    box-shadow: 0 28px 80px rgba(2, 8, 23, 0.42);
+    box-shadow: 0 28px 80px rgba(5, 2, 18, 0.42);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 }
 [data-theme="light"] .payment-confirmed-hero {
     background: rgba(255,255,255,0.82);
-    box-shadow: 0 24px 60px rgba(15, 55, 90, 0.16);
+    box-shadow: 0 24px 60px rgba(30, 18, 81, 0.16);
 }
 .payment-confirmed-hero::before {
     content: '';
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(90deg, rgba(34,211,238,0.12) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(34,211,238,0.1) 1px, transparent 1px);
+        linear-gradient(90deg, rgba(167,139,250,0.12) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(167,139,250,0.1) 1px, transparent 1px);
     background-size: 42px 42px;
     mask-image: radial-gradient(circle at var(--pulse-x, 50%) var(--pulse-y, 40%), #000 0%, transparent 62%);
     pointer-events: none;
@@ -66,9 +66,9 @@ $facturaHideActions = true;
     width: fit-content;
     min-height: 34px;
     padding: 6px 12px;
-    border: 1px solid rgba(34,211,238,0.34);
+    border: 1px solid rgba(167,139,250,0.34);
     border-radius: 999px;
-    background: rgba(34,211,238,0.1);
+    background: rgba(167,139,250,0.1);
     color: var(--accent);
     font-size: 12px;
     font-weight: 900;
@@ -78,8 +78,8 @@ $facturaHideActions = true;
     width: 9px;
     height: 9px;
     border-radius: 999px;
-    background: #22d3ee;
-    box-shadow: 0 0 18px rgba(34,211,238,0.9);
+    background: #a78bfa;
+    box-shadow: 0 0 18px rgba(167,139,250,0.9);
     animation: confirmPulse 1.35s ease-in-out infinite;
 }
 .payment-confirmed-title {
@@ -123,20 +123,20 @@ $facturaHideActions = true;
 }
 .payment-confirmed-action:hover {
     transform: translateY(-2px);
-    border-color: rgba(34,211,238,0.42);
+    border-color: rgba(167,139,250,0.42);
     color: var(--accent);
 }
 .payment-confirmed-action.primary {
     border-color: transparent;
-    background: linear-gradient(135deg, #22d3ee, #38bdf8);
-    color: #041522;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: #ffffff;
 }
 .payment-confirmed-panel {
     display: grid;
     gap: 12px;
     align-self: stretch;
     padding: 18px;
-    border: 1px solid rgba(56,189,248,0.22);
+    border: 1px solid rgba(139,92,246,0.22);
     border-radius: 16px;
     background: rgba(6, 12, 24, 0.54);
 }
@@ -148,8 +148,8 @@ $facturaHideActions = true;
     place-items: center;
     min-height: 120px;
     border-radius: 14px;
-    border: 1px solid rgba(34,211,238,0.26);
-    background: rgba(34,211,238,0.08);
+    border: 1px solid rgba(167,139,250,0.26);
+    background: rgba(167,139,250,0.08);
     color: var(--accent);
     font-family: 'Space Grotesk', 'Manrope', sans-serif;
     font-size: 28px;
@@ -177,7 +177,7 @@ $facturaHideActions = true;
     position: relative;
     z-index: 1;
     padding: 14px;
-    border: 1px solid rgba(56,189,248,0.18);
+    border: 1px solid rgba(139,92,246,0.18);
     border-radius: 14px;
     background: rgba(255,255,255,0.035);
     color: var(--secondary);
@@ -193,7 +193,7 @@ $facturaHideActions = true;
     z-index: 10000;
     display: none;
     padding: 74px 18px 28px;
-    background: rgba(2, 8, 23, 0.82);
+    background: rgba(5, 2, 18, 0.82);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     overflow-y: auto;
@@ -210,7 +210,7 @@ $facturaHideActions = true;
     height: 44px;
     border-radius: 12px;
     border: 1px solid rgba(125,211,252,0.34);
-    background: rgba(7, 13, 26, 0.9);
+    background: rgba(13, 10, 26, 0.9);
     color: #e9f2ff;
     font-size: 28px;
     line-height: 1;
@@ -221,7 +221,7 @@ $facturaHideActions = true;
 }
 .confirmed-invoice-close:hover {
     color: var(--accent);
-    border-color: rgba(34,211,238,0.52);
+    border-color: rgba(167,139,250,0.52);
 }
 .confirmed-invoice-wrap .modern-invoice-page {
     padding: 0 0 36px;
