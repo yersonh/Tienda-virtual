@@ -133,7 +133,10 @@ $remainingRetry = max(0, $secondsRetry) % 60;
     </div>
 </main>
 
-<script src="https://checkout.wompi.co/widget.js"></script>
+<script
+    src="https://checkout.wompi.co/widget.js"
+    data-public-key="<?= htmlspecialchars($checkoutPayload['publicKey'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+</script>
 <script>
 const wompiRetryCheckout = <?= json_encode($checkoutPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 

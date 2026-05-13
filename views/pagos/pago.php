@@ -645,7 +645,10 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     </div>
 </main>
 
-<script src="https://checkout.wompi.co/widget.js"></script>
+<script
+    src="https://checkout.wompi.co/widget.js"
+    data-public-key="<?= htmlspecialchars($checkoutPayload['publicKey'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+</script>
 <script>
 const paymentCompletedKey = 'naylexPaymentCompleted';
 const paymentSubmittedKey = 'naylexPaymentSubmitted';
