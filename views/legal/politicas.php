@@ -367,6 +367,21 @@
                         Protección de Datos
                     </div>
 
+                    <div class="hero-badge">
+                        <i class="fas fa-box"></i>
+                        Gestión de Inventario
+                    </div>
+
+                    <div class="hero-badge">
+                        <i class="fas fa-file-invoice"></i>
+                        Facturación Electrónica
+                    </div>
+
+                    <div class="hero-badge">
+                        <i class="fas fa-truck"></i>
+                        Seguimiento de Pedidos
+                    </div>
+
                 </div>
 
             </div>
