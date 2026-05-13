@@ -442,13 +442,13 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .product-card {
-    background: #dbeafe;
-    border-color: #93c5fd;
+    background: var(--inner-card-bg, #cfe4ff);
+    border-color: var(--inner-card-border, #7fb5ff);
     box-shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
 }
 
 [data-theme="light"] .product-card:hover {
-    background: #bfdbfe;
+    background: #c3dcff;
     border-color: #3b82f6;
 }
 
@@ -947,8 +947,8 @@ body[data-theme="light"] {
 [data-theme="light"] .sales-dashboard {
     background:
         linear-gradient(135deg, rgba(37,99,235,0.12), transparent 42%),
-        #ffffff;
-    border-color: rgba(37,99,235,0.18);
+        var(--inner-card-bg, #cfe4ff);
+    border-color: var(--inner-card-border, #7fb5ff);
 }
 
 .sales-chart {
@@ -1107,8 +1107,8 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .sales-summary {
-    background: rgba(255,255,255,0.78);
-    border-color: rgba(148,163,184,0.2);
+    background: rgba(255,255,255,0.82);
+    border-color: #93c5fd;
 }
 
 .sales-summary span {
@@ -1193,7 +1193,8 @@ body[data-theme="light"] {
 }
 
 [data-theme="light"] .sales-metric {
-    background: rgba(241,245,249,0.78);
+    background: rgba(219,234,254,0.85);
+    border-color: #93c5fd;
 }
 
 .sales-metric span {

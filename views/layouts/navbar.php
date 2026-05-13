@@ -57,7 +57,7 @@ if ($logueado) {
 }
 
 [data-theme="light"], .light-mode {
-  --bg: #f0f7ff;
+  --bg: #d7e9ff;
   --text: #1e293b;
   --accent: #3b82f6;
   --accent-strong: #2563eb;
@@ -66,7 +66,9 @@ if ($logueado) {
   --border: #bfdbfe;
   --hover: rgba(37, 99, 235, 0.10);
   --shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
-  --soft-surface: #eff6ff;
+  --soft-surface: #dbeafe;
+  --inner-card-bg: #cfe4ff;
+  --inner-card-border: #7fb5ff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -84,7 +86,7 @@ body {
 body[data-theme="light"],
 body.light-mode {
     background:
-        linear-gradient(180deg, #f0f7ff 0%, #ebf4ff 48%, #dbeafe 100%);
+        linear-gradient(180deg, #d7e9ff 0%, #dbeafe 42%, #cfe4ff 100%);
 }
 
 /* NAV */
@@ -104,7 +106,7 @@ body.light-mode {
     z-index: 100;
 }
 [data-theme="light"] .nav {
-    background: linear-gradient(135deg, #e6f1ff 0%, #d7e9ff 52%, #cfe4ff 100%);
+    background: linear-gradient(135deg, #d7e9ff 0%, #cfe4ff 52%, #bfdbfe 100%);
     border-bottom: 1px solid #93c5fd;
     box-shadow: 0 10px 24px rgba(59, 130, 246, 0.13);
 }
@@ -226,7 +228,7 @@ body.light-mode {
 }
 [data-theme="light"] .side-panel {
     background:
-        linear-gradient(180deg, rgba(219, 234, 254, 0.98) 0%, rgba(191, 219, 254, 0.9) 100%);
+        linear-gradient(180deg, rgba(207, 228, 255, 0.98) 0%, rgba(191, 219, 254, 0.94) 100%);
     border-right-color: #93c5fd;
     box-shadow: 28px 0 58px rgba(59, 130, 246, 0.18);
 }
@@ -282,7 +284,7 @@ body.light-mode {
     transform: translateX(4px);
 }
 [data-theme="light"] .side-links a {
-    background: rgba(239, 246, 255, 0.86);
+    background: rgba(219, 234, 254, 0.92);
     border-color: #93c5fd;
     color: #334155;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
@@ -753,8 +755,8 @@ main,
     border-bottom: 1px solid rgba(59, 130, 246, 0.10);
 }
 [data-theme="light"] .mob-search-wrap {
-    background: rgba(240, 246, 255, 0.96);
-    border-bottom-color: rgba(59, 130, 246, 0.10);
+    background: #d7e9ff;
+    border-bottom-color: #93c5fd;
 }
 .mob-search-form {
     position: relative;

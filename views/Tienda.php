@@ -614,12 +614,12 @@
     .product-card:active { transform: scale(0.98); }
 }
 [data-theme="light"] .product-card {
-    background: #dbeafe;
-    border: 1.5px solid #93c5fd;
+    background: var(--inner-card-bg, #cfe4ff);
+    border: 1.5px solid var(--inner-card-border, #7fb5ff);
     box-shadow: 0 2px 12px rgba(59,130,246,0.12);
 }
 [data-theme="light"] .product-card:hover {
-    background: #bfdbfe;
+    background: #c3dcff;
     border-color: #3b82f6;
     box-shadow: 0 8px 22px rgba(59,130,246,0.18);
 }

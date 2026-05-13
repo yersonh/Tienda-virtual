@@ -264,6 +264,14 @@ function orderProductImage(?string $imagen): ?string {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 }
+[data-theme="light"] .orders-stat,
+[data-theme="light"] .orders-card,
+[data-theme="light"] .order-detail-panel,
+[data-theme="light"] .orders-filter-bar {
+    background: var(--inner-card-bg, #cfe4ff);
+    border-color: var(--inner-card-border, #7fb5ff);
+    box-shadow: 0 2px 12px rgba(59,130,246,0.12);
+}
 .orders-stat {
     padding: 18px;
 }
