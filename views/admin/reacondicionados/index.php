@@ -220,7 +220,7 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
     // Imagen
     $html .= '<div class="reac-img-wrapper">';
     if ($imgUrl) {
-        $html .= '<img src="' . $imgUrl . '" alt="' . $nombre . '">';
+        $html .= '<img src="' . $imgUrl . '" alt="' . $nombre . '" loading="lazy" decoding="async">';
     } else {
         $html .= '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--secondary);"><i class="fas fa-box" style="font-size:32px;"></i></div>';
     }
@@ -362,7 +362,7 @@ function reacAdminCard(array $item, string $accion, string $label, string $color
                     <div class="reac-card">
                         <div class="reac-img-wrapper">
                             <?php if ($imgUrl2): ?>
-                                <img src="<?= $imgUrl2 ?>">
+                                <img src="<?= $imgUrl2 ?>" alt="<?= $nombre ?>" loading="lazy" decoding="async">
                             <?php else: ?>
                                 <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--secondary);"><i class="fas fa-box" style="font-size:28px;"></i></div>
                             <?php endif; ?>

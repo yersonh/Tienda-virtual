@@ -57,16 +57,16 @@ if ($logueado) {
 }
 
 [data-theme="light"], .light-mode {
-  --bg: #f0f6ff;
-  --text: #0f2340;
+  --bg: #f0f7ff;
+  --text: #1e293b;
   --accent: #3b82f6;
   --accent-strong: #2563eb;
-  --secondary: #475569;
-  --card-bg: rgba(255, 255, 255, 0.96);
-  --border: rgba(37, 99, 235, 0.18);
+  --secondary: #374151;
+  --card-bg: #ffffff;
+  --border: #bfdbfe;
   --hover: rgba(37, 99, 235, 0.10);
-  --shadow: 0 22px 48px rgba(15, 35, 80, 0.12);
-  --soft-surface: rgba(37, 99, 235, 0.06);
+  --shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
+  --soft-surface: #eff6ff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -84,7 +84,7 @@ body {
 body[data-theme="light"],
 body.light-mode {
     background:
-        linear-gradient(180deg, #f0f6ff, #e8f0fe, #dde9fb);
+        linear-gradient(180deg, #f0f7ff 0%, #ebf4ff 48%, #dbeafe 100%);
 }
 
 /* NAV */
@@ -104,9 +104,9 @@ body.light-mode {
     z-index: 100;
 }
 [data-theme="light"] .nav {
-    background: rgba(240, 246, 255, 0.82);
-    border-bottom: 1px solid rgba(59, 130, 246, 0.16);
-    box-shadow: 0 16px 34px rgba(15, 35, 80, 0.12);
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.94), rgba(219, 234, 254, 0.92));
+    border-bottom: 1px solid #bfdbfe;
+    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.12);
 }
 .nav-logo {
     font-family: 'Space Grotesk', sans-serif;
@@ -185,8 +185,14 @@ body.light-mode {
     box-shadow: 0 12px 26px rgba(147, 197, 253, 0.26);
 }
 [data-theme="light"] .nav-links a {
-    background: rgba(255, 255, 255, 0.72);
-    border-color: rgba(59, 130, 246, 0.18);
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+[data-theme="light"] .nav-links a:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
 }
 .side-backdrop {
     position: fixed;
@@ -218,7 +224,9 @@ body.light-mode {
     z-index: 200;
 }
 [data-theme="light"] .side-panel {
-    background: rgba(240, 246, 255, 0.96);
+    background: rgba(239, 246, 255, 0.97);
+    border-right-color: #bfdbfe;
+    box-shadow: 28px 0 58px rgba(59, 130, 246, 0.16);
 }
 .side-panel.is-open {
     transform: translateX(0);
@@ -246,6 +254,7 @@ body.light-mode {
 .side-links a {
     display: flex;
     align-items: center;
+    gap: 12px;
     min-height: 48px;
     padding: 0 14px;
     border: 1px solid var(--border);
@@ -255,6 +264,13 @@ body.light-mode {
     text-decoration: none;
     font-weight: 800;
     transition: background var(--transition), color var(--transition), transform var(--transition), border-color var(--transition);
+}
+.side-links a i {
+    width: 20px;
+    text-align: center;
+    color: currentColor;
+    font-size: 15px;
+    flex: 0 0 20px;
 }
 .side-links a:hover,
 .side-links a.active {
@@ -409,9 +425,9 @@ textarea:focus {
 [data-theme="light"] .profile-card,
 [data-theme="light"] .best-panel,
 [data-theme="light"] .models-3d {
-    background: rgba(255, 255, 255, 0.76) !important;
-    border-color: rgba(59, 130, 246, 0.2) !important;
-    box-shadow: 0 22px 48px rgba(30, 18, 81, 0.16);
+    background: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.12);
 }
 
 .hero-title,
@@ -487,6 +503,24 @@ textarea:focus {
     .btn-ghost,
     .btn-primary {
         padding: 8px 12px;
+    }
+
+    .table-responsive,
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-inline: contain;
+    }
+
+    table {
+        min-width: 680px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+        font-size: 16px;
     }
 }
 
@@ -648,6 +682,40 @@ textarea {
 img, video {
     max-width: 100%;
     height: auto;
+}
+
+main,
+.store-card,
+.orders-page,
+.dev-container,
+.admin-content,
+.main-content {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+@supports not (overflow-x: clip) {
+    main,
+    .store-card,
+    .orders-page,
+    .dev-container,
+    .admin-content,
+    .main-content {
+        overflow-x: hidden;
+    }
+}
+
+.product-card,
+.order-card,
+.profile-card,
+.cart-panel,
+.checkout-panel,
+.filter-card,
+.table-container,
+.detail-info,
+.detail-gallery {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 420px;
 }
 
 /* =============================================
@@ -1093,17 +1161,17 @@ img, video {
     <button class="side-close" id="side-menu-close" type="button" aria-label="<?= htmlspecialchars('Cerrar menu', ENT_QUOTES, 'UTF-8') ?>">&times;</button>
   </div>
   <div class="side-links">
-    <a href="index.php?action=nosotros" data-nav-key="nosotros" class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>"><?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?></a>
-    <a href="index.php?action=inicio#interaccion-360" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></a>
-    <a href="index.php?action=inicio#lo-nuevo" data-nav-key="nuevo"><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></a>
-    <a href="index.php?action=inicio#mas-vendidos" data-nav-key="mas-vendidos"><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></a>
-    <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></a>
-    <a href="index.php?action=reacondicionados" data-nav-key="reacondicionados" class="<?= $currentAction === 'reacondicionados' ? 'active' : '' ?>"><?= htmlspecialchars('Ofertas', ENT_QUOTES, 'UTF-8') ?></a>
+    <a href="index.php?action=nosotros" data-nav-key="nosotros" class="<?= $currentAction === 'nosotros' ? 'active' : '' ?>"><i class="fas fa-circle-info" aria-hidden="true"></i><span><?= htmlspecialchars('Nosotros', ENT_QUOTES, 'UTF-8') ?></span></a>
+    <a href="index.php?action=inicio#interaccion-360" onclick="return mostrarSeccion('interaccion-360');" data-nav-key="interaccion" class="<?= $currentAction === 'inicio' ? 'active' : '' ?>"><i class="fas fa-vr-cardboard" aria-hidden="true"></i><span><?= htmlspecialchars('Interaccion 360', ENT_QUOTES, 'UTF-8') ?></span></a>
+    <a href="index.php?action=inicio#lo-nuevo" onclick="return mostrarSeccion('lo-nuevo')" data-nav-key="nuevo"><i class="fas fa-star" aria-hidden="true"></i><span><?= htmlspecialchars('Nuevo', ENT_QUOTES, 'UTF-8') ?></span></a>
+    <a href="index.php?action=inicio#mas-vendidos" onclick="return mostrarSeccion('mas-vendidos');" data-nav-key="mas-vendidos"><i class="fas fa-fire" aria-hidden="true"></i><span><?= htmlspecialchars('Mas vendidos', ENT_QUOTES, 'UTF-8') ?></span></a>
+    <a href="index.php?action=tienda" data-nav-key="tienda" class="<?= $currentAction === 'tienda' || $currentAction === 'productoDetalle' ? 'active' : '' ?>"><i class="fas fa-store" aria-hidden="true"></i><span><?= htmlspecialchars('Productos', ENT_QUOTES, 'UTF-8') ?></span></a>
+    <a href="index.php?action=reacondicionados" data-nav-key="reacondicionados" class="<?= $currentAction === 'reacondicionados' ? 'active' : '' ?>"><i class="fas fa-tag" aria-hidden="true"></i><span><?= htmlspecialchars('Ofertas', ENT_QUOTES, 'UTF-8') ?></span></a>
     <?php if($logueado): ?>
-      <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=misDevoluciones" data-nav-key="mis-devoluciones" class="<?= in_array($currentAction, ['misDevoluciones', 'devolucionDetalle', 'solicitarDevolucion'], true) ? 'active' : '' ?>"><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=perfil" data-nav-key="perfil" class="<?= $currentAction === 'perfil' ? 'active' : '' ?>"><?= htmlspecialchars('Perfil', ENT_QUOTES, 'UTF-8') ?></a>
-      <a href="index.php?action=logout" data-nav-key="salir"><?= htmlspecialchars('Salir', ENT_QUOTES, 'UTF-8') ?></a>
+      <a href="index.php?action=misPedidos" data-nav-key="mis-pedidos" class="<?= $currentAction === 'misPedidos' ? 'active' : '' ?>"><i class="fas fa-bag-shopping" aria-hidden="true"></i><span><?= htmlspecialchars('Mis pedidos', ENT_QUOTES, 'UTF-8') ?></span></a>
+      <a href="index.php?action=misDevoluciones" data-nav-key="mis-devoluciones" class="<?= in_array($currentAction, ['misDevoluciones', 'devolucionDetalle', 'solicitarDevolucion'], true) ? 'active' : '' ?>"><i class="fas fa-rotate-left" aria-hidden="true"></i><span><?= htmlspecialchars('Devoluciones', ENT_QUOTES, 'UTF-8') ?></span></a>
+      <a href="index.php?action=perfil" data-nav-key="perfil" class="<?= $currentAction === 'perfil' ? 'active' : '' ?>"><i class="fas fa-user" aria-hidden="true"></i><span><?= htmlspecialchars('Perfil', ENT_QUOTES, 'UTF-8') ?></span></a>
+      <a href="index.php?action=logout" data-nav-key="salir"><i class="fas fa-right-from-bracket" aria-hidden="true"></i><span><?= htmlspecialchars('Salir', ENT_QUOTES, 'UTF-8') ?></span></a>
     <?php endif; ?>
   </div>
 </aside>
@@ -1391,12 +1459,18 @@ function showToast(message, type = 'success') {
         });
     }
 
-    // Refresh badge every 30 s without reopening the dropdown
-    setInterval(function () {
+    function refreshBadge() {
+        if (document.hidden) return;
         fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
-    }, 30000);
+    }
+
+    // Refresh badge only while the tab is visible.
+    setInterval(refreshBadge, 45000);
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) refreshBadge();
+    });
 })();
 
 </script>

@@ -1301,7 +1301,9 @@ function syncPaymentCountdowns() {
 
 if (countdownItems.length > 0) {
     syncPaymentCountdowns();
-    window.setInterval(syncPaymentCountdowns, 1000);
+    window.setInterval(() => {
+        if (!document.hidden) syncPaymentCountdowns();
+    }, 1000);
 }
 
 document.querySelectorAll('[data-order-strip]').forEach((strip) => {
@@ -1411,7 +1413,7 @@ if (editAddressBtn && orderAddressForm) {
         const knownState = parseInt(detailPanel.dataset.pollOrderEstadoId || '0');
 
         async function pollDetail() {
-            if (reloading) return;
+            if (reloading || document.hidden) return;
             try {
                 const resp = await fetch('index.php?action=pollPedidoEstado&id=' + orderId, {
                     headers: { 'Accept': 'application/json' }
@@ -1423,7 +1425,10 @@ if (editAddressBtn && orderAddressForm) {
             } catch {}
         }
 
-        setInterval(pollDetail, 5000);
+        setInterval(pollDetail, 12000);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) pollDetail();
+        });
     } else {
         const stateMap = {};
         cards.forEach(c => {
@@ -1433,7 +1438,7 @@ if (editAddressBtn && orderAddressForm) {
         });
 
         async function pollList() {
-            if (reloading) return;
+            if (reloading || document.hidden) return;
             try {
                 const resp = await fetch('index.php?action=pollPedidosUsuario', {
                     headers: { 'Accept': 'application/json' }
@@ -1450,7 +1455,10 @@ if (editAddressBtn && orderAddressForm) {
             } catch {}
         }
 
-        setInterval(pollList, 5000);
+        setInterval(pollList, 15000);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) pollList();
+        });
     }
 })();
 

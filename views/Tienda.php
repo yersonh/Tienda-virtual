@@ -17,8 +17,9 @@
     overflow: hidden;
 }
 [data-theme="light"] .store-card {
-    background: rgba(255,255,255,0.9);
-    box-shadow: 0 18px 44px rgba(148,163,184,0.18);
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    box-shadow: 0 18px 44px rgba(59,130,246,0.14);
 }
 .hero {
     padding: 42px 32px 32px;
@@ -57,6 +58,14 @@
 }
 .hero-title em { color: var(--accent); font-style: normal; }
 .hero-sub { color: var(--secondary); font-size: 14px; margin-bottom: 28px; }
+[data-theme="light"] .hero-title {
+    color: #1e3a5f;
+}
+[data-theme="light"] .hero-label {
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
 
 /* FILTERS */
 .filters {
@@ -79,8 +88,14 @@
     transition: border-color 0.2s;
 }
 [data-theme="light"] .filter-input {
-    background: rgba(0,0,0,0.04);
-    border-color: rgba(0,0,0,0.08);
+    background: #f8faff;
+    border-color: #93c5fd;
+    color: #1e293b;
+    box-shadow: 0 1px 0 rgba(59,130,246,0.06);
+}
+.filter-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.16);
 }
 .filter-input:focus { border-color: var(--accent); }
 .filter-input::placeholder { color: var(--secondary); }
@@ -106,9 +121,9 @@
     background: #ffffff;
 }
 [data-theme="light"] .filter-select {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
-    color: #0f172a;
+    background-color: #f8faff;
+    border-color: #93c5fd;
+    color: #1e293b;
 }
 .btn-clear {
     background: rgba(147,197,253,0.1);
@@ -125,12 +140,14 @@
 }
 .btn-clear:hover { background: rgba(147,197,253,0.2); }
 [data-theme="light"] .btn-clear {
-    background: #dff7f5;
-    border-color: #9fe8e1;
-    color: #0f766e;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
 }
 [data-theme="light"] .btn-clear:hover {
-    background: #c8f2ee;
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
 }
 .btn-filter {
     background: rgba(255,255,255,0.06);
@@ -166,15 +183,15 @@
     stroke-linejoin: round;
 }
 [data-theme="light"] .btn-filter {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #0f172a;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
 }
 [data-theme="light"] .btn-filter:hover,
 [data-theme="light"] .btn-filter.active {
-    background: #dff7f5;
-    border-color: #59d8cd;
-    color: #0f766e;
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
 }
 .filter-overlay {
     position: fixed;
@@ -215,10 +232,10 @@
     transform: translateX(0);
 }
 [data-theme="light"] .filter-sidebar {
-    background: rgba(255,255,255,0.78);
-    border-left-color: #d6dee8;
-    border-top-color: #d6dee8;
-    box-shadow: -22px 0 48px rgba(9,21,37,0.14);
+    background: rgba(219,234,254,0.92);
+    border-left-color: #bfdbfe;
+    border-top-color: #bfdbfe;
+    box-shadow: -22px 0 48px rgba(59,130,246,0.16);
 }
 .sidebar-head {
     display: flex;
@@ -270,6 +287,9 @@
     text-transform: uppercase;
     letter-spacing: 0.8px;
 }
+[data-theme="light"] .filter-label {
+    color: #2563eb;
+}
 .compat-fields {
     display: grid;
     gap: 12px;
@@ -292,8 +312,8 @@
     gap: 2px;
 }
 [data-theme="light"] .option-list {
-    background: #f8fafc;
-    border-color: #d6dee8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
 }
 .option-row {
     display: flex;
@@ -330,7 +350,9 @@
     text-align: center;
 }
 [data-theme="light"] .store-empty {
-    background: #f8fafc;
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #374151;
 }
 .sidebar-actions {
     display: flex;
@@ -377,19 +399,20 @@
     color: var(--accent);
 }
 [data-theme="light"] .cat-tab {
-    background: rgba(255,255,255,0.85);
-    border-color: #d6dee8;
-    color: #496588;
-    box-shadow: 0 10px 28px rgba(148, 163, 184, 0.12);
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+    box-shadow: 0 2px 12px rgba(59,130,246,0.10);
 }
 [data-theme="light"] .cat-tab:hover {
-    border-color: #7dded6;
-    color: #0f172a;
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
 }
 [data-theme="light"] .cat-tab.active {
-    background: linear-gradient(135deg, #dffaf7, #ecfeff);
-    border-color: #59d8cd;
-    color: #0f766e;
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
 }
 .category-section {
     padding-bottom: 30px;
@@ -410,10 +433,10 @@
     color: var(--accent);
 }
 [data-theme="light"] .detail-back {
-    color: #64748b;
+    color: #374151;
 }
 [data-theme="light"] .detail-back:hover {
-    color: #0f766e;
+    color: #2563eb;
 }
 
 /* SECTION HEADER */
@@ -431,6 +454,9 @@
     display: flex;
     align-items: center;
     gap: 10px;
+}
+[data-theme="light"] .section-title {
+    color: #1e3a5f;
 }
 .section-title::before {
     content: '';
@@ -513,12 +539,13 @@
     border-color: rgba(147,197,253,0.4);
 }
 [data-theme="light"] .carousel-btn {
-    background: #f0fdfa;
-    border-color: #b5ebe5;
-    color: #0f766e;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
 }
 [data-theme="light"] .carousel-btn:hover {
-    background: #dff7f5;
+    background: #dbeafe;
+    border-color: #93c5fd;
 }
 .product-carousel {
     position: relative;
@@ -557,10 +584,10 @@
     flex: initial;
 }
 [data-theme="light"] .product-grid {
-    scrollbar-color: rgba(20, 184, 166, 0.35) transparent;
+    scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
 }
 [data-theme="light"] .product-grid::-webkit-scrollbar-thumb {
-    background: rgba(20, 184, 166, 0.35);
+    background: rgba(59, 130, 246, 0.35);
 }
 
 /* PRODUCT CARD */
@@ -587,13 +614,14 @@
     .product-card:active { transform: scale(0.98); }
 }
 [data-theme="light"] .product-card {
-    background: var(--card-bg);
-    border-color: var(--border);
-    box-shadow: var(--shadow);
+    background: #ffffff;
+    border: 1.5px solid #3b82f6;
+    box-shadow: 0 2px 12px rgba(59,130,246,0.12);
 }
 [data-theme="light"] .product-card:hover {
-    border-color: var(--accent);
-    box-shadow: 0 16px 32px rgba(148, 163, 184, 0.15);
+    background: #f0f7ff;
+    border-color: #1d4ed8;
+    box-shadow: 0 8px 22px rgba(59,130,246,0.18);
 }
 .card-badge {
     position: absolute;
@@ -607,6 +635,11 @@
     letter-spacing: 0.5px;
     padding: 3px 8px;
     border-radius: 6px;
+}
+[data-theme="light"] .card-badge {
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
 }
 .card-img-wrap {
     background: #ffffff;
@@ -623,7 +656,7 @@
 }
 [data-theme="light"] .card-img-wrap {
     background: #ffffff;
-    border-color: #000000;
+    border-color: #bfdbfe;
 }
 .card-img-wrap::after {
     content: '';
@@ -652,8 +685,8 @@
     color: var(--accent);
 }
 [data-theme="light"] .card-placeholder {
-    background: #e6fffb;
-    color: #0f766e;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 .card-body {
     padding: 14px 16px 16px;
@@ -665,6 +698,9 @@
     color: var(--text);
     margin-bottom: 8px;
     line-height: 1.3;
+}
+[data-theme="light"] .card-name {
+    color: #1e293b;
 }
 .card-meta {
     display: flex;
@@ -683,9 +719,9 @@
     border: 1px solid var(--border);
 }
 [data-theme="light"] .meta-code {
-    background: #f8fafc;
-    border-color: #d6dee8;
-    color: #64748b;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #374151;
 }
 .meta-stock {
     background: rgba(147,197,253,0.08);
@@ -693,9 +729,9 @@
     border: 1px solid rgba(147,197,253,0.15);
 }
 [data-theme="light"] .meta-stock {
-    background: #e7fffb;
-    border-color: #b4ece7;
-    color: #0f766e;
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
 }
 .meta-stock.low {
     background: rgba(250,199,117,0.1);
@@ -721,8 +757,8 @@
     background: rgba(255,255,255,0.035);
 }
 [data-theme="light"] .compat-block {
-    background: #f8fafc;
-    border-color: #d6dee8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
 }
 .compat-title {
     display: inline-flex;
@@ -736,6 +772,16 @@
     font-size: 10px;
     font-weight: 900;
     text-transform: uppercase;
+}
+[data-theme="light"] .compat-title {
+    background: #dbeafe;
+    color: #2563eb;
+}
+[data-theme="light"] .compat-line {
+    color: #374151;
+}
+[data-theme="light"] .compat-line strong {
+    color: #1e293b;
 }
 .compat-list {
     display: grid;
@@ -764,6 +810,12 @@
     margin-bottom: 14px;
 }
 .card-price span { font-size: 13px; font-weight: 400; color: var(--secondary); margin-left: 2px; }
+[data-theme="light"] .card-price {
+    color: #1d4ed8;
+}
+[data-theme="light"] .card-price span {
+    color: #374151;
+}
 .card-footer {
     display: flex;
     gap: 8px;
@@ -778,8 +830,8 @@
     overflow: hidden;
 }
 [data-theme="light"] .qty-wrap {
-    background: #f8fafc;
-    border-color: #d6dee8;
+    background: #f8faff;
+    border-color: #93c5fd;
 }
 .qty-btn {
     width: 28px; height: 32px;
@@ -830,17 +882,19 @@
     color: var(--secondary);
 }
 [data-theme="light"] .add-btn {
-    background: #ddfaf5;
-    border-color: #8ce0d7;
-    color: #0f766e;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
 }
 [data-theme="light"] .add-btn:hover {
-    background: #caf5ef;
-    border-color: #59d8cd;
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
 }
 [data-theme="light"] .add-btn.added {
-    background: #c2f4ed;
-    border-color: #34cbbd;
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1d4ed8;
 }
 .cart-toast {
     position: fixed;
@@ -922,11 +976,12 @@
 }
 [data-theme="light"] .cart-toast {
     background: rgba(255,255,255,0.96);
-    color: #0f172a;
-    box-shadow: 0 18px 42px rgba(9,21,37,0.16);
+    color: #1e293b;
+    border-color: #bfdbfe;
+    box-shadow: 0 18px 42px rgba(59,130,246,0.16);
 }
 [data-theme="light"] .cart-toast-text {
-    color: #475569;
+    color: #374151;
 }
 @keyframes toastBar {
     from { transform: scaleX(1); }
@@ -945,23 +1000,23 @@
     font-size: 12px;
 }
 [data-theme="light"] .footer {
-    background: #334155;
-    border-top-color: #cbd5e1;
-    color: #e2e8f0;
+    background: #dbeafe;
+    border-top-color: #bfdbfe;
+    color: #374151;
 }
 [data-theme="light"] .hero::before {
-    background: radial-gradient(ellipse, rgba(20,184,166,0.12) 0%, transparent 72%);
+    background: radial-gradient(ellipse, rgba(59,130,246,0.16) 0%, transparent 72%);
 }
 [data-theme="light"] .hero-sub {
-    color: #64748b;
+    color: #374151;
 }
 [data-theme="light"] .section-count {
-    background: #ffffff;
-    border-color: #d6dee8;
-    color: #64748b;
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
 }
 [data-theme="light"] .see-all {
-    color: #0f766e;
+    color: #2563eb;
 }
 @media (max-width: 980px) {
     .filters {

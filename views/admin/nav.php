@@ -822,12 +822,18 @@ applyAdminTheme(localStorage.getItem('theme') || 'dark');
             });
         });
     }
-    // Refresh badge every 30 s without reopening the dropdown
-    setInterval(function () {
+    function refreshAdminBadge() {
+        if (document.hidden) return;
         fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (d) { if (d.ok) setBadge(d.no_leidas, d.dev_pendientes); });
-    }, 30000);
+    }
+
+    // Refresh badge only while the admin tab is visible.
+    setInterval(refreshAdminBadge, 45000);
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) refreshAdminBadge();
+    });
 })();
 
 // Mobile sidebar toggle

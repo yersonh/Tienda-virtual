@@ -225,7 +225,7 @@ $motivosLabel = [
                                     <?php foreach ($imagenes as $img): ?>
                                         <?php $imgUrl = UploadHelper::getDevolucionImageUrl($img['ruta_imagen'] ?? ''); ?>
                                         <img class="dev-img-thumb" src="<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') ?>"
-                                             alt="Imagen devolución" loading="lazy"
+                                             alt="Imagen devolución" loading="lazy" decoding="async"
                                              onclick="openLightbox(this.src)">
                                     <?php endforeach; ?>
                                 </div>
@@ -241,7 +241,7 @@ $motivosLabel = [
 <!-- Lightbox -->
 <div class="dev-lightbox" id="dev-lightbox">
     <button class="dev-lightbox-close" onclick="closeLightbox()"><i class="fas fa-xmark"></i></button>
-    <img id="dev-lightbox-img" src="" alt="Imagen ampliada">
+    <img id="dev-lightbox-img" src="" alt="Imagen ampliada" decoding="async">
 </div>
 
 <script>

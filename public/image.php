@@ -53,6 +53,7 @@ header('Cache-Control: public, max-age=604800, immutable');
 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 604800) . ' GMT');
 header('Content-Length: ' . filesize($rutaArchivo));
 header('Accept-Ranges: bytes');
+header('X-Content-Type-Options: nosniff');
 
 if (
     (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
@@ -83,6 +84,10 @@ switch ($extension) {
     default:
         header('Content-Type: application/octet-stream');
         break;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD') {
+    exit;
 }
 
 $fp = fopen($rutaArchivo, 'rb');

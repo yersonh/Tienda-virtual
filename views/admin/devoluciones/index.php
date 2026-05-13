@@ -107,9 +107,10 @@ function adDevEstadoStyle(string $nombre): array {
         background: var(--card-bg);
         border: 1px solid var(--border);
         border-radius: 20px;
-        overflow: hidden;
+        overflow-x: auto;
         padding: 8px;
         backdrop-filter: blur(14px);
+        -webkit-overflow-scrolling: touch;
     }
     .dev-table {
         width: 100%;
@@ -164,12 +165,28 @@ function adDevEstadoStyle(string $nombre): array {
     }
 
     @media (max-width: 768px) {
+        .dev-container {
+            padding: 14px;
+        }
+        .dev-header {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .filter-card {
+            border-radius: 16px;
+            padding: 16px;
+        }
         .filter-form {
             grid-template-columns: 1fr;
         }
         .btn-filter, .btn-clear {
             width: 100%;
             justify-content: center;
+        }
+        .dev-table {
+            min-width: 760px;
         }
     }
 </style>

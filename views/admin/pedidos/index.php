@@ -23,7 +23,7 @@
     </div>
 
     <div class="filter-card">
-        <form method="GET" action="index.php" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto auto; gap: 15px; align-items: flex-end;">
+        <form method="GET" action="index.php" class="admin-order-filter-form">
             <input type="hidden" name="action" value="admin_pedidos">
 
             <div class="filter-group">
@@ -183,6 +183,12 @@
         -webkit-backdrop-filter: blur(14px);
         box-shadow: var(--shadow);
     }
+    .admin-order-filter-form {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(160px, 1fr)) auto auto;
+        gap: 15px;
+        align-items: flex-end;
+    }
     .filter-group label {
         display: block;
         color: var(--accent);
@@ -305,6 +311,44 @@
         color: #ffffff;
         transform: scale(1.05);
     }
+    @media (max-width: 1100px) {
+        .admin-order-filter-form {
+            grid-template-columns: repeat(2, minmax(180px, 1fr));
+        }
+        .btn-filtrar,
+        .btn-limpiar {
+            justify-content: center;
+        }
+    }
+    @media (max-width: 720px) {
+        div[style*="padding: 20px"] {
+            padding: 14px !important;
+        }
+        .pedidos-header {
+            align-items: stretch;
+            flex-direction: column;
+            padding: 16px;
+        }
+        .btn-mapa {
+            justify-content: center;
+            width: 100%;
+        }
+        .filter-card,
+        .table-container {
+            border-radius: 16px;
+            padding: 14px;
+        }
+        .admin-order-filter-form {
+            grid-template-columns: 1fr;
+        }
+        .btn-filtrar,
+        .btn-limpiar {
+            width: 100%;
+        }
+        .pedidos-table {
+            min-width: 820px;
+        }
+    }
 </style>
 
 <script>
@@ -323,7 +367,7 @@
     let reloading = false;
 
     async function pollAdmin() {
-        if (reloading) return;
+        if (reloading || document.hidden) return;
         try {
             const resp = await fetch('index.php?action=pollAdminPedidos&ids=' + ids, {
                 headers: { 'Accept': 'application/json' }
@@ -341,7 +385,10 @@
         } catch {}
     }
 
-    setInterval(pollAdmin, 10000);
+    setInterval(pollAdmin, 20000);
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) pollAdmin();
+    });
 })();
 </script>
 

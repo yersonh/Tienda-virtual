@@ -1215,8 +1215,10 @@ if (followLink) {
 }
 
 setInterval(() => {
-    refreshDetailStock();
-}, 3000);
+    if (!document.hidden) {
+        refreshDetailStock();
+    }
+}, 12000);
 
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {

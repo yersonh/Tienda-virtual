@@ -184,7 +184,7 @@ $motivosDisponibles = [
                             <?php if ($imgUrl): ?>
                                 <img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8') ?>"
                                      alt="<?= htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') ?>"
-                                     loading="lazy">
+                                     loading="lazy" decoding="async">
                             <?php else: ?>
                                 <span class="dev-card-thumb-empty"><i class="fas fa-box"></i></span>
                             <?php endif; ?>

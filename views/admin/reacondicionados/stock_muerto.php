@@ -53,6 +53,7 @@ $items = $items ?? [];
                     <div style="height:130px;background:rgba(148,163,184,.08);overflow:hidden;position:relative;">
                         <?php if ($imgUrl): ?>
                             <img src="<?= $imgUrl ?>" alt="<?= $nombre ?>"
+                                 loading="lazy" decoding="async"
                                  style="width:100%;height:100%;object-fit:cover;filter:grayscale(60%);">
                         <?php else: ?>
                             <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;">
