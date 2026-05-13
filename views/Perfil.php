@@ -105,6 +105,44 @@ $iniciales = $inicialNombre . $inicialApellido;
 
     </form>
 
+    <!-- ZONA DE PELIGRO -->
+    <div class="perfil-danger-zone">
+        <div class="perfil-danger-head">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span><?= htmlspecialchars('Zona de peligro', ENT_QUOTES, 'UTF-8') ?></span>
+        </div>
+        <p class="perfil-danger-desc">
+            <?= htmlspecialchars('Al inactivar tu cuenta no podras iniciar sesion. Tus pedidos y datos se conservan.', ENT_QUOTES, 'UTF-8') ?>
+        </p>
+        <button type="button" class="btn-inactivar" id="btn-inactivar-cuenta">
+            <i class="fas fa-user-slash"></i>
+            <?= htmlspecialchars('Inactivar cuenta', ENT_QUOTES, 'UTF-8') ?>
+        </button>
+    </div>
+
+</div>
+
+<!-- MODAL CONFIRMACION -->
+<div class="inactivar-overlay" id="inactivar-overlay" role="dialog" aria-modal="true" aria-labelledby="inactivar-title">
+    <div class="inactivar-modal">
+        <div class="inactivar-modal-icon">
+            <i class="fas fa-user-slash"></i>
+        </div>
+        <h3 id="inactivar-title"><?= htmlspecialchars('Inactivar cuenta', ENT_QUOTES, 'UTF-8') ?></h3>
+        <p><?= htmlspecialchars('Esta accion cerrara tu sesion y no podras iniciar sesion hasta que reactiven tu cuenta. Tus pedidos y datos se conservan.', ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="inactivar-modal-warning"><?= htmlspecialchars('¿Estas seguro de que deseas continuar?', ENT_QUOTES, 'UTF-8') ?></p>
+        <div class="inactivar-modal-actions">
+            <button type="button" class="inactivar-btn-cancel" id="inactivar-cancelar">
+                <?= htmlspecialchars('Cancelar', ENT_QUOTES, 'UTF-8') ?>
+            </button>
+            <form method="POST" action="index.php?action=inactivarCuenta" id="form-inactivar">
+                <button type="submit" class="inactivar-btn-confirm">
+                    <i class="fas fa-user-slash"></i>
+                    <?= htmlspecialchars('Si, inactivar', ENT_QUOTES, 'UTF-8') ?>
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -365,6 +403,215 @@ button:hover {
     }
 }
 
+/* ZONA DE PELIGRO */
+.perfil-danger-zone {
+    margin-top: 28px;
+    padding: 18px 20px;
+    border: 1px solid rgba(248,113,113,0.32);
+    border-radius: 14px;
+    background: rgba(248,113,113,0.07);
+}
+[data-theme="light"] .perfil-danger-zone {
+    background: rgba(248,113,113,0.06);
+    border-color: rgba(220,38,38,0.22);
+}
+.perfil-danger-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fca5a5;
+    font-weight: 900;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+}
+[data-theme="light"] .perfil-danger-head {
+    color: #b91c1c;
+}
+.perfil-danger-desc {
+    color: #94a3b8;
+    font-size: 13px;
+    margin: 0 0 14px;
+    line-height: 1.5;
+}
+[data-theme="light"] .perfil-danger-desc {
+    color: #64748b;
+}
+.btn-inactivar {
+    width: auto;
+    padding: 11px 20px;
+    background: rgba(248,113,113,0.14);
+    border: 1px solid rgba(248,113,113,0.44);
+    border-radius: 12px;
+    color: #fca5a5;
+    font-weight: 900;
+    font-size: 14px;
+    margin-top: 0;
+    transition: 0.25s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-inactivar:hover {
+    background: rgba(248,113,113,0.24);
+    border-color: rgba(248,113,113,0.7);
+    transform: none;
+    box-shadow: 0 4px 16px rgba(248,113,113,0.2);
+}
+[data-theme="light"] .btn-inactivar {
+    background: rgba(220,38,38,0.08);
+    border-color: rgba(220,38,38,0.3);
+    color: #b91c1c;
+}
+
+/* MODAL */
+.inactivar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,23,0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.inactivar-overlay.is-open {
+    display: flex;
+}
+.inactivar-modal {
+    background: rgba(15,23,42,0.97);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 20px;
+    padding: 32px 28px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(248,113,113,0.15);
+    animation: fadeIn 0.25s ease;
+}
+[data-theme="light"] .inactivar-modal {
+    background: rgba(255,255,255,0.98);
+    border-color: rgba(220,38,38,0.22);
+}
+.inactivar-modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(248,113,113,0.14);
+    border: 2px solid rgba(248,113,113,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 26px;
+    color: #fca5a5;
+}
+.inactivar-modal h3 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    color: #fca5a5;
+}
+[data-theme="light"] .inactivar-modal h3 {
+    color: #b91c1c;
+}
+.inactivar-modal p {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 10px;
+}
+[data-theme="light"] .inactivar-modal p {
+    color: #64748b;
+}
+.inactivar-modal-warning {
+    color: #fbbf24 !important;
+    font-weight: 900 !important;
+    font-size: 14px !important;
+    margin-top: 6px !important;
+}
+[data-theme="light"] .inactivar-modal-warning {
+    color: #b45309 !important;
+}
+.inactivar-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+    justify-content: center;
+}
+.inactivar-modal-actions form { margin: 0; }
+.inactivar-btn-cancel {
+    padding: 11px 20px;
+    border: 1px solid rgba(148,163,184,0.3);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    color: #94a3b8;
+    font-weight: 900;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+.inactivar-btn-cancel:hover {
+    background: rgba(255,255,255,0.1);
+    color: #e2e8f0;
+    transform: none;
+    box-shadow: none;
+}
+[data-theme="light"] .inactivar-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #d1d5db;
+}
+.inactivar-btn-confirm {
+    padding: 11px 20px;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 900;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+    width: auto;
+    margin-top: 0;
+}
+.inactivar-btn-confirm:hover {
+    transform: none;
+    box-shadow: 0 4px 18px rgba(239,68,68,0.45);
+}
+
 </style>
+
+<script>
+(function () {
+    var btn     = document.getElementById('btn-inactivar-cuenta');
+    var overlay = document.getElementById('inactivar-overlay');
+    var cancel  = document.getElementById('inactivar-cancelar');
+
+    if (!btn || !overlay) return;
+
+    btn.addEventListener('click', function () {
+        overlay.classList.add('is-open');
+        overlay.focus();
+    });
+
+    cancel.addEventListener('click', function () {
+        overlay.classList.remove('is-open');
+    });
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) overlay.classList.remove('is-open');
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') overlay.classList.remove('is-open');
+    });
+})();
+</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>

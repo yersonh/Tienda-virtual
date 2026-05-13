@@ -61,4 +61,49 @@ class PerfilController {
         header("Location: index.php?action=perfil");
         exit();
     }
+
+    public function inactivarCuenta(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['id_usuario'])) {
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?action=perfil');
+            exit();
+        }
+
+        $idUsuario = (int) $_SESSION['id_usuario'];
+
+        $conn  = Database::getConnection();
+        $model = new UsuarioModel($conn);
+
+        try {
+            $model->inactivarUsuario($idUsuario);
+        } catch (Throwable $e) {
+            error_log('inactivarCuenta: ' . $e->getMessage());
+            $_SESSION['error'] = 'No se pudo inactivar la cuenta. Intenta de nuevo.';
+            header('Location: index.php?action=perfil');
+            exit();
+        }
+
+        // Destruir sesion actual
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+        }
+        session_destroy();
+
+        // Nueva sesion solo para el mensaje de confirmacion
+        session_start();
+        $_SESSION['success'] = 'Tu cuenta fue inactivada correctamente.';
+
+        header('Location: index.php?action=login');
+        exit();
+    }
 }

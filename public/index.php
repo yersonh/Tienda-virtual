@@ -308,6 +308,10 @@ switch ($action) {
         (new PerfilController())->actualizar();
         break;
 
+    case 'inactivarCuenta':
+        (new PerfilController())->inactivarCuenta();
+        break;
+
     case 'admin_panel':
         Auth::soloAdmin();
         require_once __DIR__ . '/../views/admin/nav.php';

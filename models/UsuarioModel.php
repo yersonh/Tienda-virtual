@@ -501,6 +501,26 @@ class UsuarioModel
         return true;
     }
 
+    public function inactivarUsuario(int $idUsuario): bool {
+        if ($idUsuario <= 0) return false;
+
+        $sql = "UPDATE USUARIO SET ESTADO = 'INACTIVO', UPDATED_AT = SYSDATE WHERE ID_USUARIO = :id_usuario";
+        $stmt = oci_parse($this->conn, $sql);
+        oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $error = oci_error($stmt);
+            oci_free_statement($stmt);
+            throw new \Exception($error['message'] ?? 'No se pudo inactivar la cuenta');
+        }
+
+        $afectadas = oci_num_rows($stmt);
+        oci_free_statement($stmt);
+        oci_commit($this->conn);
+
+        return $afectadas > 0;
+    }
+
     /**
      * Actualizar contraseña del usuario
      */

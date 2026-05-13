@@ -44,7 +44,7 @@ class LoginController
         }
 
         if (strtoupper(trim($usuario['estado'])) !== 'ACTIVO') {
-            $_SESSION['error'] = "Usuario inactivo";
+            $_SESSION['error'] = "Tu cuenta esta inactiva.";
             header("Location: index.php?action=login");
             exit();
         }
