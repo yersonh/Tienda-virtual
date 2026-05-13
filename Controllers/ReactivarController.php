@@ -15,8 +15,10 @@ class ReactivarController
 
     private function verificarToken(string $token): ?int
     {
-        $decoded = base64_decode(strtr($token, '-_', '+/'));
-        if (!$decoded) return null;
+        $padded  = strtr($token, '-_', '+/');
+        $padded .= str_repeat('=', (4 - strlen($padded) % 4) % 4);
+        $decoded  = base64_decode($padded, true);
+        if ($decoded === false) return null;
 
         $parts = explode('.', $decoded, 3);
         if (count($parts) !== 3) return null;
@@ -50,6 +52,7 @@ class ReactivarController
         if ($usuario && $usuario['ESTADO'] !== 'ACTIVO') {
             try {
                 $token  = $this->generarToken((int) $usuario['ID_USUARIO']);
+                error_log('[REACTIVACION] TOKEN_GENERADO=' . $token);
                 $mailer = new Mailer();
                 $mailer->enviarReactivacion($usuario['NOMBRES'], $usuario['CORREO'], $token);
             } catch (\Throwable $e) {
@@ -67,6 +70,7 @@ class ReactivarController
     public function confirmarReactivacion(): void
     {
         $token = trim($_GET['token'] ?? '');
+        error_log('[REACTIVACION] TOKEN_RECIBIDO_CONFIRMACION=' . $token);
 
         $idUsuario = $token !== '' ? $this->verificarToken($token) : null;
 

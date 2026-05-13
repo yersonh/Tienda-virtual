@@ -45,7 +45,8 @@ class Mailer
 
     public function enviarReactivacion($nombre, $email, $token)
     {
-        $link = self::BASE_URL . '/index.php?action=confirmarReactivacion&token=' . $token;
+        error_log('[MAILER] TOKEN_RECIBIDO=' . $token);
+        $link = self::BASE_URL . '/index.php?action=confirmarReactivacion&token=' . urlencode($token);
 
         $body = '
             <p style="font-size:16px;line-height:1.6;margin-bottom:24px;color:#4a5568;">
