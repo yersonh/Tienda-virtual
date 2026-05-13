@@ -15,7 +15,7 @@ RUN apt-get install -y --no-install-recommends \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Extensiones PHP
-RUN docker-php-ext-install pdo curl xml mbstring
+RUN docker-php-ext-install pdo curl xml mbstring opcache
 
 # Descargar Oracle Instant Client
 RUN mkdir -p /opt/oracle && \
@@ -41,6 +41,7 @@ RUN export LDFLAGS="-Wl,-rpath,/opt/oracle/instantclient_21_10" && \
 # App
 WORKDIR /app
 COPY . .
+COPY config/php-performance.ini /usr/local/etc/php/conf.d/performance.ini
 
 # EntryPoint
 COPY docker-entrypoint.sh /usr/local/bin/

@@ -616,6 +616,9 @@ class TiendaController {
     public function productosRealtimeJson(): void {
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store, max-age=0');
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
 
         try {
             $raw = trim((string) ($_GET['ids'] ?? ''));
@@ -659,6 +662,10 @@ class TiendaController {
 
     public function stockProductoJson(): void {
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store, max-age=0');
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
 
         try {
             $id = (int) ($_GET['id'] ?? 0);
@@ -671,7 +678,7 @@ class TiendaController {
                 exit();
             }
 
-            $producto = $this->productoModel()->obtenerPorId($id);
+            $producto = $this->productoModel()->obtenerStockProductoRapido($id);
             if (!$producto) {
                 http_response_code(404);
                 echo json_encode([

@@ -7,6 +7,7 @@ $mapsEmbedUrl = 'https://www.google.com/maps?q=' . $direccionMaps . '&z=18&outpu
 $mapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . $direccionMaps . '&travelmode=driving';
 $mapsSearchUrl = 'https://www.google.com/maps/search/?api=1&query=' . $direccionMaps;
 $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
+$manualUsuarioUrl = 'MANUAL_USUARIO/Manual_Usuario.pdf';
 ?>
 
 <style>
@@ -27,6 +28,7 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 
 .about-panel,
 .about-map-panel,
+.about-manual,
 .about-service,
 .about-stat {
     border: 1px solid var(--border);
@@ -38,6 +40,7 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
 
 [data-theme="light"] .about-panel,
 [data-theme="light"] .about-map-panel,
+[data-theme="light"] .about-manual,
 [data-theme="light"] .about-service,
 [data-theme="light"] .about-stat {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(235, 248, 255, 0.8));
@@ -351,9 +354,106 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     font-size: 14px;
 }
 
+.about-manual {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    margin-top: 22px;
+    padding: 22px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.about-manual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(239, 68, 68, 0.12), transparent 48%, rgba(59, 130, 246, 0.1));
+    pointer-events: none;
+}
+
+.manual-icon {
+    position: relative;
+    z-index: 1;
+    width: 58px;
+    height: 58px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(248, 113, 113, 0.28);
+    font-size: 27px;
+}
+
+[data-theme="light"] .manual-icon {
+    color: #dc2626;
+    background: #fee2e2;
+    border-color: #fecaca;
+}
+
+.manual-copy {
+    position: relative;
+    z-index: 1;
+}
+
+.manual-copy h2 {
+    margin: 0 0 6px;
+    font-family: 'Space Grotesk', 'Manrope', sans-serif;
+    font-size: clamp(20px, 2vw, 26px);
+    letter-spacing: 0;
+}
+
+.manual-copy p {
+    margin: 0;
+    max-width: 640px;
+    color: var(--secondary);
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.manual-download {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 8px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 900;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #dc2626, #2563eb);
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+    transition: transform var(--transition), box-shadow var(--transition), filter var(--transition);
+}
+
+.manual-download:hover,
+.manual-download:focus-visible {
+    color: #ffffff;
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 20px 38px rgba(37, 99, 235, 0.28);
+}
+
 @media (max-width: 980px) {
     .about-services {
         grid-template-columns: 1fr;
+    }
+
+    .about-manual {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .manual-download {
+        grid-column: 1 / -1;
+        width: 100%;
     }
 
     .about-map-panel {
@@ -377,6 +477,17 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
     .about-actions,
     .about-map-actions {
         display: grid;
+    }
+
+    .about-manual {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+
+    .manual-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 24px;
     }
 
     .about-map-frame,
@@ -463,6 +574,24 @@ $horarioTienda = 'Lunes a sabado: 8:00 a.m. - 6:00 p.m. Domingo: cerrado.';
                     </aside>
                 </div>
             </article>
+        </section>
+
+        <section class="about-manual" aria-labelledby="manual-title">
+            <span class="manual-icon" aria-hidden="true">
+                <i class="fas fa-file-pdf"></i>
+            </span>
+            <div class="manual-copy">
+                <h2 id="manual-title"><?= htmlspecialchars('Manual de usuario', ENT_QUOTES, 'UTF-8') ?></h2>
+                <p><?= htmlspecialchars('Descarga una guia en PDF con las funciones principales de Naylex Store para consultar el proceso de compra, navegacion y uso del sistema cuando lo necesites.', ENT_QUOTES, 'UTF-8') ?></p>
+            </div>
+            <a
+                class="manual-download"
+                href="<?= htmlspecialchars($manualUsuarioUrl, ENT_QUOTES, 'UTF-8') ?>"
+                download="Manual_Usuario.pdf"
+                aria-label="<?= htmlspecialchars('Descargar manual de usuario en PDF', ENT_QUOTES, 'UTF-8') ?>">
+                <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                <?= htmlspecialchars('Descargar PDF', ENT_QUOTES, 'UTF-8') ?>
+            </a>
         </section>
 
         <section class="about-services" aria-label="<?= htmlspecialchars('Servicios de ElectriTorres', ENT_QUOTES, 'UTF-8') ?>">

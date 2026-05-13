@@ -2247,8 +2247,12 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
         }, { rootMargin: '300px 0px' })
         : null;
 
-    function observeCards(root) {
+    function observeCards(root, reset) {
         root = root || document;
+        if (reset) {
+            visibleRefs.clear();
+            if (io) io.disconnect();
+        }
         root.querySelectorAll('.product-card[data-reference]').forEach(function (card) {
             if (io) io.observe(card);
             else visibleRefs.add(parseInt(card.dataset.reference || '0', 10));
@@ -2307,6 +2311,7 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     function fetchRealtime() {
         if (paused || visibleRefs.size === 0) return;
         var ids = Array.from(visibleRefs).slice(0, 50);
+        if (ids.length === 0) return;
         fetch('index.php?action=productosRealtime&ids=' + ids.join(','), {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }
@@ -2322,7 +2327,7 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     }
 
     function startPolling() {
-        if (rtInterval) return;
+        if (rtInterval || document.hidden) return;
         rtInterval = setInterval(fetchRealtime, 20000);
     }
 
@@ -2334,11 +2339,16 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     // Pause/resume con visibilidad de la pestaña
     document.addEventListener('visibilitychange', function () {
         paused = document.hidden;
-        if (!paused && !rtInterval) startPolling();
+        if (paused) {
+            stopPolling();
+        } else {
+            startPolling();
+            fetchRealtime();
+        }
     });
 
     // Observar cards ya en el DOM
-    observeCards();
+    observeCards(document, true);
     startPolling();
 
     // Re-observar tras actualización de filtros
@@ -2346,7 +2356,10 @@ if (sessionStorage.getItem('tiendaFilterSidebarOpen') === '1') {
     if (typeof _origApply === 'function') {
         window.applyFilteredStoreResponse = function (data, viewParams, cat, requestKey, append) {
             _origApply.call(this, data, viewParams, cat, requestKey, append);
-            setTimeout(function () { observeCards(); }, 80);
+            setTimeout(function () {
+                observeCards(document.getElementById('store-results') || document, !append);
+                fetchRealtime();
+            }, 80);
         };
     }
 })();

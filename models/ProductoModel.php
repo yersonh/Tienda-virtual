@@ -430,6 +430,8 @@ class ProductoModel {
             $params[$param] = $idReferencia;
         }
 
+        $inSql = implode(',', $placeholders);
+
         $query = "SELECT r.ID_REFERENCIA,
                          p.ID_PRODUCTO,
                          p.PRECIO,
@@ -442,13 +444,15 @@ class ProductoModel {
                       FROM (
                           SELECT ID_REFERENCIA, NVL(STOCK_P, 0) AS STOCK_P
                           FROM COMPATIBILIDAD_VEHICULO
+                          WHERE ID_REFERENCIA IN ($inSql)
                           UNION ALL
                           SELECT ID_REFERENCIA, NVL(STOCK_P, 0) AS STOCK_P
                           FROM COMPATIBILIDAD_MAQUINARIA
+                          WHERE ID_REFERENCIA IN ($inSql)
                       )
                       GROUP BY ID_REFERENCIA
                   ) stk ON stk.ID_REFERENCIA = r.ID_REFERENCIA
-                  WHERE r.ID_REFERENCIA IN (" . implode(',', $placeholders) . ")";
+                  WHERE r.ID_REFERENCIA IN ($inSql)";
 
         $stmt = oci_parse($this->conn, $query);
         $bindValues = [];
@@ -466,6 +470,48 @@ class ProductoModel {
         oci_free_statement($stmt);
 
         return $results;
+    }
+
+    public function obtenerStockProductoRapido(int $idProducto): ?array {
+        if ($idProducto <= 0) {
+            return null;
+        }
+
+        $query = "SELECT r.ID_REFERENCIA,
+                         p.ID_PRODUCTO,
+                         NVL(stk.STOCK_P, 0) AS STOCK_P
+                  FROM PRODUCTO p
+                  LEFT JOIN (
+                      SELECT id_producto,
+                             MIN(id_referencia) KEEP (DENSE_RANK FIRST ORDER BY id_referencia) AS id_referencia
+                      FROM REFERENCIA_PRODUCTO
+                      GROUP BY id_producto
+                  ) r ON r.ID_PRODUCTO = p.ID_PRODUCTO
+                  LEFT JOIN (
+                      SELECT ID_REFERENCIA, SUM(STOCK_P) AS STOCK_P
+                      FROM (
+                          SELECT cv.ID_REFERENCIA, NVL(cv.STOCK_P, 0) AS STOCK_P
+                          FROM COMPATIBILIDAD_VEHICULO cv
+                          INNER JOIN REFERENCIA_PRODUCTO rv ON rv.ID_REFERENCIA = cv.ID_REFERENCIA
+                          WHERE rv.ID_PRODUCTO = :id_producto
+                          UNION ALL
+                          SELECT cm.ID_REFERENCIA, NVL(cm.STOCK_P, 0) AS STOCK_P
+                          FROM COMPATIBILIDAD_MAQUINARIA cm
+                          INNER JOIN REFERENCIA_PRODUCTO rm ON rm.ID_REFERENCIA = cm.ID_REFERENCIA
+                          WHERE rm.ID_PRODUCTO = :id_producto
+                      )
+                      GROUP BY ID_REFERENCIA
+                  ) stk ON stk.ID_REFERENCIA = r.ID_REFERENCIA
+                  WHERE p.ID_PRODUCTO = :id_producto";
+
+        $stmt = oci_parse($this->conn, $query);
+        oci_bind_by_name($stmt, ':id_producto', $idProducto, -1, SQLT_INT);
+        oci_execute($stmt);
+
+        $row = oci_fetch_assoc($stmt);
+        oci_free_statement($stmt);
+
+        return $row ? $this->normalizeRow($row) : null;
     }
 
     public function obtenerMasVendidos($limite = 5) {
