@@ -120,6 +120,20 @@ function orderProductImage(?string $imagen): ?string {
 .orders-shell {
     max-width: 1180px;
     margin: 0 auto;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background:
+        linear-gradient(135deg, rgba(59,130,246,0.08), transparent 38%),
+        var(--card-bg);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+[data-theme="light"] .orders-shell {
+    background: #ffffff;
+    border-color: #bfdbfe;
+    box-shadow: 0 18px 44px rgba(59,130,246,0.12);
 }
 .orders-head {
     display: flex;
@@ -766,6 +780,10 @@ function orderProductImage(?string $imagen): ?string {
 @media (max-width: 640px) {
     .orders-page {
         padding: 26px 14px 86px;
+    }
+    .orders-shell {
+        padding: 16px;
+        border-radius: 18px;
     }
     .delivery-steps {
         grid-template-columns: 1fr;
