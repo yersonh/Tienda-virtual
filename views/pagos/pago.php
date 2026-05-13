@@ -749,6 +749,14 @@ async function openWompiCheckout(checkout) {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
 
+    console.log('WOMPI DEBUG', {
+        publicKey,
+        reference,
+        amountInCents,
+        redirectUrl,
+        integrity
+    });
+
     const widget = new WidgetCheckout({
         currency: String(currency),
         amountInCents: Number(amountInCents),
