@@ -411,80 +411,28 @@ if (session_status() === PHP_SESSION_NONE) {
 
     </div>
 
+    <script src="js/nxl-auth.js"></script>
     <script>
-        const toggle = document.getElementById('togglePassword');
-        const password = document.getElementById('password');
-        const icon = document.getElementById('iconEye');
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        toggle.addEventListener('click', () => {
-
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                password.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-
-        });
-
-        function applyTheme(theme) {
-            body.setAttribute('data-theme', theme);
-            themeToggle.innerHTML = theme === 'dark' ?
-                '<i class="fas fa-moon"></i>' :
-                '<i class="fas fa-sun"></i>';
+        var toggleBtn = document.getElementById('togglePassword');
+        var pwdInput  = document.getElementById('password');
+        var eyeIcon   = document.getElementById('iconEye');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                var isHidden = pwdInput.type === 'password';
+                pwdInput.type = isHidden ? 'text' : 'password';
+                eyeIcon.classList.toggle('fa-eye',      !isHidden);
+                eyeIcon.classList.toggle('fa-eye-slash', isHidden);
+            });
         }
 
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'dark');
-
-        function showToast(message, type) {
-            type = type || 'success';
-            var container = document.getElementById('nxl-toast-container');
-            if (!container || !message) return;
-            var icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation' };
-            var icon = icons[type] || 'fa-circle-check';
-            var toast = document.createElement('div');
-            toast.className = 'nxl-toast nxl-toast-' + type;
-            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
-            toast.innerHTML = '<i class="fas ' + icon + ' nxl-toast-icon"></i><span class="nxl-toast-text"></span><button class="nxl-toast-close" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>';
-            toast.querySelector('.nxl-toast-text').textContent = message;
-            container.appendChild(toast);
-            var dismiss = function() {
-                if (!toast.isConnected) return;
-                toast.classList.add('nxl-toast-out');
-                toast.addEventListener('animationend', function() { toast.remove(); }, { once: true });
-            };
-            toast.querySelector('.nxl-toast-close').addEventListener('click', dismiss);
-            setTimeout(dismiss, 4000);
-        }
-
-        const successMessage = document.getElementById('success-message');
-        if (successMessage) {
-            setTimeout(() => {
-                successMessage.style.opacity = '0';
-                successMessage.style.transition = 'opacity 0.4s ease';
-
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 400);
-            }, 3000);
-        }
-        const loginForm = document.querySelector('form[action="index.php?action=iniciarSesion"]');
+        var loginForm = document.querySelector('form[action="index.php?action=iniciarSesion"]');
         if (loginForm) {
             loginForm.addEventListener('submit', function() {
-                const btn = this.querySelector('.login-btn');
-                btn.classList.add('btn-loading');
-                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Iniciando...';
+                var btn = this.querySelector('.login-btn');
+                if (btn) {
+                    btn.classList.add('btn-loading');
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Iniciando...';
+                }
             });
         }
     </script>

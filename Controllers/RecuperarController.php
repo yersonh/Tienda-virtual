@@ -5,116 +5,79 @@ require_once __DIR__ . '/../Notifications/mail.php';
 
 class RecuperarController
 {
-
-    /**
-     * Procesar solicitud de recuperación (envío de correo)
-     */
-    public function solicitarRecuperacion()
+    public function solicitarRecuperacion(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?action=recuperar');
-            exit;
-        }
+        requirePost('recuperar');
 
-        $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
+        $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
 
-        if (empty($email)) {
-            $_SESSION['error'] = 'Por favor, ingresá tu correo electrónico.';
-            header('Location: index.php?action=recuperar');
-            exit;
+        if ($email === '') {
+            redirectTo('recuperar', 'Por favor, ingresá tu correo electrónico.');
         }
 
         $usuarioModel = new UsuarioModel();
-        $usuario = $usuarioModel->buscarPorEmail($email);
+        $usuario      = $usuarioModel->buscarPorEmail($email);
 
         if ($usuario) {
-            $token = $usuarioModel->generarTokenRecuperacion($usuario['ID_USUARIO']);
-
+            $token  = $usuarioModel->generarTokenRecuperacion($usuario['ID_USUARIO']);
             $mailer = new Mailer();
-            $enviado = $mailer->enviarRecuperacion(
-                $usuario['NOMBRES'],
-                $usuario['CORREO'],
-                $token
-            );
+            $enviado = $mailer->enviarRecuperacion($usuario['NOMBRES'], $usuario['CORREO'], $token);
 
-            if ($enviado) {
-                $_SESSION['success'] = 'Te enviamos un correo con las instrucciones para restablecer tu contraseña.';
-            } else {
-                $_SESSION['error'] = 'Error al enviar el correo. Por favor, intentá de nuevo.';
+            if (!$enviado) {
+                redirectTo('recuperar', 'Error al enviar el correo. Por favor, intentá de nuevo.');
             }
-        } else {
-            $_SESSION['success'] = 'Si el correo existe en nuestro sistema, recibirás las instrucciones.';
         }
 
-        header('Location: index.php?action=recuperar');
-        exit;
+        redirectTo(
+            'recuperar',
+            'Si el correo existe en nuestro sistema, recibirás las instrucciones.',
+            'success'
+        );
     }
 
-    /**
-     * Mostrar formulario para restablecer contraseña
-     */
-    public function mostrarRestablecer()
+    public function mostrarRestablecer(): void
     {
-        $token = $_GET['token'] ?? '';
+        $token      = $_GET['token'] ?? '';
         $tokenValido = false;
 
-        if (!empty($token)) {
+        if ($token !== '') {
             $usuarioModel = new UsuarioModel();
-            $datos = $usuarioModel->validarToken($token);
-            if ($datos) {
-                $tokenValido = true;
-            }
+            $tokenValido  = (bool) $usuarioModel->validarToken($token);
         }
 
         require_once __DIR__ . '/../views/Restablecer.php';
     }
 
-    /**
-     * Procesar cambio de contraseña
-     */
-    public function cambiarPassword()
+    public function cambiarPassword(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?action=recuperar');
-            exit;
-        }
+        requirePost('recuperar');
 
-        $token = $_POST['token'] ?? '';
+        $token    = $_POST['token'] ?? '';
         $password = $_POST['password'] ?? '';
         $confirmar = $_POST['confirmar'] ?? '';
 
-        if (empty($token) || empty($password) || empty($confirmar)) {
-            $_SESSION['error'] = 'Todos los campos son obligatorios.';
-            header('Location: index.php?action=restablecer&token=' . urlencode($token));
-            exit;
+        if ($token === '' || $password === '' || $confirmar === '') {
+            redirectTo('restablecer&token=' . urlencode($token), 'Todos los campos son obligatorios.');
         }
 
         if (strlen($password) < 8) {
-            $_SESSION['error'] = 'La contraseña debe tener al menos 8 caracteres.';
-            header('Location: index.php?action=restablecer&token=' . urlencode($token));
-            exit;
+            redirectTo('restablecer&token=' . urlencode($token), 'La contraseña debe tener al menos 8 caracteres.');
         }
 
         if ($password !== $confirmar) {
-            $_SESSION['error'] = 'Las contraseñas no coinciden.';
-            header('Location: index.php?action=restablecer&token=' . urlencode($token));
-            exit;
+            redirectTo('restablecer&token=' . urlencode($token), 'Las contraseñas no coinciden.');
         }
 
         $usuarioModel = new UsuarioModel();
-        $datos = $usuarioModel->validarToken($token);
+        $datos        = $usuarioModel->validarToken($token);
 
         if (!$datos) {
-            $_SESSION['error'] = 'El enlace es inválido o expiró. Solicitá uno nuevo.';
-            header('Location: index.php?action=recuperar');
-            exit;
+            redirectTo('recuperar', 'El enlace es inválido o expiró. Solicitá uno nuevo.');
         }
 
         $usuarioModel->actualizarPassword($datos['USUARIO_ID'], $password);
         $usuarioModel->marcarTokenUsado($token);
 
-        $_SESSION['success'] = 'Contraseña actualizada correctamente. Ya podés iniciar sesión.';
-        header('Location: index.php?action=login');
-        exit;
+        redirectTo('login', 'Contraseña actualizada correctamente. Ya podés iniciar sesión.', 'success');
     }
 }

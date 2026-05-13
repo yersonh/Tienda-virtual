@@ -5,23 +5,43 @@ require_once __DIR__ . '/../Notifications/mail.php';
 
 class ReactivarController
 {
-    public function solicitarReactivacion()
+    private function generarToken(int $userId): string
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        $expiry = time() + 86400;
+        $secret = getenv('BREVO_API_KEY') ?: 'nxl-reactivacion-secret';
+        $hmac   = substr(hash_hmac('sha256', $userId . '.' . $expiry, $secret), 0, 40);
+        return rtrim(strtr(base64_encode($userId . '.' . $expiry . '.' . $hmac), '+/', '-_'), '=');
+    }
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?action=reactivar');
-            exit;
-        }
+    private function verificarToken(string $token): ?int
+    {
+        $decoded = base64_decode(strtr($token, '-_', '+/'));
+        if (!$decoded) return null;
+
+        $parts = explode('.', $decoded, 3);
+        if (count($parts) !== 3) return null;
+
+        [$userId, $expiry, $hmac] = $parts;
+
+        if (!ctype_digit($userId) || !ctype_digit($expiry)) return null;
+        if (time() > (int) $expiry) return null;
+
+        $secret   = getenv('BREVO_API_KEY') ?: 'nxl-reactivacion-secret';
+        $expected = substr(hash_hmac('sha256', $userId . '.' . $expiry, $secret), 0, 40);
+
+        if (!hash_equals($expected, $hmac)) return null;
+
+        return (int) $userId;
+    }
+
+    public function solicitarReactivacion(): void
+    {
+        requirePost('reactivar');
 
         $identificador = trim($_POST['identificador'] ?? '');
 
-        if (empty($identificador)) {
-            $_SESSION['error'] = 'Por favor, ingresá tu usuario, correo o teléfono.';
-            header('Location: index.php?action=reactivar');
-            exit;
+        if ($identificador === '') {
+            redirectTo('reactivar', 'Por favor, ingresá tu usuario, correo o teléfono.');
         }
 
         $usuarioModel = new UsuarioModel();
@@ -29,52 +49,39 @@ class ReactivarController
 
         if ($usuario && $usuario['ESTADO'] !== 'ACTIVO') {
             try {
-                $token = $usuarioModel->generarTokenReactivacion((int) $usuario['ID_USUARIO']);
+                $token  = $this->generarToken((int) $usuario['ID_USUARIO']);
                 $mailer = new Mailer();
                 $mailer->enviarReactivacion($usuario['NOMBRES'], $usuario['CORREO'], $token);
             } catch (\Throwable $e) {
-                error_log('Error generando token de reactivación: ' . $e->getMessage());
+                error_log('Error enviando correo de reactivación: ' . $e->getMessage());
             }
         }
 
-        $_SESSION['success'] = 'Si los datos corresponden a una cuenta inactiva, recibirás un correo con el enlace de reactivación.';
-        header('Location: index.php?action=reactivar');
-        exit;
+        redirectTo(
+            'reactivar',
+            'Si los datos corresponden a una cuenta inactiva, recibirás un correo con el enlace.',
+            'success'
+        );
     }
 
-    public function confirmarReactivacion()
+    public function confirmarReactivacion(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
         $token = trim($_GET['token'] ?? '');
 
-        if (empty($token)) {
-            $_SESSION['error'] = 'Enlace inválido.';
-            header('Location: index.php?action=reactivar');
-            exit;
+        $idUsuario = $token !== '' ? $this->verificarToken($token) : null;
+
+        if (!$idUsuario) {
+            redirectTo('reactivar', 'El enlace de reactivación es inválido o ya expiró. Solicitá uno nuevo.');
         }
 
         $usuarioModel = new UsuarioModel();
-        $datos = $usuarioModel->validarTokenReactivacion($token);
-
-        if (!$datos) {
-            $_SESSION['error'] = 'El enlace de reactivación es inválido o ya expiró. Solicitá uno nuevo.';
-            header('Location: index.php?action=reactivar');
-            exit;
-        }
 
         try {
-            $usuarioModel->reactivarUsuario((int) $datos['USUARIO_ID']);
-            $usuarioModel->marcarTokenReactivacionUsado($token);
-            $_SESSION['success'] = 'Tu cuenta ha sido reactivada. Ya podés iniciar sesión.';
+            $usuarioModel->reactivarUsuario($idUsuario);
+            redirectTo('login', 'Tu cuenta ha sido reactivada. Ya podés iniciar sesión.', 'success');
         } catch (\Throwable $e) {
             error_log('Error reactivando cuenta: ' . $e->getMessage());
-            $_SESSION['error'] = 'No se pudo reactivar la cuenta. Intentá de nuevo.';
+            redirectTo('reactivar', 'No se pudo reactivar la cuenta. Intentá de nuevo.');
         }
-
-        header('Location: index.php?action=login');
-        exit;
     }
 }

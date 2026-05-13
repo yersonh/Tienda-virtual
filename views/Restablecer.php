@@ -327,25 +327,7 @@ if (!empty($token)) {
         <?php endif; ?>
     </div>
 
-    <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        function applyTheme(theme) {
-            body.setAttribute('data-theme', theme);
-            themeToggle.innerHTML = theme === 'dark' ?
-                '<i class="fas fa-moon"></i>' :
-                '<i class="fas fa-sun"></i>';
-        }
-
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'dark');
-    </script>
+    <script src="js/nxl-auth.js"></script>
 
 </body>
 

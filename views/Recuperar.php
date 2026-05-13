@@ -318,34 +318,14 @@ if (session_status() === PHP_SESSION_NONE) {
 
     </div>
 
+    <script src="js/nxl-auth.js"></script>
     <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        function applyTheme(theme) {
-            body.setAttribute('data-theme', theme);
-            themeToggle.innerHTML = theme === 'dark' ?
-                '<i class="fas fa-moon"></i>' :
-                '<i class="fas fa-sun"></i>';
-        }
-
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'dark');
-
-        const successMessage = document.getElementById('success-message');
+        var successMessage = document.getElementById('success-message');
         if (successMessage) {
-            setTimeout(() => {
+            setTimeout(function() {
                 successMessage.style.opacity = '0';
                 successMessage.style.transition = 'opacity 0.4s ease';
-
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 400);
+                setTimeout(function() { successMessage.style.display = 'none'; }, 400);
             }, 5000);
         }
     </script>

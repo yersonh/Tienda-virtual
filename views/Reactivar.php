@@ -374,25 +374,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
     </div>
 
+    <script src="js/nxl-auth.js"></script>
     <script>
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        function applyTheme(theme) {
-            body.setAttribute('data-theme', theme);
-            themeToggle.innerHTML = theme === 'dark' ?
-                '<i class="fas fa-moon"></i>' :
-                '<i class="fas fa-sun"></i>';
-        }
-
-        themeToggle.addEventListener('click', function() {
-            var nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'dark');
-
         var successMessage = document.getElementById('success-message');
         if (successMessage) {
             setTimeout(function() {
@@ -402,10 +385,13 @@ if (session_status() === PHP_SESSION_NONE) {
             }, 6000);
         }
 
-        document.getElementById('reactivar-form').addEventListener('submit', function() {
-            var btn = document.getElementById('reactivar-btn');
-            btn.classList.add('btn-loading');
-        });
+        var reactivarForm = document.getElementById('reactivar-form');
+        if (reactivarForm) {
+            reactivarForm.addEventListener('submit', function() {
+                var btn = document.getElementById('reactivar-btn');
+                if (btn) btn.classList.add('btn-loading');
+            });
+        }
     </script>
 
 </body>

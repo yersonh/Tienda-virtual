@@ -512,6 +512,7 @@ a:hover {
     </div>
 
 
+    <script src="js/nxl-auth.js"></script>
     <script>
         const i18n = {
             onlyGmail: <?= json_encode('Solo correos @gmail.com') ?>,
@@ -529,24 +530,6 @@ a:hover {
             usernameCheckError: <?= json_encode('Error al verificar usuario') ?>,
             registerError: <?= json_encode('No se pudo registrar el usuario') ?>
         };
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-
-        function applyTheme(theme) {
-            body.setAttribute('data-theme', theme);
-            themeToggle.innerHTML = theme === 'dark'
-                ? '<i class="fas fa-moon"></i>'
-                : '<i class="fas fa-sun"></i>';
-        }
-
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(nextTheme);
-            localStorage.setItem('theme', nextTheme);
-        });
-
-        applyTheme(localStorage.getItem('theme') || 'dark');
-
         // Validación de contraseñas, correo y usuario en tiempo real
         const passwordInput = document.getElementById('password');
         const confirmInput = document.getElementById('confirm_password');
@@ -829,27 +812,6 @@ a:hover {
         });
 
         checkFormValidity();
-
-        function showToast(message, type) {
-            type = type || 'success';
-            var container = document.getElementById('nxl-toast-container');
-            if (!container || !message) return;
-            var icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation' };
-            var icon = icons[type] || 'fa-circle-check';
-            var toast = document.createElement('div');
-            toast.className = 'nxl-toast nxl-toast-' + type;
-            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
-            toast.innerHTML = '<i class="fas ' + icon + ' nxl-toast-icon"></i><span class="nxl-toast-text"></span><button class="nxl-toast-close" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>';
-            toast.querySelector('.nxl-toast-text').textContent = message;
-            container.appendChild(toast);
-            var dismiss = function() {
-                if (!toast.isConnected) return;
-                toast.classList.add('nxl-toast-out');
-                toast.addEventListener('animationend', function() { toast.remove(); }, { once: true });
-            };
-            toast.querySelector('.nxl-toast-close').addEventListener('click', dismiss);
-            setTimeout(dismiss, 4000);
-        }
 
         setTimeout(() => {
             const error = document.getElementById("mensajeError");

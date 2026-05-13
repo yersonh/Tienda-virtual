@@ -71,6 +71,7 @@ class OCI8Connection {
         $result = oci_execute($stmt, OCI_COMMIT_ON_SUCCESS);
         if (!$result) {
             $error = oci_error($stmt);
+            oci_free_statement($stmt);
             throw new Exception("OCI8 query error: " . ($error['message'] ?? 'desconocido'));
         }
         return new OCI8Statement($stmt);
@@ -79,7 +80,9 @@ class OCI8Connection {
     public function exec(string $sql): bool {
         $stmt = oci_parse($this->conn, $sql);
         if (!$stmt) return false;
-        return (bool) oci_execute($stmt, OCI_COMMIT_ON_SUCCESS);
+        $result = oci_execute($stmt, OCI_COMMIT_ON_SUCCESS);
+        oci_free_statement($stmt);
+        return (bool) $result;
     }
 
     public function lastInsertId(): mixed {

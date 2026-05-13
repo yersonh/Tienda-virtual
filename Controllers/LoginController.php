@@ -5,13 +5,8 @@ require_once __DIR__ . '/../models/CarritoModel.php';
 
 class LoginController
 {
-
-    public function iniciarSesion()
+    public function iniciarSesion(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
         $carritoInvitado = (isset($_SESSION['carrito']) && is_array($_SESSION['carrito']))
             ? $_SESSION['carrito']
             : [];
@@ -19,92 +14,60 @@ class LoginController
         $username = strtolower(trim($_POST['nickname'] ?? ''));
         $password = trim($_POST['password'] ?? '');
 
-        if (empty($username) || empty($password)) {
-            $_SESSION['error'] = "Complete todos los campos";
-            header("Location: index.php?action=login");
-            exit();
+        if ($username === '' || $password === '') {
+            redirectTo('login', 'Complete todos los campos');
         }
 
-        $conn = Database::getConnection();
+        $conn  = Database::getConnection();
         $model = new UsuarioModel($conn);
 
         try {
             $usuario = $model->validarCredenciales($username, $password);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             error_log($e->getMessage());
-            $_SESSION['error'] = "No se pudo iniciar sesion. Intenta de nuevo.";
-            header("Location: index.php?action=login");
-            exit();
+            redirectTo('login', 'No se pudo iniciar sesion. Intenta de nuevo.');
         }
 
         if (!$usuario) {
-            $_SESSION['error'] = "Credenciales incorrectas";
-            header("Location: index.php?action=login");
-            exit();
+            redirectTo('login', 'Credenciales incorrectas');
         }
 
         if (strtoupper(trim($usuario['estado'])) !== 'ACTIVO') {
-            $_SESSION['error'] = "Tu cuenta esta inactiva.";
-            header("Location: index.php?action=login");
-            exit();
+            redirectTo('login', 'Tu cuenta esta inactiva.');
         }
 
-        $carritoModel = new CarritoModel($conn);
+        $carritoModel    = new CarritoModel($conn);
         $resultadoFusion = $carritoModel->fusionarCarritoSesion((int) $usuario['id_usuario'], $carritoInvitado);
 
         if (($resultadoFusion['success'] ?? false) === false) {
-            $_SESSION['error'] = $resultadoFusion['message'] ?? 'No se pudo sincronizar el carrito';
-            header("Location: index.php?action=login");
-            exit();
+            redirectTo('login', $resultadoFusion['message'] ?? 'No se pudo sincronizar el carrito');
         }
 
         unset($_SESSION['carrito'], $_SESSION['carrito_count'], $_SESSION['carrito_mapa_cache']);
-        $_SESSION['id_usuario'] = $usuario['id_usuario'];
-        $_SESSION['username'] = $usuario['username'];
-        $_SESSION['nickname'] = $usuario['username'];
+
+        $_SESSION['id_usuario']   = $usuario['id_usuario'];
+        $_SESSION['username']     = $usuario['username'];
+        $_SESSION['nickname']     = $usuario['username'];
         $_SESSION['tipo_usuario'] = $usuario['id_tipo'];
-        $_SESSION['usuario'] = [
+        $_SESSION['usuario']      = [
             'id_usuario' => (int) $usuario['id_usuario'],
             'id_persona' => (int) $usuario['id_persona'],
-            'username' => $usuario['username'],
-            'id_tipo' => (int) $usuario['id_tipo']
+            'username'   => $usuario['username'],
+            'id_tipo'    => (int) $usuario['id_tipo'],
         ];
-        $_SESSION['logueado'] = true;
-        $_SESSION['bienvenida'] = "Bienvenido, " . $usuario['username'];
-        $_SESSION['carrito_count'] = $carritoModel->obtenerTotalItemsCarrito((int) $usuario['id_usuario']);
+        $_SESSION['logueado']       = true;
+        $_SESSION['bienvenida']     = 'Bienvenido, ' . $usuario['username'];
+        $_SESSION['carrito_count']  = $carritoModel->obtenerTotalItemsCarrito((int) $usuario['id_usuario']);
 
-        if ($usuario['id_tipo'] == 1) {
-            header("Location: index.php?action=admin_panel");
-            exit();
-        }
-
-        header("Location: index.php?action=tienda");
+        $destino = ($usuario['id_tipo'] == 1) ? 'admin_panel' : 'tienda';
+        header("Location: index.php?action={$destino}");
         exit();
     }
 
-    public function logout()
+    public function logout(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $_SESSION = [];
-
-        if (ini_get('session.use_cookies')) {
-            $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $params['path'],
-                $params['domain'],
-                $params['secure'],
-                $params['httponly']
-            );
-        }
-
-        session_destroy();
-        header("Location: index.php?action=login");
+        destroySession();
+        header('Location: index.php?action=login');
         exit();
     }
 }
