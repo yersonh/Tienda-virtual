@@ -354,7 +354,7 @@
 
                     <div class="hero-badge">
                         <i class="fas fa-shield-halved"></i>
-                        Seguridad Digital.
+                        Seguridad Digital
                     </div>
 
                     <div class="hero-badge">
