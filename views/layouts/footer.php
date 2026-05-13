@@ -1,82 +1,118 @@
 <style>
-body {
-    padding-bottom: 48px;
+
+body{
+    padding-bottom:58px;
 }
-.app-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(7, 11, 20, 0.86);
-    color: #dbeafe;
-    min-height: 44px;
-    padding: 8px 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid rgba(148,163,184,0.16);
-    box-shadow: 0 -14px 34px rgba(2,6,23,0.24);
-    z-index: 90;
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.01em;
+
+.app-footer{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+
+    background:rgba(7,11,20,.88);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    border-top:1px solid rgba(148,163,184,.14);
+
+    box-shadow:0 -10px 28px rgba(2,6,23,.22);
+
+    z-index:90;
+
+    padding:14px 22px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:24px;
+
+    color:#e2e8f0;
+
+    font-size:14px;
+    font-weight:700;
 }
-[data-theme="light"] .app-footer {
-    background: rgba(255,255,255,0.88);
-    color: #334155;
-    border-top-color: rgba(100,116,139,0.18);
-    box-shadow: 0 -14px 34px rgba(100,116,139,0.12);
+
+[data-theme="light"] .app-footer{
+    background:rgba(255,255,255,.92);
+    color:#334155;
 }
-.app-footer i {
-    color: var(--accent, #38bdf8);
-}
+
 .footer-brand{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:10px;
+
+    font-size:15px;
+    font-weight:800;
 }
-@media (max-width: 560px) {
-    .app-footer {
-        font-size: 12px;
-        text-align: center;
-    }
+
+.footer-brand i{
+    color:#38bdf8;
 }
+
 .footer-links{
-    margin-top: 10px;
+    display:flex;
+    align-items:center;
 }
 
 .footer-links a{
-    color: #9ecbff;
-    text-decoration: none;
-    font-size: 14px;
+
+    color:#7dd3fc;
+
+    text-decoration:none;
+
+    font-size:14px;
+    font-weight:700;
+
+    transition:.2s ease;
 }
 
 .footer-links a:hover{
-    text-decoration: underline;
+    color:#bae6fd;
+    text-decoration:underline;
 }
+
+@media(max-width:768px){
+
+    .app-footer{
+
+        flex-direction:column;
+
+        gap:8px;
+
+        text-align:center;
+
+        padding:12px;
+    }
+}
+
 </style>
 
-    <div class="app-footer">
+<div class="app-footer">
 
-        <div class="footer-brand">
-            <i class="fas fa-store"></i>
+    <div class="footer-brand">
 
-            <span>
-                <?= htmlspecialchars('Tienda Virtual del Sistema de Inventario TechSolutions', ENT_QUOTES, 'UTF-8') ?>
-            </span>
-        </div>
+        <i class="fas fa-store"></i>
 
-        <div class="footer-links">
-            <a href="index.php?action=politicas">
-                Políticas de pago y privacidad
-            </a>
-        </div>
+        <span>
+            <?= htmlspecialchars('Tienda Virtual del Sistema de Inventario TechSolutions', ENT_QUOTES, 'UTF-8') ?>
+        </span>
 
     </div>
 
-    </body>
+    <div class="footer-links">
+
+        <a href="index.php?action=politicas">
+
+            Políticas de pago y privacidad
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
 </html>
