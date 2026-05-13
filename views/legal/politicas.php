@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-
     <title>Políticas de Pago y Privacidad</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,151 +10,435 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/tienda.css">
 
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
 
+        *{
+            box-sizing:border-box;
+        }
+
         body{
-            background:
-                linear-gradient(rgba(2,6,23,.92), rgba(2,6,23,.92)),
-                url('imagenes/Fondo.png') center/cover fixed;
-            color:#fff;
-            font-family: Arial, sans-serif;
             margin:0;
+            min-height:100vh;
+
+            background:
+                radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 25%),
+                radial-gradient(circle at bottom right, rgba(14,165,233,.12), transparent 25%),
+                linear-gradient(rgba(2,6,23,.95), rgba(2,6,23,.95)),
+                url('imagenes/Fondo.png') center/cover fixed;
+
+            color:#fff;
+
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
             padding:40px 20px 120px;
         }
 
         .politicas-container{
-            max-width:1100px;
+            max-width:1200px;
             margin:auto;
         }
 
-        .politicas-card{
-            background:rgba(15,23,42,.78);
-            backdrop-filter:blur(16px);
-            -webkit-backdrop-filter:blur(16px);
-            border:1px solid rgba(148,163,184,.14);
-            border-radius:24px;
-            padding:40px;
-            box-shadow:0 20px 45px rgba(0,0,0,.35);
-        }
+        .hero-politicas{
 
-        .politicas-title{
-            text-align:center;
-            font-size:38px;
+            position:relative;
+
+            overflow:hidden;
+
+            background:
+                linear-gradient(135deg,
+                rgba(14,165,233,.22),
+                rgba(15,23,42,.92));
+
+            border:1px solid rgba(125,211,252,.18);
+
+            border-radius:32px;
+
+            padding:70px 50px;
+
             margin-bottom:35px;
-            color:#fff;
+
+            backdrop-filter:blur(22px);
+            -webkit-backdrop-filter:blur(22px);
+
+            box-shadow:
+                0 25px 65px rgba(0,0,0,.45),
+                inset 0 1px 0 rgba(255,255,255,.04);
         }
 
-        .politicas-card h2{
-            margin-top:40px;
-            color:#7dd3fc;
-            font-size:28px;
+        .hero-politicas::before{
+
+            content:'';
+
+            position:absolute;
+
+            width:450px;
+            height:450px;
+
+            background:rgba(56,189,248,.12);
+
+            border-radius:50%;
+
+            top:-180px;
+            right:-120px;
+
+            filter:blur(30px);
         }
 
-        .politicas-card p,
-        .politicas-card li{
-            color:#e2e8f0;
+        .hero-top{
+
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:25px;
+            flex-wrap:wrap;
+
+            position:relative;
+            z-index:2;
+        }
+
+        .hero-title{
+
+            font-size:58px;
+            line-height:1.05;
+            font-weight:900;
+
+            margin:0 0 18px;
+
+            letter-spacing:-2px;
+
+            background:linear-gradient(to right,#fff,#7dd3fc);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+
+        .hero-subtitle{
+
+            max-width:760px;
+
+            font-size:18px;
             line-height:1.8;
-            font-size:16px;
+
+            color:#cbd5e1;
         }
 
-        .politicas-card ul{
-            padding-left:22px;
+        .hero-badges{
+
+            display:flex;
+            gap:14px;
+            flex-wrap:wrap;
+
+            margin-top:28px;
         }
 
-        .politicas-card hr{
-            border:none;
-            height:1px;
-            background:rgba(148,163,184,.18);
-            margin:35px 0;
+        .hero-badge{
+
+            display:flex;
+            align-items:center;
+            gap:10px;
+
+            padding:14px 18px;
+
+            border-radius:18px;
+
+            background:rgba(15,23,42,.72);
+
+            border:1px solid rgba(125,211,252,.16);
+
+            color:#dbeafe;
+
+            font-size:14px;
+            font-weight:700;
+        }
+
+        .hero-badge i{
+            color:#38bdf8;
         }
 
         .volver-btn{
+
             display:inline-flex;
             align-items:center;
-            gap:10px;
-            margin-bottom:25px;
-            padding:12px 18px;
-            border-radius:14px;
+            gap:12px;
+
+            padding:14px 22px;
+
+            border-radius:18px;
+
             background:rgba(56,189,248,.15);
+
+            border:1px solid rgba(56,189,248,.28);
+
             color:#7dd3fc;
+
             text-decoration:none;
-            border:1px solid rgba(56,189,248,.25);
-            transition:.25s;
+
+            font-weight:700;
+
+            transition:.25s ease;
         }
 
         .volver-btn:hover{
-            background:rgba(56,189,248,.25);
+
+            transform:translateY(-2px);
+
+            background:rgba(56,189,248,.24);
+
+            box-shadow:0 10px 28px rgba(56,189,248,.18);
+        }
+
+        .politicas-grid{
+
+            display:grid;
+
+            grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+
+            gap:26px;
+        }
+
+        .politica-card{
+
+            background:rgba(15,23,42,.82);
+
+            border:1px solid rgba(148,163,184,.12);
+
+            border-radius:28px;
+
+            padding:32px;
+
+            backdrop-filter:blur(18px);
+            -webkit-backdrop-filter:blur(18px);
+
+            box-shadow:
+                0 18px 45px rgba(0,0,0,.28);
+
+            transition:.3s ease;
+        }
+
+        .politica-card:hover{
+
+            transform:translateY(-5px);
+
+            border-color:rgba(56,189,248,.28);
+
+            box-shadow:
+                0 25px 60px rgba(0,0,0,.38);
+        }
+
+        .politica-icon{
+
+            width:68px;
+            height:68px;
+
+            border-radius:20px;
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            background:linear-gradient(135deg,#0ea5e9,#38bdf8);
+
+            color:#fff;
+
+            font-size:28px;
+
+            margin-bottom:22px;
+
+            box-shadow:0 12px 28px rgba(14,165,233,.35);
+        }
+
+        .politica-card h2{
+
+            margin:0 0 20px;
+
+            font-size:30px;
+
+            color:#fff;
+        }
+
+        .politica-card p,
+        .politica-card li{
+
+            color:#cbd5e1;
+
+            font-size:16px;
+
+            line-height:1.9;
+        }
+
+        .politica-card ul{
+            padding-left:20px;
+        }
+
+        .politica-highlight{
+
+            margin-top:20px;
+
+            padding:18px;
+
+            border-radius:18px;
+
+            background:rgba(56,189,248,.10);
+
+            border:1px solid rgba(56,189,248,.16);
+
+            color:#dbeafe;
+
+            font-weight:600;
+        }
+
+        .politica-footer{
+
+            margin-top:35px;
+
+            text-align:center;
+
+            color:#94a3b8;
+
+            font-size:15px;
         }
 
         @media(max-width:768px){
 
-            .politicas-card{
+            body{
+                padding:25px 15px 120px;
+            }
+
+            .hero-politicas{
+                padding:40px 24px;
+            }
+
+            .hero-title{
+                font-size:38px;
+            }
+
+            .hero-subtitle{
+                font-size:16px;
+            }
+
+            .politica-card{
                 padding:24px;
             }
 
-            .politicas-title{
-                font-size:28px;
-            }
-
-            .politicas-card h2{
-                font-size:22px;
+            .politica-card h2{
+                font-size:24px;
             }
         }
 
     </style>
+
 </head>
 
 <body>
 
-    <div class="politicas-container">
+<div class="politicas-container">
 
-        <a href="index.php?action=tienda" class="volver-btn">
-            ← Volver a la tienda
-        </a>
+    <div class="hero-politicas">
 
-        <div class="politicas-card">
+        <div class="hero-top">
 
-            <h1 class="politicas-title">
-                Políticas de Pago y Tratamiento de Datos
-            </h1>
+            <div>
 
-            <h2>Política de Pagos</h2>
+                <h1 class="hero-title">
+                    Políticas de Pago <br>
+                    y Tratamiento de Datos
+                </h1>
+
+                <p class="hero-subtitle">
+                    Nuestro sistema implementa procesos seguros de validación, pagos electrónicos, gestión de pedidos y protección de datos personales para garantizar una experiencia de compra moderna, confiable y transparente.
+                </p>
+
+                <div class="hero-badges">
+
+                    <div class="hero-badge">
+                        <i class="fas fa-shield-halved"></i>
+                        Seguridad Digital
+                    </div>
+
+                    <div class="hero-badge">
+                        <i class="fas fa-credit-card"></i>
+                        Integración Wompi
+                    </div>
+
+                    <div class="hero-badge">
+                        <i class="fas fa-lock"></i>
+                        Protección de Datos
+                    </div>
+
+                </div>
+
+            </div>
+
+            <a href="index.php?action=tienda" class="volver-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a la tienda
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="politicas-grid">
+
+        <div class="politica-card">
+
+            <div class="politica-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+
+            <h2>Pagos Electrónicos</h2>
 
             <p>
-                Al realizar una compra en la tienda virtual, el usuario acepta que los pagos electrónicos serán procesados mediante plataformas seguras de terceros como Wompi.
+                Todos los pagos son procesados mediante plataformas seguras y validadas como Wompi.
             </p>
 
-            <p>
-                Los pagos realizados con tarjeta débito, tarjeta crédito y transferencias electrónicas están sujetos a validación y aprobación por parte de la entidad financiera correspondiente.
-            </p>
+            <ul>
+                <li>Tarjeta débito.</li>
+                <li>Tarjeta crédito.</li>
+                <li>Transferencias electrónicas.</li>
+            </ul>
 
-            <p>
-                La confirmación del pedido, generación de factura y actualización del inventario únicamente se realizarán cuando el pago sea aprobado oficialmente por la pasarela de pago.
-            </p>
+            <div class="politica-highlight">
+                Los pedidos únicamente se aprueban cuando la transacción es validada oficialmente por la pasarela de pago.
+            </div>
 
-            <hr>
+        </div>
+
+        <div class="politica-card">
+
+            <div class="politica-icon">
+                <i class="fas fa-database"></i>
+            </div>
 
             <h2>Tratamiento de Datos</h2>
 
             <p>
-                La información personal suministrada por el usuario será utilizada únicamente para procesamiento de pedidos, pagos, facturación, envíos y soporte de compras.
+                La información suministrada por el usuario se utiliza exclusivamente para:
             </p>
 
             <ul>
                 <li>Procesamiento de pedidos.</li>
-                <li>Gestión de pagos.</li>
                 <li>Facturación.</li>
-                <li>Envíos.</li>
+                <li>Gestión logística.</li>
                 <li>Seguimiento de compras.</li>
+                <li>Soporte administrativo.</li>
             </ul>
 
-            <p>
-                La tienda no almacena números completos de tarjetas ni códigos CVV.
-            </p>
+            <div class="politica-highlight">
+                El sistema NO almacena números completos de tarjetas ni códigos CVV.
+            </div>
 
-            <hr>
+        </div>
 
-            <h2>Pedidos y Estados</h2>
+        <div class="politica-card">
+
+            <div class="politica-icon">
+                <i class="fas fa-box"></i>
+            </div>
+
+            <h2>Estados del Pedido</h2>
 
             <ul>
                 <li>Pendiente de pago.</li>
@@ -165,10 +448,20 @@
             </ul>
 
             <p>
-                Un pedido solo será aprobado cuando la pasarela confirme exitosamente la transacción.
+                Los estados son gestionados automáticamente por el sistema mediante validaciones de pago e inventario.
             </p>
 
-            <hr>
+            <div class="politica-highlight">
+                El inventario y facturación se actualizan únicamente tras la aprobación del pago.
+            </div>
+
+        </div>
+
+        <div class="politica-card">
+
+            <div class="politica-icon">
+                <i class="fas fa-rotate-left"></i>
+            </div>
 
             <h2>Reembolsos</h2>
 
@@ -177,20 +470,26 @@
             </p>
 
             <p>
-                No se garantiza reembolso sobre pedidos ya despachados o completamente procesados.
+                Los tiempos de procesamiento pueden variar dependiendo de la entidad financiera utilizada.
             </p>
 
-            <hr>
-
-            <h2>Aceptación</h2>
-
-            <p>
-                Al continuar con el proceso de compra, el usuario declara haber leído y aceptado estas políticas.
-            </p>
+            <div class="politica-highlight">
+                No se garantizan reembolsos sobre pedidos completamente procesados o despachados.
+            </div>
 
         </div>
 
     </div>
-    <?php require_once __DIR__ . '/layouts/footer.php'; ?>
-</body> 
+
+    <div class="politica-footer">
+
+        Al continuar con el proceso de compra, el usuario declara haber leído y aceptado las políticas de pago, privacidad y tratamiento de datos de la plataforma.
+
+    </div>
+
+</div>
+
+<?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+
+</body>
 </html>
