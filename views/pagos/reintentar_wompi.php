@@ -168,48 +168,6 @@ async function syncWompiTransaction(result) {
     }
 }
 
-const wompiMerchantIdCache = new Map();
-
-async function resolveWompiMerchantId(publicKey) {
-    const key = String(publicKey || '').trim();
-    if (!key) {
-        throw new Error('No se recibio la llave publica de Wompi.');
-    }
-
-    if (wompiMerchantIdCache.has(key)) {
-        return wompiMerchantIdCache.get(key);
-    }
-
-    const endpoints = [
-        'https://api.wompi.co/v1/merchants/' + encodeURIComponent(key),
-        (key.startsWith('pub_test_') ? 'https://sandbox.wompi.co/v1/merchants/' : 'https://production.wompi.co/v1/merchants/') + encodeURIComponent(key)
-    ];
-
-    let lastError = null;
-    for (const endpoint of [...new Set(endpoints)]) {
-        try {
-            const response = await fetch(endpoint, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
-            const payload = await response.json().catch(() => null);
-            const merchantId = String(payload?.data?.id || '').trim();
-
-            if (response.ok && merchantId) {
-                wompiMerchantIdCache.set(key, merchantId);
-                return merchantId;
-            }
-
-            lastError = new Error(payload?.error?.reason || payload?.message || 'Respuesta invalida de Wompi');
-        } catch (error) {
-            lastError = error;
-        }
-    }
-
-    console.error('No se pudo resolver merchantId de Wompi:', lastError);
-    throw new Error('No se pudo validar el comercio de Wompi. Intenta nuevamente.');
-}
-
 async function openWompiRetry() {
     if (typeof WidgetCheckout === 'undefined') {
         alert('No se pudo cargar el widget de Wompi. Intenta de nuevo.');
@@ -229,16 +187,7 @@ async function openWompiRetry() {
         return;
     }
 
-    let merchantId = '';
-    try {
-        merchantId = await resolveWompiMerchantId(publicKey);
-    } catch (error) {
-        alert(error.message || 'No se pudo validar el comercio de Wompi. Intenta de nuevo.');
-        return;
-    }
-
     const widget = new WidgetCheckout({
-        merchantId,
         currency,
         amountInCents,
         reference,
