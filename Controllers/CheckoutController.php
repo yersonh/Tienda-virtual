@@ -550,6 +550,8 @@ class CheckoutController {
                 throw new Exception('No se pudo preparar el pedido para Wompi');
             }
 
+            $this->ventaModel->completarDatosCheckoutTx($idVenta, $idUsuario, $resumen);
+
             // Eliminar cualquier PAGO creado por el SP sin referencia Wompi —
             // el registro real de PAGO solo debe crearse desde el webhook.
             $this->eliminarPagoPendienteSinReferencia($idVenta);

@@ -256,6 +256,82 @@ class VentaModel {
         return $idVenta;
     }
 
+    public function completarDatosCheckoutTx(int $idVenta, int $idUsuario, array $resumen): void {
+        $idVenta = (int) $idVenta;
+        $idUsuario = (int) $idUsuario;
+        if ($idVenta <= 0 || $idUsuario <= 0) {
+            throw new InvalidArgumentException('Venta o usuario invalido');
+        }
+
+        $columnas = $this->columnasTabla('VENTA');
+        $sets = [];
+        $binds = [
+            ':id_venta' => ['value' => $idVenta, 'type' => SQLT_INT],
+            ':id_usuario' => ['value' => $idUsuario, 'type' => SQLT_INT]
+        ];
+
+        if (isset($columnas['subtotal'])) {
+            $sets[] = 'SUBTOTAL = :subtotal';
+            $binds[':subtotal'] = ['value' => $this->numeroOracle((float) ($resumen['subtotal'] ?? 0)), 'type' => SQLT_CHR];
+        }
+
+        if (isset($columnas['iva'])) {
+            $sets[] = 'IVA = :iva';
+            $binds[':iva'] = ['value' => $this->numeroOracle((float) ($resumen['iva'] ?? 0)), 'type' => SQLT_CHR];
+        }
+
+        if (isset($columnas['envio'])) {
+            $sets[] = 'ENVIO = :envio';
+            $binds[':envio'] = ['value' => $this->numeroOracle((float) ($resumen['envio'] ?? 0)), 'type' => SQLT_CHR];
+        }
+
+        if (isset($columnas['total'])) {
+            $sets[] = 'TOTAL = :total';
+            $binds[':total'] = ['value' => $this->numeroOracle((float) ($resumen['total'] ?? 0)), 'type' => SQLT_CHR];
+        }
+
+        if (isset($columnas['id_tipo'])) {
+            $sets[] = 'ID_TIPO = NVL(ID_TIPO, :id_tipo)';
+            $binds[':id_tipo'] = ['value' => 2, 'type' => SQLT_INT];
+        }
+
+        if (isset($columnas['id_cliente'])) {
+            $idCliente = $this->obtenerIdClienteUsuarioTx($idUsuario);
+            if ($idCliente !== null) {
+                $sets[] = 'ID_CLIENTE = NVL(ID_CLIENTE, :id_cliente)';
+                $binds[':id_cliente'] = ['value' => $idCliente, 'type' => SQLT_INT];
+            }
+        }
+
+        if (empty($sets)) {
+            return;
+        }
+
+        $query = "UPDATE VENTA
+                  SET " . implode(', ', $sets) . "
+                  WHERE ID_VENTA = :id_venta
+                    AND ID_USUARIO = :id_usuario";
+
+        $stmt = oci_parse($this->conn, $query);
+        if (!$stmt) {
+            throw new Exception($this->oracleErrorMessage());
+        }
+
+        $bindValues = [];
+        foreach ($binds as $placeholder => $bind) {
+            $bindValues[$placeholder] = $bind['value'];
+            oci_bind_by_name($stmt, $placeholder, $bindValues[$placeholder], -1, $bind['type']);
+        }
+
+        if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
+            $message = $this->oracleErrorMessage($stmt);
+            oci_free_statement($stmt);
+            throw new Exception($message);
+        }
+
+        oci_free_statement($stmt);
+    }
+
     public function insertarDetalleVentaTx(int $idVenta, int $idProducto, int $cantidad, float $precioUnitario, ?int $idReferencia = null): void {
         if ($idVenta <= 0 || $idProducto <= 0 || $cantidad <= 0 || $precioUnitario < 0) {
             throw new InvalidArgumentException('Detalle de venta invalido');

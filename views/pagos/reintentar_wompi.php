@@ -140,7 +140,14 @@ const wompiRetryCheckout = <?= json_encode($checkoutPayload, JSON_UNESCAPED_UNIC
 function getWompiTransactionId(result) {
     return String(
         result?.transaction?.id ||
+        result?.transaction?.transactionId ||
+        result?.transaction?.transaction_id ||
         result?.data?.transaction?.id ||
+        result?.data?.transaction?.transactionId ||
+        result?.data?.transaction?.transaction_id ||
+        result?.data?.id ||
+        result?.transactionId ||
+        result?.transaction_id ||
         result?.id ||
         ''
     ).trim();
@@ -148,13 +155,16 @@ function getWompiTransactionId(result) {
 
 async function syncWompiTransaction(result) {
     const transactionId = getWompiTransactionId(result);
-    if (!transactionId) return;
+    if (!transactionId) {
+        console.warn('No se pudo obtener transaction_id desde Wompi result:', result);
+        return;
+    }
 
     const body = new URLSearchParams();
     body.set('transaction_id', transactionId);
 
     try {
-        await fetch('index.php?action=sincronizarPagoWompi', {
+        const response = await fetch('index.php?action=sincronizarPagoWompi', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -163,6 +173,8 @@ async function syncWompiTransaction(result) {
             },
             body
         });
+        const text = await response.text();
+        console.log('Wompi sync response', response.status, text);
     } catch (error) {
         console.warn('No se pudo sincronizar la transaccion Wompi antes de redirigir:', error);
     }

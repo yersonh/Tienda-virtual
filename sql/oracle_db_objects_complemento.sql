@@ -819,7 +819,14 @@ BEGIN
           SELECT 1
           FROM PAGO pg
           WHERE pg.ID_VENTA = p.ID_VENTA
-            AND UPPER(TRIM(pg.ESTADO)) IN ('APPROVED', 'PAGADO', 'COMPLETADO')
+            AND (
+                UPPER(TRIM(pg.ESTADO)) = 'APPROVED'
+                OR (
+                    UPPER(TRIM(pg.ESTADO)) IN ('PAGADO', 'COMPLETADO')
+                    AND pg.ID_TRANSACCION_WOMPI IS NOT NULL
+                    AND TRIM(TO_CHAR(pg.ID_TRANSACCION_WOMPI)) <> ''
+                )
+            )
       );
 END;
 /
