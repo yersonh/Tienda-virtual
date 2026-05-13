@@ -720,14 +720,11 @@ async function openWompiCheckout(checkout) {
         throw new Error('No se pudo preparar la informacion del pago.');
     }
 
-    console.log('WidgetCheckout type', typeof WidgetCheckout);
-    console.log('window.WidgetCheckout', window.WidgetCheckout);
-
     const widget = new WidgetCheckout({
+        publicKey: publicKey,
         currency: currency,
         amountInCents: amountInCents,
         reference: reference,
-        publicKey: publicKey,
         redirectUrl: redirectUrl,
         signature: {
             integrity: integrity
