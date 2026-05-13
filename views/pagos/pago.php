@@ -702,7 +702,49 @@ async function syncWompiTransaction(result) {
     }
 }
 
-function openWompiCheckout(checkout) {
+const wompiMerchantIdCache = new Map();
+
+async function resolveWompiMerchantId(publicKey) {
+    const key = String(publicKey || '').trim();
+    if (!key) {
+        throw new Error('No se recibio la llave publica de Wompi.');
+    }
+
+    if (wompiMerchantIdCache.has(key)) {
+        return wompiMerchantIdCache.get(key);
+    }
+
+    const endpoints = [
+        'https://api.wompi.co/v1/merchants/' + encodeURIComponent(key),
+        (key.startsWith('pub_test_') ? 'https://sandbox.wompi.co/v1/merchants/' : 'https://production.wompi.co/v1/merchants/') + encodeURIComponent(key)
+    ];
+
+    let lastError = null;
+    for (const endpoint of [...new Set(endpoints)]) {
+        try {
+            const response = await fetch(endpoint, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            const payload = await response.json().catch(() => null);
+            const merchantId = String(payload?.data?.id || '').trim();
+
+            if (response.ok && merchantId) {
+                wompiMerchantIdCache.set(key, merchantId);
+                return merchantId;
+            }
+
+            lastError = new Error(payload?.error?.reason || payload?.message || 'Respuesta invalida de Wompi');
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    console.error('No se pudo resolver merchantId de Wompi:', lastError);
+    throw new Error('No se pudo validar el comercio de Wompi. Intenta nuevamente.');
+}
+
+async function openWompiCheckout(checkout) {
     if (typeof WidgetCheckout === 'undefined') {
         throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
@@ -719,7 +761,13 @@ function openWompiCheckout(checkout) {
         throw new Error('No se pudo preparar la informacion del pago.');
     }
 
+    const merchantId = await resolveWompiMerchantId(publicKey);
+    if (!merchantId) {
+        throw new Error('No se pudo obtener el comercio Wompi.');
+    }
+
     const widget = new WidgetCheckout({
+        merchantId,
         currency,
         amountInCents,
         reference,
@@ -787,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             setWompiButtonLoading(true, 'Abriendo pasarela Wompi');
-            openWompiCheckout(data.checkout);
+            await openWompiCheckout(data.checkout);
         } catch (error) {
             paymentForm.dataset.processing = '0';
             sessionStorage.removeItem(paymentSubmittedKey);
