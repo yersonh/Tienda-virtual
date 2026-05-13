@@ -64,6 +64,7 @@ class WompiController {
                 $this->conn = Database::getConnection();
                 $this->wompiModel = new WompiModel($this->conn);
                 $this->wompiModel->registrarTransaccion($transaction, $jsonRespuesta);
+                oci_commit($this->conn);
             }
 
             $this->jsonResponse(200, [

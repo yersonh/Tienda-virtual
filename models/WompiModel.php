@@ -50,19 +50,6 @@ class WompiModel {
         if ($this->pagoYaProcesado($pagoActual, $idTransaccion, $referencia, $estadoPago)) {
             error_log("[Wompi Notification] Payment $idPago already processed as $estadoPago. Updating JSON only.");
             $this->actualizarJsonPago($idPago, $rawJson);
-            oci_commit($this->conn);
-            return;
-        }
-
-        $pedido = $this->buscarPedidoPorVenta($idVenta);
-        if (!$pedido) {
-            throw new Exception('No se encontro un pedido asociado a la venta Wompi: ' . $idVenta);
-        }
-
-        $idEstadoPedido = (int) ($pedido['id_estado'] ?? 0);
-        if ($idEstadoPedido !== 1) {
-            error_log("[Wompi Notification] Skipping SP_PROCESAR_PAGO for Venta $idVenta because order state is $idEstadoPedido");
-            oci_commit($this->conn);
             return;
         }
 
@@ -77,7 +64,6 @@ class WompiModel {
             $rawJson
         );
 
-        oci_commit($this->conn);
         error_log("[Wompi Notification] TX $idTransaccion processed successfully.");
     }
 
@@ -183,21 +169,6 @@ class WompiModel {
     private function buscarVentaPorId(int $idVenta): ?array {
         $query = "SELECT ID_VENTA
                   FROM VENTA
-                  WHERE ID_VENTA = :id_venta
-                  FETCH FIRST 1 ROWS ONLY";
-
-        $stmt = $this->parse($query);
-        oci_bind_by_name($stmt, ':id_venta', $idVenta, -1, SQLT_INT);
-        $this->execute($stmt);
-        $row = oci_fetch_assoc($stmt);
-        oci_free_statement($stmt);
-
-        return $row ? array_change_key_case($row, CASE_LOWER) : null;
-    }
-
-    private function buscarPedidoPorVenta(int $idVenta): ?array {
-        $query = "SELECT ID_PEDIDO, ID_ESTADO
-                  FROM PEDIDO
                   WHERE ID_VENTA = :id_venta
                   FETCH FIRST 1 ROWS ONLY";
 
