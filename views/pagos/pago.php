@@ -645,14 +645,11 @@ unset($_SESSION['payment_old'], $_SESSION['payment_expired_notice']);
     </div>
 </main>
 
-<script
-    src="https://checkout.wompi.co/widget.js"
-    data-public-key="<?= htmlspecialchars($checkoutPayload['publicKey'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-</script>
 <script>
 const paymentCompletedKey = 'naylexPaymentCompleted';
 const paymentSubmittedKey = 'naylexPaymentSubmitted';
 const currentNavigation   = performance.getEntriesByType('navigation')[0];
+let wompiSdkPromise = null;
 
 window.addEventListener('pageshow', (event) => {
     const isBack = event.persisted || currentNavigation?.type === 'back_forward';
@@ -705,11 +702,35 @@ async function syncWompiTransaction(result) {
     }
 }
 
-async function openWompiCheckout(checkout) {
-    if (typeof WidgetCheckout === 'undefined') {
-        throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
+function loadWompiSdk(publicKey) {
+    if (typeof WidgetCheckout !== 'undefined') {
+        return Promise.resolve();
     }
 
+    if (wompiSdkPromise) {
+        return wompiSdkPromise;
+    }
+
+    wompiSdkPromise = new Promise((resolve, reject) => {
+        const existingScript = document.querySelector('script[src="https://checkout.wompi.co/widget.js"]');
+        if (existingScript) {
+            existingScript.addEventListener('load', () => resolve(), { once: true });
+            existingScript.addEventListener('error', () => reject(new Error('No se pudo cargar la pasarela de pago.')), { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://checkout.wompi.co/widget.js';
+        script.dataset.publicKey = publicKey;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('No se pudo cargar la pasarela de pago.'));
+        document.body.appendChild(script);
+    });
+
+    return wompiSdkPromise;
+}
+
+async function openWompiCheckout(checkout) {
     const wompi = checkout || {};
     const publicKey = typeof wompi.publicKey === 'string' ? wompi.publicKey.trim() : '';
     const reference = typeof wompi.reference === 'string' ? wompi.reference.trim() : '';
@@ -721,6 +742,11 @@ async function openWompiCheckout(checkout) {
     if (!publicKey || !reference || !integrity || !(amountInCents > 0)) {
         console.error('Payload Wompi incompleto:', { publicKey, reference, integrity, amountInCents, raw: checkout });
         throw new Error('No se pudo preparar la informacion del pago.');
+    }
+
+    await loadWompiSdk(publicKey);
+    if (typeof WidgetCheckout === 'undefined') {
+        throw new Error('No se pudo cargar la pasarela de pago. Recarga la pagina e intenta nuevamente.');
     }
 
     const widget = new WidgetCheckout({
