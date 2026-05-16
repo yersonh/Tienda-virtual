@@ -10,8 +10,9 @@ if (session_status() === PHP_SESSION_NONE) {
 <head>
     <meta charset="UTF-8">
     <title>Recuperar Contraseña - NAYLEX Store</title>
-    <link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
-    <link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+    <link rel="icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+    <link rel="shortcut icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/imagenes/logosinfondo.png?v=2">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">

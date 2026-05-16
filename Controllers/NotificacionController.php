@@ -24,6 +24,10 @@ class NotificacionController {
         exit();
     }
 
+    private function limpiarCacheNavbar(): void {
+        unset($_SESSION['user_nav_notif_cache'], $_SESSION['admin_nav_cache']);
+    }
+
     /** GET ?action=notificaciones_json — devuelve lista + contador no leídas */
     public function listarJson(): void {
         $idUsuario = $this->userId();
@@ -33,11 +37,17 @@ class NotificacionController {
         try {
             $items    = $this->model->obtenerParaUsuario($idUsuario, 15);
             $noLeidas = $this->model->contarNoLeidas($idUsuario);
+            $_SESSION['user_nav_notif_cache'] = [
+                'ts' => time(),
+                'user_id' => $idUsuario,
+                'notif' => $noLeidas,
+            ];
             
             $devPendientes = 0;
             if (isset($_SESSION['tipo_usuario']) && (int)$_SESSION['tipo_usuario'] === 1) {
                 require_once __DIR__ . '/../models/DevolucionModel.php';
                 $devPendientes = (new DevolucionModel($this->conn))->contarPendientesAdmin();
+                unset($_SESSION['admin_nav_cache']);
             }
 
             $this->json([
@@ -61,6 +71,7 @@ class NotificacionController {
         try {
             $this->model->marcarTodas($idUsuario);
             oci_commit($this->conn);
+            $this->limpiarCacheNavbar();
             $this->json(['ok' => true]);
         } catch (Throwable $e) {
             error_log('NotificacionController::marcarLeidas – ' . $e->getMessage());

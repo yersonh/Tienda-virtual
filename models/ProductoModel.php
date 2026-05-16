@@ -28,6 +28,12 @@ class ProductoModel {
         return $normalized;
     }
 
+    private function setPrefetch($stmt, int $rows = 100): void {
+        if ($stmt) {
+            @oci_set_prefetch($stmt, $rows);
+        }
+    }
+
     private function anexarCompatibilidades(array $productos, int $limitePorProducto = 3): array {
         $productosIds = array_values(array_unique(array_filter(array_map(
             fn($producto) => (int) ($producto['id_producto'] ?? 0),
@@ -78,6 +84,7 @@ class ProductoModel {
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
         oci_bind_by_name($stmt, ':limit_compat', $limitePorProducto, -1, SQLT_INT);
+        $this->setPrefetch($stmt, 100);
         oci_execute($stmt);
         while ($row = oci_fetch_assoc($stmt)) {
             $item = $this->normalizeRow($row);
@@ -107,6 +114,7 @@ class ProductoModel {
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
         oci_bind_by_name($stmt, ':limit_compat', $limitePorProducto, -1, SQLT_INT);
+        $this->setPrefetch($stmt, 100);
         oci_execute($stmt);
         while ($row = oci_fetch_assoc($stmt)) {
             $item = $this->normalizeRow($row);
@@ -250,6 +258,7 @@ class ProductoModel {
                 ORDER BY c.nombre, CASE WHEN NVL(stk.stock_p, 0) <= 0 THEN 1 ELSE 0 END, p.nombre";
 
         $stmt = oci_parse($this->conn, $query);
+        $this->setPrefetch($stmt, 120);
         oci_execute($stmt);
 
         $results = [];
@@ -274,6 +283,7 @@ class ProductoModel {
                   $imageJoin
                   ORDER BY p.id_producto DESC";
         $stmt = oci_parse($this->conn, $query);
+        $this->setPrefetch($stmt, 120);
         oci_execute($stmt);
 
         $results = [];
@@ -401,6 +411,7 @@ class ProductoModel {
             $bindValues[$param] = $value;
             oci_bind_by_name($stmt, $param, $bindValues[$param], -1, SQLT_INT);
         }
+        $this->setPrefetch($stmt, 80);
         oci_execute($stmt);
 
         $results = [];
@@ -1366,6 +1377,7 @@ class ProductoModel {
 
         $stmt = oci_parse($this->conn, $query);
         $this->bindDynamicValues($stmt, $binds);
+        $this->setPrefetch($stmt, $limit > 0 ? max(30, $limit) : 120);
         
         if (!@oci_execute($stmt)) {
             $error = oci_error($stmt);

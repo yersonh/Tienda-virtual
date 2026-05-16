@@ -327,6 +327,7 @@ class CarritoModel {
         }
 
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+        oci_set_prefetch($stmt, 100);
         $mode = $tx ? OCI_NO_AUTO_COMMIT : OCI_COMMIT_ON_SUCCESS;
         if (!@oci_execute($stmt, $mode)) {
             $message = $this->oracleErrorMessage($stmt);
@@ -373,14 +374,16 @@ class CarritoModel {
 
     public function obtenerMapaCarritoUsuario($idUsuario) {
         [$idUsuario] = $this->validarIdsYCantidad($idUsuario);
-        $query = "SELECT ID_PRODUCTO,
-                         ID_REFERENCIA,
-                         CANTIDAD
-                  FROM V_CARRITO_USUARIO
-                  WHERE ID_USUARIO = :ID_USUARIO";
+        $query = "SELECT dc.ID_PRODUCTO,
+                         dc.ID_REFERENCIA,
+                         dc.CANTIDAD
+                  FROM CARRITO c
+                  INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
+                  WHERE c.ID_USUARIO = :ID_USUARIO";
 
         $stmt = oci_parse($this->conn, $query);
         oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+        oci_set_prefetch($stmt, 50);
         if (!@oci_execute($stmt)) {
             $message = $this->oracleErrorMessage($stmt);
             oci_free_statement($stmt);
@@ -388,14 +391,14 @@ class CarritoModel {
                 throw new Exception($message);
             }
 
-            $query = "SELECT dc.ID_PRODUCTO,
-                             dc.ID_REFERENCIA,
-                             dc.CANTIDAD
-                      FROM CARRITO c
-                      INNER JOIN DETALLE_CARRITO dc ON dc.ID_CARRITO = c.ID_CARRITO
-                      WHERE c.ID_USUARIO = :ID_USUARIO";
+            $query = "SELECT ID_PRODUCTO,
+                             ID_REFERENCIA,
+                             CANTIDAD
+                      FROM V_CARRITO_USUARIO
+                      WHERE ID_USUARIO = :ID_USUARIO";
             $stmt = oci_parse($this->conn, $query);
             oci_bind_by_name($stmt, ':ID_USUARIO', $idUsuario, -1, SQLT_INT);
+            oci_set_prefetch($stmt, 50);
             oci_execute($stmt);
         }
 

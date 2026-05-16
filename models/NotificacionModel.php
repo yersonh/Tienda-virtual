@@ -81,6 +81,7 @@ class NotificacionModel {
         }
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
         oci_bind_by_name($stmt, ':limite',     $limite,    -1, SQLT_INT);
+        oci_set_prefetch($stmt, max(15, $limite));
         if (!@oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             oci_free_statement($stmt);
             return [];

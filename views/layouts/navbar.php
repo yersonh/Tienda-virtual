@@ -15,12 +15,32 @@ $currentAction = $_GET['action'] ?? 'nosotros';
 // Unread notification count for bell badge
 $notifNoLeidas = 0;
 if ($logueado) {
-    try {
-        require_once __DIR__ . '/../../config/database.php';
-        require_once __DIR__ . '/../../models/NotificacionModel.php';
-        $notifNoLeidas = (new NotificacionModel(Database::getConnection()))
-            ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
-    } catch (Throwable $_e) { /* silencioso */ }
+    $_navCacheKey = 'user_nav_notif_cache';
+    $_navCacheTtl = 30;
+    $_navCache = $_SESSION[$_navCacheKey] ?? null;
+
+    if (
+        is_array($_navCache)
+        && isset($_navCache['ts'], $_navCache['user_id'], $_navCache['notif'])
+        && (int) $_navCache['user_id'] === (int) ($_SESSION['id_usuario'] ?? 0)
+        && (time() - (int) $_navCache['ts']) < $_navCacheTtl
+    ) {
+        $notifNoLeidas = (int) $_navCache['notif'];
+    } else {
+        try {
+            require_once __DIR__ . '/../../config/database.php';
+            require_once __DIR__ . '/../../models/NotificacionModel.php';
+            $notifNoLeidas = (new NotificacionModel(Database::getConnection()))
+                ->contarNoLeidas((int) ($_SESSION['id_usuario'] ?? 0));
+            $_SESSION[$_navCacheKey] = [
+                'ts' => time(),
+                'user_id' => (int) ($_SESSION['id_usuario'] ?? 0),
+                'notif' => $notifNoLeidas,
+            ];
+        } catch (Throwable $_e) { /* silencioso */ }
+    }
+
+    unset($_navCacheKey, $_navCacheTtl, $_navCache);
 }
 
 ?>
@@ -30,7 +50,9 @@ if ($logueado) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NAYLEX Store</title>
-<link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="shortcut icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="apple-touch-icon" href="/imagenes/logosinfondo.png?v=2">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

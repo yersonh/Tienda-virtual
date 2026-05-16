@@ -41,8 +41,9 @@ unset($_navCacheKey, $_navCacheTtl, $_navCache, $_navConn);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title><?= htmlspecialchars('Panel Admin - NAYLEX Store', ENT_QUOTES, 'UTF-8') ?></title>
-<link rel="icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
-<link rel="shortcut icon" href="imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="shortcut icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+<link rel="apple-touch-icon" href="/imagenes/logosinfondo.png?v=2">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">

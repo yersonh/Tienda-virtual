@@ -6,6 +6,9 @@
     <title>Políticas de Pago y Privacidad</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+    <link rel="shortcut icon" href="/imagenes/logosinfondo.ico?v=2" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/imagenes/logosinfondo.png?v=2">
 
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/tienda.css">
