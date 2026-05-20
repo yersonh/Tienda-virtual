@@ -1,0 +1,166 @@
+@startuml Diagrama_Casos_de_Uso
+
+title Tienda Virtual - NAYLEX STORE\nDiagrama de Casos de Uso
+
+left to right direction
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+skinparam actor {
+  BackgroundColor #DDEEFF
+  BorderColor #336699
+  FontSize 13
+}
+skinparam usecase {
+  BackgroundColor #FFFDE7
+  BorderColor #F9A825
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #F5F5F5
+  BorderColor #BDBDBD
+}
+
+' ─── ACTOR IZQUIERDO ────────────────────────────────────────────────────────────
+actor "Cliente" as Cliente
+
+' ─── PAQUETES CLIENTE (agrupados juntos) ────────────────────────────────────────
+together {
+  package "Autenticación y Cuenta" {
+    usecase "Registrarse"              as UC_Registro
+    usecase "Iniciar sesión"           as UC_Login
+    usecase "Cerrar sesión"            as UC_Logout
+    usecase "Recuperar contraseña"     as UC_Recuperar
+    usecase "Reactivar cuenta"         as UC_Reactivar
+    usecase "Ver / Editar perfil"      as UC_Perfil
+    usecase "Inactivar cuenta"         as UC_Inactivar
+  }
+
+  package "Catálogo" {
+    usecase "Ver página de inicio"           as UC_Inicio
+    usecase "Explorar tienda"                as UC_Tienda
+    usecase "Ver detalle de producto"        as UC_Detalle
+    usecase "Ver productos reacondicionados" as UC_Reacondicionados
+  }
+
+  package "Carrito de Compras" {
+    usecase "Agregar producto al carrito"  as UC_AgregarCarrito
+    usecase "Ver carrito"                  as UC_VerCarrito
+    usecase "Actualizar cantidad"          as UC_ActualizarCarrito
+    usecase "Eliminar del carrito"         as UC_EliminarCarrito
+  }
+
+  package "Checkout y Pagos" {
+    usecase "Gestionar dirección de entrega" as UC_Direccion
+    usecase "Ver resumen de compra"          as UC_Resumen
+    usecase "Procesar pedido"                as UC_ProcesarPedido
+    usecase "Pagar con Wompi"                as UC_Pago
+    usecase "Ver confirmación de pedido"     as UC_Confirmacion
+    usecase "Reintentar pago"                as UC_Reintentar
+  }
+
+  package "Pedidos y Devoluciones" {
+    usecase "Ver mis pedidos"          as UC_MisPedidos
+    usecase "Cancelar pedido"          as UC_CancelarPedido
+    usecase "Descargar factura"        as UC_Factura
+    usecase "Solicitar devolución"     as UC_SolicitarDev
+    usecase "Ver mis devoluciones"     as UC_MisDev
+  }
+
+  package "Notificaciones" {
+    usecase "Ver notificaciones"  as UC_Notificaciones
+    usecase "Marcar como leídas"  as UC_MarcarLeidas
+  }
+}
+
+' ─── PAQUETES ADMIN (agrupados juntos, a la derecha) ────────────────────────────
+together {
+  package "Administración — Productos" {
+    usecase "Listar productos"         as UC_ListarProd
+    usecase "Crear producto"           as UC_CrearProd
+    usecase "Editar producto"          as UC_EditarProd
+    usecase "Eliminar producto"        as UC_EliminarProd
+    usecase "Gestionar imágenes"       as UC_Imagenes
+  }
+
+  package "Administración — Pedidos" {
+    usecase "Ver pedidos (lista y mapa)" as UC_AdminPedidos
+    usecase "Expirar pedidos pendientes" as UC_ExpirarPedidos
+  }
+
+  package "Administración — Devoluciones" {
+    usecase "Listar devoluciones"          as UC_AdminDev
+    usecase "Aprobar devolución"           as UC_Aprobar
+    usecase "Rechazar devolución"          as UC_Rechazar
+    usecase "Registrar producto recibido"  as UC_Recibido
+    usecase "Gestionar reacondicionados"   as UC_Reacond
+    usecase "Ofertar reacondicionado"      as UC_Ofertar
+  }
+}
+
+' ─── ACTOR DERECHO ──────────────────────────────────────────────────────────────
+actor "Administrador" as Admin
+
+' ─── FORZAR: grupo cliente a la izquierda del grupo admin ───────────────────────
+UC_MarcarLeidas -[hidden]right-> UC_ListarProd
+
+' ─── RELACIONES: CLIENTE ────────────────────────────────────────────────────────
+Cliente --> UC_Registro
+Cliente --> UC_Login
+Cliente --> UC_Logout
+Cliente --> UC_Recuperar
+Cliente --> UC_Reactivar
+Cliente --> UC_Perfil
+Cliente --> UC_Inactivar
+
+Cliente --> UC_Inicio
+Cliente --> UC_Tienda
+Cliente --> UC_Detalle
+Cliente --> UC_Reacondicionados
+
+Cliente --> UC_AgregarCarrito
+Cliente --> UC_VerCarrito
+Cliente --> UC_ActualizarCarrito
+Cliente --> UC_EliminarCarrito
+
+Cliente --> UC_Direccion
+Cliente --> UC_Resumen
+Cliente --> UC_ProcesarPedido
+Cliente --> UC_Reintentar
+Cliente --> UC_Confirmacion
+
+Cliente --> UC_MisPedidos
+Cliente --> UC_CancelarPedido
+Cliente --> UC_Factura
+Cliente --> UC_SolicitarDev
+Cliente --> UC_MisDev
+
+Cliente --> UC_Notificaciones
+Cliente --> UC_MarcarLeidas
+
+' ─── RELACIONES: ADMINISTRADOR ──────────────────────────────────────────────────
+UC_ListarProd     <-- Admin
+UC_CrearProd      <-- Admin
+UC_EditarProd     <-- Admin
+UC_EliminarProd   <-- Admin
+UC_Imagenes       <-- Admin
+
+UC_AdminPedidos   <-- Admin
+UC_ExpirarPedidos <-- Admin
+
+UC_AdminDev <-- Admin
+UC_Aprobar  <-- Admin
+UC_Rechazar <-- Admin
+UC_Reacond  <-- Admin
+UC_Ofertar  <-- Admin
+
+UC_Notificaciones <-- Admin
+UC_MarcarLeidas   <-- Admin
+
+' ─── INCLUDE ────────────────────────────────────────────────────────────────────
+UC_ProcesarPedido .> UC_Pago     : <<include>>
+UC_Aprobar        .> UC_Recibido : <<include>>
+
+@enduml

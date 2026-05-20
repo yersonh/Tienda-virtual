@@ -50,6 +50,8 @@ class NotificacionModel {
         if (!oci_execute($stmt, OCI_NO_AUTO_COMMIT)) {
             $err = oci_error($stmt);
             error_log('NotificacionModel::crear (execute) – ' . ($err['message'] ?? 'Unknown error'));
+        } elseif (session_status() === PHP_SESSION_ACTIVE) {
+            unset($_SESSION['navbar_counter_cache'], $_SESSION['user_nav_notif_cache'], $_SESSION['admin_nav_cache']);
         }
         oci_free_statement($stmt);
     }
@@ -62,6 +64,9 @@ class NotificacionModel {
         }
         oci_bind_by_name($stmt, ':id_usuario', $idUsuario, -1, SQLT_INT);
         oci_execute($stmt, OCI_NO_AUTO_COMMIT);
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            unset($_SESSION['navbar_counter_cache'], $_SESSION['user_nav_notif_cache'], $_SESSION['admin_nav_cache']);
+        }
         oci_free_statement($stmt);
     }
 

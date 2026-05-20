@@ -3,6 +3,7 @@
 class PedidoLifecycleModel {
 
     private $conn;
+    private static array $lastRun = [];
 
     public function __construct($conn) {
         $this->conn = $conn;
@@ -22,5 +23,29 @@ class PedidoLifecycleModel {
         }
 
         oci_free_statement($stmt);
+    }
+
+    public function expirarPendientesSiNecesario(int $ttl = 120, string $cacheKey = 'pedido_lifecycle_expirar_ts'): bool {
+        $now = time();
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $lastRun = (int) ($_SESSION[$cacheKey] ?? 0);
+            if ($lastRun > 0 && ($now - $lastRun) < $ttl) {
+                return false;
+            }
+
+            $this->expirarPendientes();
+            $_SESSION[$cacheKey] = $now;
+            return true;
+        }
+
+        $lastRun = (int) (self::$lastRun[$cacheKey] ?? 0);
+        if ($lastRun > 0 && ($now - $lastRun) < $ttl) {
+            return false;
+        }
+
+        $this->expirarPendientes();
+        self::$lastRun[$cacheKey] = $now;
+        return true;
     }
 }

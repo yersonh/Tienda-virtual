@@ -109,8 +109,9 @@ class PedidoController {
 
     private function expirarPedidosPendientes(): void {
         try {
-            $this->pedidoLifecycleModel->expirarPendientes();
-            oci_commit($this->conn);
+            if ($this->pedidoLifecycleModel->expirarPendientesSiNecesario()) {
+                oci_commit($this->conn);
+            }
         } catch (Throwable $e) {
             @oci_rollback($this->conn);
             error_log('SP_EXPIRAR_PEDIDOS: ' . $e->getMessage());

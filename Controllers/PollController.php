@@ -20,6 +20,12 @@ class PollController {
         return (int) ($_SESSION['id_usuario'] ?? 0);
     }
 
+    private function releaseSession(): void {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+    }
+
     private static function estadoNombre(int $id): string {
         return match ($id) {
             1 => 'Pendiente de pago',
@@ -39,6 +45,7 @@ class PollController {
         if ($idUsuario <= 0 || $idPedido <= 0) {
             $this->json(['ok' => false]);
         }
+        $this->releaseSession();
 
         $sql = "SELECT p.ID_PEDIDO, p.ID_ESTADO,
                        GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (20 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
@@ -80,6 +87,7 @@ class PollController {
         if ($idUsuario <= 0) {
             $this->json(['ok' => false, 'pedidos' => []]);
         }
+        $this->releaseSession();
 
         $sql = "SELECT p.ID_PEDIDO, p.ID_ESTADO,
                        GREATEST(0, FLOOR((CAST(p.CREATED_AT AS DATE) + (20 / 1440) - SYSDATE) * 86400)) AS SEGUNDOS_RESTANTES
@@ -113,7 +121,10 @@ class PollController {
 
     /** GET ?action=pollAdminPedidos&ids=1,2,3 — estados de pedidos visibles en el panel admin */
     public function adminPedidos(): void {
-        if ((int) ($_SESSION['tipo_usuario'] ?? 0) !== 1) {
+        $isAdmin = (int) ($_SESSION['tipo_usuario'] ?? 0) === 1;
+        $this->releaseSession();
+
+        if (!$isAdmin) {
             $this->json(['ok' => false]);
         }
 

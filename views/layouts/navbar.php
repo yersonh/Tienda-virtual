@@ -1533,7 +1533,7 @@ function showToast(message, type = 'success') {
 
     function refreshBadge() {
         if (document.hidden) return;
-        fetch('index.php?action=notificaciones_json', { credentials: 'same-origin' })
+        fetch('index.php?action=notificaciones_json&modo=contador', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (d) { if (d.ok) setBadge(d.no_leidas); });
     }

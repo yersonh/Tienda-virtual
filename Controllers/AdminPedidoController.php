@@ -16,14 +16,10 @@ class AdminPedidoController {
     }
 
     private function expirarPedidosPendientes(): void {
-        $clave = 'admin_sp_expiracion_ts';
-        if (isset($_SESSION[$clave]) && (time() - (int) $_SESSION[$clave]) < 120) {
-            return;
-        }
         try {
-            $this->lifecycleModel->expirarPendientes();
-            oci_commit($this->conn);
-            $_SESSION[$clave] = time();
+            if ($this->lifecycleModel->expirarPendientesSiNecesario()) {
+                oci_commit($this->conn);
+            }
         } catch (Throwable $e) {
             @oci_rollback($this->conn);
             error_log('SP_EXPIRAR_PEDIDOS admin: ' . $e->getMessage());

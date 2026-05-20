@@ -213,9 +213,6 @@ class ProductoModel {
     }
 
     private function productoColumnsRapidas(bool $includeDescripcion = true): string {
-        $stockExpression = "(NVL((SELECT SUM(NVL(cv.STOCK_P, 0)) FROM COMPATIBILIDAD_VEHICULO cv WHERE cv.ID_REFERENCIA = r.ID_REFERENCIA), 0)
-                            + NVL((SELECT SUM(NVL(cm.STOCK_P, 0)) FROM COMPATIBILIDAD_MAQUINARIA cm WHERE cm.ID_REFERENCIA = r.ID_REFERENCIA), 0))";
-
         $columns = [
             "p.ID_PRODUCTO",
             "r.ID_REFERENCIA",
@@ -225,7 +222,7 @@ class ProductoModel {
             "p.NOMBRE",
             "p.CODIGO",
             "p.PRECIO",
-            "{$stockExpression} AS STOCK_P",
+            "NVL(stk.STOCK_P, 0) AS STOCK_P",
             "p.ESTADO",
             "p.ID_CATEGORIA",
             "c.NOMBRE AS CATEGORIA_NOMBRE",
@@ -1303,11 +1300,8 @@ class ProductoModel {
         $referenciaJoin = $this->referenciaJoin();
         $columns = $limit > 0 ? $this->productoColumnsRapidas(true) : $this->productoColumns('p');
         $imageJoin = $limit > 0 ? '' : $this->primeraImagenJoin();
-        $stockJoin = $limit > 0 ? '' : $this->stockReferenciaJoin();
-        $stockSortExpression = $limit > 0
-            ? "(NVL((SELECT SUM(NVL(cv_sort.STOCK_P, 0)) FROM COMPATIBILIDAD_VEHICULO cv_sort WHERE cv_sort.ID_REFERENCIA = r.ID_REFERENCIA), 0)
-                + NVL((SELECT SUM(NVL(cm_sort.STOCK_P, 0)) FROM COMPATIBILIDAD_MAQUINARIA cm_sort WHERE cm_sort.ID_REFERENCIA = r.ID_REFERENCIA), 0))"
-            : "NVL(stk.stock_p, 0)";
+        $stockJoin = $this->stockReferenciaJoin();
+        $stockSortExpression = "NVL(stk.stock_p, 0)";
 
         $where = " WHERE " . $this->activeProductoCondition('p');
 

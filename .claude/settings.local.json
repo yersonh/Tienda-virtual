@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Content \"c:\\\\Users\\\\velan\\\\OneDrive\\\\Desktop\\\\PROYECTO_TIENDA\\\\Tienda-virtual\\\\Controllers\\\\AdminController.php\")",
+      "Bash(Select-String \"function \")",
+      "Bash(Select-Object -First 40)"
+    ]
+  }
+}
